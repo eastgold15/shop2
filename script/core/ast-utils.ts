@@ -11,23 +11,28 @@ const GEN_TAG = "@generated";
 const DOC_BLOCK = `/** [Auto-Generated] Do not edit this tag to keep updates. ${GEN_TAG} */`;
 
 /**
- * 🛠️ 确保 Import 存在
+ * 🛠️ 确保 Import 存在（支持 type 和普通导入聚合）
  */
 export function ensureImport(
   file: SourceFile,
   moduleSpecifier: string,
-  namedImports: string[]
+  namedImports: string[],
+  isTypeOnly = false
 ) {
   let decl = file.getImportDeclaration(
     (d) => d.getModuleSpecifierValue() === moduleSpecifier
   );
   if (!decl) {
-    decl = file.addImportDeclaration({ moduleSpecifier });
+    decl = file.addImportDeclaration({
+      moduleSpecifier,
+    });
   }
+
   const existingNamed = decl.getNamedImports().map((n) => n.getName());
   for (const name of namedImports) {
     if (!existingNamed.includes(name)) {
-      decl.addNamedImport(name);
+      // ts-morph 的 addNamedImport 会自动处理 type 关键字
+      decl.addNamedImport({ name, isTypeOnly });
     }
   }
 }
@@ -149,10 +154,10 @@ export function getLeadingJSDocText(node: Node): string {
   // 6. 去除注释标记，提取纯文本
   return lastJsDoc
     ? lastJsDoc
-      .replace(/^\/\*\*+/, "")
-      .replace(/\*+\/$/, "")
-      .replace(/^\s*\*\s*/gm, "")
-      .trim()
+        .replace(/^\/\*\*+/, "")
+        .replace(/\*+\/$/, "")
+        .replace(/^\s*\*\s*/gm, "")
+        .trim()
     : "";
 }
 

@@ -4,8 +4,10 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { Project } from "ts-morph";
-import type { GenConfig, GenContext, Task } from "./types";
+import { generateIndexFile } from "../tasks/index.task";
+import { generateRouterFile } from "../tasks/router.task";
 import { getLeadingJSDocText } from "./ast-utils";
+import type { GenConfig, GenContext, Task } from "./types";
 
 export class Pipeline {
   private readonly project: Project;
@@ -42,7 +44,13 @@ export class Pipeline {
 
   async run(
     schemaPath: string,
-    dirs: { contractDir: string; serviceDir: string; controllerDir: string }) {
+    dirs: {
+      contractDir: string;
+      serviceDir: string;
+      controllerDir: string;
+      routerFile: string;
+    }
+  ) {
     // 读取 Schema 文件
     const schemaFile = this.project.addSourceFileAtPath(schemaPath);
     const exportedVars = schemaFile
@@ -50,9 +58,14 @@ export class Pipeline {
       .filter((v) => v.isExported());
 
     // 确保目标目录存在
-    [dirs.contractDir, dirs.serviceDir, dirs.controllerDir].forEach(d => {
+    [dirs.contractDir, dirs.serviceDir, dirs.controllerDir].forEach((d) => {
       if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true });
     });
+    // 确保 router 文件的目录存在
+    const routerDir = path.dirname(dirs.routerFile);
+    if (!fs.existsSync(routerDir)) {
+      fs.mkdirSync(routerDir, { recursive: true });
+    }
 
     for (const v of exportedVars) {
       const varName = v.getName();
@@ -83,17 +96,26 @@ export class Pipeline {
           root: dirs.contractDir, // 默认以契约目录为基准
           contract: path.join(dirs.contractDir, `${tableName}.contract.ts`),
           service: path.join(dirs.serviceDir, `${tableName}.service.ts`),
-          controller: path.join(dirs.controllerDir, `${tableName}.controller.ts`),
+          controller: path.join(
+            dirs.controllerDir,
+            `${tableName}.controller.ts`
+          ),
+          index: path.join(dirs.contractDir, "index.ts"),
         },
-        artifacts: {}
+        artifacts: {},
       };
       console.log(`\n📦 Processing [${pascalName}]`);
 
       for (const task of this.tasks) {
         await task.run(this.project, ctx);
       }
-
     }
+
+    // 🔥 生成统一的 index.ts 导出文件
+    generateIndexFile(this.project, path.join(dirs.contractDir, "index.ts"));
+
+    // 🔥 生成统一的 app-router.ts 导出文件
+    generateRouterFile(this.project, dirs.routerFile);
 
     await this.project.save();
     console.log("\n✅ Pipeline Finished!");

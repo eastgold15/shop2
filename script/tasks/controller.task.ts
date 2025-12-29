@@ -1,69 +1,138 @@
 import * as path from "node:path";
-import type { Project } from "ts-morph";
+import { type Project, VariableDeclarationKind } from "ts-morph";
 import { ensureImport } from "../core/ast-utils";
 import type { GenContext, Task } from "../core/types";
 
+const GEN_HEADER = `/**
+ * 🤖 【B2B Controller - 自动生成基类】
+ * --------------------------------------------------------
+ * ⚠️ 请勿手动修改此文件，下次运行会被覆盖。
+ * 💡 如需自定义，请删除下方的 @generated 标记，或新建一个 controller。
+ * --------------------------------------------------------
+ */`;
+
 export const ControllerTask: Task = {
   name: "Generating Controller",
-  async run(project: Project, ctx: GenContext) {
+  run(project: Project, ctx: GenContext) {
     if (!ctx.config.stages.has("controller")) return;
+
+    // 依赖检查：必须有 Service 和 Contract 才能生成 Controller
     if (!(ctx.artifacts.serviceName && ctx.artifacts.contractName)) {
-      console.warn("   ⚠️ Missing Service/Contract, skipping Controller.");
+      console.warn("     ⚠️ Missing Service/Contract, skipping Controller.");
       return;
     }
-    const file = await project.createSourceFile(ctx.paths.controller, "", { overwrite: false });
 
-    // 计算相对路径
-    const dir = path.dirname(ctx.paths.controller);
-    const fileName = `${ctx.tableName}.controller.ts`;
-    // const filePath = await path.join(ctx.targetDir, fileName);
-    let contractRel = path.relative(dir, ctx.paths.contract).replace(/\.ts$/, "");
-    if (!contractRel.startsWith(".")) contractRel = `./${contractRel}`;
-
-    let serviceRel = path.relative(dir, ctx.paths.service).replace(/\.ts$/, "");
-    if (!serviceRel.startsWith(".")) serviceRel = `./${serviceRel}`;
-
-
-    // 1. Imports
-    ensureImport(file, "elysia", ["Elysia", "t"]);
-    ensureImport(file, "~/middleware/auth", ["authGuardMid"]); // 假设中间件路径
-    // 引用 Service 和 Contract
-    // 🔥 引用同级文件
-    ensureImport(file, contractRel, [ctx.artifacts.contractName]);
-    ensureImport(file, serviceRel, [ctx.artifacts.serviceName]);
-
-    // 2. 生成 Elysia App 变量
-    // 这里因为是链式调用，AST 操作比较复杂，我们简单使用替换或追加模式
-    // 对于 Controller，通常建议全量生成（因为很少手动改 Controller 内部逻辑，改都在 Service）
-    // 或者使用 upsert 方式维护一个 Class，然后 export new Class()
-
-    const varName = `${ctx.tableName}Controller`;
-    const service = `new ${ctx.artifacts.serviceName}()`; // 实例化 Service
-    const contract = ctx.artifacts.contractName;
-
-    // 简单起见，这里演示 Class 风格的 Controller 封装，或者直接 VariableDeclaration
-    const code = `
-export const ${varName} = new Elysia({ prefix: "/${ctx.tableName}" })
-  .use(authGuardMid)
-  /** @generated */
-  .post("/", ({ body, db, auth }) => ${service}.create(body, { db, auth }), { body: ${contract}.Create })
-  /** @generated */
-  .get("/", ({ query, db, auth }) => ${service}.findAll(query, { db, auth }), { query: ${contract}.ListQuery })
-  /** @generated */
-  .put("/:id", ({ params, body, db, auth }) => ${service}.update(params.id, body, { db, auth }), { params: t.Object({ id: t.String() }), body: ${contract}.Update })
-  /** @generated */
-  .delete("/:id", ({ params, db, auth }) => ${service}.delete(params.id, { db, auth }), { params: t.Object({ id: t.String() }) });
-    `.trim();
-
-    // Controller 比较特殊，建议如果文件不存在则创建，如果存在则由人工维护，或者使用更复杂的 AST 查找链式调用
-    // 这里采用：如果不存在则创建基础模板
-    if (file.getText().length < 10) {
-      file.replaceWithText(code);
-      console.log(`     ✨ Created Controller: ${fileName}`);
-    } else {
-      console.log(
-        "     🛡️ Controller exists, skipping to protect custom routes."
-      );
+    // 1. 获取或创建源文件
+    let file = project.getSourceFile(ctx.paths.controller);
+    if (!file) {
+      file = project.createSourceFile(ctx.paths.controller, "", {
+        overwrite: true,
+      });
     }
+
+    // 2. 注入 Header (如果文件是空的或已生成)
+    if (file.getText().length === 0 || file.getText().includes("🤖")) {
+      // 简单的去重处理，避免重复添加 header
+      const currentText = file.getText();
+      if (!currentText.startsWith("/**")) {
+        file.insertText(0, `${GEN_HEADER}\n\n`);
+      }
+    }
+
+    // 3. 计算相对路径 (用于 import)
+    // 目标: 从 controller 文件位置 -> 指向 contract/service 文件位置
+    const dir = path.dirname(ctx.paths.controller);
+
+    const getRelativeImport = (targetPath: string) => {
+      let rel = path.relative(dir, targetPath).replace(/\.ts$/, "");
+      if (!rel.startsWith(".")) rel = `./${rel}`;
+      return rel;
+    };
+
+    const contractImportPath = getRelativeImport(ctx.paths.contract);
+    const serviceImportPath = getRelativeImport(ctx.paths.service);
+
+    // 4. 管理 Imports
+    ensureImport(file, "elysia", ["Elysia", "t"]);
+    ensureImport(file, "~/db/connection", ["dbPlugin"]); // 根据你实际项目调整
+    ensureImport(file, "~/middleware/auth", ["authGuardMid"]); // 根据你实际项目调整
+
+    // 引用 Contract
+    ensureImport(file, contractImportPath, [ctx.artifacts.contractName]);
+    // 引用 Service Class
+    ensureImport(file, serviceImportPath, [ctx.artifacts.serviceName]);
+
+    // 5. 实例化 Service
+    // 生成代码: const service = new TenantService();
+    const serviceInstanceName = "service";
+    const serviceClassName = ctx.artifacts.serviceName;
+
+    const serviceVar = file.getVariableDeclaration(serviceInstanceName);
+    if (!serviceVar) {
+      file.addVariableStatement({
+        declarationKind: VariableDeclarationKind.Const,
+        declarations: [
+          {
+            name: serviceInstanceName,
+            initializer: `new ${serviceClassName}()`,
+          },
+        ],
+      });
+    }
+
+    // 6. 生成 Controller
+    // 变量名: tenantController
+    const controllerName = `${ctx.tableName}Controller`;
+    const contract = ctx.artifacts.contractName;
+    const prefix = `/${ctx.tableName.toLowerCase()}`;
+
+    // 构造完整的 Elysia 链式调用代码
+    // 这里我们采用"全量覆盖 Variable Initializer"的策略，
+    // 因为 Elysia 的链式调用是一个整体表达式，拆解 AST 更新非常复杂且不稳定。
+    const controllerCode = `new Elysia({ prefix: "${prefix}" })
+  .use(dbPlugin)
+  .use(authGuardMid)
+  .get("/", ({ query, auth, db }) => ${serviceInstanceName}.findAll(query, { db, auth }), { query: ${contract}.ListQuery })
+  .post("/", ({ body, auth, db }) => ${serviceInstanceName}.create(body, { db, auth }), { body: ${contract}.Create })
+  .put("/:id", ({ params, body, auth, db }) => ${serviceInstanceName}.update(params.id, body, { db, auth }), { params: t.Object({ id: t.String() }), body: ${contract}.Update })
+  .delete("/:id", ({ params, auth, db }) => ${serviceInstanceName}.delete(params.id, { db, auth }), { params: t.Object({ id: t.String() }) })`;
+
+    const controllerVar = file.getVariableDeclaration(controllerName);
+
+    // A. 新增 Controller
+    if (controllerVar) {
+      const stmt = controllerVar.getVariableStatement();
+      const docs = stmt?.getJsDocs() || [];
+      const isGenerated = docs.some((d) =>
+        d.getInnerText().includes("@generated")
+      );
+
+      if (isGenerated) {
+        // 对比代码是否变化，避免无效写入
+        if (controllerVar.getInitializer()?.getText() !== controllerCode) {
+          controllerVar.setInitializer(controllerCode);
+          console.log(`     🔄 Updated: ${controllerName}`);
+        }
+      } else {
+        console.log(`     🛡️ Skipped (Custom): ${controllerName}`);
+      }
+    } else {
+      const stmt = file.addVariableStatement({
+        declarationKind: VariableDeclarationKind.Const,
+        isExported: true,
+        declarations: [
+          {
+            name: controllerName,
+            initializer: controllerCode,
+          },
+        ],
+      });
+      // 添加标记
+      stmt.addJsDoc("@generated");
+      console.log(`     ➕ Controller: ${controllerName}`);
+    }
+
+    // 更新 Context，如果有下游依赖
+    // ctx.artifacts.controllerName = controllerName;
   },
 };

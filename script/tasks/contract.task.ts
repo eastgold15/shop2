@@ -1,14 +1,18 @@
-
 import { type Project, SyntaxKind, VariableDeclarationKind } from "ts-morph";
 import { ensureImport, upsertObjectProperty } from "../core/ast-utils";
 import type { GenContext, Task } from "../core/types";
 
 export const ContractTask: Task = {
   name: "Generating Contract",
-  async run(project: Project, ctx: GenContext) {
+  run(project: Project, ctx: GenContext) {
     if (!ctx.config.stages.has("contract")) return;
-    // 🔥 直接使用计算好的路径
-    const file = await project.createSourceFile(ctx.paths.contract, "", { overwrite: false });
+    // 🔥 直接使用计算好的路径，如果文件已存在则加载，否则创建
+    let file = project.getSourceFile(ctx.paths.contract);
+    if (!file) {
+      file = project.createSourceFile(ctx.paths.contract, "", {
+        overwrite: true,
+      });
+    }
 
     const fileName = `${ctx.tableName}.contract.ts`;
 
@@ -16,12 +20,12 @@ export const ContractTask: Task = {
 
     // 1. Imports
     ensureImport(file, "elysia", ["t"]);
-    ensureImport(file, "../../helper/utils", ["spread", "type InferDTO"]); // 假设路径
-    ensureImport(file, "../../helper/query-types.model", [
+    ensureImport(file, "../helper/utils", ["spread", "type InferDTO"]);
+    ensureImport(file, "../helper/query-types.model", [
       "PaginationParams",
       "SortParams",
     ]);
-    ensureImport(file, "@repo/contract/table.schema", [ctx.schemaKey]);
+    ensureImport(file, "../table.schema", [ctx.schemaKey]);
 
     // 2. 定义 Contract 对象
     const varName = `${ctx.pascalName}Contract`;
@@ -79,6 +83,16 @@ export const ContractTask: Task = {
       "ListResponse",
       `t.Object({ data: t.Array(t.Object(spread(${tableVar}, "select"))), total: t.Number() })`
     );
+
+    // 4. 确保 export type 存在
+    const typeExportName = varName;
+    const fileText = file.getFullText();
+    if (!fileText.includes(`export type ${typeExportName} =`)) {
+      file.insertStatements(
+        file.getStatements().length,
+        `\nexport type ${typeExportName} = InferDTO<typeof ${varName}>;\n`
+      );
+    }
 
     // 状态更新
     ctx.artifacts.contractName = `${ctx.pascalName}Contract`;

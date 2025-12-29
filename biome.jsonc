@@ -57,7 +57,8 @@
         "useBlockStatements": "off",
         "noNestedTernary": "off",
         "useConsistentTypeDefinitions": "off",
-        "noParameterProperties": "off"
+        "noParameterProperties": "off",
+        "useConsistentMemberAccessibility": "off"
       },
       // 正确性规则
       "correctness": {
