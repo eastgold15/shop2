@@ -1,23 +1,23 @@
 services:
   postgres:
     image: postgres:17-alpine
-    container_name: gina_postgres2
+    container_name: shop_postgres1
     restart: always
     environment:
-      POSTGRES_DB: gina_dev
-      POSTGRES_USER: gina_user
-      POSTGRES_PASSWORD: gina_password
+      POSTGRES_DB: shop
+      POSTGRES_USER: shop
+      POSTGRES_PASSWORD: shop
       PGDATA: /var/lib/postgresql/data/pgdata
     ports:
-      - "5433:5432"
+      - "5444:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_shop:/var/lib/postgresql/data
       - ./init-scripts:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U gina_user -d gina_dev"]
+      test: ["CMD-SHELL", "pg_isready -U shop -d shop"]
       interval: 10s
       timeout: 5s
       retries: 5
 
 volumes:
-  postgres_data:
+  postgres_shop:

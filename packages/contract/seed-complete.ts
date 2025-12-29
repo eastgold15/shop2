@@ -66,7 +66,7 @@ import { relations } from './src/table.relation'
 import { drizzle } from "drizzle-orm/node-postgres";
 
 const db = drizzle(
-  "postgres://gina_user:gina_password@localhost:5433/gina_dev",
+  "postgres://shop:shop@localhost:5444/shop",
   { relations }
 );
 
@@ -787,6 +787,27 @@ const siteConfigs = [
 // 10. 主页卡片数据
 // ========================================
 
+// 先创建一个默认的 media 记录
+const defaultMediaId = randomUUIDv7();
+const heroCardsMedia = [
+  {
+    id: defaultMediaId,
+    storageKey: "hero-card-default",
+    category: "hero_card",
+    url: "https://via.placeholder.com/1200x400",
+    originalName: "default-hero-bg.jpg",
+    mimeType: "image/jpeg",
+    status: true,
+    thumbnailUrl: "https://via.placeholder.com/300x100",
+    mediaType: "image" as const,
+    tenantId: tenant1Id,
+    deptId: dept1HeadquartersId,
+    createdBy: user2Id,
+    isPublic: true,
+    siteId: site1Id,
+  },
+];
+
 const heroCards = [
   {
     id: "e6d2b19c-81ec-4b4a-9f70-a0242ae92920",
@@ -797,7 +818,7 @@ const heroCards = [
     backgroundClass: "bg-blue-50",
     sortOrder: 3,
     isActive: true,
-    mediaId: "", // 改为空字符串，因为字段是 notNull
+    mediaId: defaultMediaId,
     siteId: site1Id,
     tenantId: tenant1Id,
   },
@@ -810,7 +831,7 @@ const heroCards = [
     backgroundClass: "bg-blue-50",
     sortOrder: 1,
     isActive: true,
-    mediaId: "", // 改为空字符串
+    mediaId: defaultMediaId,
     siteId: site1Id,
     tenantId: tenant1Id,
   },
@@ -823,7 +844,7 @@ const heroCards = [
     backgroundClass: "bg-blue-50",
     sortOrder: 2,
     isActive: true,
-    mediaId: "", // 改为空字符串
+    mediaId: defaultMediaId,
     siteId: site1Id,
     tenantId: tenant1Id,
   },
@@ -1158,23 +1179,27 @@ async function seedCompleteDatabase() {
     await db.insert(productTemplateTable).values(productTemplates);
     await db.insert(siteProductTable).values(siteProducts);
 
-    // 19. 插入主页卡片数据
+    // 19. 插入媒体数据
+    console.log("📸 插入媒体数据...");
+    await db.insert(mediaTable).values(heroCardsMedia);
+
+    // 20. 插入主页卡片数据
     console.log("🎨 插入主页卡片数据...");
     await db.insert(heroCardTable).values(heroCards);
 
-    // 20. 插入客户数据
+    // 21. 插入客户数据
     console.log("🏢 插入客户数据...");
     await db.insert(customerTable).values(customers);
 
-    // 21. 插入询盘数据
+    // 22. 插入询盘数据
     console.log("📨 插入询盘数据...");
     await db.insert(inquiryTable).values(inquiries);
 
-    // 22. 插入报价数据
+    // 23. 插入报价数据
     console.log("💰 插入报价数据...");
     await db.insert(quotationTable).values(quotations);
 
-    // 23. 插入每日询盘计数器数据
+    // 24. 插入每日询盘计数器数据
     console.log("📊 插入每日询盘计数器数据...");
     await db.insert(dailyInquiryCounterTable).values(dailyInquiryCounter);
 

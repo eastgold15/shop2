@@ -1,7 +1,7 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 
 const db = drizzle(
-  "postgres://gina_user:gina_password@localhost:5433/gina_dev"
+  "postgres://gina_user:gina_password@localhost:5444/gina_dev"
 );
 
 async function resetDatabase() {
