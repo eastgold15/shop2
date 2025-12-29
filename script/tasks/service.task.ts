@@ -1,6 +1,6 @@
 import * as path from "node:path";
 import type { Project } from "ts-morph";
-import { ensureImport, upsertMethod } from "../core/ast-utils";
+import { ensureImport, upsertMethod, normalizePath } from "../core/ast-utils";
 import type { GenContext, Task } from "../core/types";
 
 export const ServiceTask: Task = {
@@ -9,15 +9,24 @@ export const ServiceTask: Task = {
     if (!ctx.config.stages.has("service")) return;
     if (!ctx.artifacts.contractName) return;
 
-    let file = project.getSourceFile(ctx.paths.service);
-    if (!file) {
+    // 🔥 先从 project 中移除旧文件（如果存在），确保重新加载最新内容
+    const existingFile = project.getSourceFile(ctx.paths.service);
+    if (existingFile) {
+      existingFile.forget();
+    }
+
+    // 重新加载文件（从磁盘读取最新内容）
+    let file;
+    try {
+      file = project.addSourceFileAtPath(ctx.paths.service);
+    } catch {
+      // 文件不存在，创建新文件（不覆盖）
       file = project.createSourceFile(ctx.paths.service, "", {
-        overwrite: true,
+        overwrite: false,
       });
     }
 
-    // 1. 计算相对路径引用 Contract
-    // 如果目录相同，relativePath 是 ""，我们需要处理成 "./"
+    // 1. 计算相对路径引用 Contract，使用 normalizePath 修复 Windows 路径
     let relativePath = path.relative(
       path.dirname(ctx.paths.service),
       ctx.paths.contract
@@ -28,8 +37,10 @@ export const ServiceTask: Task = {
     if (!relativePath.startsWith(".")) {
       relativePath = `./${relativePath}`;
     }
+    // 🔥 修复 Windows 路径
+    const contractImportPath = normalizePath(relativePath);
 
-    // 1. Imports - 聚合相同路径的导入
+    // 2. Imports - 聚合相同路径的导入
     ensureImport(file, "drizzle-orm", ["eq", "and", "desc"]);
     // 🔥 @repo/contract 路径的导入聚合（table.schema 是普通导入，Contract 是 type 导入）
     ensureImport(file, "@repo/contract", [ctx.schemaKey]);

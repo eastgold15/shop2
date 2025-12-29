@@ -1,3 +1,4 @@
+import * as path from "node:path";
 import {
   type ClassDeclaration,
   Node,
@@ -8,11 +9,17 @@ import {
 } from "ts-morph";
 
 const GEN_TAG = "@generated";
-// 注意：保持格式一致，方便正则匹配
 const DOC_BLOCK = `/** [Auto-Generated] Do not edit this tag to keep updates. ${GEN_TAG} */`;
 
 /**
- * 🛠️ 确保 Import 存在（支持 type 和普通导入聚合）
+ * 🛠️ 路径标准化：强制将 Windows 反斜杠转换为正斜杠
+ */
+export function normalizePath(p: string): string {
+  return p.split(path.sep).join("/");
+}
+
+/**
+ * 🛠️ 确保 Import 存在
  */
 export function ensureImport(
   file: SourceFile,
@@ -20,36 +27,70 @@ export function ensureImport(
   namedImports: string[],
   isTypeOnly = false
 ) {
+  // 🔥 核心修复：规范化路径，防止生成 ..\..\
+  const normalizedSpecifier = normalizePath(moduleSpecifier);
+
   let decl = file.getImportDeclaration(
-    (d) => d.getModuleSpecifierValue() === moduleSpecifier
+    (d) => d.getModuleSpecifierValue() === normalizedSpecifier
   );
   if (!decl) {
-    decl = file.addImportDeclaration({ moduleSpecifier });
+    decl = file.addImportDeclaration({
+      moduleSpecifier: normalizedSpecifier,
+    });
   }
 
   const existingNamed = decl.getNamedImports().map((n) => n.getName());
   for (const name of namedImports) {
     if (!existingNamed.includes(name)) {
-      // ts-morph 的 addNamedImport 会自动处理 type 关键字
       decl.addNamedImport({ name, isTypeOnly });
     }
   }
 }
 
 /**
- * 🔥 [核心修复] 通用检查节点是否包含 @generated 标记
- * 使用 getLeadingCommentRanges() 直接读取节点前方的所有注释文本
- * 这种方法比 getJsDocs 更底层，能捕获 leadingTrivia 写入的注释
+ * 🔥 [核心修复] 检查节点是否包含 @generated 标记
+ * 自动向上查找：如果节点是 VariableDeclaration，自动去查 VariableStatement
  */
 function checkIsGenerated(node: Node): boolean {
-  // 1. 获取该节点之前的所有注释范围
-  const ranges = node.getLeadingCommentRanges();
+  let targetNode = node;
 
-  // 2. 遍历所有注释块
+  // 关键：对于 export const x = ...，注释在 Statement 上，不在 Declaration 上
+  if (Node.isVariableDeclaration(node)) {
+    const stmt = node.getVariableStatement();
+    if (stmt) {
+      targetNode = stmt;
+    }
+  }
+
+  // 🔥 对于 PropertyAssignment，注释可能在 Name 上
+  if (Node.isPropertyAssignment(node)) {
+    const nameNode = node.getNameNode();
+    if (nameNode) {
+      // 检查 Name 节点上的注释
+      const ranges = nameNode.getLeadingCommentRanges();
+      for (const range of ranges) {
+        const text = range.getText();
+        if (text.includes(GEN_TAG)) {
+          return true;
+        }
+      }
+    }
+  }
+
+  // 1. 优先尝试标准 JSDoc 获取
+  // @ts-ignore
+  if (typeof targetNode.getJsDocs === "function") {
+    // @ts-ignore
+    const docs = targetNode.getJsDocs();
+    if (docs.some((d: any) => d.getInnerText().includes(GEN_TAG))) {
+      return true;
+    }
+  }
+
+  // 2. 兜底：检查 LeadingTrivia (前置杂项文本，包含非标准注释)
+  const ranges = targetNode.getLeadingCommentRanges();
   for (const range of ranges) {
-    const text = range.getText();
-    // 3. 只要有一个注释包含 @generated，就认为是自动生成的
-    if (text.includes(GEN_TAG)) {
+    if (range.getText().includes(GEN_TAG)) {
       return true;
     }
   }
@@ -58,8 +99,7 @@ function checkIsGenerated(node: Node): boolean {
 }
 
 /**
- * 🛠️ [修正版] 智能更新对象属性 (用于 Contract)
- * 使用 getLeadingCommentRanges() 来精准获取注释
+ * 🛠️ 智能更新对象属性
  */
 export function upsertObjectProperty(
   objLiteral: ObjectLiteralExpression,
@@ -73,8 +113,7 @@ export function upsertObjectProperty(
     objLiteral.addPropertyAssignment({
       name: key,
       initializer: value,
-      // 使用 writer 写入带有换行的注释
-      leadingTrivia: (writer) => writer.writeLine(DOC_BLOCK),
+      leadingTrivia: (w) => w.writeLine(DOC_BLOCK),
     });
     console.log(`     ➕ Property: ${key}`);
     return;
@@ -82,14 +121,12 @@ export function upsertObjectProperty(
 
   // 2. 检查标记
   if (prop.isKind(SyntaxKind.PropertyAssignment)) {
-    const isGenerated = checkIsGenerated(prop);
+    if (checkIsGenerated(prop)) {
+      // 格式化对比：去除所有空格换行，防止格式化差异导致的误更新
+      const cleanOld = prop.getInitializer()?.getText().replace(/\s+/g, "");
+      const cleanNew = value.replace(/\s+/g, "");
 
-    if (isGenerated) {
-      // 对比 initializer 文本（忽略空格差异）
-      const currentText = prop.getInitializer()?.getText().replace(/\s+/g, '');
-      const newText = value.replace(/\s+/g, '');
-
-      if (currentText !== newText) {
+      if (cleanOld !== cleanNew) {
         prop.setInitializer(value);
         console.log(`     🔄 Updated: ${key}`);
       }
@@ -100,7 +137,7 @@ export function upsertObjectProperty(
 }
 
 /**
- * 🛠️ [修正版] 智能更新类方法 (用于 Service/Controller)
+ * 🛠️ 智能更新类方法
  */
 export function upsertMethod(
   classDec: ClassDeclaration,
@@ -111,28 +148,24 @@ export function upsertMethod(
 ) {
   const method = classDec.getMethod(name);
 
-  // 1. 新增
   if (!method) {
-    classDec.addMethod({
+    const m = classDec.addMethod({
       name,
       parameters: params,
       returnType,
       isAsync: true,
       scope: Scope.Public,
       statements: body,
-      leadingTrivia: (w) => w.writeLine(DOC_BLOCK),
     });
+    // addJsDoc 不需要 /** */ 包裹
+    m.addJsDoc(DOC_BLOCK.replace("/**", "").replace("*/", "").trim());
     console.log(`     ➕ Method: ${name}`);
     return;
   }
 
-  // 2. 检查标记
-  // ClassMethod 支持直接 getJsDocs()，但为了统一逻辑，也使用通用检查
-  const isGenerated = checkIsGenerated(method) || method.getJsDocs().some(d => d.getInnerText().includes(GEN_TAG));
-
-  if (isGenerated) {
+  if (checkIsGenerated(method)) {
     method.setBodyText(body);
-    // 更新参数类型以防 Schema 变更
+    // 更新参数
     method.getParameters().forEach((p) => p.remove());
     params.forEach((p) => method.addParameter(p));
     if (returnType) method.setReturnType(returnType);
@@ -159,7 +192,7 @@ export function getLeadingJSDocText(node: Node): string {
   const ranges = targetNode.getLeadingCommentRanges();
 
   // 从后往前找，找到最后一个 JSDoc 块（/** ... */）
-  for (let i = ranges.length - 1; i >= 0; i--) {
+  for (let i = ranges.length - 1;i >= 0;i--) {
     const range = ranges[i];
     const text = range.getText();
 

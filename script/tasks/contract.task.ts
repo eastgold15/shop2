@@ -6,11 +6,21 @@ export const ContractTask: Task = {
   name: "Generating Contract",
   run(project: Project, ctx: GenContext) {
     if (!ctx.config.stages.has("contract")) return;
-    // 🔥 直接使用计算好的路径，如果文件已存在则加载，否则创建
-    let file = project.getSourceFile(ctx.paths.contract);
-    if (!file) {
+
+    // 🔥 先从 project 中移除旧文件（如果存在），确保重新加载最新内容
+    const existingFile = project.getSourceFile(ctx.paths.contract);
+    if (existingFile) {
+      existingFile.forget();
+    }
+
+    // 重新加载文件（从磁盘读取最新内容）
+    let file;
+    try {
+      file = project.addSourceFileAtPath(ctx.paths.contract);
+    } catch {
+      // 文件不存在，创建新文件（不覆盖）
       file = project.createSourceFile(ctx.paths.contract, "", {
-        overwrite: true,
+        overwrite: false,
       });
     }
 

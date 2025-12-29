@@ -1,6 +1,6 @@
 import * as path from "node:path";
 import { type Project, VariableDeclarationKind } from "ts-morph";
-import { ensureImport } from "../core/ast-utils";
+import { ensureImport, normalizePath } from "../core/ast-utils";
 import type { GenContext, Task } from "../core/types";
 
 const GEN_HEADER = `/**
@@ -11,61 +11,59 @@ const GEN_HEADER = `/**
  * --------------------------------------------------------
  */`;
 
+const GEN_TAG = "@generated";
+
 export const ControllerTask: Task = {
   name: "Generating Controller",
   run(project: Project, ctx: GenContext) {
     if (!ctx.config.stages.has("controller")) return;
 
-    // 依赖检查：必须有 Service 和 Contract 才能生成 Controller
     if (!(ctx.artifacts.serviceName && ctx.artifacts.contractName)) {
-      console.warn("     ⚠️ Missing Service/Contract, skipping Controller.");
       return;
     }
 
-    // 1. 获取或创建源文件
-    let file = project.getSourceFile(ctx.paths.controller);
-    if (!file) {
+    // 🔥 先从 project 中移除旧文件（如果存在），确保重新加载最新内容
+    const existingFile = project.getSourceFile(ctx.paths.controller);
+    if (existingFile) {
+      existingFile.forget();
+    }
+
+    // 重新加载文件（从磁盘读取最新内容）
+    let file;
+    try {
+      file = project.addSourceFileAtPath(ctx.paths.controller);
+    } catch {
+      // 文件不存在，创建新文件（不覆盖）
       file = project.createSourceFile(ctx.paths.controller, "", {
-        overwrite: true,
+        overwrite: false,
       });
     }
 
-    // 2. 注入 Header (如果文件是空的或已生成)
-    if (file.getText().length === 0 || file.getText().includes("🤖")) {
-      // 简单的去重处理，避免重复添加 header
-      const currentText = file.getText();
-      if (!currentText.startsWith("/**")) {
-        file.insertText(0, `${GEN_HEADER}\n\n`);
-      }
+    // 1. Header 注入
+    if (file.getText().trim().length === 0) {
+      file.insertText(0, `${GEN_HEADER}\n\n`);
     }
 
-    // 3. 计算相对路径 (用于 import)
-    // 目标: 从 controller 文件位置 -> 指向 contract/service 文件位置
+    // 2. 路径计算 (修复 Windows 反斜杠)
     const dir = path.dirname(ctx.paths.controller);
-
     const getRelativeImport = (targetPath: string) => {
       let rel = path.relative(dir, targetPath).replace(/\.ts$/, "");
       if (!rel.startsWith(".")) rel = `./${rel}`;
-      // 🔥 Windows 路径转正斜杠
-      return rel.replace(/\\/g, "/");
+      return normalizePath(rel); // 🔥 关键修复
     };
 
-    const contractImportPath = getRelativeImport(ctx.paths.contract);
-    const serviceImportPath = getRelativeImport(ctx.paths.service);
+    const contractPath = getRelativeImport(ctx.paths.contract);
+    const servicePath = getRelativeImport(ctx.paths.service);
 
-    // 4. 管理 Imports
+    // 3. Imports
     ensureImport(file, "elysia", ["Elysia", "t"]);
-    ensureImport(file, "~/db/connection", ["dbPlugin"]); // 根据你实际项目调整
-    ensureImport(file, "~/middleware/auth", ["authGuardMid"]); // 根据你实际项目调整
+    ensureImport(file, "~/db/connection", ["dbPlugin"]);
+    ensureImport(file, "~/middleware/auth", ["authGuardMid"]);
+    ensureImport(file, contractPath, [ctx.artifacts.contractName]);
+    ensureImport(file, servicePath, [ctx.artifacts.serviceName]);
 
-    // 引用 Contract
-    ensureImport(file, contractImportPath, [ctx.artifacts.contractName]);
-    // 引用 Service Class
-    ensureImport(file, serviceImportPath, [ctx.artifacts.serviceName]);
-
-    // 5. 实例化 Service
-    // 生成代码: const service = new TenantService();
-    const serviceInstanceName = "service";
+    // 4. 实例化 Service (单例模式)
+    const serviceInstanceName = `${ctx.tableName}Service`; // e.g. dailyInquiryCounterService
     const serviceClassName = ctx.artifacts.serviceName;
 
     const serviceVar = file.getVariableDeclaration(serviceInstanceName);
@@ -81,15 +79,12 @@ export const ControllerTask: Task = {
       });
     }
 
-    // 6. 生成 Controller
-    // 变量名: tenantController
+    // 5. Controller 定义
     const controllerName = `${ctx.tableName}Controller`;
     const contract = ctx.artifacts.contractName;
     const prefix = `/${ctx.tableName.toLowerCase()}`;
 
-    // 构造完整的 Elysia 链式调用代码
-    // 这里我们采用"全量覆盖 Variable Initializer"的策略，
-    // 因为 Elysia 的链式调用是一个整体表达式，拆解 AST 更新非常复杂且不稳定。
+    // 构造代码
     const controllerCode = `new Elysia({ prefix: "${prefix}" })
   .use(dbPlugin)
   .use(authGuardMid)
@@ -100,17 +95,19 @@ export const ControllerTask: Task = {
 
     const controllerVar = file.getVariableDeclaration(controllerName);
 
-    // A. 新增 Controller
     if (controllerVar) {
+      // 存在：检查是否自动生成
       const stmt = controllerVar.getVariableStatement();
       const docs = stmt?.getJsDocs() || [];
-      const isGenerated = docs.some((d) =>
-        d.getInnerText().includes("@generated")
-      );
+      // 使用 some 检查，兼容性更好
+      const isGenerated = docs.some(d => d.getInnerText().includes(GEN_TAG));
 
       if (isGenerated) {
-        // 对比代码是否变化，避免无效写入
-        if (controllerVar.getInitializer()?.getText() !== controllerCode) {
+        // 去空格对比，避免格式化导致的无限更新
+        const oldCode = controllerVar.getInitializer()?.getText().replace(/\s/g, "");
+        const newCode = controllerCode.replace(/\s/g, "");
+
+        if (oldCode !== newCode) {
           controllerVar.setInitializer(controllerCode);
           console.log(`     🔄 Updated: ${controllerName}`);
         }
@@ -118,6 +115,7 @@ export const ControllerTask: Task = {
         console.log(`     🛡️ Skipped (Custom): ${controllerName}`);
       }
     } else {
+      // 不存在：新建
       const stmt = file.addVariableStatement({
         declarationKind: VariableDeclarationKind.Const,
         isExported: true,
@@ -128,12 +126,9 @@ export const ControllerTask: Task = {
           },
         ],
       });
-      // 添加标记
-      stmt.addJsDoc("@generated");
+      // 🔥 关键：在 Statement 层面添加 JSDoc，而不是 Declaration
+      stmt.addJsDoc({ description: `\n${GEN_TAG}` });
       console.log(`     ➕ Controller: ${controllerName}`);
     }
-
-    // 更新 Context，如果有下游依赖
-    // ctx.artifacts.controllerName = controllerName;
   },
 };
