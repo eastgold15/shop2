@@ -1,6 +1,6 @@
 import * as path from "node:path";
 import type { Project } from "ts-morph";
-import { ensureImport, upsertMethod, normalizePath } from "../core/ast-utils";
+import { ensureImport, normalizePath, upsertMethod } from "../core/ast-utils";
 import type { GenContext, Task } from "../core/types";
 
 export const ServiceTask: Task = {

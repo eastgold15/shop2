@@ -7,7 +7,6 @@
  */
 
 import {
-  TemplateTable,
   mediasTable,
   productMasterCategoryTable,
   productMediaTable,
@@ -17,6 +16,7 @@ import {
   siteProductTable,
   skuMediaTable,
   skuTable,
+  TemplateTable,
 } from "@repo/contract";
 import { and, asc, eq, inArray, like, or, sql } from "drizzle-orm";
 import { HttpError } from "elysia-http-problem-json";
@@ -228,10 +228,7 @@ export class ProductsService extends ProductsGeneratedService {
         siteCategoryId: siteProductTable.siteCategoryId,
       })
       .from(siteProductTable)
-      .innerJoin(
-        productTable,
-        eq(siteProductTable.productId, productTable.id)
-      )
+      .innerJoin(productTable, eq(siteProductTable.productId, productTable.id))
       .limit(Number(limit))
       .offset((page - 1) * limit)
       .where(and(...conditions));
@@ -346,17 +343,17 @@ export class ProductsService extends ProductsGeneratedService {
       const skuImages =
         skuIds.length > 0
           ? await ctx.db
-            .select({
-              skuId: skuMediaTable.skuId,
-              id: mediasTable.id,
-              url: mediasTable.url,
-              isMain: skuMediaTable.isMain,
-              sortOrder: skuMediaTable.sortOrder,
-            })
-            .from(skuMediaTable)
-            .innerJoin(mediasTable, eq(skuMediaTable.mediaId, mediasTable.id))
-            .where(inArray(skuMediaTable.skuId, skuIds))
-            .orderBy(asc(skuMediaTable.sortOrder))
+              .select({
+                skuId: skuMediaTable.skuId,
+                id: mediasTable.id,
+                url: mediasTable.url,
+                isMain: skuMediaTable.isMain,
+                sortOrder: skuMediaTable.sortOrder,
+              })
+              .from(skuMediaTable)
+              .innerJoin(mediasTable, eq(skuMediaTable.mediaId, mediasTable.id))
+              .where(inArray(skuMediaTable.skuId, skuIds))
+              .orderBy(asc(skuMediaTable.sortOrder))
           : [];
 
       // 将图片按 SKU ID 分组
@@ -421,10 +418,7 @@ export class ProductsService extends ProductsGeneratedService {
     const [{ count }] = await ctx.db
       .select({ count: sql<number>`count(*)` })
       .from(siteProductTable)
-      .innerJoin(
-        productTable,
-        eq(siteProductTable.productId, productTable.id)
-      )
+      .innerJoin(productTable, eq(siteProductTable.productId, productTable.id))
       .where(and(...conditions));
     return {
       data: enrichedResult,

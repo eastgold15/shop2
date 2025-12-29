@@ -7,8 +7,8 @@
  */
 import {
   attributeTable,
-  TemplateTable,
   attributeValueTable,
+  TemplateTable,
 } from "@repo/contract";
 import { eq, inArray } from "drizzle-orm";
 import { HttpError } from "elysia-http-problem-json";
@@ -52,9 +52,7 @@ export class AttributeTemplateService extends AttributeTemplateGeneratedService 
       await this.clearTemplateRelations(templateId, tx);
 
       // 再删除模板主体
-      await tx
-        .delete(TemplateTable)
-        .where(eq(TemplateTable.id, templateId));
+      await tx.delete(TemplateTable).where(eq(TemplateTable.id, templateId));
 
       return { success: true };
     });

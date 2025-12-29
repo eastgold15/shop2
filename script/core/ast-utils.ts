@@ -78,9 +78,9 @@ function checkIsGenerated(node: Node): boolean {
   }
 
   // 1. 优先尝试标准 JSDoc 获取
-  // @ts-ignore
+  // @ts-expect-error
   if (typeof targetNode.getJsDocs === "function") {
-    // @ts-ignore
+    // @ts-expect-error
     const docs = targetNode.getJsDocs();
     if (docs.some((d: any) => d.getInnerText().includes(GEN_TAG))) {
       return true;
@@ -192,7 +192,7 @@ export function getLeadingJSDocText(node: Node): string {
   const ranges = targetNode.getLeadingCommentRanges();
 
   // 从后往前找，找到最后一个 JSDoc 块（/** ... */）
-  for (let i = ranges.length - 1;i >= 0;i--) {
+  for (let i = ranges.length - 1; i >= 0; i--) {
     const range = ranges[i];
     const text = range.getText();
 

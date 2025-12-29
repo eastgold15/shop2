@@ -2,7 +2,11 @@ import type { Project } from "ts-morph";
 import type { GenContext, Task } from "../core/types";
 
 // 全局收集所有 controller 信息
-const controllers: Array<{ fileName: string; pascalName: string; tableName: string }> = [];
+const controllers: Array<{
+  fileName: string;
+  pascalName: string;
+  tableName: string;
+}> = [];
 
 export const RouterTask: Task = {
   name: "Collecting Controllers",
@@ -21,10 +25,7 @@ export const RouterTask: Task = {
 /**
  * 在所有 controller 生成完成后调用，生成 app-router.ts
  */
-export function generateRouterFile(
-  project: Project,
-  routerFilePath: string
-) {
+export function generateRouterFile(project: Project, routerFilePath: string) {
   let routerFile = project.getSourceFile(routerFilePath);
   if (!routerFile) {
     routerFile = project.createSourceFile(routerFilePath, "", {
@@ -48,9 +49,7 @@ export function generateRouterFile(
     const pascalName = ctrl.pascalName;
     const controllerName = `${ctrl.tableName}Controller`; // 变量名如 tenantController
 
-    importStatements.push(
-      `import { ${controllerName} } from "./${fileName}";`
-    );
+    importStatements.push(`import { ${controllerName} } from "./${fileName}";`);
     useStatements.push(`    .use(${controllerName})`);
   }
 

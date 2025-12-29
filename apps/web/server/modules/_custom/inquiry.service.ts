@@ -373,10 +373,10 @@ export class InquiryService extends InquiryGeneratedService {
       clientEmail: inquiry.customerEmail,
       photoForRefer: photo
         ? {
-          buffer: photo.buffer,
-          mimeType: photo.mimeType,
-          name: `prod-${inquiry.id}`,
-        }
+            buffer: photo.buffer,
+            mimeType: photo.mimeType,
+            name: `prod-${inquiry.id}`,
+          }
         : null,
       timeNo, // 👈 现在这里正确使用了业务单号
       termsCode1: item.id,

@@ -135,7 +135,7 @@ export class SkusService extends SkusGeneratedService {
         .returning();
 
       // 批量创建SKU和媒体的关联
-      for (let i = 0;i < skus.length;i++) {
+      for (let i = 0; i < skus.length; i++) {
         const sku = skus[i];
         const createdSku = createdSkus[i];
 
@@ -262,10 +262,7 @@ export class SkusService extends SkusGeneratedService {
           costPrice: updateData.costPrice?.toString(),
         };
 
-        await tx
-          .update(skuTable)
-          .set(formattedData)
-          .where(eq(skuTable.id, id));
+        await tx.update(skuTable).set(formattedData).where(eq(skuTable.id, id));
       }
 
       // 3. 处理媒体关联更新 (如果传了 mediaIds)
@@ -439,16 +436,16 @@ export class SkusService extends SkusGeneratedService {
     const images =
       skuIds.length > 0
         ? await db
-          .select({
-            skuId: skuMediaTable.skuId,
-            mediaId: mediasTable.id,
-            url: mediasTable.url,
-            isMain: skuMediaTable.isMain,
-          })
-          .from(skuMediaTable)
-          .innerJoin(mediasTable, eq(skuMediaTable.mediaId, mediasTable.id))
-          .where(inArray(skuMediaTable.skuId, skuIds))
-          .orderBy(skuMediaTable.sortOrder)
+            .select({
+              skuId: skuMediaTable.skuId,
+              mediaId: mediasTable.id,
+              url: mediasTable.url,
+              isMain: skuMediaTable.isMain,
+            })
+            .from(skuMediaTable)
+            .innerJoin(mediasTable, eq(skuMediaTable.mediaId, mediasTable.id))
+            .where(inArray(skuMediaTable.skuId, skuIds))
+            .orderBy(skuMediaTable.sortOrder)
         : [];
 
     // 图片按 SKU 分组 Map
@@ -532,9 +529,9 @@ export class SkusService extends SkusGeneratedService {
       ...sku,
       product: product
         ? {
-          id: sku.productId,
-          name: product.name,
-        }
+            id: sku.productId,
+            name: product.name,
+          }
         : null,
       values: [], // 暂时返回空数组
       images: images.filter((img: any) => img.url), // 过滤掉没有URL的图片
@@ -574,19 +571,19 @@ export class SkusService extends SkusGeneratedService {
     const images =
       skuIds.length > 0
         ? await db
-          .select({
-            skuId: skuMediaTable.skuId,
-            id: mediasTable.id,
-            url: mediasTable.url,
-            storageKey: mediasTable.storageKey,
-            category: mediasTable.category,
-            isMain: skuMediaTable.isMain,
-            sortOrder: skuMediaTable.sortOrder,
-          })
-          .from(skuMediaTable)
-          .leftJoin(mediasTable, eq(skuMediaTable.mediaId, mediasTable.id))
-          .where(inArray(skuMediaTable.skuId, skuIds))
-          .orderBy(skuMediaTable.sortOrder)
+            .select({
+              skuId: skuMediaTable.skuId,
+              id: mediasTable.id,
+              url: mediasTable.url,
+              storageKey: mediasTable.storageKey,
+              category: mediasTable.category,
+              isMain: skuMediaTable.isMain,
+              sortOrder: skuMediaTable.sortOrder,
+            })
+            .from(skuMediaTable)
+            .leftJoin(mediasTable, eq(skuMediaTable.mediaId, mediasTable.id))
+            .where(inArray(skuMediaTable.skuId, skuIds))
+            .orderBy(skuMediaTable.sortOrder)
         : [];
 
     // 将图片按 SKU ID 分组

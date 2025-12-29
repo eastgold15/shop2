@@ -24,10 +24,6 @@ export const ContractTask: Task = {
       });
     }
 
-    const fileName = `${ctx.tableName}.contract.ts`;
-
-    // const file = project.createSourceFile(filePath, "", { overwrite: true });
-
     // 1. Imports
     ensureImport(file, "elysia", ["t"]);
     ensureImport(file, "../helper/utils", ["spread", "type InferDTO"]);

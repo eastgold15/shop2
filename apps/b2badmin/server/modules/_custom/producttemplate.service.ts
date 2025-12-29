@@ -7,8 +7,8 @@
  */
 import {
   attributeTable,
-  TemplateTable,
   attributeValueTable,
+  TemplateTable,
 } from "@repo/contract";
 import { asc, eq, inArray, like } from "drizzle-orm";
 import { ProductTemplateGeneratedService } from "../_generated/producttemplate.service";
@@ -23,13 +23,8 @@ export class ProductTemplateService extends ProductTemplateGeneratedService {
     const rows = await ctx.db
       .select()
       .from(TemplateTable)
-      .leftJoin(
-        attributeTable,
-        eq(TemplateTable.id, attributeTable.templateId)
-      )
-      .where(
-        search ? like(TemplateTable.name, `%${search}%`) : undefined
-      );
+      .leftJoin(attributeTable, eq(TemplateTable.id, attributeTable.templateId))
+      .where(search ? like(TemplateTable.name, `%${search}%`) : undefined);
 
     const templateMap = new Map();
 

@@ -100,11 +100,14 @@ export const ControllerTask: Task = {
       const stmt = controllerVar.getVariableStatement();
       const docs = stmt?.getJsDocs() || [];
       // 使用 some 检查，兼容性更好
-      const isGenerated = docs.some(d => d.getInnerText().includes(GEN_TAG));
+      const isGenerated = docs.some((d) => d.getInnerText().includes(GEN_TAG));
 
       if (isGenerated) {
         // 去空格对比，避免格式化导致的无限更新
-        const oldCode = controllerVar.getInitializer()?.getText().replace(/\s/g, "");
+        const oldCode = controllerVar
+          .getInitializer()
+          ?.getText()
+          .replace(/\s/g, "");
         const newCode = controllerCode.replace(/\s/g, "");
 
         if (oldCode !== newCode) {
