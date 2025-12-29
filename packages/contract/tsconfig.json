@@ -5,8 +5,12 @@
     "declarationMap": true,
     "sourceMap": true,
     "paths": {
-      "~/*": ["./src/*"],
-      "*": ["./*"]
+      "~/*": [
+        "./src/*"
+      ],
+      "*": [
+        "./*"
+      ]
     },
     "strictNullChecks": true,
     "incremental": true,
@@ -20,6 +24,11 @@
     // 确保生成文件
     "noEmitOnError": false
   },
-  "include": ["src/**/*"],
-  "exclude": ["dist", "node_modules"]
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "dist",
+    "node_modules"
+  ]
 }

@@ -46,7 +46,8 @@ export const ControllerTask: Task = {
     const getRelativeImport = (targetPath: string) => {
       let rel = path.relative(dir, targetPath).replace(/\.ts$/, "");
       if (!rel.startsWith(".")) rel = `./${rel}`;
-      return rel;
+      // 🔥 Windows 路径转正斜杠
+      return rel.replace(/\\/g, "/");
     };
 
     const contractImportPath = getRelativeImport(ctx.paths.contract);

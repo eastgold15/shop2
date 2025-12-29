@@ -8,11 +8,6 @@ export const ServiceTask: Task = {
   run(project: Project, ctx: GenContext) {
     if (!ctx.config.stages.has("service")) return;
     if (!ctx.artifacts.contractName) return;
-    // 依赖检查
-    if (!ctx.artifacts.contractName) {
-      console.warn("   ⚠️ Missing Contract, skipping Service.");
-      return;
-    }
 
     let file = project.getSourceFile(ctx.paths.service);
     if (!file) {
@@ -39,7 +34,7 @@ export const ServiceTask: Task = {
     // 🔥 @repo/contract 路径的导入聚合（table.schema 是普通导入，Contract 是 type 导入）
     ensureImport(file, "@repo/contract", [ctx.schemaKey]);
     ensureImport(file, "@repo/contract", [ctx.artifacts.contractName], true);
-    ensureImport(file, "./_lib/type", ["ServiceContext"], true);
+    ensureImport(file, "../lib/type", ["ServiceContext"], true);
 
     // 2. Class 定义
     const className = `${ctx.pascalName}Service`;

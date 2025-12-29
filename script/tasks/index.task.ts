@@ -9,13 +9,11 @@ export const IndexTask: Task = {
   run(project: Project, ctx: GenContext) {
     if (!ctx.config.stages.has("contract")) return;
 
-    // 收集契约信息
+    // 收集契约信息（不修改 ctx.artifacts）
     contracts.push({
       fileName: `${ctx.tableName}.contract`,
       pascalName: ctx.pascalName,
     });
-
-    ctx.artifacts.contractName = `${ctx.pascalName}Contract`;
   },
 };
 
@@ -34,31 +32,17 @@ export function generateIndexFile(project: Project, indexFilePath: string) {
   const statements = [...indexFile.getStatements()];
   statements.forEach((stmt) => stmt.remove());
 
-  // 生成导入和导出语句
-  const importStatements: string[] = [];
-  const exportContracts: string[] = [];
-  const exportTypes: string[] = [];
+  // 生成 export * 语句
+  const exportStatements: string[] = [];
 
   for (const contract of contracts) {
     const fileName = contract.fileName;
-    const pascalName = contract.pascalName;
-    const contractName = `${pascalName}Contract`;
-
-    importStatements.push(`export { ${contractName} } from "./${fileName}";`);
-    exportContracts.push(`  ${contractName},`);
-    exportTypes.push(`  export type { ${contractName} } from "./${fileName}";`);
+    exportStatements.push(`export * from "./${fileName}";`);
   }
 
   // 生成文件内容
   const content = `// Auto-generated index file for all contracts
-${importStatements.join("\n")}
-
-// 统一导出所有契约对象
-export const contracts = {
-${exportContracts.join("\n")}};
-
-// 统一导出所有契约类型
-${exportTypes.join("\n")}
+${exportStatements.join("\n")}
 `;
 
   indexFile.replaceWithText(content);

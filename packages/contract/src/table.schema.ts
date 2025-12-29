@@ -239,7 +239,9 @@ export const accountTable = p.pgTable("sys_account", {
   scope: p.text("scope"),
   password: p.text("password"),
 });
-
+/**
+ * @onlyGen contract
+ */
 export const sessionTable = p.pgTable("sys_session", {
   ...Audit,
   expiresAt: p.timestamp("expires_at").notNull(),
@@ -249,14 +251,18 @@ export const sessionTable = p.pgTable("sys_session", {
     .notNull()
     .references(() => userTable.id, { onDelete: "cascade" }),
 });
-
+/**
+ * @onlyGen contract
+ */
 export const verificationTable = p.pgTable("sys_verification", {
   ...Audit,
   identifier: p.text("identifier").notNull(),
   value: p.text("value").notNull(),
   expiresAt: p.timestamp("expires_at").notNull(),
 });
-
+/**
+ * @onlyGen contract
+ */
 export const permissionTable = p.pgTable("sys_permission", {
   ...Audit,
   name: p.text("name").notNull(),
