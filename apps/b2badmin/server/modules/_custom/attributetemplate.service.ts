@@ -7,7 +7,7 @@
  */
 import {
   attributeTable,
-  attributeTemplateTable,
+  TemplateTable,
   attributeValueTable,
 } from "@repo/contract";
 import { eq, inArray } from "drizzle-orm";
@@ -53,8 +53,8 @@ export class AttributeTemplateService extends AttributeTemplateGeneratedService 
 
       // 再删除模板主体
       await tx
-        .delete(attributeTemplateTable)
-        .where(eq(attributeTemplateTable.id, templateId));
+        .delete(TemplateTable)
+        .where(eq(TemplateTable.id, templateId));
 
       return { success: true };
     });
@@ -69,7 +69,7 @@ export class AttributeTemplateService extends AttributeTemplateGeneratedService 
     return await ctx.db.transaction(async (tx) => {
       // a. 更新基础信息
       await tx
-        .update(attributeTemplateTable)
+        .update(TemplateTable)
         .set({
           name,
           masterCategoryId,
@@ -77,7 +77,7 @@ export class AttributeTemplateService extends AttributeTemplateGeneratedService 
           siteCategoryId:
             siteCategoryId && siteCategoryId !== "root" ? siteCategoryId : null,
         })
-        .where(eq(attributeTemplateTable.id, templateId));
+        .where(eq(TemplateTable.id, templateId));
 
       // b. 清理旧的关联数据 (复用抽离的方法)
       await this.clearTemplateRelations(templateId, tx);
@@ -151,7 +151,7 @@ export class AttributeTemplateService extends AttributeTemplateGeneratedService 
     return await ctx.db.transaction(async (tx) => {
       // 1. 创建属性模板
       const [templateRes] = await tx
-        .insert(attributeTemplateTable)
+        .insert(TemplateTable)
         .values({
           masterCategoryId,
           // 将 "root" 或空值转为 null
@@ -160,10 +160,10 @@ export class AttributeTemplateService extends AttributeTemplateGeneratedService 
           name,
         })
         .returning({
-          id: attributeTemplateTable.id,
-          name: attributeTemplateTable.name,
-          masterCategoryId: attributeTemplateTable.masterCategoryId,
-          siteCategoryId: attributeTemplateTable.siteCategoryId,
+          id: TemplateTable.id,
+          name: TemplateTable.name,
+          masterCategoryId: TemplateTable.masterCategoryId,
+          siteCategoryId: TemplateTable.siteCategoryId,
         });
 
       if (!templateRes) {

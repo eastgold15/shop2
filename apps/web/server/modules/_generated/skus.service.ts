@@ -5,9 +5,9 @@
  * 💡 请前往 ../_custom 目录修改具体的业务契约。
  * --------------------------------------------------------
  */
-import { skusTable, SkusContract } from "@repo/contract";
+import { skuTable, SkusContract } from "@repo/contract";
 import { WEBBaseService } from "../_lib/base-service";
 
-export class SkusGeneratedService extends WEBBaseService<typeof skusTable, typeof SkusContract> {
-  constructor() { super(skusTable, SkusContract); }
+export class SkusGeneratedService extends WEBBaseService<typeof skuTable, typeof SkusContract> {
+  constructor() { super(skuTable, SkusContract); }
 }

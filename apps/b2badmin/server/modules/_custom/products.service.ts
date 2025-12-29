@@ -7,16 +7,16 @@
  */
 
 import {
-  attributeTemplateTable,
-  mediaTable,
-  productMasterCategoriesTable,
+  TemplateTable,
+  mediasTable,
+  productMasterCategoryTable,
   productMediaTable,
-  productsTable,
+  productTable,
   productTemplateTable,
   siteCategoriesTable,
-  siteProductsTable,
+  siteProductTable,
   skuMediaTable,
-  skusTable,
+  skuTable,
 } from "@repo/contract";
 import { and, asc, eq, inArray, like, or, sql } from "drizzle-orm";
 import { HttpError } from "elysia-http-problem-json";
@@ -69,8 +69,8 @@ export class ProductsService extends ProductsGeneratedService {
       if (templateId) {
         const [template] = await tx
           .select()
-          .from(attributeTemplateTable)
-          .where(eq(attributeTemplateTable.id, templateId))
+          .from(TemplateTable)
+          .where(eq(TemplateTable.id, templateId))
           .limit(1);
 
         if (!template) {
@@ -88,7 +88,7 @@ export class ProductsService extends ProductsGeneratedService {
 
       // 3. 创建商品（全局商品）
       const [product] = await tx
-        .insert(productsTable)
+        .insert(productTable)
         .values({
           name,
           spuCode,
@@ -109,7 +109,7 @@ export class ProductsService extends ProductsGeneratedService {
 
       // 5. 关联主分类（如果站点分类关联了主分类）
       if (siteCategory.masterCategoryId) {
-        await tx.insert(productMasterCategoriesTable).values({
+        await tx.insert(productMasterCategoryTable).values({
           productId: product.id,
           masterCategoryId: siteCategory.masterCategoryId,
         });
@@ -122,8 +122,8 @@ export class ProductsService extends ProductsGeneratedService {
         // 验证媒体是否存在
         const existingMedia = await tx
           .select()
-          .from(mediaTable)
-          .where(inArray(mediaTable.id, allMediaIds));
+          .from(mediasTable)
+          .where(inArray(mediasTable.id, allMediaIds));
 
         const foundIds = existingMedia.map((m) => m.id);
         const notFound = allMediaIds.filter((id) => !foundIds.includes(id));
@@ -166,7 +166,7 @@ export class ProductsService extends ProductsGeneratedService {
 
       // 7. 创建站点商品关联
       const [siteProduct] = await tx
-        .insert(siteProductsTable)
+        .insert(siteProductTable)
         .values({
           siteId: ctx.auth.siteId,
           productId: product.id,
@@ -194,43 +194,43 @@ export class ProductsService extends ProductsGeneratedService {
 
     // 构建查询条件
     const conditions = [
-      eq(siteProductsTable.siteId, ctx.auth.siteId),
-      eq(siteProductsTable.isVisible, true),
+      eq(siteProductTable.siteId, ctx.auth.siteId),
+      eq(siteProductTable.isVisible, true),
     ];
 
     if (search) {
       conditions.push(
         or(
-          like(productsTable.name, `%${search}%`),
-          like(productsTable.spuCode, `%${search}%`)
+          like(productTable.name, `%${search}%`),
+          like(productTable.spuCode, `%${search}%`)
         )!
       );
     }
 
     if (categoryId) {
-      conditions.push(eq(siteProductsTable.siteCategoryId, categoryId));
+      conditions.push(eq(siteProductTable.siteCategoryId, categoryId));
     }
 
     // 查询商品数据
     const result = await ctx.db
       .select({
-        id: productsTable.id,
-        name: productsTable.name,
-        spuCode: productsTable.spuCode,
-        description: productsTable.description,
-        status: productsTable.status,
-        units: productsTable.units,
-        createdAt: productsTable.createdAt,
-        updatedAt: productsTable.updatedAt,
-        sitePrice: siteProductsTable.sitePrice,
-        siteName: siteProductsTable.siteName,
-        siteDescription: siteProductsTable.siteDescription,
-        siteCategoryId: siteProductsTable.siteCategoryId,
+        id: productTable.id,
+        name: productTable.name,
+        spuCode: productTable.spuCode,
+        description: productTable.description,
+        status: productTable.status,
+        units: productTable.units,
+        createdAt: productTable.createdAt,
+        updatedAt: productTable.updatedAt,
+        sitePrice: siteProductTable.sitePrice,
+        siteName: siteProductTable.siteName,
+        siteDescription: siteProductTable.siteDescription,
+        siteCategoryId: siteProductTable.siteCategoryId,
       })
-      .from(siteProductsTable)
+      .from(siteProductTable)
       .innerJoin(
-        productsTable,
-        eq(siteProductsTable.productId, productsTable.id)
+        productTable,
+        eq(siteProductTable.productId, productTable.id)
       )
       .limit(Number(limit))
       .offset((page - 1) * limit)
@@ -252,14 +252,14 @@ export class ProductsService extends ProductsGeneratedService {
           isMain: productMediaTable.isMain,
           sortOrder: productMediaTable.sortOrder,
           // 媒体信息
-          mediaUrl: mediaTable.url,
-          mediaOriginalName: mediaTable.originalName,
-          mediaMimeType: mediaTable.mimeType,
-          mediaType: mediaTable.mediaType,
-          thumbnailUrl: mediaTable.thumbnailUrl,
+          mediaUrl: mediasTable.url,
+          mediaOriginalName: mediasTable.originalName,
+          mediaMimeType: mediasTable.mimeType,
+          mediaType: mediasTable.mediaType,
+          thumbnailUrl: mediasTable.thumbnailUrl,
         })
         .from(productMediaTable)
-        .innerJoin(mediaTable, eq(productMediaTable.mediaId, mediaTable.id))
+        .innerJoin(mediasTable, eq(productMediaTable.mediaId, mediasTable.id))
         .where(inArray(productMediaTable.productId, productIds))
         .orderBy(asc(productMediaTable.sortOrder));
 
@@ -328,35 +328,35 @@ export class ProductsService extends ProductsGeneratedService {
       // 查询 SKU
       const skus = await ctx.db
         .select({
-          id: skusTable.id,
-          productId: skusTable.productId,
-          skuCode: skusTable.skuCode,
-          price: skusTable.price,
-          marketPrice: skusTable.marketPrice,
-          costPrice: skusTable.costPrice,
-          stock: skusTable.stock,
-          specJson: skusTable.specJson,
-          status: skusTable.status,
+          id: skuTable.id,
+          productId: skuTable.productId,
+          skuCode: skuTable.skuCode,
+          price: skuTable.price,
+          marketPrice: skuTable.marketPrice,
+          costPrice: skuTable.costPrice,
+          stock: skuTable.stock,
+          specJson: skuTable.specJson,
+          status: skuTable.status,
         })
-        .from(skusTable)
-        .where(inArray(skusTable.productId, productIds));
+        .from(skuTable)
+        .where(inArray(skuTable.productId, productIds));
 
       // 查询 SKU 图片
       const skuIds = skus.map((s) => s.id);
       const skuImages =
         skuIds.length > 0
           ? await ctx.db
-              .select({
-                skuId: skuMediaTable.skuId,
-                id: mediaTable.id,
-                url: mediaTable.url,
-                isMain: skuMediaTable.isMain,
-                sortOrder: skuMediaTable.sortOrder,
-              })
-              .from(skuMediaTable)
-              .innerJoin(mediaTable, eq(skuMediaTable.mediaId, mediaTable.id))
-              .where(inArray(skuMediaTable.skuId, skuIds))
-              .orderBy(asc(skuMediaTable.sortOrder))
+            .select({
+              skuId: skuMediaTable.skuId,
+              id: mediasTable.id,
+              url: mediasTable.url,
+              isMain: skuMediaTable.isMain,
+              sortOrder: skuMediaTable.sortOrder,
+            })
+            .from(skuMediaTable)
+            .innerJoin(mediasTable, eq(skuMediaTable.mediaId, mediasTable.id))
+            .where(inArray(skuMediaTable.skuId, skuIds))
+            .orderBy(asc(skuMediaTable.sortOrder))
           : [];
 
       // 将图片按 SKU ID 分组
@@ -420,10 +420,10 @@ export class ProductsService extends ProductsGeneratedService {
     // 替换 getSiteProducts 最后的总数计算部分
     const [{ count }] = await ctx.db
       .select({ count: sql<number>`count(*)` })
-      .from(siteProductsTable)
+      .from(siteProductTable)
       .innerJoin(
-        productsTable,
-        eq(siteProductsTable.productId, productsTable.id)
+        productTable,
+        eq(siteProductTable.productId, productTable.id)
       )
       .where(and(...conditions));
     return {
@@ -465,11 +465,11 @@ export class ProductsService extends ProductsGeneratedService {
       // --- 阶段 A: 权限与存在性验证 ---
       const [siteProduct] = await tx
         .select()
-        .from(siteProductsTable)
+        .from(siteProductTable)
         .where(
           and(
-            eq(siteProductsTable.productId, productId),
-            eq(siteProductsTable.siteId, ctx.auth.siteId)
+            eq(siteProductTable.productId, productId),
+            eq(siteProductTable.siteId, ctx.auth.siteId)
           )
         )
         .limit(1);
@@ -488,9 +488,9 @@ export class ProductsService extends ProductsGeneratedService {
 
       if (Object.keys(productUpdate).length > 0) {
         await tx
-          .update(productsTable)
+          .update(productTable)
           .set(productUpdate)
-          .where(eq(productsTable.id, productId));
+          .where(eq(productTable.id, productId));
       }
 
       // --- 阶段 C: 更新站点商品表与分类联动 ---
@@ -503,12 +503,12 @@ export class ProductsService extends ProductsGeneratedService {
       };
 
       await tx
-        .update(siteProductsTable)
+        .update(siteProductTable)
         .set(siteUpdate)
         .where(
           and(
-            eq(siteProductsTable.productId, productId),
-            eq(siteProductsTable.siteId, ctx.auth.siteId)
+            eq(siteProductTable.productId, productId),
+            eq(siteProductTable.siteId, ctx.auth.siteId)
           )
         );
 
@@ -521,9 +521,9 @@ export class ProductsService extends ProductsGeneratedService {
           .limit(1);
         if (category?.masterCategoryId) {
           await tx
-            .delete(productMasterCategoriesTable)
-            .where(eq(productMasterCategoriesTable.productId, productId));
-          await tx.insert(productMasterCategoriesTable).values({
+            .delete(productMasterCategoryTable)
+            .where(eq(productMasterCategoryTable.productId, productId));
+          await tx.insert(productMasterCategoryTable).values({
             productId,
             masterCategoryId: category.masterCategoryId,
           });
@@ -564,7 +564,7 @@ export class ProductsService extends ProductsGeneratedService {
       // --- 阶段 E: SKU 全量替换 ---
       // 逻辑：先删除该商品下所有旧 SKU，再插入新 SKU。这是保持数据清洁最简单的方式。
       if (skus && Array.isArray(skus)) {
-        await tx.delete(skusTable).where(eq(skusTable.productId, productId));
+        await tx.delete(skuTable).where(eq(skuTable.productId, productId));
         if (skus.length > 0) {
           const skuValues = skus.map((s) => ({
             productId,
@@ -574,7 +574,7 @@ export class ProductsService extends ProductsGeneratedService {
             specJson: s.specJson || {},
             status: s.status ?? 1,
           }));
-          await tx.insert(skusTable).values(skuValues);
+          await tx.insert(skuTable).values(skuValues);
         }
       }
 
@@ -602,11 +602,11 @@ export class ProductsService extends ProductsGeneratedService {
       // 1. 验证商品是否属于当前站点
       const siteProducts = await tx
         .select()
-        .from(siteProductsTable)
+        .from(siteProductTable)
         .where(
           and(
-            inArray(siteProductsTable.productId, ids),
-            eq(siteProductsTable.siteId, ctx.auth.siteId)
+            inArray(siteProductTable.productId, ids),
+            eq(siteProductTable.siteId, ctx.auth.siteId)
           )
         );
 
@@ -616,14 +616,14 @@ export class ProductsService extends ProductsGeneratedService {
 
       // 2. 删除站点商品关联
       await tx
-        .delete(siteProductsTable)
+        .delete(siteProductTable)
         .where(
           and(
-            eq(siteProductsTable.siteId, ctx.auth.siteId),
-            inArray(siteProductsTable.productId, ids)
+            eq(siteProductTable.siteId, ctx.auth.siteId),
+            inArray(siteProductTable.productId, ids)
           )
         );
-      await tx.delete(skusTable).where(inArray(skusTable.productId, ids));
+      await tx.delete(skuTable).where(inArray(skuTable.productId, ids));
 
       // 3. 删除其他关联数据
       await tx
@@ -635,11 +635,11 @@ export class ProductsService extends ProductsGeneratedService {
         .where(inArray(productTemplateTable.productId, ids));
 
       await tx
-        .delete(productMasterCategoriesTable)
-        .where(inArray(productMasterCategoriesTable.productId, ids));
+        .delete(productMasterCategoryTable)
+        .where(inArray(productMasterCategoryTable.productId, ids));
 
       // 4. 删除商品
-      await tx.delete(productsTable).where(inArray(productsTable.id, ids));
+      await tx.delete(productTable).where(inArray(productTable.id, ids));
     });
 
     return { count: ids.length, message: `成功删除 ${ids.length} 个商品` };

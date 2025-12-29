@@ -5,9 +5,9 @@
  * 💡 请前往 ../_custom 目录修改具体的业务契约。
  * --------------------------------------------------------
  */
-import { siteProductsTable, SiteProductsContract } from "@repo/contract";
+import { siteProductTable, SiteProductsContract } from "@repo/contract";
 import { WEBBaseService } from "../_lib/base-service";
 
-export class SiteProductsGeneratedService extends WEBBaseService<typeof siteProductsTable, typeof SiteProductsContract> {
-  constructor() { super(siteProductsTable, SiteProductsContract); }
+export class SiteProductsGeneratedService extends WEBBaseService<typeof siteProductTable, typeof SiteProductsContract> {
+  constructor() { super(siteProductTable, SiteProductsContract); }
 }

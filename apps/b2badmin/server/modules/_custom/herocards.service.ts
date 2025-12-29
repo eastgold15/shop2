@@ -1,4 +1,4 @@
-import { heroCardsTable, mediaTable } from "@repo/contract";
+import { heroCardsTable, mediasTable } from "@repo/contract";
 import {
   and,
   asc,
@@ -36,10 +36,10 @@ export class HeroCardsService extends HeroCardsGeneratedService {
     const baseQuery = ctx.db
       .select({
         ...getColumns(heroCardsTable),
-        mediaUrl: mediaTable.url,
+        mediaUrl: mediasTable.url,
       })
       .from(heroCardsTable)
-      .leftJoin(mediaTable, eq(heroCardsTable.mediaId, mediaTable.id))
+      .leftJoin(mediasTable, eq(heroCardsTable.mediaId, mediasTable.id))
       .$dynamic();
 
     // 3. 在 withScope 处理后再调用 orderBy 等动态方法

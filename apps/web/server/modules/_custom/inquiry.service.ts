@@ -16,7 +16,7 @@ import {
   type InquiryContract,
   inquiryItemsTable,
   inquiryTable,
-  mediaTable,
+  mediasTable,
   salespersonsTable,
 } from "@repo/contract";
 import { eq, type InferSelectModel } from "drizzle-orm";
@@ -327,13 +327,13 @@ export class InquiryService extends InquiryGeneratedService {
     if (!media?.url) return null;
     const [existing] = await ctx.db
       .select()
-      .from(mediaTable)
-      .where(eq(mediaTable.url, media.url))
+      .from(mediasTable)
+      .where(eq(mediasTable.url, media.url))
       .limit(1);
     if (existing) return existing.id;
 
     const [newMedia] = await ctx.db
-      .insert(mediaTable)
+      .insert(mediasTable)
       .values({
         url: media.url,
         type: media.type || "image",
@@ -373,10 +373,10 @@ export class InquiryService extends InquiryGeneratedService {
       clientEmail: inquiry.customerEmail,
       photoForRefer: photo
         ? {
-            buffer: photo.buffer,
-            mimeType: photo.mimeType,
-            name: `prod-${inquiry.id}`,
-          }
+          buffer: photo.buffer,
+          mimeType: photo.mimeType,
+          name: `prod-${inquiry.id}`,
+        }
         : null,
       timeNo, // 👈 现在这里正确使用了业务单号
       termsCode1: item.id,

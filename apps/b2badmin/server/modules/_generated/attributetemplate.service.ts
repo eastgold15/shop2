@@ -5,9 +5,9 @@
  * 💡 请前往 ../_custom 目录修改具体的业务契约。
  * --------------------------------------------------------
  */
-import { attributeTemplateTable, AttributeTemplateContract } from "@repo/contract";
+import { TemplateTable, AttributeTemplateContract } from "@repo/contract";
 import { B2BBaseService } from "../_lib/base-service";
 
-export class AttributeTemplateGeneratedService extends B2BBaseService<typeof attributeTemplateTable, typeof AttributeTemplateContract> {
-  constructor() { super(attributeTemplateTable, AttributeTemplateContract); }
+export class AttributeTemplateGeneratedService extends B2BBaseService<typeof TemplateTable, typeof AttributeTemplateContract> {
+  constructor() { super(TemplateTable, AttributeTemplateContract); }
 }

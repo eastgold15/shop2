@@ -5,9 +5,9 @@
  * 💡 请前往 ../_custom 目录修改具体的业务契约。
  * --------------------------------------------------------
  */
-import { rolePermissionsTable, RolePermissionsContract } from "@repo/contract";
+import { rolePermissionTable, RolePermissionsContract } from "@repo/contract";
 import { WEBBaseService } from "../_lib/base-service";
 
-export class RolePermissionsGeneratedService extends WEBBaseService<typeof rolePermissionsTable, typeof RolePermissionsContract> {
-  constructor() { super(rolePermissionsTable, RolePermissionsContract); }
+export class RolePermissionsGeneratedService extends WEBBaseService<typeof rolePermissionTable, typeof RolePermissionsContract> {
+  constructor() { super(rolePermissionTable, RolePermissionsContract); }
 }

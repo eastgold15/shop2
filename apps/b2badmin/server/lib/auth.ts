@@ -1,7 +1,7 @@
 import {
   accountTable,
   sessionTable,
-  usersTable,
+  userTable,
   verificationTable,
 } from "@repo/contract";
 import { betterAuth } from "better-auth";
@@ -22,7 +22,7 @@ export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
     schema: {
-      user: usersTable, // ✅ 键名必须是 "user"
+      user: userTable, // ✅ 键名必须是 "user"
       account: accountTable, // ✅ "account"
       session: sessionTable, // ✅ "session"
       verification: verificationTable, // ✅ "verification"

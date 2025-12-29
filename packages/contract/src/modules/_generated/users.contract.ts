@@ -6,10 +6,10 @@
  * --------------------------------------------------------
  */
 import { t } from "elysia";
-import { usersTable } from "../../table.schema";
-import { spread } from "../../helper/utils"; 
+import { userTable } from "../../table.schema";
+import { spread } from "../../helper/utils";
 
 export const UsersBase = {
-  fields: spread(usersTable, 'select'),
-  insertFields: spread(usersTable, 'insert'),
+  fields: spread(userTable, 'select'),
+  insertFields: spread(userTable, 'insert'),
 } as const;

@@ -6,10 +6,10 @@
  * --------------------------------------------------------
  */
 import { t } from "elysia";
-import { attributeTemplateTable } from "../../table.schema";
-import { spread } from "../../helper/utils"; 
+import { TemplateTable } from "../../table.schema";
+import { spread } from "../../helper/utils";
 
 export const AttributeTemplateBase = {
-  fields: spread(attributeTemplateTable, 'select'),
-  insertFields: spread(attributeTemplateTable, 'insert'),
+  fields: spread(TemplateTable, 'select'),
+  insertFields: spread(TemplateTable, 'insert'),
 } as const;

@@ -6,10 +6,10 @@
  * --------------------------------------------------------
  */
 import { t } from "elysia";
-import { productsTable } from "../../table.schema";
-import { spread } from "../../helper/utils"; 
+import { productTable } from "../../table.schema";
+import { spread } from "../../helper/utils";
 
 export const ProductsBase = {
-  fields: spread(productsTable, 'select'),
-  insertFields: spread(productsTable, 'insert'),
+  fields: spread(productTable, 'select'),
+  insertFields: spread(productTable, 'insert'),
 } as const;

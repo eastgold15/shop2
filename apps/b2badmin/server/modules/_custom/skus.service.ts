@@ -6,15 +6,15 @@
  * --------------------------------------------------------
  */
 import {
-  mediaTable,
-  productSiteCategoriesTable,
-  productsTable,
+  mediasTable,
+  productSiteCategoryTable,
+  productTable,
   salespersonAffiliationsTable,
   salespersonsTable,
-  siteProductsTable,
-  sitesTable,
+  siteProductTable,
+  siteTable,
   skuMediaTable,
-  skusTable,
+  skuTable,
 } from "@repo/contract";
 import { and, desc, eq, inArray, like, sql } from "drizzle-orm";
 import { HttpError } from "elysia-http-problem-json";
@@ -27,8 +27,8 @@ export class SkusService extends SkusGeneratedService {
 
     // 删除SKU
     const result = await db
-      .delete(skusTable)
-      .where(inArray(skusTable.id, ids))
+      .delete(skuTable)
+      .where(inArray(skuTable.id, ids))
       .returning();
 
     return { count: result.length };
@@ -42,10 +42,10 @@ export class SkusService extends SkusGeneratedService {
     const db = ctx.db;
     const [product] = await db
       .select({
-        id: productsTable.id,
+        id: productTable.id,
       })
-      .from(productsTable)
-      .where(eq(productsTable.id, productId))
+      .from(productTable)
+      .where(eq(productTable.id, productId))
       .limit(1);
 
     return !!product;
@@ -60,17 +60,17 @@ export class SkusService extends SkusGeneratedService {
   ): Promise<boolean> {
     const db = ctx.db;
     const conditions = [
-      eq(skusTable.productId, productId),
-      eq(skusTable.skuCode, skuCode),
+      eq(skuTable.productId, productId),
+      eq(skuTable.skuCode, skuCode),
     ];
 
     if (excludeId) {
-      conditions.push(sql`${skusTable.id} != ${excludeId}`);
+      conditions.push(sql`${skuTable.id} != ${excludeId}`);
     }
 
     const [existing] = await db
-      .select({ id: skusTable.id })
-      .from(skusTable)
+      .select({ id: skuTable.id })
+      .from(skuTable)
       .where(and(...conditions))
       .limit(1);
 
@@ -85,10 +85,10 @@ export class SkusService extends SkusGeneratedService {
     const db = ctx.db;
     const [image] = await db
       .select({
-        id: mediaTable.id,
+        id: mediasTable.id,
       })
-      .from(mediaTable)
-      .where(eq(mediaTable.id, mediaId))
+      .from(mediasTable)
+      .where(eq(mediasTable.id, mediaId))
       .limit(1);
 
     return !!image;
@@ -102,13 +102,13 @@ export class SkusService extends SkusGeneratedService {
     const skuCodes = skus.map((s) => s.skuCode);
     const existingSkus = await db
       .select({
-        skuCode: skusTable.skuCode,
+        skuCode: skuTable.skuCode,
       })
-      .from(skusTable)
+      .from(skuTable)
       .where(
         and(
-          eq(skusTable.productId, productId),
-          inArray(skusTable.skuCode, skuCodes)
+          eq(skuTable.productId, productId),
+          inArray(skuTable.skuCode, skuCodes)
         )
       );
 
@@ -121,7 +121,7 @@ export class SkusService extends SkusGeneratedService {
     // 创建SKU
     const result = await db.transaction(async (tx: any) => {
       const createdSkus = await tx
-        .insert(skusTable)
+        .insert(skuTable)
         .values(
           skus.map((sku) => ({
             skuCode: sku.skuCode,
@@ -135,7 +135,7 @@ export class SkusService extends SkusGeneratedService {
         .returning();
 
       // 批量创建SKU和媒体的关联
-      for (let i = 0; i < skus.length; i++) {
+      for (let i = 0;i < skus.length;i++) {
         const sku = skus[i];
         const createdSku = createdSkus[i];
 
@@ -169,7 +169,7 @@ export class SkusService extends SkusGeneratedService {
     // 创建SKU
     const result = await db.transaction(async (tx: any) => {
       const [sku] = await tx
-        .insert(skusTable)
+        .insert(skuTable)
         .values({
           ...skuData,
           productId,
@@ -216,16 +216,16 @@ export class SkusService extends SkusGeneratedService {
 
       // 更新SKU
       updated = await db
-        .update(skusTable)
+        .update(skuTable)
         .set(updateData)
-        .where(eq(skusTable.id, id))
+        .where(eq(skuTable.id, id))
         .returning();
     } else {
       // 更新SKU
       updated = await db
-        .update(skusTable)
+        .update(skuTable)
         .set(body)
-        .where(eq(skusTable.id, id))
+        .where(eq(skuTable.id, id))
         .returning();
     }
 
@@ -243,8 +243,8 @@ export class SkusService extends SkusGeneratedService {
       // 如果你的 SKU 表没有 siteId，需通过 productId 关联 productsTable 校验 siteId
       const [existingSku] = await tx
         .select()
-        .from(skusTable)
-        .where(eq(skusTable.id, id))
+        .from(skuTable)
+        .where(eq(skuTable.id, id))
         .limit(1);
 
       if (!existingSku) {
@@ -263,9 +263,9 @@ export class SkusService extends SkusGeneratedService {
         };
 
         await tx
-          .update(skusTable)
+          .update(skuTable)
           .set(formattedData)
-          .where(eq(skusTable.id, id));
+          .where(eq(skuTable.id, id));
       }
 
       // 3. 处理媒体关联更新 (如果传了 mediaIds)
@@ -321,21 +321,21 @@ export class SkusService extends SkusGeneratedService {
         // 工厂业务员：获取该工厂所有站点的商品
         const siteProducts = await db
           .select({
-            productId: siteProductsTable.productId,
+            productId: siteProductTable.productId,
           })
-          .from(siteProductsTable)
-          .innerJoin(sitesTable, eq(siteProductsTable.siteId, sitesTable.id))
-          .where(eq(sitesTable.factoryId, affiliation.factoryId!));
+          .from(siteProductTable)
+          .innerJoin(siteTable, eq(siteProductTable.siteId, siteTable.id))
+          .where(eq(siteTable.factoryId, affiliation.factoryId!));
 
         siteProducts.forEach((sp: any) => productIdsSet.add(sp.productId));
       } else if (affiliation.entityType === "exporter") {
         // 出口商业务员：获取该出口商站点的商品
         const siteProducts = await db
           .select({
-            productId: siteProductsTable.productId,
+            productId: siteProductTable.productId,
           })
-          .from(siteProductsTable)
-          .where(eq(siteProductsTable.siteId, affiliation.exporterId!));
+          .from(siteProductTable)
+          .where(eq(siteProductTable.siteId, affiliation.exporterId!));
 
         siteProducts.forEach((sp: any) => productIdsSet.add(sp.productId));
       }
@@ -363,64 +363,64 @@ export class SkusService extends SkusGeneratedService {
 
     // 1. 站点筛选 (必须)
     if (siteId) {
-      baseConditions.push(eq(skusTable.siteId, siteId));
+      baseConditions.push(eq(skuTable.siteId, siteId));
     }
 
     // 2. 商品筛选
     if (productId) {
-      baseConditions.push(eq(skusTable.productId, productId));
+      baseConditions.push(eq(skuTable.productId, productId));
     }
 
     // 3. 搜索条件 (SKU Code 或 商品名称)
     if (search) {
-      baseConditions.push(like(skusTable.skuCode, `%${search}%`));
+      baseConditions.push(like(skuTable.skuCode, `%${search}%`));
     }
 
     // 4. 状态筛选
     if (status !== undefined) {
-      baseConditions.push(eq(skusTable.status, Number(status)));
+      baseConditions.push(eq(skuTable.status, Number(status)));
     }
 
     // 排序处理
     const allowedSortFields = {
-      id: skusTable.id,
-      skuCode: skusTable.skuCode,
-      price: skusTable.price,
-      stock: skusTable.stock,
-      status: skusTable.status,
-      createdAt: skusTable.createdAt,
+      id: skuTable.id,
+      skuCode: skuTable.skuCode,
+      price: skuTable.price,
+      stock: skuTable.stock,
+      status: skuTable.status,
+      createdAt: skuTable.createdAt,
     };
     const orderByField =
       allowedSortFields[sort as keyof typeof allowedSortFields] ||
-      skusTable.createdAt;
+      skuTable.createdAt;
 
     // --- 构建主查询 ---
     let queryBuilder = db
       .select({
         // SKU 信息
-        id: skusTable.id,
-        skuCode: skusTable.skuCode,
-        price: skusTable.price,
-        stock: skusTable.stock,
-        status: skusTable.status,
-        specJson: skusTable.specJson,
-        createdAt: skusTable.createdAt,
+        id: skuTable.id,
+        skuCode: skuTable.skuCode,
+        price: skuTable.price,
+        stock: skuTable.stock,
+        status: skuTable.status,
+        specJson: skuTable.specJson,
+        createdAt: skuTable.createdAt,
         // 补充商品信息
         product: {
-          id: productsTable.id,
-          name: productsTable.name,
-          spuCode: productsTable.spuCode,
+          id: productTable.id,
+          name: productTable.name,
+          spuCode: productTable.spuCode,
         },
         // 补充站点分类信息 (由于是多对多，这里通常取关联表的 categoryId)
-        siteCategoryId: productSiteCategoriesTable.siteCategoryId,
+        siteCategoryId: productSiteCategoryTable.siteCategoryId,
       })
-      .from(skusTable)
+      .from(skuTable)
       // 连商品表
-      .innerJoin(productsTable, eq(skusTable.productId, productsTable.id))
+      .innerJoin(productTable, eq(skuTable.productId, productTable.id))
       // 连商品站点分类关联表 (Left Join 以防万一没设分类也能查出来)
       .leftJoin(
-        productSiteCategoriesTable,
-        eq(productsTable.id, productSiteCategoriesTable.productId)
+        productSiteCategoryTable,
+        eq(productTable.id, productSiteCategoryTable.productId)
       )
       .$dynamic();
 
@@ -439,16 +439,16 @@ export class SkusService extends SkusGeneratedService {
     const images =
       skuIds.length > 0
         ? await db
-            .select({
-              skuId: skuMediaTable.skuId,
-              mediaId: mediaTable.id,
-              url: mediaTable.url,
-              isMain: skuMediaTable.isMain,
-            })
-            .from(skuMediaTable)
-            .innerJoin(mediaTable, eq(skuMediaTable.mediaId, mediaTable.id))
-            .where(inArray(skuMediaTable.skuId, skuIds))
-            .orderBy(skuMediaTable.sortOrder)
+          .select({
+            skuId: skuMediaTable.skuId,
+            mediaId: mediasTable.id,
+            url: mediasTable.url,
+            isMain: skuMediaTable.isMain,
+          })
+          .from(skuMediaTable)
+          .innerJoin(mediasTable, eq(skuMediaTable.mediaId, mediasTable.id))
+          .where(inArray(skuMediaTable.skuId, skuIds))
+          .orderBy(skuMediaTable.sortOrder)
         : [];
 
     // 图片按 SKU 分组 Map
@@ -481,23 +481,23 @@ export class SkusService extends SkusGeneratedService {
     // 获取SKU基本信息
     const [sku] = await db
       .select({
-        id: skusTable.id,
-        skuCode: skusTable.skuCode,
-        productId: skusTable.productId,
-        price: skusTable.price,
-        marketPrice: skusTable.marketPrice,
-        costPrice: skusTable.costPrice,
-        weight: skusTable.weight,
-        volume: skusTable.volume,
-        stock: skusTable.stock,
-        specJson: skusTable.specJson,
-        extraAttributes: skusTable.extraAttributes,
-        status: skusTable.status,
-        createdAt: skusTable.createdAt,
-        updatedAt: skusTable.updatedAt,
+        id: skuTable.id,
+        skuCode: skuTable.skuCode,
+        productId: skuTable.productId,
+        price: skuTable.price,
+        marketPrice: skuTable.marketPrice,
+        costPrice: skuTable.costPrice,
+        weight: skuTable.weight,
+        volume: skuTable.volume,
+        stock: skuTable.stock,
+        specJson: skuTable.specJson,
+        extraAttributes: skuTable.extraAttributes,
+        status: skuTable.status,
+        createdAt: skuTable.createdAt,
+        updatedAt: skuTable.updatedAt,
       })
-      .from(skusTable)
-      .where(eq(skusTable.id, id))
+      .from(skuTable)
+      .where(eq(skuTable.id, id))
       .limit(1);
 
     if (!sku) {
@@ -507,24 +507,24 @@ export class SkusService extends SkusGeneratedService {
     // 获取商品名称
     const [product] = await db
       .select({
-        name: productsTable.name,
+        name: productTable.name,
       })
-      .from(productsTable)
-      .where(eq(productsTable.id, sku.productId))
+      .from(productTable)
+      .where(eq(productTable.id, sku.productId))
       .limit(1);
 
     // 获取所有关联的图片
     const images = await db
       .select({
-        id: mediaTable.id,
-        url: mediaTable.url,
-        storageKey: mediaTable.storageKey,
-        category: mediaTable.category,
+        id: mediasTable.id,
+        url: mediasTable.url,
+        storageKey: mediasTable.storageKey,
+        category: mediasTable.category,
         isMain: skuMediaTable.isMain,
         sortOrder: skuMediaTable.sortOrder,
       })
       .from(skuMediaTable)
-      .leftJoin(mediaTable, eq(skuMediaTable.mediaId, mediaTable.id))
+      .leftJoin(mediasTable, eq(skuMediaTable.mediaId, mediasTable.id))
       .where(eq(skuMediaTable.skuId, sku.id))
       .orderBy(skuMediaTable.sortOrder);
 
@@ -532,9 +532,9 @@ export class SkusService extends SkusGeneratedService {
       ...sku,
       product: product
         ? {
-            id: sku.productId,
-            name: product.name,
-          }
+          id: sku.productId,
+          name: product.name,
+        }
         : null,
       values: [], // 暂时返回空数组
       images: images.filter((img: any) => img.url), // 过滤掉没有URL的图片
@@ -556,37 +556,37 @@ export class SkusService extends SkusGeneratedService {
 
     const skus = await db
       .select({
-        id: skusTable.id,
-        skuCode: skusTable.skuCode,
-        price: skusTable.price,
-        marketPrice: skusTable.marketPrice,
-        costPrice: skusTable.costPrice,
-        stock: skusTable.stock,
-        specJson: skusTable.specJson,
-        status: skusTable.status,
+        id: skuTable.id,
+        skuCode: skuTable.skuCode,
+        price: skuTable.price,
+        marketPrice: skuTable.marketPrice,
+        costPrice: skuTable.costPrice,
+        stock: skuTable.stock,
+        specJson: skuTable.specJson,
+        status: skuTable.status,
       })
-      .from(skusTable)
-      .where(eq(skusTable.productId, productId))
-      .orderBy(skusTable.createdAt);
+      .from(skuTable)
+      .where(eq(skuTable.productId, productId))
+      .orderBy(skuTable.createdAt);
 
     // 获取图片信息
     const skuIds = skus.map((s: any) => s.id);
     const images =
       skuIds.length > 0
         ? await db
-            .select({
-              skuId: skuMediaTable.skuId,
-              id: mediaTable.id,
-              url: mediaTable.url,
-              storageKey: mediaTable.storageKey,
-              category: mediaTable.category,
-              isMain: skuMediaTable.isMain,
-              sortOrder: skuMediaTable.sortOrder,
-            })
-            .from(skuMediaTable)
-            .leftJoin(mediaTable, eq(skuMediaTable.mediaId, mediaTable.id))
-            .where(inArray(skuMediaTable.skuId, skuIds))
-            .orderBy(skuMediaTable.sortOrder)
+          .select({
+            skuId: skuMediaTable.skuId,
+            id: mediasTable.id,
+            url: mediasTable.url,
+            storageKey: mediasTable.storageKey,
+            category: mediasTable.category,
+            isMain: skuMediaTable.isMain,
+            sortOrder: skuMediaTable.sortOrder,
+          })
+          .from(skuMediaTable)
+          .leftJoin(mediasTable, eq(skuMediaTable.mediaId, mediasTable.id))
+          .where(inArray(skuMediaTable.skuId, skuIds))
+          .orderBy(skuMediaTable.sortOrder)
         : [];
 
     // 将图片按 SKU ID 分组
@@ -635,10 +635,10 @@ export class SkusService extends SkusGeneratedService {
     if (mediaIds && mediaIds.length > 0) {
       const existingMedia = await db
         .select({
-          id: mediaTable.id,
+          id: mediasTable.id,
         })
-        .from(mediaTable)
-        .where(inArray(mediaTable.id, mediaIds));
+        .from(mediasTable)
+        .where(inArray(mediasTable.id, mediaIds));
 
       if (existingMedia.length !== mediaIds.length) {
         throw new HttpError.NotFound("部分媒体文件不存在");

@@ -6,10 +6,10 @@
  * --------------------------------------------------------
  */
 import { t } from "elysia";
-import { mediaTable } from "../../table.schema";
-import { spread } from "../../helper/utils"; 
+import { mediasTable } from "../../table.schema";
+import { spread } from "../../helper/utils";
 
 export const MediaBase = {
-  fields: spread(mediaTable, 'select'),
-  insertFields: spread(mediaTable, 'insert'),
+  fields: spread(mediasTable, 'select'),
+  insertFields: spread(mediasTable, 'insert'),
 } as const;

@@ -5,9 +5,9 @@
  * 💡 请前往 ../_custom 目录修改具体的业务契约。
  * --------------------------------------------------------
  */
-import { mediaTable, MediaContract } from "@repo/contract";
+import { mediasTable, MediaContract } from "@repo/contract";
 import { WEBBaseService } from "../_lib/base-service";
 
-export class MediaGeneratedService extends WEBBaseService<typeof mediaTable, typeof MediaContract> {
-  constructor() { super(mediaTable, MediaContract); }
+export class MediaGeneratedService extends WEBBaseService<typeof mediasTable, typeof MediaContract> {
+  constructor() { super(mediasTable, MediaContract); }
 }

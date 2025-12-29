@@ -6,7 +6,7 @@
  * --------------------------------------------------------
  */
 
-import { RolePermissionsContract, rolePermissionsTable } from "@repo/contract";
+import { RolePermissionsContract, rolePermissionTable } from "@repo/contract";
 import { eq } from "drizzle-orm";
 import { Elysia, t } from "elysia";
 import { dbPlugin } from "~/db/connection";
@@ -42,12 +42,12 @@ export const rolepermissionsController = new Elysia({
 
       // 先删除该角色的所有权限
       await db
-        .delete(rolePermissionsTable)
-        .where(eq(rolePermissionsTable.roleId, roleId));
+        .delete(rolePermissionTable)
+        .where(eq(rolePermissionTable.roleId, roleId));
 
       // 如果有权限，则批量插入
       if (permissionIds.length > 0) {
-        await db.insert(rolePermissionsTable).values(
+        await db.insert(rolePermissionTable).values(
           permissionIds.map((permissionId) => ({
             roleId,
             permissionId,

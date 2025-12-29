@@ -6,10 +6,10 @@
  * --------------------------------------------------------
  */
 import { t } from "elysia";
-import { productMasterCategoriesTable } from "../../table.schema";
-import { spread } from "../../helper/utils"; 
+import { productMasterCategoryTable } from "../../table.schema";
+import { spread } from "../../helper/utils";
 
 export const ProductMasterCategoriesBase = {
-  fields: spread(productMasterCategoriesTable, 'select'),
-  insertFields: spread(productMasterCategoriesTable, 'insert'),
+  fields: spread(productMasterCategoryTable, 'select'),
+  insertFields: spread(productMasterCategoryTable, 'insert'),
 } as const;

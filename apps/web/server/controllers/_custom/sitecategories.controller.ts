@@ -1,4 +1,4 @@
-import { productSiteCategoriesTable, productsTable } from "@repo/contract";
+import { productSiteCategoryTable, productTable } from "@repo/contract";
 import { eq } from "drizzle-orm";
 import Elysia, { t } from "elysia";
 import { dbPlugin } from "~/db/connection";
@@ -51,14 +51,14 @@ export const sitecategoriesController = new Elysia({
 
       const products = await db
         .select({
-          product: productsTable,
+          product: productTable,
         })
-        .from(productsTable)
+        .from(productTable)
         .innerJoin(
-          productSiteCategoriesTable,
-          eq(productsTable.id, productSiteCategoriesTable.productId)
+          productSiteCategoryTable,
+          eq(productTable.id, productSiteCategoryTable.productId)
         )
-        .where(eq(productSiteCategoriesTable.siteCategoryId, categoryId))
+        .where(eq(productSiteCategoryTable.siteCategoryId, categoryId))
         .limit(limit)
         .offset((page - 1) * limit);
 

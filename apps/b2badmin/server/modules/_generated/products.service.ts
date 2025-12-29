@@ -5,9 +5,9 @@
  * 💡 请前往 ../_custom 目录修改具体的业务契约。
  * --------------------------------------------------------
  */
-import { productsTable, ProductsContract } from "@repo/contract";
+import { productTable, ProductsContract } from "@repo/contract";
 import { B2BBaseService } from "../_lib/base-service";
 
-export class ProductsGeneratedService extends B2BBaseService<typeof productsTable, typeof ProductsContract> {
-  constructor() { super(productsTable, ProductsContract); }
+export class ProductsGeneratedService extends B2BBaseService<typeof productTable, typeof ProductsContract> {
+  constructor() { super(productTable, ProductsContract); }
 }

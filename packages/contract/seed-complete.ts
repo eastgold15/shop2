@@ -1,102 +1,115 @@
-import { relations } from "@repo/contract";
+
 import {
-  // Auth相关
-  accountTable,
-  adsTable,
-  attributeTable,
-  attributeTemplateTable,
-  attributeValueTable,
-  // 客户和询盘
-  CustomerTable,
-  // 其他
-  dailyInquiryCounterTable,
-  // 业务数据
-  exportersTable,
-  factoriesTable,
-  heroCardsTable,
-  inquiryItemsTable,
-  inquiryTable,
-  masterTable,
-  mediaMetadataTable,
-  mediaTable,
-  permissionTable,
-  productMasterCategoriesTable,
-  productMediaTable,
-  // 产品相关
-  productsTable,
-  productTemplateTable,
-  quotationItemsTable,
-  quotationsTable,
-  rolePermissionsTable,
-  // 基础数据
+  // ========================================
+  // 系统架构核心表
+  // ========================================
+  tenantTable,
+  departmentTable,
+  userTable,
   roleTable,
-  salespersonAffiliationsTable,
-  salespersonCategoriesTable,
-  salespersonsTable,
+  permissionTable,
+  userRoleTable,
+  rolePermissionTable,
+  accountTable,
   sessionTable,
-  siteCategoriesTable,
-  siteConfigTable,
-  siteProductsTable,
-  // 站点和媒体
-  sitesTable,
-  skuMediaTable,
-  skusTable,
-  translationDictTable,
-  // 用户站点角色
-  userSiteRolesTable,
-  usersTable,
   verificationTable,
-} from "@repo/contract/table";
-import { randomUUIDv7 } from "bun";
+
+  // ========================================
+  // 站点相关
+  // ========================================
+  siteTable,
+  siteCategoryTable,
+  siteProductTable,
+  siteConfigTable,
+
+  // ========================================
+  // 分类和模板
+  // ========================================
+  masterCategoryTable,
+  templateTable,
+  templateKeyTable,
+  templateValueTable,
+  productTemplateTable,
+
+  // ========================================
+  // 产品相关
+  // ========================================
+  productTable,
+  productMasterCategoryTable,
+  productSiteCategoryTable,
+  skuTable,
+  productMediaTable,
+  skuMediaTable,
+
+  // ========================================
+  // 媒体相关
+  // ========================================
+  mediaTable,
+  mediaMetadataTable,
+  adTable,
+  heroCardTable,
+
+  // ========================================
+  // 业务表
+  // ========================================
+  customerTable,
+  inquiryTable,
+  quotationTable,
+
+  // ========================================
+  // 其他
+  // ========================================
+  dailyInquiryCounterTable,
+} from "./src/table.schema";
+import { randomUUIDv7 } from "bun"; // @ts-ignore - bun types
+import { relations } from './src/table.relation'
 import { drizzle } from "drizzle-orm/node-postgres";
 
 const db = drizzle(
-  "postgres://gina_user:gina_password@localhost:5432/gina_dev",
+  "postgres://gina_user:gina_password@localhost:5433/gina_dev",
   { relations }
 );
 
+// ========================================
+// 1. 基础配置
+// ========================================
+
 // 预定义密码哈希 (12345678)
+const hashedPassword =
+  "948ca608bf8799e01f412bc8e42e4384:18a873f36c8ccb79a0954f6ae5c66ecc0a1c14f113e6d3f0de65dd3d0deeb3257cdc3fa840021fe627cf6f399cb8beb9c597ed30967a8959badb5e782db934065";
 
 // 获取所有数据库表名并生成对应的权限
 const getAllTableNames = () => [
-  "users",
-  "account",
-  "session",
-  "verification",
-  "roles",
-  "permissions",
-  "role_permissions",
-  "user_site_roles",
-  "exporters",
-  "master_categories",
-  "factories",
-  "salespersons",
-  "salesperson_affiliations",
-  "salesperson_categories",
+  "sys_tenant",
+  "sys_dept",
+  "sys_user",
+  "sys_role",
+  "sys_permission",
+  // "sys_user_role",
+  // "sys_role_permission",
+  "site",
+  "site_category",
+  "site_product",
+  "site_config",
+  "master_category",
+  "template",
+  "template_key",
+  "template_value",
+  "product",
+  "product_category",
+  "product_site_category",
+  "product_template",
+  "sku",
+  "product_media",
+  "sku_media",
   "media",
   "media_metadata",
-  "advertisements",
-  "hero_cards",
-  "products_table",
-  "product_master_categories",
-  "product_media",
-  "attribute_templates",
-  "attributes_table",
-  "attribute_values_table",
-  "product_template_table",
-  "skus_table",
-  "sku_media",
+  "ad",
+  "hero_card",
   "customer",
-  "inquiries",
-  "inquiry_items",
-  "quotations",
-  "quotation_items",
-  "site_config",
+  "inquiry",
+  "quotation",
   "daily_inquiry_counter",
-  "translation_dict",
-  "sites",
-  "site_categories",
-  "site_products",
 ];
 
 // 生成标准CRUD权限
@@ -107,45 +120,36 @@ const generateCRUDPermissions = (resource: string) => [
   `${resource.toUpperCase()}_DELETE`,
 ];
 
-// 角色权限映射（内联定义，避免导入问题）
+// 角色权限映射
 const ROLE_PERMISSIONS: Record<string, string[]> = {
   super_admin: [
     // 超级管理员拥有所有权限
     ...getAllTableNames().flatMap((table) => generateCRUDPermissions(table)),
-    "SITES_MANAGE", // 站点管理特殊权限
+    "SITES_MANAGE",
+    "TENANTS_MANAGE",
   ],
-  exporter_admin: [
-    // 出口商管理员权限
-    ...generateCRUDPermissions("users"),
-    ...generateCRUDPermissions("exporters"),
-    ...generateCRUDPermissions("factories"),
-    ...generateCRUDPermissions("products_table"),
-    ...generateCRUDPermissions("skus_table"),
-    ...generateCRUDPermissions("media"),
+  tenant_admin: [
+    // 租户管理员权限
+    ...generateCRUDPermissions("sys_users"),
+    ...generateCRUDPermissions("sys_depts"),
     ...generateCRUDPermissions("sites"),
-    ...generateCRUDPermissions("site_categories"),
-    ...generateCRUDPermissions("site_products"),
-    ...generateCRUDPermissions("site_config"),
-    ...generateCRUDPermissions("customer"),
+    ...generateCRUDPermissions("products"),
+    ...generateCRUDPermissions("skus"),
+    ...generateCRUDPermissions("media"),
+    ...generateCRUDPermissions("customers"),
     ...generateCRUDPermissions("inquiries"),
     ...generateCRUDPermissions("quotations"),
-    ...generateCRUDPermissions("hero_cards"),
-    ...generateCRUDPermissions("advertisements"),
     "SITES_VIEW",
     "SITES_CREATE",
     "SITES_EDIT",
   ],
-  factory_admin: [
-    // 工厂管理员权限
-    ...generateCRUDPermissions("users"),
-    ...generateCRUDPermissions("factories"),
-    ...generateCRUDPermissions("products_table"),
-    ...generateCRUDPermissions("skus_table"),
+  dept_manager: [
+    // 部门经理权限
+    ...generateCRUDPermissions("sys_users"),
+    ...generateCRUDPermissions("products"),
+    ...generateCRUDPermissions("skus"),
     ...generateCRUDPermissions("media"),
-    ...generateCRUDPermissions("sites"),
-    ...generateCRUDPermissions("site_categories"),
-    ...generateCRUDPermissions("site_products"),
-    ...generateCRUDPermissions("customer"),
+    ...generateCRUDPermissions("customers"),
     ...generateCRUDPermissions("inquiries"),
     ...generateCRUDPermissions("quotations"),
     "SITES_VIEW",
@@ -153,11 +157,11 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
   ],
   salesperson: [
     // 业务员权限
-    ...generateCRUDPermissions("customer"),
-    "PRODUCTS_TABLE_VIEW",
-    "PRODUCTS_TABLE_CREATE",
-    "PRODUCTS_TABLE_EDIT",
-    "SKUS_TABLE_VIEW",
+    ...generateCRUDPermissions("customers"),
+    "PRODUCTS_VIEW",
+    "PRODUCTS_CREATE",
+    "PRODUCTS_EDIT",
+    "SKUS_VIEW",
     "MEDIA_VIEW",
     "MEDIA_CREATE",
     "MEDIA_DELETE",
@@ -173,48 +177,50 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
   ],
 };
 
-// 预定义密码哈希 (12345678)
-const hashedPassword =
-  "948ca608bf8799e01f412bc8e42e4384:18a873f36c8ccb79a0954f6ae5c66ecc0a1c14f113e6d3f0e65dd3d0deeb3257cdc3fa840021fe627cf6f399cb8beb9c597ed30967a8959badb5e782db934065";
+// ========================================
+// 2. 角色和权限数据
+// ========================================
 
-// 1. 角色数据
 const roles = [
   {
     id: randomUUIDv7(),
-    name: "exporter_admin",
-    description: "出口商管理员",
-    type: "system",
+    name: "tenant_admin",
+    description: "租户管理员",
+    type: "system" as const,
     priority: 80,
+    dataScope: "all" as const,
   },
   {
     id: randomUUIDv7(),
-    name: "factory_admin",
-    description: "工厂管理员",
-    type: "system",
+    name: "dept_manager",
+    description: "部门经理",
+    type: "system" as const,
     priority: 70,
+    dataScope: "dept_and_child" as const,
   },
   {
     id: randomUUIDv7(),
     name: "salesperson",
     description: "业务员",
-    type: "system",
+    type: "system" as const,
     priority: 50,
+    dataScope: "self" as const,
   },
   {
     id: randomUUIDv7(),
     name: "super_admin",
     description: "超级管理员",
-    type: "system",
+    type: "system" as const,
     priority: 100,
+    dataScope: "all" as const,
   },
 ];
 
-// 2. 权限数据（基于数据库表自动生成）
+// 生成权限数据
 const generatePermissions = () => {
   const permissions: any[] = [];
   const allTables = getAllTableNames();
 
-  // 为每个表生成CRUD权限
   allTables.forEach((table) => {
     const resource = table.toUpperCase();
     permissions.push(
@@ -241,11 +247,16 @@ const generatePermissions = () => {
     );
   });
 
-  // 添加特殊权限
   permissions.push({
     id: randomUUIDv7(),
     name: "SITES_MANAGE",
     description: "管理站点",
+  });
+
+  permissions.push({
+    id: randomUUIDv7(),
+    name: "TENANTS_MANAGE",
+    description: "管理租户",
   });
 
   return permissions;
@@ -253,9 +264,11 @@ const generatePermissions = () => {
 
 const permissions = generatePermissions();
 
-// 3. 产品分类数据 - 添加更多鞋类相关分类
-const categories = [
-  // 鞋类主分类
+// ========================================
+// 3. 主分类数据
+// ========================================
+
+const masterCategories = [
   {
     id: "019b1bd7-8d03-701c-85c9-4cb7bbc75ab5",
     name: "pumps",
@@ -263,7 +276,7 @@ const categories = [
     description: "pumps",
     parentId: null,
     sortOrder: 1,
-    isVisible: true,
+    isActive: true,
     icon: "electronics",
   },
   {
@@ -273,7 +286,7 @@ const categories = [
     description: "bridal",
     parentId: null,
     sortOrder: 6,
-    isVisible: true,
+    isActive: true,
     icon: "clothing",
   },
   {
@@ -283,7 +296,7 @@ const categories = [
     description: "boots",
     parentId: null,
     sortOrder: 3,
-    isVisible: true,
+    isActive: true,
     icon: "home",
   },
   {
@@ -293,7 +306,7 @@ const categories = [
     description: "sandals",
     parentId: null,
     sortOrder: 2,
-    isVisible: true,
+    isActive: true,
     icon: "clothing",
   },
   {
@@ -303,7 +316,7 @@ const categories = [
     description: "platforms",
     parentId: null,
     sortOrder: 4,
-    isVisible: true,
+    isActive: true,
     icon: "sports",
   },
   {
@@ -313,654 +326,739 @@ const categories = [
     description: "flats",
     parentId: null,
     sortOrder: 5,
-    isVisible: true,
+    isActive: true,
     icon: "food",
   },
-  // 其他分类
-  {
-    id: randomUUIDv7(),
-    name: "bags",
-    slug: "bags",
-    description: "bags",
-    parentId: null,
-    sortOrder: 7,
-    isVisible: true,
-    icon: "bags",
-  },
-  {
-    id: randomUUIDv7(),
-    name: "about us",
-    slug: "about-us",
-    description: "about us",
-    parentId: null,
-    sortOrder: 8,
-    isVisible: true,
-    icon: "about",
-  },
 ];
 
-// 4. 出口商数据
-const exporterData = [
+// ========================================
+// 4. 租户和部门数据
+// ========================================
+
+const tenant1Id = randomUUIDv7();
+const tenant2Id = randomUUIDv7();
+
+const tenants = [
   {
-    id: randomUUIDv7(),
-    name: "环球贸易公司",
-    code: "GLOBAL_TRADE",
-    address: "深圳市福田区",
-    contact: "13800138006",
+    id: tenant1Id,
+    name: "环球贸易集团",
+    code: "GLOBAL_TRADE_GROUP",
+    status: 1,
+    address: "深圳市福田区中心商务大厦",
+    website: "https://www.global-trade.com",
+    subscriptionPlan: "premium",
   },
   {
-    id: randomUUIDv7(),
-    name: "美亚进出口",
+    id: tenant2Id,
+    name: "美亚进出口公司",
     code: "MEYA_IMPORT",
-    address: "广州市天河区",
-    contact: "13800138007",
+    status: 1,
+    address: "广州市天河区珠江新城",
+    website: "https://www.meya-import.com",
+    subscriptionPlan: "standard",
   },
 ];
 
-// 5. 工厂数据
-const factoryData = [
+// 租户1的部门结构
+const dept1HeadquartersId = randomUUIDv7();
+const dept1Factory1Id = randomUUIDv7();
+const dept1Factory2Id = randomUUIDv7();
+const dept1Office1Id = randomUUIDv7();
+
+const departments = [
+  // 租户1 - 总部
   {
-    id: randomUUIDv7(),
-    name: "东莞电子制造厂",
-    code: "DG_ELECTRONICS",
-    website: "https://www.dg-electronics.com",
+    id: dept1HeadquartersId,
+    tenantId: tenant1Id,
+    parentId: null,
+    name: "总部",
+    code: "HQ",
+    category: "headquarters" as const,
+    address: "深圳市福田区",
+    contactPhone: "0755-88888888",
+    isActive: true,
+  },
+  // 租户1 - 工厂1（东莞）
+  {
+    id: dept1Factory1Id,
+    tenantId: tenant1Id,
+    parentId: dept1HeadquartersId,
+    name: "东莞制造工厂",
+    code: "DG_FACTORY",
+    category: "factory" as const,
     address: "东莞市东城区科技园",
-    categoryId: "", // 稍后设置
-    contactPhone: "13800138001",
+    contactPhone: "0769-66666666",
+    extensions: {
+      mainProducts: "鞋类、箱包、服装",
+      annualRevenue: "5000万-1亿",
+      employeeCount: 200,
+    },
     isActive: true,
-    isVerified: false,
-    mainProducts: "电子元件、电路板、智能设备",
-    annualRevenue: "5000万-1亿",
-    employeeCount: 200,
   },
+  // 租户1 - 工厂2（深圳）
   {
-    id: randomUUIDv7(),
-    name: "深圳科技园",
-    code: "SZ_TECH",
-    website: "https://www.sz-tech.com",
-    address: "深圳市南山区高新技术产业园",
-    categoryId: "", // 稍后设置
-    contactPhone: "13800138002",
+    id: dept1Factory2Id,
+    tenantId: tenant1Id,
+    parentId: dept1HeadquartersId,
+    name: "深圳制造工厂",
+    code: "SZ_FACTORY",
+    category: "factory" as const,
+    address: "深圳市宝安区工业园",
+    contactPhone: "0755-77777777",
+    extensions: {
+      mainProducts: "电子产品、智能设备",
+      annualRevenue: "8000万-1.5亿",
+      employeeCount: 350,
+    },
     isActive: true,
-    isVerified: true,
-    mainProducts: "软件开发、系统集成、技术咨询",
-    annualRevenue: "1亿-5亿",
-    employeeCount: 500,
   },
+  // 租户1 - 办事处
   {
-    id: randomUUIDv7(),
-    name: "广州服装厂",
-    code: "GZ_CLOTHING",
-    website: "https://www.gz-clothing.com",
-    address: "广州市番禺区服装产业园",
-    categoryId: "", // 稍后设置
-    contactPhone: "13800138003",
+    id: dept1Office1Id,
+    tenantId: tenant1Id,
+    parentId: dept1HeadquartersId,
+    name: "上海办事处",
+    code: "SH_OFFICE",
+    category: "office" as const,
+    address: "上海市浦东新区",
+    contactPhone: "021-55555555",
     isActive: true,
-    isVerified: true,
-    mainProducts: "休闲服装、运动服、童装",
-    annualRevenue: "3000万-5000万",
-    employeeCount: 300,
   },
 ];
 
-// 6. 用户数据
+// ========================================
+// 5. 用户数据
+// ========================================
+
+const user1Id = randomUUIDv7(); // 超级管理员
+const user2Id = randomUUIDv7(); // 租户管理员
+const user3Id = randomUUIDv7(); // 工厂经理
+const user4Id = randomUUIDv7(); // 业务员
+const user5Id = randomUUIDv7(); // 业务员2
+const user6Id = randomUUIDv7(); // 业务员3
+
 const users = [
   {
-    id: randomUUIDv7(),
+    id: user1Id,
     name: "超级管理员",
     email: "super@admin.com",
     emailVerified: true,
     isSuperAdmin: true,
-    image:
-      "https://ui-avatars.com/api/?name=超级管理员&background=random&color=fff",
+    image: "https://ui-avatars.com/api/?name=超级管理员&background=random&color=fff",
+    tenantId: tenant1Id,
+    deptId: dept1HeadquartersId,
+    phone: "13800000001",
+    position: "系统管理员",
+    isActive: true,
   },
   {
-    id: randomUUIDv7(),
+    id: user2Id,
     name: "张三",
-    email: "admin@exporter.com",
+    email: "admin@global.com",
     emailVerified: true,
     image: "https://ui-avatars.com/api/?name=张三&background=random&color=fff",
+    tenantId: tenant1Id,
+    deptId: dept1HeadquartersId,
+    phone: "13800000002",
+    position: "运营总监",
+    isActive: true,
   },
   {
-    id: randomUUIDv7(),
+    id: user3Id,
     name: "李四",
     email: "factory@manager.com",
     emailVerified: true,
     image: "https://ui-avatars.com/api/?name=李四&background=random&color=fff",
+    tenantId: tenant1Id,
+    deptId: dept1Factory1Id,
+    phone: "13800000003",
+    position: "工厂经理",
+    isActive: true,
   },
   {
-    id: randomUUIDv7(),
+    id: user4Id,
     name: "王五",
     email: "sales@rep.com",
     emailVerified: true,
     image: "https://ui-avatars.com/api/?name=王五&background=random&color=fff",
+    tenantId: tenant1Id,
+    deptId: dept1Factory1Id,
+    phone: "13800000004",
+    whatsapp: "+8613800000004",
+    position: "高级业务员",
+    isActive: true,
   },
   {
-    id: randomUUIDv7(),
+    id: user5Id,
     name: "赵六",
     email: "john@example.com",
     emailVerified: true,
     image: "https://ui-avatars.com/api/?name=John&background=random&color=fff",
+    tenantId: tenant1Id,
+    deptId: dept1Factory2Id,
+    phone: "13800000005",
+    whatsapp: "+8613800000005",
+    position: "业务员",
+    isActive: true,
   },
   {
-    id: randomUUIDv7(),
+    id: user6Id,
     name: "陈七",
     email: "jane@example.com",
     emailVerified: true,
     image: "https://ui-avatars.com/api/?name=Jane&background=random&color=fff",
+    tenantId: tenant1Id,
+    deptId: dept1Office1Id,
+    phone: "13800000006",
+    whatsapp: "+8613800000006",
+    position: "业务员",
+    isActive: true,
   },
 ];
 
-// 7. 属性模板数据
-const attributeTemplates = [
+// ========================================
+// 6. 站点数据
+// ========================================
+
+const site1Id = randomUUIDv7(); // 集团站
+const site2Id = randomUUIDv7(); // 东莞工厂站
+const site3Id = randomUUIDv7(); // 深圳工厂站
+
+const sites = [
+  {
+    id: site1Id,
+    name: "环球贸易集团站",
+    domain: "global-trade.example.com",
+    isActive: true,
+    tenantId: tenant1Id,
+    boundDeptId: dept1HeadquartersId, // 绑定总部 = 集团站
+    siteType: "group" as const,
+  },
+  {
+    id: site2Id,
+    name: "东莞工厂站",
+    domain: "dg-factory.example.com",
+    isActive: true,
+    tenantId: tenant1Id,
+    boundDeptId: dept1Factory1Id, // 绑定工厂 = 工厂站
+    siteType: "factory" as const,
+  },
+  {
+    id: site3Id,
+    name: "深圳工厂站",
+    domain: "sz-factory.example.com",
+    isActive: true,
+    tenantId: tenant1Id,
+    boundDeptId: dept1Factory2Id,
+    siteType: "factory" as const,
+  },
+];
+
+// ========================================
+// 7. 模板和属性数据
+// ========================================
+
+const templates = [
   {
     id: randomUUIDv7(),
-    name: "电子产品属性模板",
-    categoryId: "", // 稍后设置
+    name: "鞋类通用属性模板",
+    masterCategoryId: masterCategories[0].id,
+    siteCategoryId: null,
   },
   {
     id: randomUUIDv7(),
     name: "服装属性模板",
-    categoryId: "", // 稍后设置
-  },
-  {
-    id: randomUUIDv7(),
-    name: "家居用品属性模板",
-    categoryId: "", // 稍后设置
+    masterCategoryId: masterCategories[1].id,
+    siteCategoryId: null,
   },
 ];
 
-// 8. 属性定义数据
-const attributes = [
-  // 电子产品属性
+const templateKeys = [
+  // 鞋类属性
   {
     id: randomUUIDv7(),
-    templateId: "", // 稍后设置
-    name: "颜色",
-    code: "color",
-    inputType: "select",
+    templateId: templates[0].id,
+    key: "color",
+    inputType: "select" as const,
     isRequired: true,
-    isSaleAttr: true,
+    isSkuSpec: true,
     sortOrder: 1,
   },
   {
     id: randomUUIDv7(),
-    templateId: "", // 稍后设置
-    name: "存储容量",
-    code: "storage",
-    inputType: "select",
+    templateId: templates[0].id,
+    key: "size",
+    inputType: "select" as const,
     isRequired: true,
-    isSaleAttr: true,
+    isSkuSpec: true,
     sortOrder: 2,
+  },
+  {
+    id: randomUUIDv7(),
+    templateId: templates[0].id,
+    key: "material",
+    inputType: "select" as const,
+    isRequired: false,
+    isSkuSpec: false,
+    sortOrder: 3,
   },
   // 服装属性
   {
     id: randomUUIDv7(),
-    templateId: "", // 稍后设置
-    name: "尺码",
-    code: "size",
-    inputType: "select",
+    templateId: templates[1].id,
+    key: "size",
+    inputType: "select" as const,
     isRequired: true,
-    isSaleAttr: true,
+    isSkuSpec: true,
     sortOrder: 1,
   },
   {
     id: randomUUIDv7(),
-    templateId: "", // 稍后设置
-    name: "材质",
-    code: "material",
-    inputType: "select",
+    templateId: templates[1].id,
+    key: "fabric",
+    inputType: "select" as const,
     isRequired: false,
-    isSaleAttr: false,
+    isSkuSpec: false,
     sortOrder: 2,
   },
 ];
 
-// 9. 属性值数据
-const attributeValues = [
+const templateValues = [
   // 颜色值
-  {
-    id: randomUUIDv7(),
-    attributeId: "",
-    value: "黑色",
-    valueCode: "black",
-    sortOrder: 1,
-  },
-  {
-    id: randomUUIDv7(),
-    attributeId: "",
-    value: "白色",
-    valueCode: "white",
-    sortOrder: 2,
-  },
-  {
-    id: randomUUIDv7(),
-    attributeId: "",
-    value: "红色",
-    valueCode: "red",
-    sortOrder: 3,
-  },
-  {
-    id: randomUUIDv7(),
-    attributeId: "",
-    value: "蓝色",
-    valueCode: "blue",
-    sortOrder: 4,
-  },
-  // 存储容量值
-  {
-    id: randomUUIDv7(),
-    attributeId: "",
-    value: "64GB",
-    valueCode: "64gb",
-    sortOrder: 1,
-  },
-  {
-    id: randomUUIDv7(),
-    attributeId: "",
-    value: "128GB",
-    valueCode: "128gb",
-    sortOrder: 2,
-  },
-  {
-    id: randomUUIDv7(),
-    attributeId: "",
-    value: "256GB",
-    valueCode: "256gb",
-    sortOrder: 3,
-  },
-  {
-    id: randomUUIDv7(),
-    attributeId: "",
-    value: "512GB",
-    valueCode: "512gb",
-    sortOrder: 4,
-  },
-  // 尺码值
-  {
-    id: randomUUIDv7(),
-    attributeId: "",
-    value: "S",
-    valueCode: "s",
-    sortOrder: 1,
-  },
-  {
-    id: randomUUIDv7(),
-    attributeId: "",
-    value: "M",
-    valueCode: "m",
-    sortOrder: 2,
-  },
-  {
-    id: randomUUIDv7(),
-    attributeId: "",
-    value: "L",
-    valueCode: "l",
-    sortOrder: 3,
-  },
-  {
-    id: randomUUIDv7(),
-    attributeId: "",
-    value: "XL",
-    valueCode: "xl",
-    sortOrder: 4,
-  },
-  {
-    id: randomUUIDv7(),
-    attributeId: "",
-    value: "XXL",
-    valueCode: "xxl",
-    sortOrder: 5,
-  },
+  { id: randomUUIDv7(), templateKeyId: templateKeys[0].id, value: "黑色", sortOrder: 1 },
+  { id: randomUUIDv7(), templateKeyId: templateKeys[0].id, value: "白色", sortOrder: 2 },
+  { id: randomUUIDv7(), templateKeyId: templateKeys[0].id, value: "红色", sortOrder: 3 },
+  { id: randomUUIDv7(), templateKeyId: templateKeys[0].id, value: "蓝色", sortOrder: 4 },
+  // 尺码值（鞋类）
+  { id: randomUUIDv7(), templateKeyId: templateKeys[1].id, value: "35", sortOrder: 1 },
+  { id: randomUUIDv7(), templateKeyId: templateKeys[1].id, value: "36", sortOrder: 2 },
+  { id: randomUUIDv7(), templateKeyId: templateKeys[1].id, value: "37", sortOrder: 3 },
+  { id: randomUUIDv7(), templateKeyId: templateKeys[1].id, value: "38", sortOrder: 4 },
+  { id: randomUUIDv7(), templateKeyId: templateKeys[1].id, value: "39", sortOrder: 5 },
+  { id: randomUUIDv7(), templateKeyId: templateKeys[1].id, value: "40", sortOrder: 6 },
   // 材质值
-  {
-    id: randomUUIDv7(),
-    attributeId: "",
-    value: "纯棉",
-    valueCode: "cotton",
-    sortOrder: 1,
-  },
-  {
-    id: randomUUIDv7(),
-    attributeId: "",
-    value: "涤纶",
-    valueCode: "polyester",
-    sortOrder: 2,
-  },
-  {
-    id: randomUUIDv7(),
-    attributeId: "",
-    value: "混纺",
-    valueCode: "blended",
-    sortOrder: 3,
-  },
+  { id: randomUUIDv7(), templateKeyId: templateKeys[2].id, value: "真皮", sortOrder: 1 },
+  { id: randomUUIDv7(), templateKeyId: templateKeys[2].id, value: "PU", sortOrder: 2 },
+  { id: randomUUIDv7(), templateKeyId: templateKeys[2].id, value: "织物", sortOrder: 3 },
+  // 尺码值（服装）
+  { id: randomUUIDv7(), templateKeyId: templateKeys[3].id, value: "S", sortOrder: 1 },
+  { id: randomUUIDv7(), templateKeyId: templateKeys[3].id, value: "M", sortOrder: 2 },
+  { id: randomUUIDv7(), templateKeyId: templateKeys[3].id, value: "L", sortOrder: 3 },
+  { id: randomUUIDv7(), templateKeyId: templateKeys[3].id, value: "XL", sortOrder: 4 },
+  // 面料值
+  { id: randomUUIDv7(), templateKeyId: templateKeys[4].id, value: "纯棉", sortOrder: 1 },
+  { id: randomUUIDv7(), templateKeyId: templateKeys[4].id, value: "涤纶", sortOrder: 2 },
+  { id: randomUUIDv7(), templateKeyId: templateKeys[4].id, value: "混纺", sortOrder: 3 },
 ];
 
-// 10. 示例商品数据
+// ========================================
+// 8. 产品和SKU数据
+// ========================================
+
+const product1Id = randomUUIDv7();
+const product2Id = randomUUIDv7();
+
 const products = [
   {
-    id: randomUUIDv7(),
-    spuCode: "SPU001",
-    name: "智能手机",
-    description: "高性能智能手机，支持5G网络",
+    id: product1Id,
+    spuCode: "SPU-PUMP-001",
+    name: "经典高跟鞋 Pumps Classic",
+    description: "经典款高跟鞋，舒适耐穿，适合各种场合",
     status: 1,
-    factoryId: "", // 稍后设置
-    units: "PCS",
+    units: "PAIR",
+    tenantId: tenant1Id,
+    deptId: dept1Factory1Id,
+    createdBy: user3Id,
+    isPublic: true,
   },
   {
-    id: randomUUIDv7(),
-    spuCode: "SPU002",
-    name: "运动T恤",
-    description: "透气舒适的运动T恤",
+    id: product2Id,
+    spuCode: "SPU-SANDAL-001",
+    name: "夏季凉鞋 Sandals Summer",
+    description: "舒适透气的夏季凉鞋",
     status: 1,
-    factoryId: "", // 稍后设置
-    units: "PCS",
+    units: "PAIR",
+    tenantId: tenant1Id,
+    deptId: dept1Factory2Id,
+    createdBy: user5Id,
+    isPublic: true,
   },
 ];
 
-// 11. SKU数据
+const sku1Id = randomUUIDv7();
+const sku2Id = randomUUIDv7();
+const sku3Id = randomUUIDv7();
+
 const skus = [
   {
-    id: randomUUIDv7(),
-    productId: "", // 稍后设置
-    skuCode: "SKU001-001",
-    name: "智能手机 黑色 64GB",
-    price: 2999.0,
-    stock: 100,
-    specJson: { color: "黑色", storage: "64GB" }, // spec_json字段需要JSON对象
+    id: sku1Id,
+    skuCode: "SKU-PUMP-001-BLK-37",
+    price: "89.99",
+    marketPrice: "129.99",
+    costPrice: "45.00",
+    stock: "100",
+    specJson: { color: "黑色", size: "37" },
+    status: 1,
+    productId: product1Id,
+    tenantId: tenant1Id,
+    deptId: dept1Factory1Id,
+    createdBy: user3Id,
   },
   {
-    id: randomUUIDv7(),
-    productId: "", // 稍后设置
-    skuCode: "SKU001-002",
-    name: "智能手机 黑色 128GB",
-    price: 3499.0,
-    stock: 50,
-    specJson: { color: "黑色", storage: "128GB" },
+    id: sku2Id,
+    skuCode: "SKU-PUMP-001-BLK-38",
+    price: "89.99",
+    marketPrice: "129.99",
+    costPrice: "45.00",
+    stock: "150",
+    specJson: { color: "黑色", size: "38" },
+    status: 1,
+    productId: product1Id,
+    tenantId: tenant1Id,
+    deptId: dept1Factory1Id,
+    createdBy: user3Id,
   },
   {
-    id: randomUUIDv7(),
-    productId: "", // 稍后设置
-    skuCode: "SKU002-001",
-    name: "运动T恤 S 纯棉",
-    price: 99.0,
-    stock: 200,
-    specJson: { size: "S", material: "纯棉" },
+    id: sku3Id,
+    skuCode: "SKU-SANDAL-001-RED-37",
+    price: "69.99",
+    marketPrice: "99.99",
+    costPrice: "35.00",
+    stock: "80",
+    specJson: { color: "红色", size: "37" },
+    status: 1,
+    productId: product2Id,
+    tenantId: tenant1Id,
+    deptId: dept1Factory2Id,
+    createdBy: user5Id,
   },
 ];
 
-// 12. 主页卡片数据 - 使用提供的数据
+// ========================================
+// 9. 站点分类和配置
+// ========================================
+
+const siteCategory1Id = randomUUIDv7();
+const siteCategory2Id = randomUUIDv7();
+
+const siteCategories = [
+  {
+    id: siteCategory1Id,
+    name: "热销鞋类",
+    description: "最畅销的鞋类产品",
+    parentId: null,
+    sortOrder: 1,
+    isActive: true,
+    siteId: site1Id,
+    masterCategoryId: masterCategories[0].id,
+  },
+  {
+    id: siteCategory2Id,
+    name: "新品上市",
+    description: "最新发布的产品",
+    parentId: null,
+    sortOrder: 2,
+    isActive: true,
+    siteId: site2Id,
+    masterCategoryId: masterCategories[3].id,
+  },
+];
+
+const siteConfigs = [
+  {
+    id: randomUUIDv7(),
+    key: "site_name",
+    value: "环球贸易集团",
+    description: "站点名称",
+    category: "general",
+    siteId: site1Id,
+  },
+  {
+    id: randomUUIDv7(),
+    key: "site_description",
+    value: "专业的鞋类产品出口商",
+    description: "站点描述",
+    category: "general",
+    siteId: site1Id,
+  },
+];
+
+// ========================================
+// 10. 主页卡片数据
+// ========================================
+
 const heroCards = [
   {
     id: "e6d2b19c-81ec-4b4a-9f70-a0242ae92920",
     title: 'DISCOVER "HEY BABY" COLLECTION',
     description: "Crafted in the decadent leopard design calf hair",
     buttonText: "LETS SHOPPIN",
-    buttonUrl: "",
+    buttonUrl: "/shop",
     backgroundClass: "bg-blue-50",
-    imageId: null, // 暂时设为 null，稍后可以添加实际的媒体文件
     sortOrder: 3,
     isActive: true,
+    mediaId: "", // 改为空字符串，因为字段是 notNull
+    siteId: site1Id,
+    tenantId: tenant1Id,
   },
   {
     id: "eeb815b1-ded9-4b66-9bfa-fac1502ee013",
     title: "EXPLORE SANDALES",
-    description:
-      "Handcrafted in exquisite detail,explore our selection of sandals",
+    description: "Handcrafted in exquisite detail,explore our selection of sandals",
     buttonText: "EXPLORE MORE",
-    buttonUrl: "",
+    buttonUrl: "/sandals",
     backgroundClass: "bg-blue-50",
-    imageId: null, // 暂时设为 null，稍后可以添加实际的媒体文件
     sortOrder: 1,
     isActive: true,
+    mediaId: "", // 改为空字符串
+    siteId: site1Id,
+    tenantId: tenant1Id,
   },
   {
     id: "23ddb3b0-f732-4d5b-af8a-12f724415dea",
     title: 'MEET "HEY BABY" COLLECTION',
     description: "A sleek mule designed for elegant occasions",
     buttonText: "DISCOVER MORE",
-    buttonUrl: "",
+    buttonUrl: "/collection",
     backgroundClass: "bg-blue-50",
-    imageId: null, // 暂时设为 null，稍后可以添加实际的媒体文件
     sortOrder: 2,
     isActive: true,
+    mediaId: "", // 改为空字符串
+    siteId: site1Id,
+    tenantId: tenant1Id,
   },
 ];
 
-// 15. 站点数据
-const sites = [
-  {
-    id: randomUUIDv7(),
-    name: "环球贸易站点",
-    domain: "global-trade.example.com",
-    siteType: "exporter",
-    exporterId: "", // 稍后设置
-    isActive: true,
-  },
-  {
-    id: randomUUIDv7(),
-    name: "东莞电子制造厂站点",
-    domain: "dg-electronics.example.com",
-    siteType: "factory",
-    factoryId: "", // 稍后设置
-    isActive: true,
-  },
-  {
-    id: randomUUIDv7(),
-    name: "深圳科技园站点",
-    domain: "sz-tech.example.com",
-    siteType: "factory",
-    factoryId: "", // 稍后设置
-    isActive: true,
-  },
-];
+// ========================================
+// 11. 客户和询盘数据
+// ========================================
 
-// 16. 站点分类数据（每个站点的独立分类体系）
-const siteCategories = [
-  // 环球贸易站点的分类
-  {
-    id: randomUUIDv7(),
-    siteId: "", // 稍后设置
-    name: "电子产品",
-    parentId: null,
-    sortOrder: 1,
-    masterCategoryId: "", // 稍后设置
-  },
-  {
-    id: randomUUIDv7(),
-    siteId: "", // 稍后设置
-    name: "手机",
-    parentId: "", // 稍后设置
-    sortOrder: 1,
-    masterCategoryId: "",
-  },
-  // 工厂站点的分类
-  {
-    id: randomUUIDv7(),
-    siteId: "", // 稍后设置
-    name: "主打产品",
-    parentId: null,
-    sortOrder: 1,
-    masterCategoryId: "",
-  },
-];
+const customer1Id = randomUUIDv7();
+const customer2Id = randomUUIDv7();
 
-// 17. 站点配置数据
-const siteConfigs2 = [
-  {
-    id: randomUUIDv7(),
-    key: "site_name",
-    value: "环球贸易公司",
-    description: "站点名称",
-    category: "general",
-    siteId: "", // 稍后设置
-  },
-  {
-    id: randomUUIDv7(),
-    key: "site_description",
-    value: "专业的电子产品出口商",
-    description: "站点描述",
-    category: "general",
-    siteId: "", // 稍后设置
-  },
-];
-
-// 18. 翻译字典数据
-const translationDict = [
-  {
-    id: randomUUIDv7(),
-    key: "welcome_message",
-    category: "general",
-    description: "欢迎信息",
-    translations: {
-      en: "Welcome to our platform",
-      zh: "欢迎来到我们的平台",
-      es: "Bienvenido a nuestra plataforma",
-    },
-    isActive: true,
-    sortOrder: 1,
-  },
-  {
-    id: randomUUIDv7(),
-    key: "contact_us",
-    category: "contact",
-    description: "联系我们",
-    translations: {
-      en: "Contact Us",
-      zh: "联系我们",
-      es: "Contáctanos",
-    },
-    isActive: true,
-    sortOrder: 2,
-  },
-];
-
-// 19. 每日询盘计数器数据
-const dailyInquiryCounter = [
-  {
-    id: randomUUIDv7(),
-    date: new Date().toISOString().split("T")[0], // 今天
-    count: 0,
-    lastResetAt: new Date(),
-  },
-];
-
-// 20. 客户数据
 const customers = [
   {
-    id: randomUUIDv7(),
+    id: customer1Id,
     companyName: "美国ABC公司",
     name: "John Smith",
     email: "info@abc-usa.com",
     whatsapp: "+12125551234",
     phone: "2125551234",
     address: "123 Broadway, New York, NY 10001, USA",
+    tenantId: tenant1Id,
+    deptId: dept1Factory1Id,
+    createdBy: user4Id,
+    isPublic: false,
   },
   {
-    id: randomUUIDv7(),
+    id: customer2Id,
     companyName: "德国XYZ贸易",
     name: "Hans Mueller",
     email: "contact@xyz-germany.de",
     whatsapp: "+493012345678",
     phone: "3012345678",
     address: "Friedrichstrasse 123, 10117 Berlin, Germany",
+    tenantId: tenant1Id,
+    deptId: dept1Factory2Id,
+    createdBy: user5Id,
+    isPublic: false,
   },
 ];
 
-// 清理数据库的函数
+const inquiry1Id = randomUUIDv7();
+
+const inquiries = [
+  {
+    id: inquiry1Id,
+    inquiryNumber: "INQ-2024-001",
+    customerName: "John Smith",
+    customerCompany: "美国ABC公司",
+    customerEmail: "info@abc-usa.com",
+    customerPhone: "2125551234",
+    customerWhatsapp: "+12125551234",
+    status: "pending" as const,
+    skuId: sku1Id,
+    productName: "经典高跟鞋 Pumps Classic",
+    productDescription: "经典款高跟鞋，舒适耐穿",
+    quantity: 500,
+    price: "89.99",
+    paymentMethod: "T/T",
+    customerRequirements: "需要定制包装，印客户logo",
+    tenantId: tenant1Id,
+    deptId: dept1Factory1Id,
+    createdBy: user4Id,
+  },
+];
+
+const quotation1Id = randomUUIDv7();
+
+const quotations = [
+  {
+    id: quotation1Id,
+    refNo: "QT-2024-001",
+    date: new Date().toISOString().split("T")[0],
+    clientId: customer1Id,
+    deliveryTimeDays: "30",
+    sampleLeadtimeDays: "7",
+    paymentTerms: "30% deposit, 70% before shipment",
+    qualityRemark: "符合欧盟标准",
+    safetyCompliance: "CE认证",
+    status: "draft",
+    skuId: sku1Id,
+    productionDeptId: dept1Factory1Id,
+    unitPriceUsd: "89.99",
+    quantity: 500,
+    totalUsd: "44995.00",
+    remark: "包含定制包装费用",
+    tenantId: tenant1Id,
+    deptId: dept1Factory1Id,
+    createdBy: user3Id,
+  },
+];
+
+// ========================================
+// 12. 产品关联数据
+// ========================================
+
+const productMasterCategories = [
+  { productId: product1Id, masterCategoryId: masterCategories[0].id },
+  { productId: product2Id, masterCategoryId: masterCategories[3].id },
+];
+
+const productSiteCategories = [
+  { productId: product1Id, siteCategoryId: siteCategory1Id },
+  { productId: product2Id, siteCategoryId: siteCategory2Id },
+];
+
+const productTemplates = [
+  { productId: product1Id, templateId: templates[0].id },
+  { productId: product2Id, templateId: templates[0].id },
+];
+
+const siteProducts = [
+  {
+    siteId: site1Id,
+    productId: product1Id,
+    sitePrice: "89.99",
+    siteName: "经典高跟鞋 - 热销款",
+    siteDescription: "集团站热销产品",
+    isFeatured: true,
+    sortOrder: 1,
+    isVisible: true,
+    siteCategoryId: siteCategory1Id,
+  },
+  {
+    siteId: site2Id,
+    productId: product2Id,
+    sitePrice: "69.99",
+    siteName: "夏季凉鞋 - 工厂直供",
+    siteDescription: "东莞工厂生产",
+    isFeatured: true,
+    sortOrder: 1,
+    isVisible: true,
+    siteCategoryId: siteCategory2Id,
+  },
+];
+
+// ========================================
+// 13. 其他数据
+// ========================================
+
+const dailyInquiryCounter = [
+  {
+    id: randomUUIDv7(),
+    date: new Date().toISOString().split("T")[0],
+    count: 1,
+    lastResetAt: new Date(),
+  },
+];
+
+// ========================================
+// 清理数据库
+// ========================================
+
 async function clearDatabase() {
   console.log("🧹 清理现有数据...");
 
-  // 按照外键依赖顺序删除数据
   const tables = [
     // 先删除有外键依赖的表
-    userSiteRolesTable,
-    rolePermissionsTable,
-    siteProductsTable,
-    siteCategoriesTable,
-    skuMediaTable,
-    quotationItemsTable,
-    inquiryItemsTable,
-    salespersonCategoriesTable,
-    salespersonAffiliationsTable,
-    productMediaTable,
-    productMasterCategoriesTable,
+    siteProductTable,
+    productSiteCategoryTable,
+    productMasterCategoryTable,
     productTemplateTable,
-    attributeValueTable,
-
-    // SKU和商品相关
-    skusTable,
-    productsTable,
-    attributeTable,
-    attributeTemplateTable,
-
-    // 业务数据
-    salespersonsTable,
-    CustomerTable,
+    skuMediaTable,
+    productMediaTable,
     inquiryTable,
-    quotationsTable,
-    factoriesTable,
-    exportersTable,
-
-    // 站点和配置
-    sitesTable,
+    quotationTable,
+    customerTable,
+    skuTable,
+    productTable,
+    templateValueTable,
+    templateKeyTable,
+    templateTable,
+    siteCategoryTable,
     siteConfigTable,
-    heroCardsTable,
-    adsTable,
-    mediaTable,
+    heroCardTable,
+    adTable,
     mediaMetadataTable,
-
-    // 其他数据
-    dailyInquiryCounterTable,
-    translationDictTable,
-    masterTable,
-
-    // Auth相关
+    mediaTable,
+    siteTable,
+    masterCategoryTable,
+    userRoleTable,
+    userTable,
+    rolePermissionTable,
+    roleTable,
+    permissionTable,
+    departmentTable,
+    tenantTable,
     accountTable,
     sessionTable,
     verificationTable,
-    usersTable,
-    roleTable,
-    permissionTable,
+    dailyInquiryCounterTable,
   ];
 
   for (const table of tables) {
     try {
       if (!table) {
-        console.log("表不存在，跳过");
         continue;
       }
       await db.delete(table);
-    } catch (error) {
-      // 忽略表不存在的错误
-      console.log(
-        `注意：表 ${table?._?.name || "未知"} 可能不存在: ${error.message}`
-      );
+    } catch (error: any) {
+      console.log(`注意：表 ${table?._?.name || "未知"} 可能不存在: ${error?.message || error}`);
     }
   }
 }
+
+// ========================================
+// 数据库初始化
+// ========================================
 
 async function seedCompleteDatabase() {
   try {
     console.log("🌱 开始完整数据库初始化...");
 
-    // 1. 插入角色数据
+    // 1. 插入租户数据
+    console.log("🏢 插入租户数据...");
+    await db.insert(tenantTable).values(tenants);
+
+    // 2. 插入部门数据
+    console.log("🏭 插入部门数据...");
+    await db.insert(departmentTable).values(departments);
+
+    // 3. 插入角色数据
     console.log("📋 插入角色数据...");
     await db.insert(roleTable).values(roles);
 
-    // 2. 插入权限数据
+    // 4. 插入权限数据
     console.log("🔑 插入权限数据...");
     await db.insert(permissionTable).values(permissions);
 
-    // 3. 插入角色权限关联
+    // 5. 插入角色权限关联
     console.log("🔗 插入角色权限关联...");
     const rolePermissionRelations = [];
-    const uniqueRelations = new Set(); // 用于去重
+    const uniqueRelations = new Set();
 
-    // 为每个角色分配对应的权限
-    for (const [roleName, permissionNames] of Object.entries(
-      ROLE_PERMISSIONS
-    )) {
+    for (const [roleName, permissionNames] of Object.entries(ROLE_PERMISSIONS)) {
       const role = roles.find((r) => r.name === roleName);
       if (!role) continue;
 
@@ -968,7 +1066,6 @@ async function seedCompleteDatabase() {
         const permission = permissions.find((p) => p.name === permissionName);
         if (!permission) continue;
 
-        // 使用字符串组合来确保唯一性
         const relationKey = `${role.id}-${permission.id}`;
         if (!uniqueRelations.has(relationKey)) {
           uniqueRelations.add(relationKey);
@@ -980,73 +1077,21 @@ async function seedCompleteDatabase() {
       }
     }
 
-    // 分批插入以避免参数过多
     const batchSize = 100;
-    for (let i = 0; i < rolePermissionRelations.length; i += batchSize) {
+    for (let i = 0;i < rolePermissionRelations.length;i += batchSize) {
       const batch = rolePermissionRelations.slice(i, i + batchSize);
-      await db.insert(rolePermissionsTable).values(batch);
+      await db.insert(rolePermissionTable).values(batch);
     }
 
-    // 4. 插入产品分类数据
-    console.log("📦 插入产品分类数据...");
-    await db.insert(masterTable).values(categories);
+    // 6. 插入主分类数据
+    console.log("📦 插入主分类数据...");
+    await db.insert(masterCategoryTable).values(masterCategories);
 
-    // 5. 设置属性模板的分类ID并插入
-    console.log("📋 插入属性模板数据...");
-    attributeTemplates[0].categoryId = categories[0].id; // 电子产品
-    attributeTemplates[1].categoryId = categories[1].id; // 服装
-    attributeTemplates[2].categoryId = categories[2].id; // 家居
-    await db.insert(attributeTemplateTable).values(attributeTemplates);
-
-    // 6. 设置属性并插入
-    console.log("🏷️ 插入属性定义数据...");
-    attributes[0].templateId = attributeTemplates[0].id; // 电子产品-颜色
-    attributes[1].templateId = attributeTemplates[0].id; // 电子产品-存储容量
-    attributes[2].templateId = attributeTemplates[1].id; // 服装-尺码
-    attributes[3].templateId = attributeTemplates[1].id; // 服装-材质
-    await db.insert(attributeTable).values(attributes);
-
-    // 7. 设置属性值并插入
-    console.log("💎 插入属性值数据...");
-    // 颜色值
-    attributeValues[0].attributeId = attributes[0].id;
-    attributeValues[1].attributeId = attributes[0].id;
-    attributeValues[2].attributeId = attributes[0].id;
-    attributeValues[3].attributeId = attributes[0].id;
-    // 存储容量值
-    attributeValues[4].attributeId = attributes[1].id;
-    attributeValues[5].attributeId = attributes[1].id;
-    attributeValues[6].attributeId = attributes[1].id;
-    attributeValues[7].attributeId = attributes[1].id;
-    // 尺码值
-    attributeValues[8].attributeId = attributes[2].id;
-    attributeValues[9].attributeId = attributes[2].id;
-    attributeValues[10].attributeId = attributes[2].id;
-    attributeValues[11].attributeId = attributes[2].id;
-    attributeValues[12].attributeId = attributes[2].id;
-    // 材质值
-    attributeValues[13].attributeId = attributes[3].id;
-    attributeValues[14].attributeId = attributes[3].id;
-    attributeValues[15].attributeId = attributes[3].id;
-    await db.insert(attributeValueTable).values(attributeValues);
-
-    // 8. 插入出口商数据
-    console.log("🚢 插入出口商数据...");
-    await db.insert(exportersTable).values(exporterData);
-
-    // 9. 插入工厂数据（分配categoryId）
-    console.log("🏭 插入工厂数据...");
-    const factoryDataWithCategories = factoryData.map((factory, index) => ({
-      ...factory,
-      categoryId: categories[index % categories.length].id,
-    }));
-    await db.insert(factoriesTable).values(factoryDataWithCategories);
-
-    // 10. 插入用户数据到users表
+    // 7. 插入用户数据
     console.log("👥 插入用户数据...");
-    await db.insert(usersTable).values(users);
+    await db.insert(userTable).values(users);
 
-    // 11. 创建Better Auth账户记录
+    // 8. 创建Better Auth账户记录
     console.log("🔐 创建Better Auth账户记录...");
     const accounts = users.map((user) => ({
       id: randomUUIDv7(),
@@ -1055,170 +1100,114 @@ async function seedCompleteDatabase() {
       providerId: "credential",
       accountId: user.email,
       password: hashedPassword,
-      createdAt: new Date(),
-      updatedAt: new Date(),
     }));
     await db.insert(accountTable).values(accounts);
 
-    // 12. 插入站点数据
+    // 9. 插入用户角色关联
+    console.log("👑 插入用户角色关联...");
+    const userRoles = [
+      // 超级管理员
+      { userId: user1Id, roleId: roles[3].id },
+      // 租户管理员
+      { userId: user2Id, roleId: roles[0].id },
+      // 工厂经理
+      { userId: user3Id, roleId: roles[1].id },
+      // 业务员们
+      { userId: user4Id, roleId: roles[2].id },
+      { userId: user5Id, roleId: roles[2].id },
+      { userId: user6Id, roleId: roles[2].id },
+    ];
+    await db.insert(userRoleTable).values(userRoles);
+
+    // 10. 插入站点数据
     console.log("🌐 插入站点数据...");
-    sites[0].exporterId = exporterData[0].id; // 环球贸易站点
-    sites[1].factoryId = factoryDataWithCategories[0].id; // 东莞电子制造厂站点
-    sites[2].factoryId = factoryDataWithCategories[1].id; // 深圳科技园站点
-    await db.insert(sitesTable).values(sites);
+    await db.insert(siteTable).values(sites);
 
-    // 13. 插入站点分类数据
+    // 11. 插入站点分类数据
     console.log("📂 插入站点分类数据...");
-    // 设置站点分类的ID
-    siteCategories[0].siteId = sites[0].id; // 环球贸易站点
-    siteCategories[1].siteId = sites[0].id; // 环球贸易站点
-    siteCategories[2].siteId = sites[1].id; // 东莞电子制造厂站点
+    await db.insert(siteCategoryTable).values(siteCategories);
 
-    siteCategories[0].masterCategoryId = categories[0].id; // 电子产品
-    siteCategories[1].masterCategoryId = categories[0].id; // 电子产品
-    siteCategories[1].parentId = siteCategories[0].id; // 手机是电子产品的子分类
-    siteCategories[2].masterCategoryId = categories[0].id; // 电子产品
-
-    await db.insert(siteCategoriesTable).values(siteCategories);
-
-    // 14. 插入用户站点角色关联数据
-    console.log("👑 插入用户站点角色关联...");
-    const userSiteRoles = [
-      // 超级管理员 - 可以访问所有站点
-      {
-        userId: users[0].id,
-        siteId: sites[0].id,
-        roleId: roles[3].id, // super_admin
-      },
-      // 张三 - 出口商管理员
-      {
-        userId: users[1].id,
-        siteId: sites[0].id,
-        roleId: roles[0].id, // exporter_admin
-      },
-      // 李四 - 工厂管理员
-      {
-        userId: users[2].id,
-        siteId: sites[1].id,
-        roleId: roles[1].id, // factory_admin
-      },
-      // 王五 - 业务员
-      {
-        userId: users[3].id,
-        siteId: sites[0].id,
-        roleId: roles[2].id, // salesperson
-      },
-      // 赵六 - 业务员
-      {
-        userId: users[4].id,
-        siteId: sites[1].id,
-        roleId: roles[2].id, // salesperson
-      },
-      // 陈七 - 业务员
-      {
-        userId: users[5].id,
-        siteId: sites[2].id,
-        roleId: roles[2].id, // salesperson
-      },
-    ];
-    await db.insert(userSiteRolesTable).values(userSiteRoles);
-
-    // 15. 插入商品数据
-    console.log("🛍️ 插入商品数据...");
-    products[0].factoryId = factoryDataWithCategories[0].id; // 智能手机 - 电子厂
-    products[1].factoryId = factoryDataWithCategories[2].id; // 运动T恤 - 服装厂
-    await db.insert(productsTable).values(products);
-
-    // 16. 插入SKU数据
-    console.log("📦 插入SKU数据...");
-    skus[0].productId = products[0].id; // 智能手机 SKU
-    skus[1].productId = products[0].id;
-    skus[2].productId = products[1].id; // 运动T恤 SKU
-    await db.insert(skusTable).values(skus);
-
-    // 17. 插入商品模板关联
-    console.log("📋 插入商品模板关联...");
-    const productTemplates = [
-      { productId: products[0].id, templateId: attributeTemplates[0].id }, // 智能手机 - 电子产品模板
-      { productId: products[1].id, templateId: attributeTemplates[1].id }, // 运动T恤 - 服装模板
-    ];
-    await db.insert(productTemplateTable).values(productTemplates);
-
-    // 18. 插入站点商品关联数据
-    console.log("🛒 插入站点商品关联数据...");
-    const siteProducts = [
-      {
-        siteId: sites[0].id, // 环球贸易站点
-        productId: products[0].id, // 智能手机
-        isFeatured: true,
-        sortOrder: 1,
-        isVisible: true,
-        siteCategoryId: siteCategories[1].id, // 手机分类
-      },
-      {
-        siteId: sites[1].id, // 东莞电子制造厂站点
-        productId: products[0].id, // 智能手机
-        isFeatured: true,
-        sortOrder: 1,
-        isVisible: true,
-        siteCategoryId: siteCategories[2].id, // 主打产品分类
-      },
-    ];
-    await db.insert(siteProductsTable).values(siteProducts);
-
-    // 19. 插入主页卡片数据（需要siteId）
-    console.log("🎨 插入主页卡片数据...");
-    const heroCardsWithSite = heroCards.map((card) => ({
-      ...card,
-      siteId: sites[0].id, // 默认添加到环球贸易站点
-    }));
-    await db.insert(heroCardsTable).values(heroCardsWithSite);
-
-    // 20. 插入站点配置数据
+    // 12. 插入站点配置数据
     console.log("⚙️ 插入站点配置数据...");
-    // 设置站点配置的siteId
-    siteConfigs2[0].siteId = sites[0].id; // 环球贸易站点
-    siteConfigs2[1].siteId = sites[0].id; // 环球贸易站点
-    await db.insert(siteConfigTable).values(siteConfigs2);
+    await db.insert(siteConfigTable).values(siteConfigs);
 
-    // 21. 插入翻译字典数据
-    console.log("🌍 插入翻译字典数据...");
-    await db.insert(translationDictTable).values(translationDict);
+    // 13. 插入模板数据
+    console.log("📋 插入模板数据...");
+    await db.insert(templateTable).values(templates);
 
-    // 22. 插入每日询盘计数器数据
+    // 14. 插入模板键数据
+    console.log("🔑 插入模板键数据...");
+    await db.insert(templateKeyTable).values(templateKeys);
+
+    // 15. 插入模板值数据
+    console.log("💎 插入模板值数据...");
+    await db.insert(templateValueTable).values(templateValues);
+
+    // 16. 插入产品数据
+    console.log("🛍️ 插入产品数据...");
+    await db.insert(productTable).values(products);
+
+    // 17. 插入SKU数据
+    console.log("📦 插入SKU数据...");
+    await db.insert(skuTable).values(skus);
+
+    // 18. 插入产品关联数据
+    console.log("🔗 插入产品关联数据...");
+    await db.insert(productMasterCategoryTable).values(productMasterCategories);
+    await db.insert(productSiteCategoryTable).values(productSiteCategories);
+    await db.insert(productTemplateTable).values(productTemplates);
+    await db.insert(siteProductTable).values(siteProducts);
+
+    // 19. 插入主页卡片数据
+    console.log("🎨 插入主页卡片数据...");
+    await db.insert(heroCardTable).values(heroCards);
+
+    // 20. 插入客户数据
+    console.log("🏢 插入客户数据...");
+    await db.insert(customerTable).values(customers);
+
+    // 21. 插入询盘数据
+    console.log("📨 插入询盘数据...");
+    await db.insert(inquiryTable).values(inquiries);
+
+    // 22. 插入报价数据
+    console.log("💰 插入报价数据...");
+    await db.insert(quotationTable).values(quotations);
+
+    // 23. 插入每日询盘计数器数据
     console.log("📊 插入每日询盘计数器数据...");
     await db.insert(dailyInquiryCounterTable).values(dailyInquiryCounter);
-
-    // 23. 插入客户数据
-    console.log("🏢 插入客户数据...");
-    await db.insert(CustomerTable).values(customers);
 
     console.log("✅ 数据库初始化完成！");
     console.log("\n📝 创建的账号信息：");
     console.log("1. 超级管理员: super@admin.com");
-    console.log("2. 出口商管理员: admin@exporter.com");
-    console.log("3. 工厂管理员: factory@manager.com");
+    console.log("2. 租户管理员: admin@global.com");
+    console.log("3. 部门经理: factory@manager.com");
     console.log("4. 业务员1: sales@rep.com");
     console.log("5. 业务员2: john@example.com");
     console.log("6. 业务员3: jane@example.com");
     console.log("\n💡 所有账号的密码都是: 12345678");
     console.log("\n📊 初始化的数据包括：");
+    console.log("- 2个租户");
+    console.log("- 4个部门（1个总部 + 2个工厂 + 1个办事处）");
     console.log("- 4个角色及其权限");
-    console.log("- 22个权限");
-    console.log("- 8个产品分类");
-    console.log("- 3个属性模板");
-    console.log("- 4个属性定义");
-    console.log("- 16个属性值");
-    console.log("- 2个出口商");
-    console.log("- 3个工厂");
+    console.log("- 6个主分类（鞋类）");
+    console.log("- 2个属性模板");
+    console.log("- 5个属性键");
+    console.log("- 18个属性值");
     console.log("- 6个用户");
-    console.log("- 3个站点");
-    console.log("- 3个站点分类");
-    console.log("- 2个站点商品关联");
-    console.log("- 2个示例商品");
+    console.log("- 3个站点（1个集团站 + 2个工厂站）");
+    console.log("- 2个站点分类");
+    console.log("- 2个产品");
     console.log("- 3个SKU");
     console.log("- 3个主页卡片");
-    console.log("- 站点配置、翻译字典、每日询盘计数器、客户数据等");
+    console.log("- 2个客户");
+    console.log("- 1个询盘");
+    console.log("- 1个报价");
+    console.log("\n🏗️ 架构说明：");
+    console.log("- 租户 → 部门（树形结构）→ 用户");
+    console.log("- 站点绑定部门：集团站绑定总部，工厂站绑定工厂");
+    console.log("- 所有业务表包含 tenantCols（tenantId, deptId, createdBy, isPublic, siteId）");
   } catch (error) {
     console.error("❌ 数据库初始化失败:", error);
     process.exit(1);
@@ -1226,4 +1215,9 @@ async function seedCompleteDatabase() {
 }
 
 // 运行初始化
-seedCompleteDatabase();
+async function main() {
+  await clearDatabase(); // 先清理现有数据
+  await seedCompleteDatabase();
+}
+
+main();

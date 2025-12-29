@@ -7,7 +7,7 @@
  */
 
 import type { UserSiteRolesDTO } from "@repo/contract";
-import { sitesTable, userSiteRolesTable } from "@repo/contract";
+import { siteTable, userSiteRolesTable } from "@repo/contract";
 import { and, eq } from "drizzle-orm";
 import { HttpError } from "elysia-http-problem-json";
 import { UserSiteRolesGeneratedService } from "../_generated/usersiteroles.service";
@@ -104,7 +104,7 @@ export class UserSiteRolesService extends UserSiteRolesGeneratedService {
     // 获取可访问的站点ID
     const accessibleSites = await db
       .select()
-      .from(sitesTable)
+      .from(siteTable)
       .where((sites) => {
         const conditions = [];
 
@@ -141,10 +141,10 @@ export class UserSiteRolesService extends UserSiteRolesGeneratedService {
       where: {
         ...(accessibleUserIds.length > 0
           ? {
-              userId: {
-                in: accessibleUserIds,
-              },
-            }
+            userId: {
+              in: accessibleUserIds,
+            },
+          }
           : {}),
         siteId: {
           in: accessibleSiteIds,
@@ -457,10 +457,10 @@ export class UserSiteRolesService extends UserSiteRolesGeneratedService {
           where: {
             ...(factoryIds.length > 0
               ? {
-                  factoryId: {
-                    in: factoryIds,
-                  },
-                }
+                factoryId: {
+                  in: factoryIds,
+                },
+              }
               : {}),
           },
           columns: { id: true },

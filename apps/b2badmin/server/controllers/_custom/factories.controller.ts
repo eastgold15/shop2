@@ -1,7 +1,7 @@
 import {
   FactoriesContract,
   factoriesTable,
-  sitesTable,
+  siteTable,
   userSiteRolesTable,
 } from "@repo/contract";
 import { eq } from "drizzle-orm";
@@ -132,7 +132,7 @@ export const factoriesController = new Elysia({
 
         // 为工厂创建站点
         const [newSite] = await tx
-          .insert(sitesTable)
+          .insert(siteTable)
           .values({
             name: body.name,
             domain: body.code.toLowerCase(),

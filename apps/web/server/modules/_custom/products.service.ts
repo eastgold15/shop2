@@ -6,10 +6,10 @@
  * --------------------------------------------------------
  */
 import {
-  mediaTable,
-  productMasterCategoriesTable,
+  mediasTable,
+  productMasterCategoryTable,
   productMediaTable,
-  skusTable,
+  skuTable,
 } from "@repo/contract";
 import { and, asc, desc, eq, exists, like, type SQL, sql } from "drizzle-orm";
 import { db } from "~/db/connection";
@@ -40,11 +40,11 @@ export class ProductsService extends ProductsGeneratedService {
         exists(
           ctx.db
             .select({})
-            .from(productMasterCategoriesTable)
+            .from(productMasterCategoryTable)
             .where(
               and(
-                eq(productMasterCategoriesTable.productId, this.table.id),
-                eq(productMasterCategoriesTable.masterCategoryId, categoryId)
+                eq(productMasterCategoryTable.productId, this.table.id),
+                eq(productMasterCategoryTable.masterCategoryId, categoryId)
               )
             )
         )
@@ -56,31 +56,31 @@ export class ProductsService extends ProductsGeneratedService {
       .select({
         id: this.table.id,
         name: this.table.name,
-        price: sql<number>`(select min(${skusTable.price}) from ${skusTable} where ${skusTable.productId} = ${this.table.id})`,
+        price: sql<number>`(select min(${skuTable.price}) from ${skuTable} where ${skuTable.productId} = ${this.table.id})`,
         status: this.table.status,
         createdAt: this.table.createdAt,
         // 【改进】只取主图或第一张图，避免 Join 导致的数据重复
         mainImageUrl: sql<string>`(
-      select ${mediaTable.url} 
-      from ${mediaTable} 
-      inner join ${productMediaTable} on ${mediaTable.id} = ${productMediaTable.mediaId}
+      select ${mediasTable.url} 
+      from ${mediasTable} 
+      inner join ${productMediaTable} on ${mediasTable.id} = ${productMediaTable.mediaId}
       where ${productMediaTable.productId} = ${this.table.id}
       order by ${productMediaTable.isMain} desc, ${productMediaTable.sortOrder} asc 
       limit 1
     )`,
         // 【可选】如果需要标记这个商品是否有视频
         hasVideo: sql<boolean>`exists(
-      select 1 from ${mediaTable} 
-      inner join ${productMediaTable} on ${mediaTable.id} = ${productMediaTable.mediaId}
+      select 1 from ${mediasTable} 
+      inner join ${productMediaTable} on ${mediasTable.id} = ${productMediaTable.mediaId}
       where ${productMediaTable.productId} = ${this.table.id} 
-      and ${mediaTable.mediaType} = 'video'
+      and ${mediasTable.mediaType} = 'video'
     )`,
       })
       .from(this.table)
       // 移除原来的 productMediaTable 和 mediaTable 的 leftJoin，改用上面的子查询
       .leftJoin(
-        productMasterCategoriesTable,
-        eq(this.table.id, productMasterCategoriesTable.productId)
+        productMasterCategoryTable,
+        eq(this.table.id, productMasterCategoryTable.productId)
       )
       .$dynamic();
 

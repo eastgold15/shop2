@@ -6,7 +6,7 @@
  * --------------------------------------------------------
  */
 
-import { mediaTable } from "@repo/contract";
+import { mediasTable } from "@repo/contract";
 import { and, eq, getColumns, inArray, like, sql } from "drizzle-orm";
 import { HttpError } from "elysia-http-problem-json";
 import { AdsGeneratedService } from "../_generated/ads.service";
@@ -49,10 +49,10 @@ export class AdsService extends AdsGeneratedService {
     const select = ctx.db
       .select({
         ...getColumns(table),
-        mediaUrl: mediaTable.url,
+        mediaUrl: mediasTable.url,
       })
       .from(table)
-      .leftJoin(mediaTable, eq(table.mediaId, mediaTable.id))
+      .leftJoin(mediasTable, eq(table.mediaId, mediasTable.id))
       .$dynamic();
 
     // 获取数据

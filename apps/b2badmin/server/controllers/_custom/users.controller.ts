@@ -1,10 +1,10 @@
 import {
   exportersTable,
   factoriesTable,
-  sitesTable,
+  siteTable,
   UsersContract,
   userSiteRolesTable,
-  usersTable,
+  userTable,
 } from "@repo/contract";
 import { eq } from "drizzle-orm";
 import { Elysia, t } from "elysia";
@@ -61,14 +61,14 @@ export const usersController = new Elysia({ prefix: "/users" })
     "/me/profile",
     async ({ body, user, db }) => {
       const updatedUser = await db
-        .update(usersTable)
+        .update(userTable)
         .set({
           name: body.name,
           phone: body.phone,
           address: body.address,
           city: body.city,
         })
-        .where(eq(usersTable.id, user.id))
+        .where(eq(userTable.id, user.id))
         .returning();
 
       return updatedUser[0];
@@ -130,12 +130,12 @@ export const usersController = new Elysia({ prefix: "/users" })
 
       // 1. 先更新站点信息
       const updatedSite = await db
-        .update(sitesTable)
+        .update(siteTable)
         .set({
           name: body.siteName,
           domain: body.domain,
         })
-        .where(eq(sitesTable.id, currentSite.id))
+        .where(eq(siteTable.id, currentSite.id))
         .returning();
 
       // 2. 根据站点类型更新对应的出口商或工厂信息

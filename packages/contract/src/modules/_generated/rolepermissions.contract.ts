@@ -6,10 +6,10 @@
  * --------------------------------------------------------
  */
 import { t } from "elysia";
-import { rolePermissionsTable } from "../../table.schema";
-import { spread } from "../../helper/utils"; 
+import { rolePermissionTable } from "../../table.schema";
+import { spread } from "../../helper/utils";
 
 export const RolePermissionsBase = {
-  fields: spread(rolePermissionsTable, 'select'),
-  insertFields: spread(rolePermissionsTable, 'insert'),
+  fields: spread(rolePermissionTable, 'select'),
+  insertFields: spread(rolePermissionTable, 'insert'),
 } as const;

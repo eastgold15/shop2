@@ -6,10 +6,10 @@
  * --------------------------------------------------------
  */
 import { t } from "elysia";
-import { quotationsTable } from "../../table.schema";
-import { spread } from "../../helper/utils"; 
+import { quotationTable } from "../../table.schema";
+import { spread } from "../../helper/utils";
 
 export const QuotationsBase = {
-  fields: spread(quotationsTable, 'select'),
-  insertFields: spread(quotationsTable, 'insert'),
+  fields: spread(quotationTable, 'select'),
+  insertFields: spread(quotationTable, 'insert'),
 } as const;
