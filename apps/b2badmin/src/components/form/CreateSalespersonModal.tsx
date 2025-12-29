@@ -261,9 +261,7 @@ export function CreateSalespersonModal({
               <div className="rounded-md bg-blue-50 p-3">
                 <p className="font-medium text-blue-900 text-sm">
                   归属信息：
-                  {currentSite.siteType === "exporter"
-                    ? " 出口商"
-                    : " 工厂"}
+                  {currentSite.siteType === "exporter" ? " 出口商" : " 工厂"}
                 </p>
                 <p className="text-blue-700 text-xs">
                   业务员将自动归属到当前登录用户的站点

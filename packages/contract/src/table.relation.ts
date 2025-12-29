@@ -41,11 +41,11 @@ export const relations = defineRelations(schema, (r) => ({
     users: r.many.userTable({
       from: r.departmentTable.id,
       to: r.userTable.deptId,
-    }),             // 部门下的员工
+    }), // 部门下的员工
     site: r.one.siteTable({
       from: r.departmentTable.id,
-      to: r.siteTable.boundDeptId
-    }),             // 绑定到该部门的站点 (如工厂站)
+      to: r.siteTable.boundDeptId,
+    }), // 绑定到该部门的站点 (如工厂站)
     // 生产关联
     producedQuotations: r.many.quotationTable({
       from: r.departmentTable.id,
@@ -192,7 +192,6 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.masterCategoryTable.id,
       to: r.templateTable.masterCategoryId,
     }),
-
   },
 
   // [站点分类]
@@ -310,9 +309,6 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.siteProductTable.productId,
       to: r.productTable.id,
     }),
-
-
-
   },
 
   // ==========================================
@@ -359,7 +355,6 @@ export const relations = defineRelations(schema, (r) => ({
     }),
   },
 
-
   // ==========================================
   // 6. 媒体资源 (Media)
   // ==========================================
@@ -394,8 +389,6 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.mediaTable.id,
     }),
   },
-
-
 
   productMediaTable: {
     product: r.one.productTable({
@@ -465,8 +458,6 @@ export const relations = defineRelations(schema, (r) => ({
     }),
   },
 
-
-
   quotationTable: {
     tenant: r.one.tenantTable({
       from: r.quotationTable.tenantId,
@@ -493,8 +484,6 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.departmentTable.id,
     }),
   },
-
-
 
   // ==========================================
   // 8. 认证 (Auth Helpers)

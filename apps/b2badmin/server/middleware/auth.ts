@@ -1,15 +1,15 @@
-import { and, eq } from "drizzle-orm";
 import { Elysia } from "elysia";
 import { HttpError } from "elysia-http-problem-json";
 import { dbPlugin } from "~/db/connection";
 import { auth } from "~/lib/auth";
+
 // 定义权重字典：数字越大，权限越大
 const SCOPE_WEIGHT = {
-  all: 4,            // 全部数据
+  all: 4, // 全部数据
   dept_and_child: 3, // 本部门及子部门
-  dept_only: 2,      // 本部门
-  self: 1,           // 仅本人
-} as const
+  dept_only: 2, // 本部门
+  self: 1, // 仅本人
+} as const;
 export const authGuardMid = new Elysia({ name: "authGuard" })
 
   .use(dbPlugin)
@@ -31,15 +31,19 @@ export const authGuardMid = new Elysia({ name: "authGuard" })
                 name: true,
               },
             },
-          }
-        }
-      }
+          },
+        },
+      },
     });
     if (!userRolePermission) throw new HttpError.NotFound("用户不存在");
 
     const permissions = [
       ...new Set(
-        userRolePermission.roles.map((role) => role.permissions.map((permission) => permission.name)).flat().filter(Boolean)
+        userRolePermission.roles
+          .flatMap((role) =>
+            role.permissions.map((permission) => permission.name)
+          )
+          .filter(Boolean)
       ),
     ];
 
@@ -50,7 +54,6 @@ export const authGuardMid = new Elysia({ name: "authGuard" })
     };
   })
   .resolve(({ user }) => {
-
     const getMaxScope = () => {
       let maxWeight = 0;
       let maxScope = "self"; // 默认最低
@@ -73,7 +76,7 @@ export const authGuardMid = new Elysia({ name: "authGuard" })
       // 计算出最终生效的 scope
       const filter: Record<string, any> = {
         tenantId: user.tenantId,
-      }
+      };
 
       // 超管直接返回租户限制
       if (user.isSuperAdmin) return filter;
@@ -103,12 +106,12 @@ export const authGuardMid = new Elysia({ name: "authGuard" })
           break;
       }
       return filter;
-    }
+    };
     return {
       // ...
       getScopeObj,
       // 也可以把计算出的最大权限暴露出去，方便前端展示
-      effectiveScope
+      effectiveScope,
     };
   })
   .macro({

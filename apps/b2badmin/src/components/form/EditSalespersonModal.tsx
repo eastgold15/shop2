@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import type { SalespersonWithDetails } from "@repo/contract";
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -26,9 +27,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useMasterCategories } from "@/hooks/api/master-categories";
-import { useUpdateSalesperson } from "@/hooks/api/salesperson";
-import { useUpdateSalespersonMasterCategories } from "@/hooks/api/salesperson";
-import type { SalespersonWithDetails } from "@repo/contract";
+import {
+  useUpdateSalesperson,
+  useUpdateSalespersonMasterCategories,
+} from "@/hooks/api/salesperson";
 
 const formSchema = z.object({
   phone: z.string().optional(),
@@ -263,8 +265,9 @@ export function EditSalespersonModal({
                     <p className="text-slate-500 text-sm">暂无主分类</p>
                   ) : (
                     masterCategories.map((category) => {
-                      const isSelected =
-                        selectedMasterCategoryIds.includes(category.id);
+                      const isSelected = selectedMasterCategoryIds.includes(
+                        category.id
+                      );
                       return (
                         <div
                           className="flex items-center space-x-2"

@@ -1,5 +1,6 @@
 "use client";
 
+import type { SalespersonWithDetails } from "@repo/contract";
 import {
   Briefcase,
   Building2,
@@ -23,14 +24,12 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { useDeleteSalesperson, useSalespersons } from "@/hooks/api/salesperson";
-import type { SalespersonWithDetails } from "@repo/contract";
 
 export default function UsersPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editingSalesperson, setEditingSalesperson] = useState<
-    SalespersonWithDetails | null
-  >(null);
+  const [editingSalesperson, setEditingSalesperson] =
+    useState<SalespersonWithDetails | null>(null);
   const [isMounted, setIsMounted] = useState(false);
 
   // 避免hydration错误

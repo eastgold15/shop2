@@ -1,74 +1,64 @@
-
+import { randomUUIDv7 } from "bun"; // @ts-ignore - bun types
+import { drizzle } from "drizzle-orm/node-postgres";
+import { relations } from "./src/table.relation";
 import {
-  // ========================================
-  // 系统架构核心表
-  // ========================================
-  tenantTable,
-  departmentTable,
-  userTable,
-  roleTable,
-  permissionTable,
-  userRoleTable,
-  rolePermissionTable,
   accountTable,
-  sessionTable,
-  verificationTable,
-
-  // ========================================
-  // 站点相关
-  // ========================================
-  siteTable,
-  siteCategoryTable,
-  siteProductTable,
-  siteConfigTable,
-
-  // ========================================
-  // 分类和模板
-  // ========================================
-  masterCategoryTable,
-  templateTable,
-  templateKeyTable,
-  templateValueTable,
-  productTemplateTable,
-
-  // ========================================
-  // 产品相关
-  // ========================================
-  productTable,
-  productMasterCategoryTable,
-  productSiteCategoryTable,
-  skuTable,
-  productMediaTable,
-  skuMediaTable,
-
-  // ========================================
-  // 媒体相关
-  // ========================================
-  mediaTable,
-  mediaMetadataTable,
   adTable,
-  heroCardTable,
-
   // ========================================
   // 业务表
   // ========================================
   customerTable,
-  inquiryTable,
-  quotationTable,
-
   // ========================================
   // 其他
   // ========================================
   dailyInquiryCounterTable,
+  departmentTable,
+  heroCardTable,
+  inquiryTable,
+  // ========================================
+  // 分类和模板
+  // ========================================
+  masterCategoryTable,
+  mediaMetadataTable,
+  // ========================================
+  // 媒体相关
+  // ========================================
+  mediaTable,
+  permissionTable,
+  productMasterCategoryTable,
+  productMediaTable,
+  productSiteCategoryTable,
+  // ========================================
+  // 产品相关
+  // ========================================
+  productTable,
+  productTemplateTable,
+  quotationTable,
+  rolePermissionTable,
+  roleTable,
+  sessionTable,
+  siteCategoryTable,
+  siteConfigTable,
+  siteProductTable,
+  // ========================================
+  // 站点相关
+  // ========================================
+  siteTable,
+  skuMediaTable,
+  skuTable,
+  templateKeyTable,
+  templateTable,
+  templateValueTable,
+  // ========================================
+  // 系统架构核心表
+  // ========================================
+  tenantTable,
+  userRoleTable,
+  userTable,
+  verificationTable,
 } from "./src/table.schema";
-import { randomUUIDv7 } from "bun"; // @ts-ignore - bun types
-import { relations } from './src/table.relation'
-import { drizzle } from "drizzle-orm/node-postgres";
 
-const db = drizzle(
-  "postgres://shop:shop@localhost:5444/shop",
-  { relations }
-);
+const db = drizzle("postgres://shop:shop@localhost:5444/shop", { relations });
 
 // ========================================
 // 1. 基础配置
@@ -444,7 +434,8 @@ const users = [
     email: "super@admin.com",
     emailVerified: true,
     isSuperAdmin: true,
-    image: "https://ui-avatars.com/api/?name=超级管理员&background=random&color=fff",
+    image:
+      "https://ui-avatars.com/api/?name=超级管理员&background=random&color=fff",
     tenantId: tenant1Id,
     deptId: dept1HeadquartersId,
     phone: "13800000001",
@@ -625,30 +616,130 @@ const templateKeys = [
 
 const templateValues = [
   // 颜色值
-  { id: randomUUIDv7(), templateKeyId: templateKeys[0].id, value: "黑色", sortOrder: 1 },
-  { id: randomUUIDv7(), templateKeyId: templateKeys[0].id, value: "白色", sortOrder: 2 },
-  { id: randomUUIDv7(), templateKeyId: templateKeys[0].id, value: "红色", sortOrder: 3 },
-  { id: randomUUIDv7(), templateKeyId: templateKeys[0].id, value: "蓝色", sortOrder: 4 },
+  {
+    id: randomUUIDv7(),
+    templateKeyId: templateKeys[0].id,
+    value: "黑色",
+    sortOrder: 1,
+  },
+  {
+    id: randomUUIDv7(),
+    templateKeyId: templateKeys[0].id,
+    value: "白色",
+    sortOrder: 2,
+  },
+  {
+    id: randomUUIDv7(),
+    templateKeyId: templateKeys[0].id,
+    value: "红色",
+    sortOrder: 3,
+  },
+  {
+    id: randomUUIDv7(),
+    templateKeyId: templateKeys[0].id,
+    value: "蓝色",
+    sortOrder: 4,
+  },
   // 尺码值（鞋类）
-  { id: randomUUIDv7(), templateKeyId: templateKeys[1].id, value: "35", sortOrder: 1 },
-  { id: randomUUIDv7(), templateKeyId: templateKeys[1].id, value: "36", sortOrder: 2 },
-  { id: randomUUIDv7(), templateKeyId: templateKeys[1].id, value: "37", sortOrder: 3 },
-  { id: randomUUIDv7(), templateKeyId: templateKeys[1].id, value: "38", sortOrder: 4 },
-  { id: randomUUIDv7(), templateKeyId: templateKeys[1].id, value: "39", sortOrder: 5 },
-  { id: randomUUIDv7(), templateKeyId: templateKeys[1].id, value: "40", sortOrder: 6 },
+  {
+    id: randomUUIDv7(),
+    templateKeyId: templateKeys[1].id,
+    value: "35",
+    sortOrder: 1,
+  },
+  {
+    id: randomUUIDv7(),
+    templateKeyId: templateKeys[1].id,
+    value: "36",
+    sortOrder: 2,
+  },
+  {
+    id: randomUUIDv7(),
+    templateKeyId: templateKeys[1].id,
+    value: "37",
+    sortOrder: 3,
+  },
+  {
+    id: randomUUIDv7(),
+    templateKeyId: templateKeys[1].id,
+    value: "38",
+    sortOrder: 4,
+  },
+  {
+    id: randomUUIDv7(),
+    templateKeyId: templateKeys[1].id,
+    value: "39",
+    sortOrder: 5,
+  },
+  {
+    id: randomUUIDv7(),
+    templateKeyId: templateKeys[1].id,
+    value: "40",
+    sortOrder: 6,
+  },
   // 材质值
-  { id: randomUUIDv7(), templateKeyId: templateKeys[2].id, value: "真皮", sortOrder: 1 },
-  { id: randomUUIDv7(), templateKeyId: templateKeys[2].id, value: "PU", sortOrder: 2 },
-  { id: randomUUIDv7(), templateKeyId: templateKeys[2].id, value: "织物", sortOrder: 3 },
+  {
+    id: randomUUIDv7(),
+    templateKeyId: templateKeys[2].id,
+    value: "真皮",
+    sortOrder: 1,
+  },
+  {
+    id: randomUUIDv7(),
+    templateKeyId: templateKeys[2].id,
+    value: "PU",
+    sortOrder: 2,
+  },
+  {
+    id: randomUUIDv7(),
+    templateKeyId: templateKeys[2].id,
+    value: "织物",
+    sortOrder: 3,
+  },
   // 尺码值（服装）
-  { id: randomUUIDv7(), templateKeyId: templateKeys[3].id, value: "S", sortOrder: 1 },
-  { id: randomUUIDv7(), templateKeyId: templateKeys[3].id, value: "M", sortOrder: 2 },
-  { id: randomUUIDv7(), templateKeyId: templateKeys[3].id, value: "L", sortOrder: 3 },
-  { id: randomUUIDv7(), templateKeyId: templateKeys[3].id, value: "XL", sortOrder: 4 },
+  {
+    id: randomUUIDv7(),
+    templateKeyId: templateKeys[3].id,
+    value: "S",
+    sortOrder: 1,
+  },
+  {
+    id: randomUUIDv7(),
+    templateKeyId: templateKeys[3].id,
+    value: "M",
+    sortOrder: 2,
+  },
+  {
+    id: randomUUIDv7(),
+    templateKeyId: templateKeys[3].id,
+    value: "L",
+    sortOrder: 3,
+  },
+  {
+    id: randomUUIDv7(),
+    templateKeyId: templateKeys[3].id,
+    value: "XL",
+    sortOrder: 4,
+  },
   // 面料值
-  { id: randomUUIDv7(), templateKeyId: templateKeys[4].id, value: "纯棉", sortOrder: 1 },
-  { id: randomUUIDv7(), templateKeyId: templateKeys[4].id, value: "涤纶", sortOrder: 2 },
-  { id: randomUUIDv7(), templateKeyId: templateKeys[4].id, value: "混纺", sortOrder: 3 },
+  {
+    id: randomUUIDv7(),
+    templateKeyId: templateKeys[4].id,
+    value: "纯棉",
+    sortOrder: 1,
+  },
+  {
+    id: randomUUIDv7(),
+    templateKeyId: templateKeys[4].id,
+    value: "涤纶",
+    sortOrder: 2,
+  },
+  {
+    id: randomUUIDv7(),
+    templateKeyId: templateKeys[4].id,
+    value: "混纺",
+    sortOrder: 3,
+  },
 ];
 
 // ========================================
@@ -825,7 +916,8 @@ const heroCards = [
   {
     id: "eeb815b1-ded9-4b66-9bfa-fac1502ee013",
     title: "EXPLORE SANDALES",
-    description: "Handcrafted in exquisite detail,explore our selection of sandals",
+    description:
+      "Handcrafted in exquisite detail,explore our selection of sandals",
     buttonText: "EXPLORE MORE",
     buttonUrl: "/sandals",
     backgroundClass: "bg-blue-50",
@@ -1045,7 +1137,9 @@ async function clearDatabase() {
       }
       await db.delete(table);
     } catch (error: any) {
-      console.log(`注意：表 ${table?._?.name || "未知"} 可能不存在: ${error?.message || error}`);
+      console.log(
+        `注意：表 ${table?._?.name || "未知"} 可能不存在: ${error?.message || error}`
+      );
     }
   }
 }
@@ -1079,7 +1173,9 @@ async function seedCompleteDatabase() {
     const rolePermissionRelations = [];
     const uniqueRelations = new Set();
 
-    for (const [roleName, permissionNames] of Object.entries(ROLE_PERMISSIONS)) {
+    for (const [roleName, permissionNames] of Object.entries(
+      ROLE_PERMISSIONS
+    )) {
       const role = roles.find((r) => r.name === roleName);
       if (!role) continue;
 
@@ -1099,7 +1195,7 @@ async function seedCompleteDatabase() {
     }
 
     const batchSize = 100;
-    for (let i = 0;i < rolePermissionRelations.length;i += batchSize) {
+    for (let i = 0; i < rolePermissionRelations.length; i += batchSize) {
       const batch = rolePermissionRelations.slice(i, i + batchSize);
       await db.insert(rolePermissionTable).values(batch);
     }
@@ -1232,7 +1328,9 @@ async function seedCompleteDatabase() {
     console.log("\n🏗️ 架构说明：");
     console.log("- 租户 → 部门（树形结构）→ 用户");
     console.log("- 站点绑定部门：集团站绑定总部，工厂站绑定工厂");
-    console.log("- 所有业务表包含 tenantCols（tenantId, deptId, createdBy, isPublic, siteId）");
+    console.log(
+      "- 所有业务表包含 tenantCols（tenantId, deptId, createdBy, isPublic, siteId）"
+    );
   } catch (error) {
     console.error("❌ 数据库初始化失败:", error);
     process.exit(1);
