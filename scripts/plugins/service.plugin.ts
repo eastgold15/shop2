@@ -1,5 +1,6 @@
 // scripts/plugins/service.plugin.ts
 
+import { existsSync } from "node:fs";
 import * as path from "node:path";
 import type { Project, SourceFile } from "ts-morph";
 import {
@@ -7,14 +8,10 @@ import {
   type IGeneratorPlugin,
   upsertMethod,
 } from "../core/engine";
-import { existsSync } from "node:fs";
 export class ServiceGenerator implements IGeneratorPlugin {
   name = "ServiceGenerator";
 
-
-
   async generate(project: Project, ctx: GeneratorContext) {
-
     const filePath = path.join(ctx.targetDir, `${ctx.tableName}.service.ts`);
     const sourceFile = existsSync(filePath)
       ? project.getSourceFileOrThrow(filePath)

@@ -89,6 +89,9 @@ export const tenantTable = p.pgTable("sys_tenant", {
 });
 
 // [部门表]：原 Factories + 总部，支持树形结构
+/**
+ * @onlyGen contract
+ */
 export const departmentTable = p.pgTable("sys_dept", {
   ...Audit,
 

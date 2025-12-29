@@ -1,9 +1,10 @@
 // scripts/main.ts
 import * as path from "node:path";
+import { existsSync } from "fs-extra";
 import * as dbSchema from "../packages/contract/src/table.schema"; // 你的 Schema
 import { SmartCodeEngine } from "./core/engine";
 import { ServiceGenerator } from "./plugins/service.plugin";
-import { existsSync } from "fs-extra";
+
 // 引入其他 generator...
 
 const engine = new SmartCodeEngine();
@@ -11,7 +12,7 @@ const engine = new SmartCodeEngine();
 // 注册插件
 const plugins = [
   new ServiceGenerator(),
-  // new ControllerGenerator(), 
+  // new ControllerGenerator(),
   // new ContractGenerator()
 ];
 
@@ -22,7 +23,9 @@ const OUTPUT_DIRS = {
 };
 
 async function run() {
-  const tableEntries = Object.entries(dbSchema).filter(([key]) => key.endsWith("Table"));
+  const tableEntries = Object.entries(dbSchema).filter(([key]) =>
+    key.endsWith("Table")
+  );
 
   for (const [key, schemaObj] of tableEntries) {
     const rawName = key.replace("Table", "");
@@ -35,7 +38,11 @@ async function run() {
     const needsUpdate = engine.needsUpdate(key, schemaObj);
 
     // 检查目标文件是否存在
-    const targetFilePath = path.join(OUTPUT_DIRS.B2B, tableName, `${tableName}.service.ts`);
+    const targetFilePath = path.join(
+      OUTPUT_DIRS.B2B,
+      tableName,
+      `${tableName}.service.ts`
+    );
     const fileExists = existsSync(targetFilePath);
 
     // 如果Schema未变更且文件存在，则跳过

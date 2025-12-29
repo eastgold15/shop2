@@ -57,38 +57,35 @@ export class SmartCodeEngine {
     const seen = new WeakSet();
 
     const stringify = (obj: any): string => {
-      if (obj === null || typeof obj !== 'object') {
+      if (obj === null || typeof obj !== "object") {
         return JSON.stringify(obj);
       }
 
       if (seen.has(obj)) {
-        return '[Circular]';
+        return "[Circular]";
       }
       seen.add(obj);
 
       if (Array.isArray(obj)) {
-        const result = obj.map(item => stringify(item));
+        const result = obj.map((item) => stringify(item));
         seen.delete(obj);
-        return `[${result.join(',')}]`;
+        return `[${result.join(",")}]`;
       }
 
       const keys = Object.keys(obj).sort();
-      const result = keys.map(key => {
+      const result = keys.map((key) => {
         // 跳过函数和Symbol类型的属性
-        if (typeof obj[key] === 'function' || typeof obj[key] === 'symbol') {
+        if (typeof obj[key] === "function" || typeof obj[key] === "symbol") {
           return `${JSON.stringify(key)}:"[Function]"`;
         }
         return `${JSON.stringify(key)}:${stringify(obj[key])}`;
       });
 
       seen.delete(obj);
-      return `{${result.join(',')}}`;
+      return `{${result.join(",")}}`;
     };
 
-    return crypto
-      .createHash("md5")
-      .update(stringify(content))
-      .digest("hex");
+    return crypto.createHash("md5").update(stringify(content)).digest("hex");
   }
   // 核心：加载或创建源文件
   loadSourceFile(filePath: string): SourceFile {
@@ -134,7 +131,8 @@ export function upsertMethod(
   const existingMethod = classDec.getMethod(methodName);
 
   // 使用单行JSDoc注释，避免多行注释格式问题
-  const docText = "🤖 [Auto-Generated] Do not edit this tag to keep updates. @generated";
+  const docText =
+    "🤖 [Auto-Generated] Do not edit this tag to keep updates. @generated";
 
   // 1. 如果方法不存在，直接创建
   if (!existingMethod) {
@@ -159,7 +157,7 @@ export function upsertMethod(
 
   if (isGenerated) {
     // 3. 有标记，进行覆盖更新 - 先清理现有JSDoc，再添加新的
-    existingMethod.getJsDocs().forEach(doc => doc.remove());
+    existingMethod.getJsDocs().forEach((doc) => doc.remove());
     existingMethod.setBodyText(methodBody);
     existingMethod.setReturnType(returnType || "any");
     existingMethod.addJsDoc(docText);
