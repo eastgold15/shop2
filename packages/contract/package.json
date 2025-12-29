@@ -1,0 +1,36 @@
+{
+  "name": "@repo/contract",
+  "version": "1.0.0",
+  "description": "契约层 - 统一的 Zod Schema 和类型管理",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist .turbo",
+    "db:push": "bun x drizzle-kit push",
+    "db:generate": "bun x drizzle-kit generate",
+    "db:migrate": "bun x drizzle-kit migrate",
+    "db:studio": "bun x drizzle-kit studio",
+    "seed": "bun run seed-complete.ts",
+    "seed:reset": "bun run reset-database.ts",
+    "build": "tsc -b --force"
+  },
+  "dependencies": {
+    "drizzle-orm": "catalog:",
+    "drizzle-typebox": "catalog:",
+    "elysia": "catalog:"
+  },
+  "devDependencies": {
+    "@repo/tsconfig": "*",
+    "@types/pg": "catalog:",
+    "drizzle-kit": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:"
+  }
+}

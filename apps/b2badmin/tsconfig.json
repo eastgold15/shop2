@@ -1,0 +1,47 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./src/*"],
+      "~/*": ["./server/*"],
+      "@repo/contract": ["../../packages/contract/src/index.ts"]
+    },
+    // ✅ 增量编译（关键！）
+    "incremental": true,
+    "tsBuildInfoFile": "./.cache/tsbuildinfo"
+  },
+  "exclude": [
+    "node_modules",
+    ".next", // 排除整个 .next
+    "out", // 如果有静态导出
+    "dist"
+  ],
+  "include": [
+    "next-env.d.ts",
+    "src/**/*", // ✅ 更精确地只包含源码
+    "server/**/*",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../packages/contract"
+    } // 指向 contract 子项目的目录（包含 tsconfig.json）
+  ]
+}

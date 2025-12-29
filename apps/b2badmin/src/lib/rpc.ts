@@ -1,0 +1,25 @@
+import { treaty } from "@elysiajs/eden";
+import type { App } from "@/app/api/[[...route]]/route";
+import { env } from "@/env";
+
+/**
+ * Creates an RPC client using edenTreaty.
+ *
+ * This setup allows for type-safe API calls between the client and server,
+ * leveraging the App type from the API route definition.
+ *
+ * The base URL for the RPC client is determined dynamically:
+ * - On the server side, it uses localhost with the specified PORT (or 3000 as default)
+ * - On the client side, it uses the current window's origin
+ */
+const siteId =
+  typeof window !== "undefined" ? localStorage.getItem("SiteId") : null;
+
+export const rpc = treaty<App>(
+  typeof window === "undefined"
+    ? `http://localhost:${env.PORT || 3000}`
+    : window.location.origin,
+  {
+    headers: siteId ? { "X-Site-Id": siteId } : {},
+  }
+);
