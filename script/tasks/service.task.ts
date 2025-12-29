@@ -7,7 +7,7 @@ export const ServiceTask: Task = {
   name: "Generating Service",
   async run(project: Project, ctx: GenContext) {
     if (!ctx.config.stages.has("service")) return;
-
+    if (!ctx.artifacts.contractName) return;
     // 依赖检查
     if (!ctx.artifacts.contractName) {
       console.warn("   ⚠️ Missing Contract, skipping Service.");
@@ -15,17 +15,25 @@ export const ServiceTask: Task = {
     }
 
     const fileName = `${ctx.tableName}.service.ts`;
-    const filePath = await path.join(ctx.targetDir, fileName);
-    const file = project.createSourceFile(filePath, "", { overwrite: false });
+    const file = await project.createSourceFile(ctx.paths.service, "", { overwrite: false });
+
+    // 1. 计算相对路径引用 Contract
+    // 如果目录相同，relativePath 是 ""，我们需要处理成 "./"
+    let relativePath = path.relative(path.dirname(ctx.paths.service), ctx.paths.contract);
+    // 去掉 .ts 后缀
+    relativePath = relativePath.replace(/\.ts$/, "");
+    // 如果在同级目录，path.relative 返回的是文件名，需要加 ./
+    if (!relativePath.startsWith(".")) {
+      relativePath = `./${relativePath}`;
+    }
 
     // 1. Imports
     ensureImport(file, "drizzle-orm", ["eq", "and", "desc"]);
     ensureImport(file, "@repo/contract/table.schema", [ctx.schemaKey]);
     ensureImport(file, "../_lib/types", ["ServiceContext"]); // 假设通用类型
     // 🔥 引用刚刚生成的 Contract
-    ensureImport(file, `./${ctx.tableName}.contract`, [
-      ctx.artifacts.contractName,
-    ]);
+    // 🔥 引用契约 (动态计算的相对路径)
+    ensureImport(file, relativePath, [ctx.artifacts.contractName]);
 
     // 2. Class 定义
     const className = `${ctx.pascalName}Service`;
@@ -100,7 +108,7 @@ export const ServiceTask: Task = {
     );
 
     // 4. 更新上下文
-    ctx.artifacts.serviceFile = fileName;
-    ctx.artifacts.serviceName = className;
+    ctx.artifacts.serviceName = `${ctx.pascalName}Service`;
+    console.log(`     ✅ Service: ${ctx.paths.service}`);
   },
 };

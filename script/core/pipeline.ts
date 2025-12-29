@@ -5,6 +5,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { Project } from "ts-morph";
 import type { GenConfig, GenContext, Task } from "./types";
+import { getLeadingJSDocText } from "./ast-utils";
 
 export class Pipeline {
   private readonly project: Project;
@@ -39,18 +40,28 @@ export class Pipeline {
     return { skip: false, stages };
   }
 
-  async run(schemaPath: string, outDirRoot: string) {
+  async run(
+    schemaPath: string,
+    dirs: { contractDir: string; serviceDir: string; controllerDir: string }) {
     // 读取 Schema 文件
     const schemaFile = this.project.addSourceFileAtPath(schemaPath);
     const exportedVars = schemaFile
       .getVariableDeclarations()
       .filter((v) => v.isExported());
 
+    // 确保目标目录存在
+    [dirs.contractDir, dirs.serviceDir, dirs.controllerDir].forEach(d => {
+      if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true });
+    });
+
     for (const v of exportedVars) {
       const varName = v.getName();
       if (!varName.endsWith("Table")) continue;
 
-      const jsDocs = v.getJsDocs().map((d) => d.getInnerText());
+      // 使用工具函数获取JSDoc注释
+      const jsDocText = getLeadingJSDocText(v);
+
+      const jsDocs = jsDocText ? [jsDocText] : [];
       const config = this.parseConfig(jsDocs);
 
       if (config.skip) {
@@ -62,26 +73,26 @@ export class Pipeline {
       const tableName = rawName.toLowerCase();
       const pascalName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
 
-      const targetDir = path.join(outDirRoot, tableName);
-      if (!fs.existsSync(targetDir))
-        fs.mkdirSync(targetDir, { recursive: true });
-
+      // 🔥 核心修改：文件名平铺，不再拼接 /tableName/ 文件夹
       const ctx: GenContext = {
         tableName,
         pascalName,
         schemaKey: varName,
-        targetDir,
         config,
-        artifacts: {},
+        paths: {
+          root: dirs.contractDir, // 默认以契约目录为基准
+          contract: path.join(dirs.contractDir, `${tableName}.contract.ts`),
+          service: path.join(dirs.serviceDir, `${tableName}.service.ts`),
+          controller: path.join(dirs.controllerDir, `${tableName}.controller.ts`),
+        },
+        artifacts: {}
       };
-
       console.log(`\n📦 Processing [${pascalName}]`);
 
-      // 串行执行任务
       for (const task of this.tasks) {
-        console.log(`   👉 Task: ${task.name}`);
         await task.run(this.project, ctx);
       }
+
     }
 
     await this.project.save();

@@ -7,26 +7,30 @@ export const ControllerTask: Task = {
   name: "Generating Controller",
   async run(project: Project, ctx: GenContext) {
     if (!ctx.config.stages.has("controller")) return;
-
     if (!(ctx.artifacts.serviceName && ctx.artifacts.contractName)) {
       console.warn("   ⚠️ Missing Service/Contract, skipping Controller.");
       return;
     }
+    const file = await project.createSourceFile(ctx.paths.controller, "", { overwrite: false });
 
+    // 计算相对路径
+    const dir = path.dirname(ctx.paths.controller);
     const fileName = `${ctx.tableName}.controller.ts`;
-    const filePath = await path.join(ctx.targetDir, fileName);
-    const file = project.createSourceFile(filePath, "", { overwrite: false });
+    // const filePath = await path.join(ctx.targetDir, fileName);
+    let contractRel = path.relative(dir, ctx.paths.contract).replace(/\.ts$/, "");
+    if (!contractRel.startsWith(".")) contractRel = `./${contractRel}`;
+
+    let serviceRel = path.relative(dir, ctx.paths.service).replace(/\.ts$/, "");
+    if (!serviceRel.startsWith(".")) serviceRel = `./${serviceRel}`;
+
 
     // 1. Imports
     ensureImport(file, "elysia", ["Elysia", "t"]);
     ensureImport(file, "~/middleware/auth", ["authGuardMid"]); // 假设中间件路径
     // 引用 Service 和 Contract
-    ensureImport(file, `./${ctx.tableName}.contract`, [
-      ctx.artifacts.contractName,
-    ]);
-    ensureImport(file, `./${ctx.tableName}.service`, [
-      ctx.artifacts.serviceName,
-    ]);
+    // 🔥 引用同级文件
+    ensureImport(file, contractRel, [ctx.artifacts.contractName]);
+    ensureImport(file, serviceRel, [ctx.artifacts.serviceName]);
 
     // 2. 生成 Elysia App 变量
     // 这里因为是链式调用，AST 操作比较复杂，我们简单使用替换或追加模式

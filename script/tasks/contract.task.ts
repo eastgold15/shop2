@@ -1,4 +1,4 @@
-import * as path from "node:path";
+
 import { type Project, SyntaxKind, VariableDeclarationKind } from "ts-morph";
 import { ensureImport, upsertObjectProperty } from "../core/ast-utils";
 import type { GenContext, Task } from "../core/types";
@@ -7,10 +7,12 @@ export const ContractTask: Task = {
   name: "Generating Contract",
   async run(project: Project, ctx: GenContext) {
     if (!ctx.config.stages.has("contract")) return;
+    // 🔥 直接使用计算好的路径
+    const file = await project.createSourceFile(ctx.paths.contract, "", { overwrite: false });
 
     const fileName = `${ctx.tableName}.contract.ts`;
-    const filePath = await path.join(ctx.targetDir, fileName);
-    const file = project.createSourceFile(filePath, "", { overwrite: false });
+
+    // const file = project.createSourceFile(filePath, "", { overwrite: true });
 
     // 1. Imports
     ensureImport(file, "elysia", ["t"]);
@@ -78,8 +80,8 @@ export const ContractTask: Task = {
       `t.Object({ data: t.Array(t.Object(spread(${tableVar}, "select"))), total: t.Number() })`
     );
 
-    // 4. 更新上下文状态
-    ctx.artifacts.contractFile = fileName;
-    ctx.artifacts.contractName = varName;
+    // 状态更新
+    ctx.artifacts.contractName = `${ctx.pascalName}Contract`;
+    console.log(`     ✅ Contract: ${ctx.paths.contract}`);
   },
 };

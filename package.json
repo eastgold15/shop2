@@ -17,7 +17,8 @@
     "gen:ai-docs": "bun run  scripts/gen-ai-docs.ts",
     "gen:final": "bun run packages/contract/scripts/gen-all-final.ts",
     "postgen:final": "bun run fix",
-    "ast:Gen": "bun run scripts/gen-ast.ts"
+    "ast:Gen": "bun run scripts/gen-ast.ts",
+    "pipeline:gen": "bun run script/gen.ts"
   },
   "engines": {
     "bun": ">=1.3.0"
