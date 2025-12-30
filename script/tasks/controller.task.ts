@@ -13,6 +13,27 @@ const GEN_HEADER = `/**
 
 const GEN_TAG = "@generated";
 
+/**
+ * 将表名转换为权限前缀
+ * templateTable -> TEMPLATE
+ * productMediaTable -> PRODUCTMEDIA
+ */
+function toPermissionPrefix(tableName: string): string {
+  let tableNameUpper = tableName.toUpperCase();
+  if (tableNameUpper.includes("TABLE")) {
+    tableNameUpper = tableName.replace("TABLE", "");
+  }
+  return tableNameUpper;
+}
+
+/**
+ * 生成权限名称
+ */
+function getPermission(tableName: string, action: string): string {
+  const prefix = toPermissionPrefix(tableName);
+  return `${prefix}:${action.toUpperCase()}`;
+}
+
 export const ControllerTask: Task = {
   name: "Generating Controller",
   run(project: Project, ctx: GenContext) {
@@ -49,7 +70,7 @@ export const ControllerTask: Task = {
     const getRelativeImport = (targetPath: string) => {
       let rel = path.relative(dir, targetPath).replace(/\.ts$/, "");
       if (!rel.startsWith(".")) rel = `./${rel}`;
-      return normalizePath(rel); // 🔥 关键修复
+      return normalizePath(rel);
     };
 
     const contractPath = getRelativeImport(ctx.paths.contract);
@@ -62,8 +83,8 @@ export const ControllerTask: Task = {
     ensureImport(file, contractPath, [ctx.artifacts.contractName]);
     ensureImport(file, servicePath, [ctx.artifacts.serviceName]);
 
-    // 4. 实例化 Service (单例模式)
-    const serviceInstanceName = `${ctx.tableName}Service`; // e.g. dailyInquiryCounterService
+    // 4. 实例化 Service
+    const serviceInstanceName = `${ctx.tableName}Service`;
     const serviceClassName = ctx.artifacts.serviceName;
 
     const serviceVar = file.getVariableDeclaration(serviceInstanceName);
@@ -79,19 +100,59 @@ export const ControllerTask: Task = {
       });
     }
 
-    // 5. Controller 定义
+    // 5. 权限配置
+    const readPermission = getPermission(ctx.tableName, "read");
+    const createPermission = getPermission(ctx.tableName, "create");
+    const updatePermission = getPermission(ctx.tableName, "update");
+    const deletePermission = getPermission(ctx.tableName, "delete");
+
+    // 6. Controller 定义 - 带权限和 OpenAPI 文档
     const controllerName = `${ctx.tableName}Controller`;
     const contract = ctx.artifacts.contractName;
+    const pascalName = ctx.pascalName;
     const prefix = `/${ctx.tableName.toLowerCase()}`;
 
-    // 构造代码
+    // 构造带权限和文档的代码
     const controllerCode = `new Elysia({ prefix: "${prefix}" })
   .use(dbPlugin)
   .use(authGuardMid)
-  .get("/", ({ query, auth, db }) => ${serviceInstanceName}.findAll(query, { db, auth }), { query: ${contract}.ListQuery })
-  .post("/", ({ body, auth, db }) => ${serviceInstanceName}.create(body, { db, auth }), { body: ${contract}.Create })
-  .put("/:id", ({ params, body, auth, db }) => ${serviceInstanceName}.update(params.id, body, { db, auth }), { params: t.Object({ id: t.String() }), body: ${contract}.Update })
-  .delete("/:id", ({ params, auth, db }) => ${serviceInstanceName}.delete(params.id, { db, auth }), { params: t.Object({ id: t.String() }) })`;
+  .get("/", ({ query, user, db }) => ${serviceInstanceName}.findAll(query, { db, user }), {
+    allPermissions: ["${readPermission}"],
+    query: ${contract}.ListQuery,
+    detail: {
+      summary: "获取${pascalName}列表",
+      description: "分页查询${pascalName}数据，支持搜索和排序",
+      tags: ["${pascalName}"],
+    },
+  })
+  .post("/", ({ body, user, db }) => ${serviceInstanceName}.create(body, { db, user }), {
+    allPermissions: ["${createPermission}"],
+    body: ${contract}.Create,
+    detail: {
+      summary: "创建${pascalName}",
+      description: "新增一条${pascalName}记录",
+      tags: ["${pascalName}"],
+    },
+  })
+  .put("/:id", ({ params, user, db }) => ${serviceInstanceName}.update(params.id, { db, user }), {
+    params: t.Object({ id: t.String() }),
+    body: ${contract}.Update,
+    allPermissions: ["${updatePermission}"],
+    detail: {
+      summary: "更新${pascalName}",
+      description: "根据ID更新${pascalName}信息",
+      tags: ["${pascalName}"],
+    },
+  })
+  .delete("/:id", ({ params, user, db }) => ${serviceInstanceName}.delete(params.id, { db, user }), {
+    params: t.Object({ id: t.String() }),
+    allPermissions: ["${deletePermission}"],
+    detail: {
+      summary: "删除${pascalName}",
+      description: "根据ID删除${pascalName}记录",
+      tags: ["${pascalName}"],
+    },
+  })`;
 
     const controllerVar = file.getVariableDeclaration(controllerName);
 

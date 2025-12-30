@@ -99,7 +99,7 @@ export const authGuardMid = new Elysia({ name: "authGuard" })
           filter.deptId = user.deptId;
           break;
 
-        case "self":
+        // case "self":
         default:
           // 权重 1: 限制创建人
           filter.createdBy = user.id;
@@ -115,13 +115,16 @@ export const authGuardMid = new Elysia({ name: "authGuard" })
     };
   })
   .macro({
-    allPermission: (name: string) => ({
+    allPermissions: (names: string[]) => ({
       beforeHandle({ permissions, status }) {
         if (!permissions) {
           throw new HttpError.Forbidden("您没有任何权限");
         }
-        if (!(permissions.includes(name) || permissions.includes("*"))) {
-          return status(403, `权限不足，需要 ${name} 权限`);
+
+        for (const n of names) {
+          if (!(permissions.includes(n) || permissions.includes("*"))) {
+            return status(403, `权限不足，需要 ${n} 权限`);
+          }
         }
       },
     }),

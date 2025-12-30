@@ -1,5 +1,5 @@
 import { type Project, SyntaxKind, VariableDeclarationKind } from "ts-morph";
-import { ensureImport, upsertObjectProperty } from "../core/ast-utils";
+import { ensureImport, upsertExportedConst, upsertObjectProperty } from "../core/ast-utils";
 import type { GenContext, Task } from "../core/types";
 
 export const ContractTask: Task = {
@@ -33,7 +33,32 @@ export const ContractTask: Task = {
     ]);
     ensureImport(file, "../table.schema", [ctx.schemaKey]);
 
-    // 2. 定义 Contract 对象
+    const tableVar = ctx.schemaKey; // e.g. "usersTable"
+    // ============================================================
+    // 2. 生成外部基础变量 (Base Variables)
+    // ============================================================
+    const fieldsVarName = `${ctx.pascalName}Fields`;       // e.g. UsersFields
+    const insertFieldsVarName = `${ctx.pascalName}InsertFields`; // e.g. UsersInsertFields
+
+    // 生成 export const UsersFields = spread(usersTable, "select");
+    upsertExportedConst(
+      file,
+      fieldsVarName,
+      `spread(${tableVar}, "select")`
+    );
+
+    // 生成 export const UsersInsertFields = spread(usersTable, "insert");
+    upsertExportedConst(
+      file,
+      insertFieldsVarName,
+      `spread(${tableVar}, "insert")`
+    );
+    // ============================================================
+    // 3. 生成 Contract 对象 (引用上面的变量)
+    // ============================================================
+
+
+    //  定义 Contract 对象
     const varName = `${ctx.pascalName}Contract`;
     let varDec = file.getVariableDeclaration(varName);
 
@@ -51,44 +76,62 @@ export const ContractTask: Task = {
       .getInitializerIfKindOrThrow(SyntaxKind.AsExpression)
       .getExpressionIfKindOrThrow(SyntaxKind.ObjectLiteralExpression);
 
-    // 3. 填充属性
-    const tableVar = ctx.schemaKey;
     const sysFields = `["id", "createdAt", "updatedAt"]`;
-
+    const updateOmitFields = `["id", "createdAt", "updatedAt", "siteId"]`;
+    // 4. 填充 Response, Create, Update, ListQuery, ListResponse
+    // Response: 使用对象展开引用外部变量
+    // t.Object({ ...UsersFields })
     upsertObjectProperty(
       objLiteral,
       "Response",
-      `t.Object(spread(${tableVar}, "select"))`
+      `t.Object({
+        ...${fieldsVarName}
+      })`
     );
 
+    // Create: 引用 UsersInsertFields
+    // t.Object({ ...t.Omit(t.Object(UsersInsertFields), [...]).properties })
     upsertObjectProperty(
       objLiteral,
       "Create",
-      `t.Object(t.Omit(t.Object(spread(${tableVar}, "insert")), ${sysFields}).properties)`
+      `t.Object({
+        ...t.Omit(t.Object(${insertFieldsVarName}), ${sysFields}).properties
+      })`
     );
 
+    // Update
     upsertObjectProperty(
       objLiteral,
       "Update",
-      `t.Partial(t.Object(t.Omit(t.Object(spread(${tableVar}, "insert")), ${sysFields}).properties))`
+      `t.Partial(t.Object({
+        ...t.Omit(t.Object(${insertFieldsVarName}), ${updateOmitFields}).properties
+      }))`
     );
 
+    // ListQuery: 使用 InsertFields (通常查询参数和插入字段有关，或者是 SelectFields)
+    // 这里依然使用 InsertFields 的 Partial
     upsertObjectProperty(
       objLiteral,
       "ListQuery",
       `t.Object({
-        ...t.Partial(t.Object(spread(${tableVar}, "insert"))).properties,
+        ...t.Partial(t.Object(${insertFieldsVarName})).properties,
         ...PaginationParams.properties,
         ...SortParams.properties,
         search: t.Optional(t.String()),
       })`
     );
 
+    // ListResponse
     upsertObjectProperty(
       objLiteral,
       "ListResponse",
-      `t.Object({ data: t.Array(t.Object(spread(${tableVar}, "select"))), total: t.Number() })`
+      `t.Object({
+        data: t.Array(t.Object({ ...${fieldsVarName} })),
+        total: t.Number(),
+      })`
     );
+
+
 
     // 4. 确保 export type 存在
     const typeExportName = varName;

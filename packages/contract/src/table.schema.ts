@@ -268,7 +268,9 @@ export const permissionTable = p.pgTable("sys_permission", {
   name: p.text("name").notNull(),
   description: p.text("description"),
 });
-
+/**
+ * @onlyGen contract
+ */
 export const rolePermissionTable = p.pgTable(
   "sys_role_permission",
   {
@@ -385,7 +387,9 @@ export const productTable = p.pgTable("product", {
 
   ...tenantCols, // 🔥 核心：包含 tenantId, deptId, createdBy
 });
-
+/**
+ * @onlyGen contract
+ */
 export const productMasterCategoryTable = p.pgTable(
   "product_category",
   {
@@ -416,7 +420,9 @@ export const siteCategoryTable = p.pgTable("site_category", {
     .uuid("master_category_id")
     .references(() => masterCategoryTable.id, { onDelete: "set null" }),
 });
-
+/**
+ * @onlyGen contract
+ */
 export const productSiteCategoryTable = p.pgTable(
   "product_site_category",
   {
@@ -431,7 +437,9 @@ export const productSiteCategoryTable = p.pgTable(
   },
   (t) => [p.primaryKey({ columns: [t.productId, t.siteCategoryId] })]
 );
-
+/**
+ * @onlyGen contract
+ */
 export const productMediaTable = p.pgTable(
   "product_media",
   {
@@ -483,7 +491,9 @@ export const templateValueTable = p.pgTable("template_value", {
   value: p.varchar("value", { length: 100 }).notNull(),
   sortOrder: p.integer("sort_order").default(0),
 });
-
+/**
+ * @onlyGen contract
+ */
 export const productTemplateTable = p.pgTable("product_template", {
   productId: p
     .uuid("product_id")

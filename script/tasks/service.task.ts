@@ -63,7 +63,7 @@ export const ServiceTask: Task = {
       `const insertData = {
         ...body,
         // 自动注入租户信息
-        ...(ctx.auth ? { tenantId: ctx.auth.tenantId, createdBy: ctx.auth.userId } : {})
+        ...(ctx.user ? { tenantId: ctx.user.tenantId, createdBy: ctx.user.id } : {})
       };
       const [res] = await ctx.db.insert(${ctx.schemaKey}).values(insertData).returning();
       return res;`,
@@ -76,14 +76,14 @@ export const ServiceTask: Task = {
     upsertMethod(
       classDec,
       "findAll",
-      `const { limit = 10, offset = 0, sort, ...filters } = query;
+      `const { limit = 10, page = 0, sort, ...filters } = query;
       const whereConditions = [];
       // 租户隔离
-      if (ctx.auth?.tenantId) whereConditions.push(eq(${ctx.schemaKey}.tenantId, ctx.auth.tenantId));
-      
+      if (ctx.user?.tenantId) whereConditions.push(eq(${ctx.schemaKey}.tenantId, ctx.user.tenantId));
+
       const data = await ctx.db.select().from(${ctx.schemaKey})
         .where(and(...whereConditions))
-        .limit(limit).offset(offset);
+        .limit(limit).offset((page - 1) * limit);
       const total = await ctx.db.$count(${ctx.schemaKey}, and(...whereConditions));
       return { data, total };`,
       [

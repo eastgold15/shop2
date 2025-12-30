@@ -6,6 +6,7 @@ import {
   Scope,
   type SourceFile,
   SyntaxKind,
+  VariableDeclarationKind,
 } from "ts-morph";
 
 const GEN_TAG = "@generated";
@@ -192,7 +193,7 @@ export function getLeadingJSDocText(node: Node): string {
   const ranges = targetNode.getLeadingCommentRanges();
 
   // 从后往前找，找到最后一个 JSDoc 块（/** ... */）
-  for (let i = ranges.length - 1; i >= 0; i--) {
+  for (let i = ranges.length - 1;i >= 0;i--) {
     const range = ranges[i];
     const text = range.getText();
 
@@ -208,4 +209,52 @@ export function getLeadingJSDocText(node: Node): string {
   }
 
   return "";
+}
+
+
+
+
+
+/**
+ * 🛠️ 智能更新导出常量 (export const Xxx = ...)
+ */
+export function upsertExportedConst(file: SourceFile,
+  name: string,
+  initializer: string,
+) {
+  const varDec = file.getVariableDeclaration(name)
+
+  if (!varDec) {
+
+    // 🔥 核心修复：计算插入位置
+    // 找到最后一个 Import 语句的位置，插入到它后面
+    const lastImport = file.getImportDeclarations().at(-1);
+    // getChildIndex 获取的是节点在当前 SourceFile 子节点列表中的索引
+    const insertIndex = lastImport ? lastImport.getChildIndex() + 1 : 0;
+
+    const stmt = file.insertVariableStatement(insertIndex, {
+      declarationKind: VariableDeclarationKind.Const,
+      isExported: true,
+      declarations: [{ name, initializer }],
+    })
+
+    // 添加 JSDoc 到 Statement 层级
+    stmt.addJsDoc(DOC_BLOCK.replace("/**", "").replace("*/", "").trim());
+    console.log(`     ➕ Const: ${name}`);
+    return;
+  }
+
+  // 2. 检查更新
+  if (checkIsGenerated(varDec)) {
+    // 简单文本对比
+    const currentInit = varDec.getInitializer()?.getText().replace(/\s+/g, "");
+    const newInit = initializer.replace(/\s+/g, "");
+
+    if (currentInit !== newInit) {
+      varDec.setInitializer(initializer);
+      console.log(`     🔄 Updated Const: ${name}`);
+    }
+  } else {
+    console.log(`     🛡️ Skipped Const (Custom): ${name}`);
+  }
 }
