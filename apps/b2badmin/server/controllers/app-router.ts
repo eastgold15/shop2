@@ -5,84 +5,55 @@
  * --------------------------------------------------------
  */
 import type { Elysia } from "elysia";
-import { adsController } from "./_custom/ads.controller";
-import { attributeController } from "./_custom/attribute.controller";
-import { attributetemplateController } from "./_custom/attributetemplate.controller";
-import { factoriesController } from "./_custom/factories.controller";
-import { herocardsController } from "./_custom/herocards.controller";
-import { masterController } from "./_custom/master.controller";
-import { mediaController } from "./_custom/media.controller";
-import { permissionController } from "./_custom/permission.controller";
-import { productmastercategoriesController } from "./_custom/productmastercategories.controller";
-import { productsController } from "./_custom/products.controller";
-import { roleController } from "./_custom/role.controller";
-import { rolepermissionsController } from "./_custom/rolepermissions.controller";
-import { salespersonsController } from "./_custom/salespersons.controller";
-import { sitecategoriesController } from "./_custom/sitecategories.controller";
-import { siteconfigController } from "./_custom/siteconfig.controller";
-import { sitesController } from "./_custom/sites.controller";
-import { skusController } from "./_custom/skus.controller";
-import { usersController } from "./_custom/users.controller";
-import { usersiterolesController } from "./_custom/usersiteroles.controller";
-import { accountController } from "./_generated/account.controller";
-import { attributevalueController } from "./_generated/attributevalue.controller";
-import { customerController } from "./_generated/customer.controller";
-import { dailyinquirycounterController } from "./_generated/dailyinquirycounter.controller";
-import { exportersController } from "./_generated/exporters.controller";
-import { inquiryController } from "./_generated/inquiry.controller";
-import { inquiryitemsController } from "./_generated/inquiryitems.controller";
-import { mediametadataController } from "./_generated/mediametadata.controller";
-import { productmediaController } from "./_generated/productmedia.controller";
-import { productsitecategoriesController } from "./_generated/productsitecategories.controller";
-import { producttemplateController } from "./_generated/producttemplate.controller";
-import { quotationitemsController } from "./_generated/quotationitems.controller";
-import { quotationsController } from "./_generated/quotations.controller";
-import { salespersonaffiliationsController } from "./_generated/salespersonaffiliations.controller";
-import { salespersoncategoriesController } from "./_generated/salespersoncategories.controller";
-import { sessionController } from "./_generated/session.controller";
-import { siteproductsController } from "./_generated/siteproducts.controller";
-import { skumediaController } from "./_generated/skumedia.controller";
-// import { translationdictController } from "./_generated/translationdict.controller";
-import { verificationController } from "./_generated/verification.controller";
+
+import { accountController } from "./account.controller";
+import { adController } from "./ad.controller";
+import { customerController } from "./customer.controller";
+import { dailyinquirycounterController } from "./dailyinquirycounter.controller";
+import { herocardController } from "./herocard.controller";
+import { inquiryController } from "./inquiry.controller";
+import { mastercategoryController } from "./mastercategory.controller";
+import { mediaController } from "./media.controller";
+import { mediametadataController } from "./mediametadata.controller";
+import { productController } from "./product.controller";
+import { quotationController } from "./quotation.controller";
+import { roleController } from "./role.controller";
+import { siteController } from "./site.controller";
+import { sitecategoryController } from "./sitecategory.controller";
+import { siteconfigController } from "./siteconfig.controller";
+import { siteproductController } from "./siteproduct.controller";
+import { skuController } from "./sku.controller";
+import { skumediaController } from "./skumedia.controller";
+import { templateController } from "./template.controller";
+import { templatekeyController } from "./templatekey.controller";
+import { templatevalueController } from "./templatevalue.controller";
+import { tenantController } from "./tenant.controller";
+import { userController } from "./user.controller";
+import { userroleController } from "./userrole.controller";
 
 export const appRouter = (app: Elysia) =>
   app
-    .use(customerController)
     .use(accountController)
-    .use(adsController)
-    .use(attributeController)
-    .use(attributetemplateController)
-    .use(attributevalueController)
+    .use(adController)
+    .use(customerController)
     .use(dailyinquirycounterController)
-    .use(exportersController)
-    .use(factoriesController)
-    .use(herocardsController)
-    .use(inquiryitemsController)
+    .use(herocardController)
     .use(inquiryController)
-    .use(masterController)
-    .use(mediametadataController)
+    .use(mastercategoryController)
     .use(mediaController)
-    .use(permissionController)
-    .use(productmastercategoriesController)
-    .use(productmediaController)
-    .use(productsitecategoriesController)
-    .use(producttemplateController)
-    .use(productsController)
-    .use(quotationitemsController)
-    .use(quotationsController)
-    .use(rolepermissionsController)
+    .use(mediametadataController)
+    .use(productController)
+    .use(quotationController)
     .use(roleController)
-    .use(salespersonaffiliationsController)
-    .use(salespersoncategoriesController)
-    .use(salespersonsController)
-    .use(sessionController)
-    .use(sitecategoriesController)
+    .use(siteController)
+    .use(sitecategoryController)
     .use(siteconfigController)
-    .use(siteproductsController)
-    .use(sitesController)
+    .use(siteproductController)
+    .use(skuController)
     .use(skumediaController)
-    .use(skusController)
-    // .use(translationdictController)
-    .use(usersiterolesController)
-    .use(usersController)
-    .use(verificationController);
+    .use(templateController)
+    .use(templatekeyController)
+    .use(templatevalueController)
+    .use(tenantController)
+    .use(userController)
+    .use(userroleController);
