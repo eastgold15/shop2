@@ -12,7 +12,7 @@ export const PermissionContract = {
   Response: t.Object({
     ...PermissionFields,
   }),
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+
   Create: t.Object({
     ...t.Omit(t.Object(PermissionInsertFields), [
       "id",

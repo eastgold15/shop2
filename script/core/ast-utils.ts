@@ -40,10 +40,22 @@ export function ensureImport(
     });
   }
 
-  const existingNamed = decl.getNamedImports().map((n) => n.getName());
-  for (const name of namedImports) {
-    if (!existingNamed.includes(name)) {
-      decl.addNamedImport({ name, isTypeOnly });
+  // 🔥 修复：规范化导入名称，去除 "type " 前缀后进行比较
+  const existingImports = decl.getNamedImports();
+  const existingNames = new Set(existingImports.map((n) => n.getName()));
+
+  for (const importSpec of namedImports) {
+    // 去除 "type " 前缀获取实际名称
+    const actualName = importSpec.replace(/^type\s+/, "");
+    const isType = importSpec.startsWith("type ");
+
+    // 检查是否已存在（无论是否有 type 前缀）
+    if (!existingNames.has(actualName)) {
+      decl.addNamedImport({
+        name: actualName,
+        isTypeOnly: isType || isTypeOnly,
+      });
+      existingNames.add(actualName);
     }
   }
 }
