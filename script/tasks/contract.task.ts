@@ -1,5 +1,9 @@
 import { type Project, SyntaxKind, VariableDeclarationKind } from "ts-morph";
-import { ensureImport, upsertExportedConst, upsertObjectProperty } from "../core/ast-utils";
+import {
+  ensureImport,
+  upsertExportedConst,
+  upsertObjectProperty,
+} from "../core/ast-utils";
 import type { GenContext, Task } from "../core/types";
 
 export const ContractTask: Task = {
@@ -37,15 +41,11 @@ export const ContractTask: Task = {
     // ============================================================
     // 2. 生成外部基础变量 (Base Variables)
     // ============================================================
-    const fieldsVarName = `${ctx.pascalName}Fields`;       // e.g. UsersFields
+    const fieldsVarName = `${ctx.pascalName}Fields`; // e.g. UsersFields
     const insertFieldsVarName = `${ctx.pascalName}InsertFields`; // e.g. UsersInsertFields
 
     // 生成 export const UsersFields = spread(usersTable, "select");
-    upsertExportedConst(
-      file,
-      fieldsVarName,
-      `spread(${tableVar}, "select")`
-    );
+    upsertExportedConst(file, fieldsVarName, `spread(${tableVar}, "select")`);
 
     // 生成 export const UsersInsertFields = spread(usersTable, "insert");
     upsertExportedConst(
@@ -56,7 +56,6 @@ export const ContractTask: Task = {
     // ============================================================
     // 3. 生成 Contract 对象 (引用上面的变量)
     // ============================================================
-
 
     //  定义 Contract 对象
     const varName = `${ctx.pascalName}Contract`;
@@ -130,8 +129,6 @@ export const ContractTask: Task = {
         total: t.Number(),
       })`
     );
-
-
 
     // 4. 确保 export type 存在
     const typeExportName = varName;
