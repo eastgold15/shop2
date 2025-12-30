@@ -1,7 +1,6 @@
 import { type AdContract, adTable } from "@repo/contract";
 import { and, eq, inArray } from "drizzle-orm";
 import { HttpError } from "elysia-http-problem-json";
-import { AUthFilterObj } from "~/middleware/auth";
 import { type ServiceContext } from "../lib/type";
 
 export class AdService {
@@ -19,12 +18,13 @@ export class AdService {
     return res;
   }
 
-  public async findAll(query: AdContract["ListQuery"], ctx: ServiceContext, getScopeObj: () => AUthFilterObj) {
+  public async findAll(query: AdContract["ListQuery"], ctx: ServiceContext) {
     const { search, type, position, isActive } = query;
+    const scopeObj = ctx.getScopeObj();
     const res = await ctx.db.query.adTable.findMany({
       where: {
-        deptId: getScopeObj().deptId,
-        tenantId: getScopeObj().tenantId,
+        deptId: scopeObj.deptId,
+        tenantId: scopeObj.tenantId,
         ...(search ? { title: { ilike: `%${search}%` } } : {}),
         ...(type ? { type } : {}),
         ...(position ? { position } : {}),

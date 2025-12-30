@@ -148,4 +148,6 @@ export const authGuardMid = new Elysia({ name: "authGuard" })
       },
     }),
   })
-  .as("global");
+  .as("global")
+
+// .get('/', ({ user,getScopeObj,effectiveScope}) => 'auth guard middleware works')

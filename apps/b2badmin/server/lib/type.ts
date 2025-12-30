@@ -12,4 +12,9 @@ export type ServiceUser = typeof userTable.$inferSelect & {
 export interface ServiceContext {
   db: typeof db;
   user: ServiceUser;
+  getScopeObj: () => {
+    tenantId: string;
+    deptId: string | { in: string[] };
+    createdBy: string;
+  };
 }
