@@ -10,6 +10,19 @@ const SCOPE_WEIGHT = {
   dept_only: 2, // 本部门
   self: 1, // 仅本人
 } as const;
+
+
+interface FilterObj {
+  tenantId: string | null;
+  deptId?: string | null | { in: string[] };
+  createdBy?: string | null;
+}
+export interface AUthFilterObj {
+  tenantId: string;
+  deptId: string | { in: string[] };
+  createdBy: string;
+}
+
 export const authGuardMid = new Elysia({ name: "authGuard" })
 
   .use(dbPlugin)
@@ -53,7 +66,7 @@ export const authGuardMid = new Elysia({ name: "authGuard" })
       permissions, // 自动注入到后续的所有 Hook 中
     };
   })
-  .resolve(({ user }) => {
+  .resolve(({ user, db }) => {
     const getMaxScope = () => {
       let maxWeight = 0;
       let maxScope = "self"; // 默认最低
@@ -72,9 +85,9 @@ export const authGuardMid = new Elysia({ name: "authGuard" })
     };
 
     const effectiveScope = getMaxScope();
-    const getScopeObj = () => {
+    const getScopeObj = async (): Promise<FilterObj> => {
       // 计算出最终生效的 scope
-      const filter: Record<string, any> = {
+      const filter: FilterObj = {
         tenantId: user.tenantId,
       };
 
@@ -87,16 +100,22 @@ export const authGuardMid = new Elysia({ name: "authGuard" })
           // 权重 4: 看所有 -> 不加任何额外限制，只看租户
           break;
 
-        case "dept_and_child":
+        case "dept_and_child": {
           // 权重 3: 本部门及子部门
-          // 对象写法搞不定 OR 逻辑 (deptId = A OR parentId = A)，这里只能退化为看本部门
-          // 如果必须看子部门，请用 SQL 回调写法
-          filter.deptId = user.deptId;
+          const childDepts = await db.query.departmentTable.findMany({
+            where: { parentId: user.deptId! },
+            columns: { id: true },
+          })
+          const deptIds = childDepts.map((item) => item.id);
+          filter.deptId = {
+            in: [user.deptId!, ...deptIds]
+          }
           break;
+        }
 
         case "dept_only":
           // 权重 2: 限制部门
-          filter.deptId = user.deptId;
+          filter.deptId = user.deptId!; // 非空断言（确保非超管有 deptId）
           break;
 
         // case "self":

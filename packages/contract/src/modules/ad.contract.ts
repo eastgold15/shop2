@@ -18,7 +18,6 @@ export const AdContract = {
       "id",
       "createdAt",
       "updatedAt",
-      "siteId",
       "startDate",
       "endDate",
     ]).properties,

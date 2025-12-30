@@ -222,7 +222,9 @@ export const siteTable = p.pgTable("site", {
   siteType: siteTypeEnum("site_type").notNull(),
 });
 
-// [其他原有 Auth 表]
+/**
+ * @onlyGen contract
+ */
 export const accountTable = p.pgTable("sys_account", {
   ...Audit,
   accountId: p.text("account_id").notNull(),
@@ -344,14 +346,9 @@ export const adTable = p.pgTable("advertisement", {
   isActive: p.boolean("is_active").default(true),
   startDate: p.timestamp("start_date").notNull(),
   endDate: p.timestamp("end_date").notNull(),
-  // 必须指明属于哪个站点
-  siteId: p
-    .uuid("site_id")
-    .notNull()
-    .references(() => siteTable.id, { onDelete: "cascade" }),
 
-  // 广告通常由运营创建，最好也加上 tenantCols 以便管理
-  tenantId: p.uuid("tenant_id").references(() => tenantTable.id),
+  // 广告通常由运营创建，最好也加上 tenantCols 以便管理不同租户的广告
+  ...tenantCols,
 });
 
 export const heroCardTable = p.pgTable("hero_card", {
