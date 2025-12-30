@@ -579,7 +579,7 @@ export const customerTable = p.pgTable("customer", {
   ...tenantCols,
 });
 
-export const inquiryTable = p.pgTable("inquirie", {
+export const inquiryTable = p.pgTable("inquiry", {
   ...Audit,
   inquiryNumber: p.varchar("inquiry_number", { length: 50 }).notNull(),
   customerName: p.varchar("customer_name", { length: 100 }),

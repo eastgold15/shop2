@@ -69,37 +69,49 @@ const hashedPassword =
   "948ca608bf8799e01f412bc8e42e4384:18a873f36c8ccb79a0954f6ae5c66ecc0a1c14f113e6d3f0de65dd3d0deeb3257cdc3fa840021fe627cf6f399cb8beb9c597ed30967a8959badb5e782db934065";
 
 // 获取所有数据库表名并生成对应的权限
+// 使用变量名去掉 Table 后缀
 const getAllTableNames = () => [
-  "sys_tenant",
-  "sys_dept",
-  "sys_user",
-  "sys_role",
-  "sys_permission",
-  // "sys_user_role",
-  // "sys_role_permission",
+  // 系统架构核心表
+  "tenant",
+  "department",
+  "user",
+  "role",
+  "permission",
+  // "userRole", // 关联表，通常不需要单独权限
+  // "rolePermission", // 关联表，通常不需要单独权限
+  // 认证相关
+  "account",
+  "session",
+  "verification",
+  // 站点相关
   "site",
-  "site_category",
-  "site_product",
-  "site_config",
-  "master_category",
+  "siteCategory",
+  "siteProduct",
+  "siteConfig",
+  // 分类和模板
+  "masterCategory",
   "template",
-  "template_key",
-  "template_value",
+  "templateKey",
+  "templateValue",
+  // 产品相关
   "product",
-  "product_category",
-  "product_site_category",
-  "product_template",
+  "productMasterCategory",
+  "productSiteCategory",
+  "productMedia",
+  "productTemplate",
   "sku",
-  "product_media",
-  "sku_media",
+  "skuMedia",
+  // 媒体相关
   "media",
-  "media_metadata",
+  "mediaMetadata",
+  // 广告和首页
   "ad",
-  "hero_card",
+  "heroCard",
+  // 业务表
   "customer",
   "inquiry",
   "quotation",
-  "daily_inquiry_counter",
+  "dailyInquiryCounter",
 ];
 
 // 生成标准CRUD权限

@@ -101,10 +101,10 @@ export const ControllerTask: Task = {
     }
 
     // 5. 权限配置
-    const readPermission = getPermission(ctx.tableName, "read");
-    const createPermission = getPermission(ctx.tableName, "create");
-    const updatePermission = getPermission(ctx.tableName, "update");
-    const deletePermission = getPermission(ctx.tableName, "delete");
+    const readPermission = getPermission(ctx.tableName, "VIEW");
+    const createPermission = getPermission(ctx.tableName, "CREATE");
+    const updatePermission = getPermission(ctx.tableName, "EDIT");
+    const deletePermission = getPermission(ctx.tableName, "DELETE");
 
     // 6. Controller 定义 - 带权限和 OpenAPI 文档
     const controllerName = `${ctx.tableName}Controller`;
