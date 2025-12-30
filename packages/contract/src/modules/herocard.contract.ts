@@ -1,5 +1,4 @@
 import { t } from "elysia";
-import { PaginationParams, SortParams } from "../helper/query-types.model";
 import { type InferDTO, spread } from "../helper/utils";
 import { heroCardTable } from "../table.schema";
 
@@ -12,10 +11,14 @@ export const HeroCardContract = {
   Response: t.Object({
     ...HeroCardFields,
   }),
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+
   Create: t.Object({
-    ...t.Omit(t.Object(HeroCardInsertFields), ["id", "createdAt", "updatedAt"])
-      .properties,
+    ...t.Omit(t.Object(HeroCardInsertFields), [
+      "id",
+      "createdAt",
+      "updatedAt",
+      "siteId",
+    ]).properties,
   }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Update: t.Partial(
@@ -30,9 +33,6 @@ export const HeroCardContract = {
   ),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   ListQuery: t.Object({
-    ...t.Partial(t.Object(HeroCardInsertFields)).properties,
-    ...PaginationParams.properties,
-    ...SortParams.properties,
     search: t.Optional(t.String()),
   }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */

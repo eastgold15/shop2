@@ -1,5 +1,5 @@
 import { t } from "elysia";
-import { PaginationParams, SortParams } from "../helper/query-types.model";
+import { SortParams } from "../helper/query-types.model";
 import { type InferDTO, spread } from "../helper/utils";
 import { skuTable } from "../table.schema";
 
@@ -17,21 +17,51 @@ export const SkuContract = {
     ...t.Omit(t.Object(SkuInsertFields), ["id", "createdAt", "updatedAt"])
       .properties,
   }),
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+
   Update: t.Partial(
-    t.Object({
-      ...t.Omit(t.Object(SkuInsertFields), [
+    t.Composite([
+      t.Omit(t.Object(SkuInsertFields), [
         "id",
         "createdAt",
         "updatedAt",
         "siteId",
-      ]).properties,
-    })
+      ]),
+      t.Object({
+        mediaIds: t.Optional(t.Array(t.String())), // 该 SKU 的图片 ID 列表
+        mainImageId: t.Optional(t.String()), // 指定哪张 ID 为主图
+      }),
+    ])
   ),
+  // Patch 请求 (部分更新)
+  Patch: t.Partial(
+    t.Composite([
+      t.Omit(t.Object(SkuInsertFields), [
+        "id",
+        "createdAt",
+        "updatedAt",
+        "siteId",
+      ]),
+      t.Object({
+        mediaIds: t.Optional(t.Array(t.String())),
+        mainImageId: t.Optional(t.String()),
+      }),
+    ])
+  ),
+  // BatchCreate 批量创建
+  BatchCreate: t.Object({
+    productId: t.String(),
+    skus: t.Array(
+      t.Object({
+        skuCode: t.String(),
+        price: t.Number(),
+        stock: t.Optional(t.Number()),
+        specJson: t.Any(),
+        mediaIds: t.Optional(t.Array(t.String())),
+      })
+    ),
+  }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   ListQuery: t.Object({
-    ...t.Partial(t.Object(SkuInsertFields)).properties,
-    ...PaginationParams.properties,
     ...SortParams.properties,
     search: t.Optional(t.String()),
   }),

@@ -12,6 +12,7 @@ export const MediaContract = {
   Response: t.Object({
     ...MediaFields,
   }),
+  Entity: t.Object(MediaFields),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Create: t.Object({
     ...t.Omit(t.Object(MediaInsertFields), ["id", "createdAt", "updatedAt"])
@@ -28,12 +29,24 @@ export const MediaContract = {
       ]).properties,
     })
   ),
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+  // Patch 请求 (部分更新)
+  Patch: t.Partial(
+    t.Object({
+      ...t.Omit(t.Object(MediaInsertFields), [
+        "id",
+        "createdAt",
+        "updatedAt",
+        "siteId",
+      ]).properties,
+    })
+  ),
+
   ListQuery: t.Object({
     ...t.Partial(t.Object(MediaInsertFields)).properties,
     ...PaginationParams.properties,
     ...SortParams.properties,
     search: t.Optional(t.String()),
+    ids: t.Optional(t.Array(t.String())), // 批量查询 ID 列表
   }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   ListResponse: t.Object({

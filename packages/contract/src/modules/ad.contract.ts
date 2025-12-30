@@ -12,12 +12,20 @@ export const AdContract = {
   Response: t.Object({
     ...AdFields,
   }),
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+
   Create: t.Object({
-    ...t.Omit(t.Object(AdInsertFields), ["id", "createdAt", "updatedAt"])
-      .properties,
+    ...t.Omit(t.Object(AdInsertFields), [
+      "id",
+      "createdAt",
+      "updatedAt",
+      "siteId",
+      "startDate",
+      "endDate",
+    ]).properties,
+    startDate: t.String(),
+    endDate: t.String(),
   }),
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+
   Update: t.Partial(
     t.Object({
       ...t.Omit(t.Object(AdInsertFields), [
@@ -25,7 +33,11 @@ export const AdContract = {
         "createdAt",
         "updatedAt",
         "siteId",
+        "startDate",
+        "endDate",
       ]).properties,
+      startDate: t.String(),
+      endDate: t.String(),
     })
   ),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */

@@ -1,5 +1,4 @@
 import { t } from "elysia";
-import { PaginationParams, SortParams } from "../helper/query-types.model";
 import { type InferDTO, spread } from "../helper/utils";
 import { roleTable } from "../table.schema";
 
@@ -28,11 +27,8 @@ export const RoleContract = {
       ]).properties,
     })
   ),
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+
   ListQuery: t.Object({
-    ...t.Partial(t.Object(RoleInsertFields)).properties,
-    ...PaginationParams.properties,
-    ...SortParams.properties,
     search: t.Optional(t.String()),
   }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */

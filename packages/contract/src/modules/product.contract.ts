@@ -12,12 +12,21 @@ export const ProductContract = {
   Response: t.Object({
     ...ProductFields,
   }),
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+
   Create: t.Object({
-    ...t.Omit(t.Object(ProductInsertFields), ["id", "createdAt", "updatedAt"])
-      .properties,
+    ...t.Omit(t.Object(ProductInsertFields), [
+      "id",
+      "createdAt",
+      "updatedAt",
+    ]).properties,
+    // 站点ID
+    siteCategoryId: t.Optional(t.String()),
+    // 商品媒体关联
+    mediaIds: t.Optional(t.Array(t.String())), // 商品图片ID列表
+    mainImageId: t.Optional(t.String()), // 主图ID
+    videoIds: t.Optional(t.Array(t.String())), // 视频ID列表
   }),
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+
   Update: t.Partial(
     t.Object({
       ...t.Omit(t.Object(ProductInsertFields), [
@@ -26,6 +35,24 @@ export const ProductContract = {
         "updatedAt",
         "siteId",
       ]).properties,
+      // 商品媒体关联（更新时可全量替换）
+      mediaIds: t.Optional(t.Array(t.String())),
+      mainImageId: t.Optional(t.String()),
+      videoIds: t.Optional(t.Array(t.String())),
+    })
+  ),
+ 
+  Patch: t.Partial(
+    t.Object({
+      ...t.Omit(t.Object(ProductInsertFields), [
+        "id",
+        "createdAt",
+        "updatedAt",
+        "siteId",
+      ]).properties,
+      mediaIds: t.Optional(t.Array(t.String())),
+      mainImageId: t.Optional(t.String()),
+      videoIds: t.Optional(t.Array(t.String())),
     })
   ),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */

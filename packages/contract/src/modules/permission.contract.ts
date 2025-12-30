@@ -1,5 +1,4 @@
 import { t } from "elysia";
-import { PaginationParams, SortParams } from "../helper/query-types.model";
 import { type InferDTO, spread } from "../helper/utils";
 import { permissionTable } from "../table.schema";
 
@@ -12,7 +11,6 @@ export const PermissionContract = {
   Response: t.Object({
     ...PermissionFields,
   }),
-
   Create: t.Object({
     ...t.Omit(t.Object(PermissionInsertFields), [
       "id",
@@ -33,9 +31,6 @@ export const PermissionContract = {
   ),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   ListQuery: t.Object({
-    ...t.Partial(t.Object(PermissionInsertFields)).properties,
-    ...PaginationParams.properties,
-    ...SortParams.properties,
     search: t.Optional(t.String()),
   }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */

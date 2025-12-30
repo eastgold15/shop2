@@ -1,3 +1,5 @@
+import { TemplateKeyInsertFields } from './templatekey.contract';
+import { TemplateValueInsertFields } from './templatevalue.contract';
 import { t } from "elysia";
 import { PaginationParams, SortParams } from "../helper/query-types.model";
 import { type InferDTO, spread } from "../helper/utils";
@@ -12,10 +14,23 @@ export const TemplateContract = {
   Response: t.Object({
     ...TemplateFields,
   }),
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+  // 创建请求 (默认排除系统字段)
   Create: t.Object({
-    ...t.Omit(t.Object(TemplateInsertFields), ["id", "createdAt", "updatedAt"])
-      .properties,
+    fields: t.Optional(
+      t.Array(
+        t.Object({
+          key: TemplateKeyInsertFields.key,
+          inputType: TemplateKeyInsertFields.inputType,
+          isRequired: TemplateKeyInsertFields.isRequired,
+          isSkuSpec: TemplateKeyInsertFields.isSkuSpec,
+          value: TemplateValueInsertFields.value, // 可选：text/number 类型使用
+          options: t.Optional(t.Array(t.String())), // 可选：select/multiselect 类型使用
+        })
+      )
+    ),
+    name: TemplateInsertFields.name,
+    siteCategoryId: TemplateInsertFields.siteCategoryId, // 可选：不强制要求站点分类
+    masterCategoryId: TemplateInsertFields.masterCategoryId,
   }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Update: t.Partial(

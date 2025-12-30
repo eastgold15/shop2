@@ -12,13 +12,39 @@ export const InquiryContract = {
   Response: t.Object({
     ...InquiryFields,
   }),
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  Create: t.Object({
-    ...t.Omit(t.Object(InquiryInsertFields), ["id", "createdAt", "updatedAt"])
-      .properties,
-  }),
+
+  Create: t.Composite([
+    t.Object(
+      t.Omit(t.Object(InquiryInsertFields), [
+        "id",
+        "createdAt",
+        "updatedAt",
+        "inquiryNumber",
+      ]).properties
+    ),
+    t.Object({
+      productId: t.String(),
+      skuId: t.String(),
+      quantity: t.Number(),
+      productName: t.String(),
+      productDesc: t.String(),
+      paymentMethod: t.String(),
+      customerRemarks: t.Optional(t.String()),
+    }),
+  ]),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Update: t.Partial(
+    t.Object({
+      ...t.Omit(t.Object(InquiryInsertFields), [
+        "id",
+        "createdAt",
+        "updatedAt",
+        "siteId",
+      ]).properties,
+    })
+  ),
+  // Patch 请求 (部分更新)
+  Patch: t.Partial(
     t.Object({
       ...t.Omit(t.Object(InquiryInsertFields), [
         "id",
@@ -43,3 +69,4 @@ export const InquiryContract = {
 } as const;
 
 export type InquiryContract = InferDTO<typeof InquiryContract>;
+
