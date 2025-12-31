@@ -19,11 +19,10 @@ export class AdService {
 
   public async findAll(query: AdContract["ListQuery"], ctx: ServiceContext) {
     const { search, type, position, isActive } = query;
-    const scopeObj = ctx.getScopeObj();
     const res = await ctx.db.query.adTable.findMany({
       where: {
-        deptId: scopeObj.deptId,
-        tenantId: scopeObj.tenantId,
+        deptId: ctx.currentDeptId,
+        tenantId: ctx.user.tenantId!,
         ...(search ? { title: { ilike: `%${search}%` } } : {}),
         ...(type ? { type } : {}),
         ...(position ? { position } : {}),

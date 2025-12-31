@@ -59,6 +59,7 @@ export const relations = defineRelations(schema, (r) => ({
     tenant: r.one.tenantTable({
       from: r.userTable.tenantId,
       to: r.tenantTable.id,
+      optional: false,
     }),
     department: r.one.departmentTable({
       from: r.userTable.deptId,

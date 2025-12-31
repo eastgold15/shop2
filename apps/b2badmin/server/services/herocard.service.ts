@@ -10,7 +10,8 @@ export class HeroCardService {
       // 自动注入租户信息
       ...(ctx.user?.tenantId ? { tenantId: ctx.user.tenantId } : {}),
       ...(ctx.user?.id ? { createdBy: ctx.user.id } : {}),
-      // ...(ctx.user.)
+      ...(ctx.currentDeptId ? { deptId: ctx.currentDeptId } : {}),
+      ...(ctx.user ? { siteId: ctx.user.department.site.id } : {}),
     };
     const [res] = await ctx.db
       .insert(heroCardTable)
@@ -27,8 +28,8 @@ export class HeroCardService {
 
     const res = await ctx.db.query.heroCardTable.findMany({
       where: {
-        deptId: scopeObj.deptId,
-        tenantId: scopeObj.tenantId,
+        deptId: ctx.currentDeptId,
+        tenantId: ctx.user.tenantId!,
         ...(search
           ? {
               OR: [
@@ -110,12 +111,11 @@ export class HeroCardService {
    * 切换状态
    */
   async toggleStatus(id: string, ctx: ServiceContext) {
-    const scopeObj = ctx.getScopeObj();
     const card = await ctx.db.query.heroCardTable.findFirst({
       where: {
         id,
-        deptId: scopeObj.deptId,
-        tenantId: scopeObj.tenantId,
+        deptId: ctx.currentDeptId,
+        tenantId: ctx.user.tenantId!,
       },
     });
     if (!card) throw new HttpError.NotFound("记录不存在");

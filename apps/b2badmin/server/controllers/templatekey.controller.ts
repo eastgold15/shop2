@@ -20,7 +20,8 @@ export const templatekeyController = new Elysia({ prefix: "/templatekey" })
   .use(authGuardMid)
   .get(
     "/",
-    ({ query, user, db }) => templatekeyService.findAll(query, { db, user }),
+    ({ query, user, db, currentDeptId }) =>
+      templatekeyService.findAll(query, { db, user, currentDeptId }),
     {
       allPermissions: ["TEMPLATEKEY:VIEW"],
       query: TemplateKeyContract.ListQuery,
@@ -33,7 +34,8 @@ export const templatekeyController = new Elysia({ prefix: "/templatekey" })
   )
   .post(
     "/",
-    ({ body, user, db }) => templatekeyService.create(body, { db, user }),
+    ({ body, user, db, currentDeptId }) =>
+      templatekeyService.create(body, { db, user, currentDeptId }),
     {
       allPermissions: ["TEMPLATEKEY:CREATE"],
       body: TemplateKeyContract.Create,
@@ -46,8 +48,8 @@ export const templatekeyController = new Elysia({ prefix: "/templatekey" })
   )
   .put(
     "/:id",
-    ({ params, body, user, db }) =>
-      templatekeyService.update(params.id, body, { db, user }),
+    ({ params, body, user, db, currentDeptId }) =>
+      templatekeyService.update(params.id, body, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
       body: TemplateKeyContract.Update,
@@ -61,8 +63,8 @@ export const templatekeyController = new Elysia({ prefix: "/templatekey" })
   )
   .delete(
     "/:id",
-    ({ params, user, db }) =>
-      templatekeyService.delete(params.id, { db, user }),
+    ({ params, user, db, currentDeptId }) =>
+      templatekeyService.delete(params.id, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
       allPermissions: ["TEMPLATEKEY:DELETE"],

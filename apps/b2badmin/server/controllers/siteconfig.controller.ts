@@ -20,7 +20,8 @@ export const siteconfigController = new Elysia({ prefix: "/siteconfig" })
   .use(authGuardMid)
   .get(
     "/",
-    ({ query, user, db }) => siteconfigService.findAll(query, { db, user }),
+    ({ query, user, db, currentDeptId }) =>
+      siteconfigService.findAll(query, { db, user, currentDeptId }),
     {
       allPermissions: ["SITECONFIG:VIEW"],
       query: SiteConfigContract.ListQuery,
@@ -33,7 +34,8 @@ export const siteconfigController = new Elysia({ prefix: "/siteconfig" })
   )
   .post(
     "/",
-    ({ body, user, db }) => siteconfigService.create(body, { db, user }),
+    ({ body, user, db, currentDeptId }) =>
+      siteconfigService.create(body, { db, user, currentDeptId }),
     {
       allPermissions: ["SITECONFIG:CREATE"],
       body: SiteConfigContract.Create,
@@ -46,8 +48,8 @@ export const siteconfigController = new Elysia({ prefix: "/siteconfig" })
   )
   .put(
     "/:id",
-    ({ params, body, user, db }) =>
-      siteconfigService.update(params.id, body, { db, user }),
+    ({ params, body, user, db, currentDeptId }) =>
+      siteconfigService.update(params.id, body, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
       body: SiteConfigContract.Update,
@@ -61,7 +63,8 @@ export const siteconfigController = new Elysia({ prefix: "/siteconfig" })
   )
   .delete(
     "/:id",
-    ({ params, user, db }) => siteconfigService.delete(params.id, { db, user }),
+    ({ params, user, db, currentDeptId }) =>
+      siteconfigService.delete(params.id, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
       allPermissions: ["SITECONFIG:DELETE"],

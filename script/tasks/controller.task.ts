@@ -116,7 +116,7 @@ export const ControllerTask: Task = {
     const controllerCode = `new Elysia({ prefix: "${prefix}" })
   .use(dbPlugin)
   .use(authGuardMid)
-  .get("/", ({ query, user, db }) => ${serviceInstanceName}.findAll(query, { db, user }), {
+  .get("/", ({ query, user, db, currentDeptId }) => ${serviceInstanceName}.findAll(query, { db, user, currentDeptId }), {
     allPermissions: ["${readPermission}"],
     query: ${contract}.ListQuery,
     detail: {
@@ -125,7 +125,7 @@ export const ControllerTask: Task = {
       tags: ["${pascalName}"],
     },
   })
-  .post("/", ({ body, user, db }) => ${serviceInstanceName}.create(body, { db, user }), {
+  .post("/", ({ body, user, db, currentDeptId }) => ${serviceInstanceName}.create(body, { db, user, currentDeptId }), {
     allPermissions: ["${createPermission}"],
     body: ${contract}.Create,
     detail: {
@@ -134,7 +134,7 @@ export const ControllerTask: Task = {
       tags: ["${pascalName}"],
     },
   })
-  .put("/:id", ({ params, body,user, db }) => ${serviceInstanceName}.update(params.id, body, { db, user }), {
+  .put("/:id", ({ params, body, user, db, currentDeptId }) => ${serviceInstanceName}.update(params.id, body, { db, user, currentDeptId }), {
     params: t.Object({ id: t.String() }),
     body: ${contract}.Update,
     allPermissions: ["${updatePermission}"],
@@ -144,7 +144,7 @@ export const ControllerTask: Task = {
       tags: ["${pascalName}"],
     },
   })
-  .delete("/:id", ({ params, user, db }) => ${serviceInstanceName}.delete(params.id, { db, user }), {
+  .delete("/:id", ({ params, user, db, currentDeptId }) => ${serviceInstanceName}.delete(params.id, { db, user, currentDeptId }), {
     params: t.Object({ id: t.String() }),
     allPermissions: ["${deletePermission}"],
     detail: {

@@ -18,28 +18,38 @@ const siteService = new SiteService();
 export const siteController = new Elysia({ prefix: "/site" })
   .use(dbPlugin)
   .use(authGuardMid)
-  .get("/", ({ query, user, db }) => siteService.findAll(query, { db, user }), {
-    allPermissions: ["SITE:VIEW"],
-    query: SiteContract.ListQuery,
-    detail: {
-      summary: "获取Site列表",
-      description: "分页查询Site数据，支持搜索和排序",
-      tags: ["Site"],
-    },
-  })
-  .post("/", ({ body, user, db }) => siteService.create(body, { db, user }), {
-    allPermissions: ["SITE:CREATE"],
-    body: SiteContract.Create,
-    detail: {
-      summary: "创建Site",
-      description: "新增一条Site记录",
-      tags: ["Site"],
-    },
-  })
+  .get(
+    "/",
+    ({ query, user, db, currentDeptId }) =>
+      siteService.findAll(query, { db, user, currentDeptId }),
+    {
+      allPermissions: ["SITE:VIEW"],
+      query: SiteContract.ListQuery,
+      detail: {
+        summary: "获取Site列表",
+        description: "分页查询Site数据，支持搜索和排序",
+        tags: ["Site"],
+      },
+    }
+  )
+  .post(
+    "/",
+    ({ body, user, db, currentDeptId }) =>
+      siteService.create(body, { db, user, currentDeptId }),
+    {
+      allPermissions: ["SITE:CREATE"],
+      body: SiteContract.Create,
+      detail: {
+        summary: "创建Site",
+        description: "新增一条Site记录",
+        tags: ["Site"],
+      },
+    }
+  )
   .put(
     "/:id",
-    ({ params, body, user, db }) =>
-      siteService.update(params.id, body, { db, user }),
+    ({ params, body, user, db, currentDeptId }) =>
+      siteService.update(params.id, body, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
       body: SiteContract.Update,
@@ -53,7 +63,8 @@ export const siteController = new Elysia({ prefix: "/site" })
   )
   .delete(
     "/:id",
-    ({ params, user, db }) => siteService.delete(params.id, { db, user }),
+    ({ params, user, db, currentDeptId }) =>
+      siteService.delete(params.id, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
       allPermissions: ["SITE:DELETE"],

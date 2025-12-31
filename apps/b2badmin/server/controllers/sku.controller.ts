@@ -18,28 +18,38 @@ const skuService = new SkuService();
 export const skuController = new Elysia({ prefix: "/sku" })
   .use(dbPlugin)
   .use(authGuardMid)
-  .get("/", ({ query, user, db }) => skuService.findAll(query, { db, user }), {
-    allPermissions: ["SKU:VIEW"],
-    query: SkuContract.ListQuery,
-    detail: {
-      summary: "获取Sku列表",
-      description: "分页查询Sku数据，支持搜索和排序",
-      tags: ["Sku"],
-    },
-  })
-  .post("/", ({ body, user, db }) => skuService.create(body, { db, user }), {
-    allPermissions: ["SKU:CREATE"],
-    body: SkuContract.Create,
-    detail: {
-      summary: "创建Sku",
-      description: "新增一条Sku记录",
-      tags: ["Sku"],
-    },
-  })
+  .get(
+    "/",
+    ({ query, user, db, currentDeptId }) =>
+      skuService.findAll(query, { db, user, currentDeptId }),
+    {
+      allPermissions: ["SKU:VIEW"],
+      query: SkuContract.ListQuery,
+      detail: {
+        summary: "获取Sku列表",
+        description: "分页查询Sku数据，支持搜索和排序",
+        tags: ["Sku"],
+      },
+    }
+  )
+  .post(
+    "/",
+    ({ body, user, db, currentDeptId }) =>
+      skuService.create(body, { db, user, currentDeptId }),
+    {
+      allPermissions: ["SKU:CREATE"],
+      body: SkuContract.Create,
+      detail: {
+        summary: "创建Sku",
+        description: "新增一条Sku记录",
+        tags: ["Sku"],
+      },
+    }
+  )
   .put(
     "/:id",
-    ({ params, body, user, db }) =>
-      skuService.update(params.id, body, { db, user }),
+    ({ params, body, user, db, currentDeptId }) =>
+      skuService.update(params.id, body, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
       body: SkuContract.Update,
@@ -53,7 +63,8 @@ export const skuController = new Elysia({ prefix: "/sku" })
   )
   .delete(
     "/:id",
-    ({ params, user, db }) => skuService.delete(params.id, { db, user }),
+    ({ params, user, db, currentDeptId }) =>
+      skuService.delete(params.id, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
       allPermissions: ["SKU:DELETE"],

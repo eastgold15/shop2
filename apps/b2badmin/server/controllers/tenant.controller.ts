@@ -20,7 +20,8 @@ export const tenantController = new Elysia({ prefix: "/tenant" })
   .use(authGuardMid)
   .get(
     "/",
-    ({ query, user, db }) => tenantService.findAll(query, { db, user }),
+    ({ query, user, db, currentDeptId }) =>
+      tenantService.findAll(query, { db, user, currentDeptId }),
     {
       allPermissions: ["TENANT:VIEW"],
       query: TenantContract.ListQuery,
@@ -31,19 +32,24 @@ export const tenantController = new Elysia({ prefix: "/tenant" })
       },
     }
   )
-  .post("/", ({ body, user, db }) => tenantService.create(body, { db, user }), {
-    allPermissions: ["TENANT:CREATE"],
-    body: TenantContract.Create,
-    detail: {
-      summary: "创建Tenant",
-      description: "新增一条Tenant记录",
-      tags: ["Tenant"],
-    },
-  })
+  .post(
+    "/",
+    ({ body, user, db, currentDeptId }) =>
+      tenantService.create(body, { db, user, currentDeptId }),
+    {
+      allPermissions: ["TENANT:CREATE"],
+      body: TenantContract.Create,
+      detail: {
+        summary: "创建Tenant",
+        description: "新增一条Tenant记录",
+        tags: ["Tenant"],
+      },
+    }
+  )
   .put(
     "/:id",
-    ({ params, body, user, db }) =>
-      tenantService.update(params.id, body, { db, user }),
+    ({ params, body, user, db, currentDeptId }) =>
+      tenantService.update(params.id, body, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
       body: TenantContract.Update,
@@ -57,7 +63,8 @@ export const tenantController = new Elysia({ prefix: "/tenant" })
   )
   .delete(
     "/:id",
-    ({ params, user, db }) => tenantService.delete(params.id, { db, user }),
+    ({ params, user, db, currentDeptId }) =>
+      tenantService.delete(params.id, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
       allPermissions: ["TENANT:DELETE"],

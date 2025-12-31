@@ -20,7 +20,8 @@ export const inquiryController = new Elysia({ prefix: "/inquiry" })
   .use(authGuardMid)
   .get(
     "/",
-    ({ query, user, db }) => inquiryService.findAll(query, { db, user }),
+    ({ query, user, db, currentDeptId }) =>
+      inquiryService.findAll(query, { db, user, currentDeptId }),
     {
       allPermissions: ["INQUIRY:VIEW"],
       query: InquiryContract.ListQuery,
@@ -33,7 +34,8 @@ export const inquiryController = new Elysia({ prefix: "/inquiry" })
   )
   .post(
     "/",
-    ({ body, user, db }) => inquiryService.create(body, { db, user }),
+    ({ body, user, db, currentDeptId }) =>
+      inquiryService.create(body, { db, user, currentDeptId }),
     {
       allPermissions: ["INQUIRY:CREATE"],
       body: InquiryContract.Create,
@@ -46,8 +48,8 @@ export const inquiryController = new Elysia({ prefix: "/inquiry" })
   )
   .put(
     "/:id",
-    ({ params, body, user, db }) =>
-      inquiryService.update(params.id, body, { db, user }),
+    ({ params, body, user, db, currentDeptId }) =>
+      inquiryService.update(params.id, body, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
       body: InquiryContract.Update,
@@ -61,7 +63,8 @@ export const inquiryController = new Elysia({ prefix: "/inquiry" })
   )
   .delete(
     "/:id",
-    ({ params, user, db }) => inquiryService.delete(params.id, { db, user }),
+    ({ params, user, db, currentDeptId }) =>
+      inquiryService.delete(params.id, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
       allPermissions: ["INQUIRY:DELETE"],

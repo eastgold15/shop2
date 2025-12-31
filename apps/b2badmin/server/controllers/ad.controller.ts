@@ -18,28 +18,38 @@ const adService = new AdService();
 export const adController = new Elysia({ prefix: "/ad" })
   .use(dbPlugin)
   .use(authGuardMid)
-  .get("/", ({ query, user, db }) => adService.findAll(query, { db, user }), {
-    allPermissions: ["AD:VIEW"],
-    query: AdContract.ListQuery,
-    detail: {
-      summary: "获取Ad列表",
-      description: "分页查询Ad数据，支持搜索和排序",
-      tags: ["Ad"],
-    },
-  })
-  .post("/", ({ body, user, db }) => adService.create(body, { db, user }), {
-    allPermissions: ["AD:CREATE"],
-    body: AdContract.Create,
-    detail: {
-      summary: "创建Ad",
-      description: "新增一条Ad记录",
-      tags: ["Ad"],
-    },
-  })
+  .get(
+    "/",
+    ({ query, user, db, currentDeptId }) =>
+      adService.findAll(query, { db, user, currentDeptId }),
+    {
+      allPermissions: ["AD:VIEW"],
+      query: AdContract.ListQuery,
+      detail: {
+        summary: "获取Ad列表",
+        description: "分页查询Ad数据，支持搜索和排序",
+        tags: ["Ad"],
+      },
+    }
+  )
+  .post(
+    "/",
+    ({ body, user, db, currentDeptId }) =>
+      adService.create(body, { db, user, currentDeptId }),
+    {
+      allPermissions: ["AD:CREATE"],
+      body: AdContract.Create,
+      detail: {
+        summary: "创建Ad",
+        description: "新增一条Ad记录",
+        tags: ["Ad"],
+      },
+    }
+  )
   .put(
     "/:id",
-    ({ params, body, user, db }) =>
-      adService.update(params.id, body, { db, user }),
+    ({ params, body, user, db, currentDeptId }) =>
+      adService.update(params.id, body, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
       body: AdContract.Update,
@@ -53,7 +63,8 @@ export const adController = new Elysia({ prefix: "/ad" })
   )
   .delete(
     "/:id",
-    ({ params, user, db }) => adService.delete(params.id, { db, user }),
+    ({ params, user, db, currentDeptId }) =>
+      adService.delete(params.id, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
       allPermissions: ["AD:DELETE"],

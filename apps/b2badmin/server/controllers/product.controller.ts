@@ -20,7 +20,8 @@ export const productController = new Elysia({ prefix: "/product" })
   .use(authGuardMid)
   .get(
     "/",
-    ({ query, user, db }) => productService.findAll(query, { db, user }),
+    ({ query, user, db, currentDeptId }) =>
+      productService.findAll(query, { db, user, currentDeptId }),
     {
       allPermissions: ["PRODUCT:VIEW"],
       query: ProductContract.ListQuery,
@@ -33,7 +34,8 @@ export const productController = new Elysia({ prefix: "/product" })
   )
   .post(
     "/",
-    ({ body, user, db }) => productService.create(body, { db, user }),
+    ({ body, user, db, currentDeptId }) =>
+      productService.create(body, { db, user, currentDeptId }),
     {
       allPermissions: ["PRODUCT:CREATE"],
       body: ProductContract.Create,
@@ -46,8 +48,8 @@ export const productController = new Elysia({ prefix: "/product" })
   )
   .put(
     "/:id",
-    ({ params, body, user, db }) =>
-      productService.update(params.id, body, { db, user }),
+    ({ params, body, user, db, currentDeptId }) =>
+      productService.update(params.id, body, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
       body: ProductContract.Update,
@@ -61,7 +63,8 @@ export const productController = new Elysia({ prefix: "/product" })
   )
   .delete(
     "/:id",
-    ({ params, user, db }) => productService.delete(params.id, { db, user }),
+    ({ params, user, db, currentDeptId }) =>
+      productService.delete(params.id, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
       allPermissions: ["PRODUCT:DELETE"],

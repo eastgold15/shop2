@@ -18,28 +18,38 @@ const userService = new UserService();
 export const userController = new Elysia({ prefix: "/user" })
   .use(dbPlugin)
   .use(authGuardMid)
-  .get("/", ({ query, user, db }) => userService.findAll(query, { db, user }), {
-    allPermissions: ["USER:VIEW"],
-    query: UserContract.ListQuery,
-    detail: {
-      summary: "获取User列表",
-      description: "分页查询User数据，支持搜索和排序",
-      tags: ["User"],
-    },
-  })
-  .post("/", ({ body, user, db }) => userService.create(body, { db, user }), {
-    allPermissions: ["USER:CREATE"],
-    body: UserContract.Create,
-    detail: {
-      summary: "创建User",
-      description: "新增一条User记录",
-      tags: ["User"],
-    },
-  })
+  .get(
+    "/",
+    ({ query, user, db, currentDeptId }) =>
+      userService.findAll(query, { db, user, currentDeptId }),
+    {
+      allPermissions: ["USER:VIEW"],
+      query: UserContract.ListQuery,
+      detail: {
+        summary: "获取User列表",
+        description: "分页查询User数据，支持搜索和排序",
+        tags: ["User"],
+      },
+    }
+  )
+  .post(
+    "/",
+    ({ body, user, db, currentDeptId }) =>
+      userService.create(body, { db, user, currentDeptId }),
+    {
+      allPermissions: ["USER:CREATE"],
+      body: UserContract.Create,
+      detail: {
+        summary: "创建User",
+        description: "新增一条User记录",
+        tags: ["User"],
+      },
+    }
+  )
   .put(
     "/:id",
-    ({ params, body, user, db }) =>
-      userService.update(params.id, body, { db, user }),
+    ({ params, body, user, db, currentDeptId }) =>
+      userService.update(params.id, body, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
       body: UserContract.Update,
@@ -53,7 +63,8 @@ export const userController = new Elysia({ prefix: "/user" })
   )
   .delete(
     "/:id",
-    ({ params, user, db }) => userService.delete(params.id, { db, user }),
+    ({ params, user, db, currentDeptId }) =>
+      userService.delete(params.id, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
       allPermissions: ["USER:DELETE"],
