@@ -281,6 +281,8 @@ export const sessionTable = p.pgTable("sys_session", {
   ...Audit,
   expiresAt: p.timestamp("expires_at").notNull(),
   token: p.text("token").notNull().unique(),
+  ipAddress: p.text("ip_address"),
+  userAgent: p.text("user_agent"),
   userId: p
     .uuid("user_id")
     .notNull()

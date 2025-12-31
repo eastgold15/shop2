@@ -7,19 +7,13 @@
     "noEmit": true,
     "esModuleInterop": true,
     "moduleResolution": "node",
-    "types": [
-      "bun-types"
-    ],
+    "types": ["bun-types"],
     "resolveJsonModule": true,
     "isolatedModules": true,
     "rootDir": ".",
     "paths": {
-      "~/*": [
-        "./src/*"
-      ],
-      "@repo/contract": [
-        "../../packages/contract/src/index.ts"
-      ]
+      "~/*": ["./src/*"],
+      "@repo/contract": ["../../packages/contract/src/index.ts"]
     },
     // ✅ 增量编译（关键！）
     "incremental": true,
@@ -30,9 +24,7 @@
     "out", // 如果有静态导出
     "dist"
   ],
-  "include": [
-    "src/**/*",
-  ],
+  "include": ["src/**/*"],
   "references": [
     {
       "path": "../../packages/contract"

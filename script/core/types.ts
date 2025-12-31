@@ -17,6 +17,7 @@ export interface GenContext {
     service: string; // .../modules/users.service.ts
     controller: string; // .../modules/users.controller.ts
     index: string; // .../modules/index.ts
+    frontendHook: string; // .../src/hooks/api/users.ts
   };
 
   config: GenConfig;

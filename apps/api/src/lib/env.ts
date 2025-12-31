@@ -3,9 +3,10 @@ import env from "env-var";
 export const envConfig = {
   // 端口配置：默认3000，转为合法端口号（1-65535）
   PORT: env.get("PORT").default(3000).asPortNumber(),
+  SERVERPORT: env.get("SERVERPORT").default(4000).asPortNumber(),
 
   // 必填项：必须存在且非空字符串
-  DATABASE_URL: env.get("DATABASE_URL").default('').asString(),
+  DATABASE_URL: env.get("DATABASE_URL").default("").asString(),
   BETTER_AUTH_SECRET: env.get("BETTER_AUTH_SECRET").asString(),
 
   // 合法URL校验

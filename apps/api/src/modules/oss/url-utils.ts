@@ -3,7 +3,7 @@
  * 提供统一的URL解析和key提取功能
  */
 
-import {envConfig } from "~/lib/env";
+import { envConfig } from "~/lib/env";
 
 // 顶层正则表达式常量，提升性能
 const URL_KEY_REGEX = /^https?:\/\/[^/]+\/(.+)$/;

@@ -49,6 +49,7 @@ export class Pipeline {
       serviceDir: string;
       controllerDir: string;
       routerFile: string;
+      frontendHookDir?: string;
     }
   ) {
     // 读取 Schema 文件
@@ -65,6 +66,10 @@ export class Pipeline {
     const routerDir = path.dirname(dirs.routerFile);
     if (!fs.existsSync(routerDir)) {
       fs.mkdirSync(routerDir, { recursive: true });
+    }
+    // 确保 frontendHook 目录存在（如果配置了）
+    if (dirs.frontendHookDir && !fs.existsSync(dirs.frontendHookDir)) {
+      fs.mkdirSync(dirs.frontendHookDir, { recursive: true });
     }
 
     for (const v of exportedVars) {
@@ -101,6 +106,10 @@ export class Pipeline {
             `${tableName}.controller.ts`
           ),
           index: path.join(dirs.contractDir, "index.ts"),
+          // 🔥 新增：前端 Hook 路径
+          frontendHook: dirs.frontendHookDir
+            ? path.join(dirs.frontendHookDir, `${tableName}.ts`)
+            : "",
         },
         artifacts: {},
       };

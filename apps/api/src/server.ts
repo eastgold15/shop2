@@ -6,6 +6,7 @@ import { localeMiddleware } from "~/middleware/locale";
 import { appRouter } from "./controllers/app-router";
 import { dbPlugin } from "./db/connection";
 import { auth } from "./lib/auth";
+import { envConfig } from "./lib/env";
 import { authGuardMid } from "./middleware/auth";
 import { loggerPlugin } from "./middleware/logger";
 import { errorSuite } from "./utils/err/errorSuite.plugin";
@@ -41,7 +42,7 @@ export const server = new Elysia({ name: "server", prefix: "/api" })
       references: fromTypes(
         process.env.NODE_ENV === "production"
           ? "dist/index.d.ts"
-          : "server/server.ts",
+          : "src/server.ts",
         {
           // 关键：指定项目根目录，以便编译器能找到 tsconfig.json 和其他文件
           // 这里使用 import.meta.dir (Bun) 或 process.cwd()
@@ -75,4 +76,6 @@ export const server = new Elysia({ name: "server", prefix: "/api" })
   .use(errorSuite)
   .use(dbPlugin)
   .mount("/", auth.handler) // 使用 Better Auth 认证中间件
-  .group("/v1", (app) => app.use(authGuardMid).use(appRouter));
+  .group("/v1", (app) => app.use(authGuardMid).use(appRouter))
+
+  .listen(envConfig.SERVERPORT);

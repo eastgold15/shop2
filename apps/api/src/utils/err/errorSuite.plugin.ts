@@ -3,10 +3,7 @@ import chalk from "chalk";
 import { Elysia } from "elysia";
 import { HttpError, httpProblemJsonPlugin } from "elysia-http-problem-json";
 import { mapDatabaseError } from "./database-error-mapper";
-import {
-  filterStack,
-  getValidationSummary,
-} from "./errorSuite.plugin.utils";
+import { filterStack, getValidationSummary } from "./errorSuite.plugin.utils";
 import { isDatabaseError } from "./guards";
 
 // 核心思路是，转化错误，然后打印日志，最后由elysia-http-problem-json抛出错误
