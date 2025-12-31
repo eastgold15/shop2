@@ -20,8 +20,7 @@ export const siteconfigController = new Elysia({ prefix: "/siteconfig" })
   .use(authGuardMid)
   .get(
     "/",
-    ({ query, user, db, getScopeObj }) =>
-      siteconfigService.findAll(query, { db, user, getScopeObj }),
+    ({ query, user, db }) => siteconfigService.findAll(query, { db, user }),
     {
       allPermissions: ["SITECONFIG:VIEW"],
       query: SiteConfigContract.ListQuery,
@@ -34,8 +33,7 @@ export const siteconfigController = new Elysia({ prefix: "/siteconfig" })
   )
   .post(
     "/",
-    ({ body, user, db, getScopeObj }) =>
-      siteconfigService.create(body, { db, user, getScopeObj }),
+    ({ body, user, db }) => siteconfigService.create(body, { db, user }),
     {
       allPermissions: ["SITECONFIG:CREATE"],
       body: SiteConfigContract.Create,
@@ -48,8 +46,8 @@ export const siteconfigController = new Elysia({ prefix: "/siteconfig" })
   )
   .put(
     "/:id",
-    ({ params, body, user, db, getScopeObj }) =>
-      siteconfigService.update(params.id, body, { db, user, getScopeObj }),
+    ({ params, body, user, db }) =>
+      siteconfigService.update(params.id, body, { db, user }),
     {
       params: t.Object({ id: t.String() }),
       body: SiteConfigContract.Update,
@@ -63,8 +61,7 @@ export const siteconfigController = new Elysia({ prefix: "/siteconfig" })
   )
   .delete(
     "/:id",
-    ({ params, user, db, getScopeObj }) =>
-      siteconfigService.delete(params.id, { db, user, getScopeObj }),
+    ({ params, user, db }) => siteconfigService.delete(params.id, { db, user }),
     {
       params: t.Object({ id: t.String() }),
       allPermissions: ["SITECONFIG:DELETE"],

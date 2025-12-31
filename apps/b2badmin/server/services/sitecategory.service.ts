@@ -49,10 +49,10 @@ export class SiteCategoryService {
     return res;
   }
 
-  public async delete(ids: string[], ctx: ServiceContext) {
+  public async delete(id: string, body: unknown, ctx: ServiceContext) {
     const res = await ctx.db
       .delete(siteCategoryTable)
-      .where(eq(siteCategoryTable.id, ids[0]))
+      .where(eq(siteCategoryTable.id, id))
       .returning();
     return res;
   }

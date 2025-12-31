@@ -20,8 +20,7 @@ export const sitecategoryController = new Elysia({ prefix: "/sitecategory" })
   .use(authGuardMid)
   .get(
     "/",
-    ({ query, user, db, getScopeObj }) =>
-      sitecategoryService.findAll(query, { db, user, getScopeObj }),
+    ({ query, user, db }) => sitecategoryService.findAll(query, { db, user }),
     {
       allPermissions: ["SITECATEGORY:VIEW"],
       query: SiteCategoryContract.ListQuery,
@@ -34,8 +33,7 @@ export const sitecategoryController = new Elysia({ prefix: "/sitecategory" })
   )
   .post(
     "/",
-    ({ body, user, db, getScopeObj }) =>
-      sitecategoryService.create(body, { db, user, getScopeObj }),
+    ({ body, user, db }) => sitecategoryService.create(body, { db, user }),
     {
       allPermissions: ["SITECATEGORY:CREATE"],
       body: SiteCategoryContract.Create,
@@ -48,8 +46,8 @@ export const sitecategoryController = new Elysia({ prefix: "/sitecategory" })
   )
   .put(
     "/:id",
-    ({ params, body, user, db, getScopeObj }) =>
-      sitecategoryService.update(params.id, body, { db, user, getScopeObj }),
+    ({ params, body, user, db }) =>
+      sitecategoryService.update(params.id, body, { db, user }),
     {
       params: t.Object({ id: t.String() }),
       body: SiteCategoryContract.Update,
@@ -63,8 +61,8 @@ export const sitecategoryController = new Elysia({ prefix: "/sitecategory" })
   )
   .delete(
     "/:id",
-    ({ params, user, db, getScopeObj }) =>
-      sitecategoryService.delete(params.id, { db, user, getScopeObj }),
+    ({ params, user, db }) =>
+      sitecategoryService.delete(params.id, { db, user }),
     {
       params: t.Object({ id: t.String() }),
       allPermissions: ["SITECATEGORY:DELETE"],

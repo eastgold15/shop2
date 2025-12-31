@@ -45,6 +45,7 @@ export const relations = defineRelations(schema, (r) => ({
     site: r.one.siteTable({
       from: r.departmentTable.id,
       to: r.siteTable.boundDeptId,
+      optional: false,
     }), // 绑定到该部门的站点 (如工厂站)
     // 生产关联
     producedQuotations: r.many.quotationTable({
@@ -63,6 +64,7 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.userTable.deptId,
       to: r.departmentTable.id,
       alias: "dept_hierarchy",
+      optional: false,
     }),
     // 权限关联
     // 多对多

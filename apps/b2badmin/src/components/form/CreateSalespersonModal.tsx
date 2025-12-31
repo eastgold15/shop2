@@ -101,7 +101,7 @@ export function CreateSalespersonModal({
 
   return (
     <Dialog onOpenChange={handleOpenChange} open={open}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[700px]">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-175">
         <DialogHeader>
           <DialogTitle>创建业务员</DialogTitle>
           <DialogDescription>

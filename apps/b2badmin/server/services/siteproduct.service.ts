@@ -1,5 +1,5 @@
 import { type SiteProductContract, siteProductTable } from "@repo/contract";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { type ServiceContext } from "../lib/type";
 
 export class SiteProductService {
@@ -27,23 +27,19 @@ export class SiteProductService {
     query: SiteProductContract["ListQuery"],
     ctx: ServiceContext
   ) {
-    const { limit = 10, page = 0, sort, ...filters } = query;
-    const whereConditions = [];
-    // 租户隔离
-    if (ctx.user?.tenantId)
-      whereConditions.push(eq(siteProductTable.tenantId, ctx.user.tenantId));
+    const { sort, ...filters } = query;
 
-    const data = await ctx.db
-      .select()
-      .from(siteProductTable)
-      .where(and(...whereConditions))
-      .limit(limit)
-      .offset((page - 1) * limit);
-    const total = await ctx.db.$count(
-      siteProductTable,
-      and(...whereConditions)
-    );
-    return { data, total };
+    const res = await ctx.db.query.siteProductTable.findMany({
+      where: {
+        deptId: ctx.currentDeptId,
+        tenantId: ctx.user.tenantId!,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return res;
   }
 
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */

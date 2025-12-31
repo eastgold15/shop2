@@ -20,8 +20,7 @@ export const siteproductController = new Elysia({ prefix: "/siteproduct" })
   .use(authGuardMid)
   .get(
     "/",
-    ({ query, user, db, getScopeObj }) =>
-      siteproductService.findAll(query, { db, user, getScopeObj }),
+    ({ query, user, db }) => siteproductService.findAll(query, { db, user }),
     {
       allPermissions: ["SITEPRODUCT:VIEW"],
       query: SiteProductContract.ListQuery,
@@ -34,8 +33,7 @@ export const siteproductController = new Elysia({ prefix: "/siteproduct" })
   )
   .post(
     "/",
-    ({ body, user, db, getScopeObj }) =>
-      siteproductService.create(body, { db, user, getScopeObj }),
+    ({ body, user, db }) => siteproductService.create(body, { db, user }),
     {
       allPermissions: ["SITEPRODUCT:CREATE"],
       body: SiteProductContract.Create,
@@ -48,8 +46,8 @@ export const siteproductController = new Elysia({ prefix: "/siteproduct" })
   )
   .put(
     "/:id",
-    ({ params, body, user, db, getScopeObj }) =>
-      siteproductService.update(params.id, body, { db, user, getScopeObj }),
+    ({ params, body, user, db }) =>
+      siteproductService.update(params.id, body, { db, user }),
     {
       params: t.Object({ id: t.String() }),
       body: SiteProductContract.Update,
@@ -63,8 +61,8 @@ export const siteproductController = new Elysia({ prefix: "/siteproduct" })
   )
   .delete(
     "/:id",
-    ({ params, user, db, getScopeObj }) =>
-      siteproductService.delete(params.id, { db, user, getScopeObj }),
+    ({ params, user, db }) =>
+      siteproductService.delete(params.id, { db, user }),
     {
       params: t.Object({ id: t.String() }),
       allPermissions: ["SITEPRODUCT:DELETE"],

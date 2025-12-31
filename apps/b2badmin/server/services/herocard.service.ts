@@ -10,6 +10,7 @@ export class HeroCardService {
       // 自动注入租户信息
       ...(ctx.user?.tenantId ? { tenantId: ctx.user.tenantId } : {}),
       ...(ctx.user?.id ? { createdBy: ctx.user.id } : {}),
+      // ...(ctx.user.)
     };
     const [res] = await ctx.db
       .insert(heroCardTable)
@@ -23,7 +24,7 @@ export class HeroCardService {
     ctx: ServiceContext
   ) {
     const { search } = query;
-    const scopeObj = await ctx.getScopeObj();
+
     const res = await ctx.db.query.heroCardTable.findMany({
       where: {
         deptId: scopeObj.deptId,

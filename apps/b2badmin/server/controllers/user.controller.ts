@@ -18,38 +18,28 @@ const userService = new UserService();
 export const userController = new Elysia({ prefix: "/user" })
   .use(dbPlugin)
   .use(authGuardMid)
-  .get(
-    "/",
-    ({ query, user, db, getScopeObj }) =>
-      userService.findAll(query, { db, user, getScopeObj }),
-    {
-      allPermissions: ["USER:VIEW"],
-      query: UserContract.ListQuery,
-      detail: {
-        summary: "获取User列表",
-        description: "分页查询User数据，支持搜索和排序",
-        tags: ["User"],
-      },
-    }
-  )
-  .post(
-    "/",
-    ({ body, user, db, getScopeObj }) =>
-      userService.create(body, { db, user, getScopeObj }),
-    {
-      allPermissions: ["USER:CREATE"],
-      body: UserContract.Create,
-      detail: {
-        summary: "创建User",
-        description: "新增一条User记录",
-        tags: ["User"],
-      },
-    }
-  )
+  .get("/", ({ query, user, db }) => userService.findAll(query, { db, user }), {
+    allPermissions: ["USER:VIEW"],
+    query: UserContract.ListQuery,
+    detail: {
+      summary: "获取User列表",
+      description: "分页查询User数据，支持搜索和排序",
+      tags: ["User"],
+    },
+  })
+  .post("/", ({ body, user, db }) => userService.create(body, { db, user }), {
+    allPermissions: ["USER:CREATE"],
+    body: UserContract.Create,
+    detail: {
+      summary: "创建User",
+      description: "新增一条User记录",
+      tags: ["User"],
+    },
+  })
   .put(
     "/:id",
-    ({ params, body, user, db, getScopeObj }) =>
-      userService.update(params.id, body, { db, user, getScopeObj }),
+    ({ params, body, user, db }) =>
+      userService.update(params.id, body, { db, user }),
     {
       params: t.Object({ id: t.String() }),
       body: UserContract.Update,
@@ -63,8 +53,7 @@ export const userController = new Elysia({ prefix: "/user" })
   )
   .delete(
     "/:id",
-    ({ params, user, db, getScopeObj }) =>
-      userService.delete(params.id, { db, user, getScopeObj }),
+    ({ params, user, db }) => userService.delete(params.id, { db, user }),
     {
       params: t.Object({ id: t.String() }),
       allPermissions: ["USER:DELETE"],

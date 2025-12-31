@@ -177,20 +177,19 @@ export class UserRoleService {
     query: UserRoleContract["ListQuery"],
     ctx: ServiceContext
   ) {
-    const { limit = 10, page = 0, sort, ...filters } = query;
-    const whereConditions = [];
-    // 租户隔离
-    if (ctx.user?.tenantId)
-      whereConditions.push(eq(userRoleTable.tenantId, ctx.user.tenantId));
+    const { sort, ...filters } = query;
 
-    const data = await ctx.db
-      .select()
-      .from(userRoleTable)
-      .where(and(...whereConditions))
-      .limit(limit)
-      .offset((page - 1) * limit);
-    const total = await ctx.db.$count(userRoleTable, and(...whereConditions));
-    return { data, total };
+    const res = await ctx.db.query.userRoleTable.findMany({
+      where: {
+        deptId: ctx.currentDeptId,
+        tenantId: ctx.user.tenantId!,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return res;
   }
 
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */

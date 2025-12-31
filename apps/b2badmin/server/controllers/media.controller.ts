@@ -30,18 +30,24 @@ export const mediaController = new Elysia({ prefix: "/media" })
       },
     }
   )
-  .post("/", ({ body, user, db }) => mediaService.create(body, { db, user }), {
-    allPermissions: ["MEDIA:CREATE"],
-    body: MediaContract.Create,
-    detail: {
-      summary: "创建Media",
-      description: "新增一条Media记录",
-      tags: ["Media"],
-    },
-  })
+  .post(
+    "/",
+    ({ body, user, db, getScopeObj }) =>
+      mediaService.create(body, { db, user, getScopeObj }),
+    {
+      allPermissions: ["MEDIA:CREATE"],
+      body: MediaContract.Create,
+      detail: {
+        summary: "创建Media",
+        description: "新增一条Media记录",
+        tags: ["Media"],
+      },
+    }
+  )
   .put(
     "/:id",
-    ({ params, user, db }) => mediaService.update(params.id, { db, user }),
+    ({ params, user, db, body, getScopeObj }) =>
+      mediaService.update(params.id, body, { db, user, getScopeObj }),
     {
       params: t.Object({ id: t.String() }),
       body: MediaContract.Update,
@@ -55,7 +61,8 @@ export const mediaController = new Elysia({ prefix: "/media" })
   )
   .delete(
     "/:id",
-    ({ params, user, db }) => mediaService.delete(params.id, { db, user }),
+    ({ params, user, db, getScopeObj }) =>
+      mediaService.delete(params.id, { db, user, getScopeObj }),
     {
       params: t.Object({ id: t.String() }),
       allPermissions: ["MEDIA:DELETE"],

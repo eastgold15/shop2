@@ -23,7 +23,7 @@ export class MediaService {
 
   public async findAll(query: MediaContract["ListQuery"], ctx: ServiceContext) {
     const { search } = query;
-    const scopeObj = await ctx.getScopeObj();
+    const scopeObj = ctx.getScopeObj();
     const res = await ctx.db.query.mediaTable.findMany({
       where: {
         tenantId: scopeObj.tenantId,

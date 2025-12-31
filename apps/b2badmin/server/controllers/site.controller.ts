@@ -18,38 +18,28 @@ const siteService = new SiteService();
 export const siteController = new Elysia({ prefix: "/site" })
   .use(dbPlugin)
   .use(authGuardMid)
-  .get(
-    "/",
-    ({ query, user, db, getScopeObj }) =>
-      siteService.findAll(query, { db, user, getScopeObj }),
-    {
-      allPermissions: ["SITE:VIEW"],
-      query: SiteContract.ListQuery,
-      detail: {
-        summary: "获取Site列表",
-        description: "分页查询Site数据，支持搜索和排序",
-        tags: ["Site"],
-      },
-    }
-  )
-  .post(
-    "/",
-    ({ body, user, db, getScopeObj }) =>
-      siteService.create(body, { db, user, getScopeObj }),
-    {
-      allPermissions: ["SITE:CREATE"],
-      body: SiteContract.Create,
-      detail: {
-        summary: "创建Site",
-        description: "新增一条Site记录",
-        tags: ["Site"],
-      },
-    }
-  )
+  .get("/", ({ query, user, db }) => siteService.findAll(query, { db, user }), {
+    allPermissions: ["SITE:VIEW"],
+    query: SiteContract.ListQuery,
+    detail: {
+      summary: "获取Site列表",
+      description: "分页查询Site数据，支持搜索和排序",
+      tags: ["Site"],
+    },
+  })
+  .post("/", ({ body, user, db }) => siteService.create(body, { db, user }), {
+    allPermissions: ["SITE:CREATE"],
+    body: SiteContract.Create,
+    detail: {
+      summary: "创建Site",
+      description: "新增一条Site记录",
+      tags: ["Site"],
+    },
+  })
   .put(
     "/:id",
-    ({ params, body, user, db, getScopeObj }) =>
-      siteService.update(params.id, body, { db, user, getScopeObj }),
+    ({ params, body, user, db }) =>
+      siteService.update(params.id, body, { db, user }),
     {
       params: t.Object({ id: t.String() }),
       body: SiteContract.Update,
@@ -63,8 +53,7 @@ export const siteController = new Elysia({ prefix: "/site" })
   )
   .delete(
     "/:id",
-    ({ params, user, db, getScopeObj }) =>
-      siteService.delete(params.id, { db, user, getScopeObj }),
+    ({ params, user, db }) => siteService.delete(params.id, { db, user }),
     {
       params: t.Object({ id: t.String() }),
       allPermissions: ["SITE:DELETE"],
