@@ -1,5 +1,14 @@
 // lib/api-client.ts
 
+// 导入 auth store 以获取当前部门 ID
+// 注意：这里需要在客户端组件中使用，避免 SSR 问题
+let getCurrentDeptId: () => string | null = () => null;
+
+// 在运行时设置获取函数（从 auth store）
+export function setDeptIdGetter(fn: () => string | null) {
+  getCurrentDeptId = fn;
+}
+
 // 1. 定义 RequestOptions，区分 Body 和 Query
 // TBody: 请求体类型 (POST/PUT 用)
 // TQuery: 查询参数类型 (GET列表筛选用)
@@ -37,7 +46,12 @@ async function request<
 
   const headers = new Headers(options.headers);
   headers.set("Content-Type", "application/json");
-  // if (token) headers.set("Authorization", `Bearer ${token}`);
+
+  // 🔥 添加 x-current-dept-id header（从 auth store 获取当前部门 ID）
+  const currentDeptId = getCurrentDeptId();
+  if (currentDeptId) {
+    headers.set("x-current-dept-id", currentDeptId);
+  }
 
   const response = await fetch(url.toString(), {
     ...options,
@@ -71,9 +85,14 @@ export const api = {
   put: <TRes, TBody>(url: string, body: TBody, opts?: RequestOptions<TBody>) =>
     request<TRes, TBody>(url, { ...opts, method: "PUT", body }),
 
-  // DELETE: 通常没有 body，但可能有 query
-  delete: <TRes, TQuery = Record<string, string | number>>(
+  // DELETE: 支持 body（用于批量删除）和 query
+  delete: <TRes, TBody = undefined>(
     url: string,
-    opts?: RequestOptions<never, TQuery>
-  ) => request<TRes, never, TQuery>(url, { ...opts, method: "DELETE" }),
+    body?: TBody,
+    opts?: RequestOptions<TBody>
+  ) => request<TRes, TBody>(url, { ...opts, method: "DELETE", body }),
+
+  // PATCH: 支持 body（用于部分更新）
+  patch: <TRes, TBody>(url: string, body: TBody, opts?: RequestOptions<TBody>) =>
+    request<TRes, TBody>(url, { ...opts, method: "PATCH", body }),
 };

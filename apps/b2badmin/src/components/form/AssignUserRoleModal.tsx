@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/select";
 import { useManageableUsers } from "@/hooks/api";
 import { useRolesList } from "@/hooks/api/role";
-import { useAccessibleSites } from "@/hooks/api/sites";
+import { useAccessibleSites } from "@/hooks/api/site";
 import { useUserSiteRoleCreate } from "@/hooks/api/usersiteroles";
 
 const formSchema = z.object({

@@ -38,8 +38,8 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { useProductsBatchDelete, useProductsList } from "@/hooks/api/products";
-import { useSkuDelete } from "@/hooks/api/skus";
+import { useProductsBatchDelete, useProductsList } from "@/hooks/api/product";
+import { useSkuDelete } from "@/hooks/api/sku";
 
 // 使用后端返回的类型
 interface Product {

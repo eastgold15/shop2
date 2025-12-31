@@ -2,7 +2,7 @@
 
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
-import { useMasterCategories } from "@/hooks/api/master-categories";
+import { useMasterCategories } from "@/hooks/api/mastercategory";
 
 interface CategorySelectorProps {
   value?: string;

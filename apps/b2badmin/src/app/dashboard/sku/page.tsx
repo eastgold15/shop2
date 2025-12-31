@@ -37,7 +37,7 @@ import {
   useProductsForSKU,
   useSkuDelete,
   useSkusList,
-} from "@/hooks/api/skus";
+} from "@/hooks/api/sku";
 import { useSiteCategoryStore } from "@/stores/site-category-store";
 
 interface SKU {

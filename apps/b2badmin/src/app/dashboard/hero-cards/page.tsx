@@ -1,6 +1,7 @@
 "use client";
 
-import type { HeroCardsDTO } from "@repo/contract";
+import type { HeroCardContract } from "@repo/contract";
+import type { HeroCardResponse } from "@/hooks/api/herocard";
 import { Edit, GripVertical, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
@@ -46,13 +47,11 @@ import {
   useHeroCardsList,
   useHeroCardsToggleStatus,
   useHeroCardsUpdate,
-} from "@/hooks/api/herocards";
+} from "@/hooks/api/herocard";
 
 export default function HeroCardsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [editingCard, setEditingCard] = useState<
-    HeroCardsDTO["Response"] | null
-  >(null);
+  const [editingCard, setEditingCard] = useState<HeroCardResponse | null>(null);
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     title: "",
@@ -96,7 +95,7 @@ export default function HeroCardsPage() {
   };
 
   // 打开编辑对话框
-  const handleEdit = (card: HeroCardsDTO["Response"]) => {
+  const handleEdit = (card: HeroCardResponse) => {
     setEditingCard(card);
     setFormData({
       title: card.title,
@@ -197,7 +196,7 @@ export default function HeroCardsPage() {
       setSelectedCards([]);
     } else {
       setSelectedCards(
-        cardsData?.map((card: HeroCardsDTO["Response"]) => card.id) || []
+        cardsData?.map((card: HeroCardResponse) => card.id) || []
       );
     }
   };

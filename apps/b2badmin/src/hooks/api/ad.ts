@@ -8,6 +8,7 @@
 
 import { AdContract } from "@repo/contract";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { api } from "./api-client";
 
 // --- Query Keys ---
@@ -53,7 +54,11 @@ export function useCreateAd() {
     mutationFn: (data: typeof AdContract.Create.static) =>
       api.post<any, typeof AdContract.Create.static>("/api/v1/ad", data),
     onSuccess: () => {
+      toast.success("广告创建成功");
       queryClient.invalidateQueries({ queryKey: adKeys.lists() });
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "创建广告失败");
     },
   });
 }
@@ -72,8 +77,12 @@ export function useUpdateAd() {
     }) =>
       api.put<any, typeof AdContract.Update.static>(`/api/v1/ad/${id}`, data),
     onSuccess: (_, variables) => {
+      toast.success("广告更新成功");
       queryClient.invalidateQueries({ queryKey: adKeys.lists() });
       queryClient.invalidateQueries({ queryKey: adKeys.detail(variables.id) });
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "更新广告失败");
     },
   });
 }
@@ -85,7 +94,27 @@ export function useDeleteAd() {
   return useMutation({
     mutationFn: (id: string) => api.delete<any>(`/api/v1/ad/${id}`),
     onSuccess: () => {
+      toast.success("广告删除成功");
       queryClient.invalidateQueries({ queryKey: adKeys.lists() });
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "删除广告失败");
+    },
+  });
+}
+
+// --- 批量删除 ---
+export function useAdBatchDelete() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (ids: string[]) =>
+      api.delete<any, { ids: string[] }>("/api/v1/ad/batch", { ids }),
+    onSuccess: () => {
+      toast.success("批量删除成功");
+      queryClient.invalidateQueries({ queryKey: adKeys.lists() });
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "批量删除失败");
     },
   });
 }

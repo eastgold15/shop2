@@ -27,7 +27,7 @@ import { MediaSelect } from "@/components/ui/media-select";
 import { SiteCategoryTreeSelect } from "@/components/ui/site-category-tree-select";
 import { Textarea } from "@/components/ui/textarea";
 import { useListTemplates } from "@/hooks/api/attributetemplate";
-import { useProductsCreate, useProductsUpdate } from "@/hooks/api/products";
+import { useProductsCreate, useProductsUpdate } from "@/hooks/api/product";
 
 const formSchema = z.object({
   spuCode: z.string().min(1, "SPU编码不能为空"),

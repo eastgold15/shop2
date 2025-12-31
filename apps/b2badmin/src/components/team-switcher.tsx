@@ -21,16 +21,22 @@ import { useAuthStore } from "@/stores/auth-store";
 
 export function TeamSwitcher() {
   const { isMobile } = useSidebar();
-  const { user, currentSite, allSites, switchSite } = useAuthStore();
+  const { user, currentDept, switchableDept, switchDept, getCurrentSite } =
+    useAuthStore();
 
-  // 1. 过滤出除当前站点外的其他可访问站点
-  const otherSites = useMemo(
-    () => allSites.filter((s) => s.id !== currentSite?.id),
-    [allSites, currentSite?.id]
+  // 获取当前站点信息（兼容旧组件）
+  const currentSite = getCurrentSite();
+
+  // 1. 过滤出除当前部门外的其他可切换部门
+  const otherDepts = useMemo(
+    () =>
+      switchableDept?.departments.filter(
+        (d) => d.id !== currentDept?.id && d.site
+      ) || [],
+    [switchableDept, currentDept?.id]
   );
 
   // 2. 统一图标获取逻辑
-  // biome-ignore lint/correctness/noNestedComponentDefinitions: <explanation>
   const SiteIcon = ({
     type,
     className,
@@ -61,6 +67,9 @@ export function TeamSwitcher() {
     );
   }
 
+  // 获取用户的第一个角色作为显示角色
+  const userRole = user?.roles?.[0];
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -76,7 +85,7 @@ export function TeamSwitcher() {
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{currentSite.name}</span>
                 <span className="truncate text-xs">
-                  {user.role.description || user.role.name} ·{" "}
+                  {userRole?.description || userRole?.name || "用户"} ·{" "}
                   {currentSite.domain}
                 </span>
               </div>
@@ -91,10 +100,10 @@ export function TeamSwitcher() {
             sideOffset={4}
           >
             <DropdownMenuLabel className="text-muted-foreground text-xs">
-              当前所在站点
+              当前所在部门/站点
             </DropdownMenuLabel>
 
-            {/* 当前站点 */}
+            {/* 当前部门/站点 */}
             <DropdownMenuItem className="gap-3 p-3 focus:bg-transparent">
               <div className="flex size-8 items-center justify-center rounded-md border bg-primary text-primary-foreground">
                 <SiteIcon className="size-4" type={currentSite.siteType} />
@@ -107,58 +116,68 @@ export function TeamSwitcher() {
                   </span>
                 </div>
                 <p className="text-muted-foreground text-xs">
-                  {currentSite.domain}
+                  {currentDept?.name} · {currentSite.domain}
                 </p>
               </div>
               <Check className="size-4 text-primary" />
             </DropdownMenuItem>
 
-            {otherSites.length > 0 && (
+            {otherDepts.length > 0 && (
               <>
                 <DropdownMenuSeparator />
                 <DropdownMenuLabel className="text-muted-foreground text-xs">
-                  可切换站点 ({otherSites.length})
+                  可切换部门 ({otherDepts.length})
                 </DropdownMenuLabel>
-                {otherSites.map((site) => (
-                  <DropdownMenuItem
-                    className="cursor-pointer gap-3 p-3 grayscale-[0.5] transition-all hover:grayscale-0"
-                    key={site.id}
-                    onClick={() => switchSite(site.id)}
-                  >
-                    <div className="flex size-8 items-center justify-center rounded-md border bg-background">
-                      <SiteIcon className="size-4" type={site.siteType} />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-muted-foreground">
-                          {site.name}
-                        </span>
-                        {site.siteType === "factory" ? (
-                          <span className="rounded bg-blue-100 px-1 py-0.5 text-[10px] text-blue-700">
-                            工厂
-                          </span>
-                        ) : (
-                          <span className="rounded bg-green-100 px-1 py-0.5 text-[10px] text-green-700">
-                            出口商
-                          </span>
-                        )}
+                {otherDepts.map((dept) => {
+                  if (!dept.site) return null;
+                  const siteType =
+                    dept.category === "headquarters"
+                      ? "group"
+                      : dept.category === "factory"
+                        ? "factory"
+                        : "factory";
+
+                  return (
+                    <DropdownMenuItem
+                      className="cursor-pointer gap-3 p-3 grayscale-[0.5] transition-all hover:grayscale-0"
+                      key={dept.id}
+                      onClick={() => switchDept(dept.id)}
+                    >
+                      <div className="flex size-8 items-center justify-center rounded-md border bg-background">
+                        <SiteIcon className="size-4" type={siteType} />
                       </div>
-                      <p className="text-muted-foreground/60 text-xs">
-                        {site.domain}
-                      </p>
-                    </div>
-                  </DropdownMenuItem>
-                ))}
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-muted-foreground">
+                            {dept.name}
+                          </span>
+                          {dept.category === "factory" ? (
+                            <span className="rounded bg-blue-100 px-1 py-0.5 text-[10px] text-blue-700">
+                              工厂
+                            </span>
+                          ) : (
+                            <span className="rounded bg-green-100 px-1 py-0.5 text-[10px] text-green-700">
+                              总部
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-muted-foreground/60 text-xs">
+                          {dept.site.name} · {dept.site.domain}
+                        </p>
+                      </div>
+                    </DropdownMenuItem>
+                  );
+                })}
               </>
             )}
 
             <DropdownMenuSeparator />
             <div className="px-2 py-1.5">
               <div className="rounded-md bg-muted/50 p-2 text-[11px] text-muted-foreground">
-                <p className="mb-1 font-medium">💡 权限提示：</p>
+                <p className="mb-1 font-medium">💡 提示：</p>
                 <ul className="list-inside list-disc space-y-0.5 opacity-80">
-                  <li>超级管理员可管理所有站点</li>
-                  <li>站点切换后权限将自动同步刷新</li>
+                  <li>切换部门后会自动刷新页面</li>
+                  <li>切换后权限和数据将同步更新</li>
                 </ul>
               </div>
             </div>

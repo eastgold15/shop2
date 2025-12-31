@@ -26,7 +26,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { useMasterCategories } from "@/hooks/api/master-categories";
+import { useMasterCategories } from "@/hooks/api/mastercategory";
 import {
   useUpdateSalesperson,
   useUpdateSalespersonMasterCategories,

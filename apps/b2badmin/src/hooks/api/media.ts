@@ -85,10 +85,13 @@ export function useUpdateMedia() {
 
 // --- 5. 删除 (DELETE) ---
 // TRes = any
-export function useDeleteMedia() {
+export function useMediaDelete() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => api.delete<any>(`/api/v1/media/${id}`),
+    mutationFn: (ids: string | string[]) =>
+      Array.isArray(ids)
+        ? api.delete<any>("/api/v1/media/batch", { ids })
+        : api.delete<any>(`/api/v1/media/${ids}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: mediaKeys.lists() });
     },

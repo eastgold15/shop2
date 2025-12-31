@@ -2,7 +2,7 @@
 
 import { Label } from "@radix-ui/react-label";
 import { Switch } from "@radix-ui/react-switch";
-import type { MasterDTO } from "@repo/contract";
+import type { MasterCategoryTree } from "@/hooks/api/mastercategory";
 import {
   ChevronDown,
   ChevronRight,
@@ -38,13 +38,11 @@ import {
   useBatchDeleteMasterCategories,
   useDeleteMasterCategory,
   useMasterCategoriesTree,
-} from "@/hooks/api/master-categories";
+} from "@/hooks/api/mastercategory";
 import { useAuthStore } from "@/stores/auth-store";
 
 // 将契约层的实体类型转换为前端使用的带children的类型
-type MasterCategory = MasterDTO["Response"] & {
-  children?: MasterCategory[];
-};
+type MasterCategory = MasterCategoryTree;
 
 // 树形节点组件
 function MasterCategoryTreeNode({

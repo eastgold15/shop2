@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, type ReactNode, useContext, useEffect } from "react";
-import { useSiteCategoriesTree } from "@/hooks/api/site-category";
+import { useSiteCategoriesTree } from "@/hooks/api/sitecategory";
 import { useAuthStore } from "@/stores/auth-store";
 import { useSiteCategoryStore } from "@/stores/site-category-store";
 

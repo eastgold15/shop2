@@ -27,7 +27,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { MediaSelect } from "@/components/ui/media-select";
 import { useMediaByIds } from "@/hooks/api/media";
-import { useSkuUpdate } from "@/hooks/api/skus";
+import { useSkuUpdate } from "@/hooks/api/sku";
 
 const formSchema = z.object({
   skuCode: z.string().min(1, "SKU编码不能为空"),

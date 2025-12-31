@@ -8,7 +8,11 @@
 
 import { HeroCardContract } from "@repo/contract";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { api } from "./api-client";
+
+// 导出类型供页面使用
+export type HeroCardResponse = typeof HeroCardContract.Response.static;
 
 // --- Query Keys ---
 export const herocardKeys = {
@@ -29,11 +33,21 @@ export function useHeroCardList(
     queryKey: herocardKeys.list(params),
     queryFn: () =>
       api.get<any, typeof HeroCardContract.ListQuery.static>(
-        "/api/v1/herocard",
+        "/api/v1/herocards",
         { params }
       ),
     enabled,
   });
+}
+
+// 导出旧名称以兼容
+export function useHeroCardsList(params?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  isActive?: boolean;
+}) {
+  return useHeroCardList(params as any);
 }
 
 // --- 2. 单个详情 (GET) ---
@@ -41,7 +55,7 @@ export function useHeroCardList(
 export function useHeroCardDetail(id: string, enabled = !!id) {
   return useQuery({
     queryKey: herocardKeys.detail(id),
-    queryFn: () => api.get<any>(`/api/v1/herocard/${id}`),
+    queryFn: () => api.get<any>(`/api/v1/herocards/${id}`),
     enabled,
   });
 }
@@ -53,14 +67,21 @@ export function useCreateHeroCard() {
   return useMutation({
     mutationFn: (data: typeof HeroCardContract.Create.static) =>
       api.post<any, typeof HeroCardContract.Create.static>(
-        "/api/v1/herocard",
+        "/api/v1/herocards",
         data
       ),
     onSuccess: () => {
+      toast.success("首页展示卡片创建成功");
       queryClient.invalidateQueries({ queryKey: herocardKeys.lists() });
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "创建首页展示卡片失败");
     },
   });
 }
+
+// 导出旧名称以兼容
+export const useHeroCardsCreate = useCreateHeroCard;
 
 // --- 4. 更新 (PUT) ---
 // TRes = any, TBody = typeof HeroCardContract.Update.static
@@ -75,26 +96,79 @@ export function useUpdateHeroCard() {
       data: typeof HeroCardContract.Update.static;
     }) =>
       api.put<any, typeof HeroCardContract.Update.static>(
-        `/api/v1/herocard/${id}`,
+        `/api/v1/herocards/${id}`,
         data
       ),
     onSuccess: (_, variables) => {
+      toast.success("首页展示卡片更新成功");
       queryClient.invalidateQueries({ queryKey: herocardKeys.lists() });
       queryClient.invalidateQueries({
         queryKey: herocardKeys.detail(variables.id),
       });
     },
+    onError: (error: any) => {
+      toast.error(error?.message || "更新首页展示卡片失败");
+    },
   });
 }
+
+// 导出旧名称以兼容
+export const useHeroCardsUpdate = useUpdateHeroCard;
 
 // --- 5. 删除 (DELETE) ---
 // TRes = any
 export function useDeleteHeroCard() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => api.delete<any>(`/api/v1/herocard/${id}`),
+    mutationFn: (id: string) => api.delete<any>(`/api/v1/herocards/${id}`),
     onSuccess: () => {
+      toast.success("首页展示卡片删除成功");
       queryClient.invalidateQueries({ queryKey: herocardKeys.lists() });
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "删除首页展示卡片失败");
     },
   });
 }
+
+// 导出旧名称以兼容
+export const useHeroCardsDelete = useDeleteHeroCard;
+
+// --- 批量更新排序 ---
+export function useHeroCardUpdateSort() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (items: Array<{ id: string; sortOrder: number }>) =>
+      api.patch<any, { items: Array<{ id: string; sortOrder: number }> }>("/api/v1/herocards/sort", { items }),
+    onSuccess: () => {
+      toast.success("排序更新成功");
+      queryClient.invalidateQueries({ queryKey: herocardKeys.lists() });
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "更新排序失败");
+    },
+  });
+}
+
+// 导出旧名称以兼容
+export const useHeroCardsUpdateSort = useHeroCardUpdateSort;
+
+// --- 切换激活状态 ---
+export function useHeroCardToggleStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => api.patch<any, {}>(`/api/v1/herocards/${id}/toggle`, {}),
+    onSuccess: () => {
+      toast.success("状态更新成功");
+      queryClient.invalidateQueries({ queryKey: herocardKeys.lists() });
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "更新状态失败");
+    },
+  });
+}
+
+// 导出旧名称以兼容
+export const useHeroCardsToggleStatus = useHeroCardToggleStatus;

@@ -30,7 +30,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   useCreateMasterCategory,
   useUpdateMasterCategory,
-} from "@/hooks/api/master-categories";
+} from "@/hooks/api/mastercategory";
 
 const formSchema = z.object({
   name: z.string().min(1, "分类名称不能为空"),

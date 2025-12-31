@@ -29,7 +29,7 @@ import { SiteCategoryTreeSelect } from "@/components/ui/site-category-tree-selec
 import {
   useCreateSiteCategory,
   useUpdateSiteCategory,
-} from "@/hooks/api/site-category";
+} from "@/hooks/api/sitecategory";
 
 type SiteCategory = SiteCategoriesDTO["TreeResponse"];
 

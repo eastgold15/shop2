@@ -58,7 +58,7 @@ import {
   useAdsDelete,
   useAdsList,
   useAdsUpdate,
-} from "@/hooks/api/ads";
+} from "@/hooks/api/ad";
 
 // 广告类型
 interface Ad {

@@ -1,6 +1,6 @@
 "use client";
 
-import type { SiteCategoriesDTO } from "@repo/contract";
+import type { SiteCategoryTree } from "@/hooks/api/sitecategory";
 import { ChevronDown, ChevronRight, Edit, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -27,10 +27,10 @@ import {
 import {
   useDeleteSiteCategory,
   useSiteCategoriesTree,
-} from "@/hooks/api/site-category";
+} from "@/hooks/api/sitecategory";
 
 // 使用契约层类型
-type SiteCategory = SiteCategoriesDTO["TreeResponse"];
+type SiteCategory = SiteCategoryTree;
 
 // 树形节点组件
 function CategoryTreeNode({

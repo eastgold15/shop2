@@ -25,8 +25,8 @@ import {
   useListTemplates,
   useUpdateTemplate, // 确保你有这个 hook
 } from "@/hooks/api/attributetemplate";
-import { useMasterCategories } from "@/hooks/api/master-categories";
-import { useSiteCategories } from "@/hooks/api/site-category";
+import { useMasterCategories } from "@/hooks/api/mastercategory";
+import { useSiteCategories } from "@/hooks/api/sitecategory";
 import type { TemplateField } from "@/types";
 import { useTemplateForm } from "./useTemplateForm";
 

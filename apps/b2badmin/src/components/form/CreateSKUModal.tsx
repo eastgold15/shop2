@@ -33,7 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useCreateSKUBatch, useProductsForSKU } from "@/hooks/api/skus";
+import { useCreateSKUBatch, useProductsForSKU } from "@/hooks/api/sku";
 
 // SKU 基础信息 schema
 const skuSchema = z.object({
