@@ -1,6 +1,6 @@
 import { type InquiryContract, inquiryTable } from "@repo/contract";
 import { eq } from "drizzle-orm";
-import { type ServiceContext } from "../../lib/type";
+import { type ServiceContext } from "../lib/type";
 
 export class InquiryService {
   public async create(

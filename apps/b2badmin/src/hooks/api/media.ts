@@ -1,77 +1,96 @@
-import type { MediaDTO } from "@repo/contract";
+/**
+ * 🤖 【Frontend Hooks - 自动生成】
+ * --------------------------------------------------------
+ * ⚠️ 请勿手动修改此文件，下次运行会被覆盖。
+ * 💡 如需自定义，请在 hooks/api 目录下新建文件进行封装。
+ * --------------------------------------------------------
+ */
+
+import { MediaContract } from "@repo/contract";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { rpc } from "@/lib/rpc";
-import { handleEden } from "@/lib/utils/base";
-import type { MyInferQuery } from "./utils";
+import { api } from "./api-client";
 
-// 媒体文件相关 hooks
-// 使用
-type MediaListQueryParams = MyInferQuery<typeof rpc.api.v1.media.list.get>;
+// --- Query Keys ---
+export const mediaKeys = {
+  all: ["media"] as const,
+  lists: () => [...mediaKeys.all, "list"] as const,
+  list: (params: any) => [...mediaKeys.lists(), params] as const,
+  details: () => [...mediaKeys.all, "detail"] as const,
+  detail: (id: string) => [...mediaKeys.details(), id] as const,
+};
 
-export function useMediaList(query: MediaListQueryParams) {
+// --- 1. 列表查询 (GET) ---
+// TRes = any, TQuery = typeof MediaContract.ListQuery.static
+export function useMediaList(
+  params?: typeof MediaContract.ListQuery.static,
+  enabled = true
+) {
   return useQuery({
-    queryKey: ["media", "list", query],
-    queryFn: async () => {
-      const res = (await handleEden(
-        rpc.api.v1.media.list.get({ query })
-      )) as MediaDTO["Entity"][];
-      return res;
-    },
-    staleTime: 5 * 60 * 1000, // 5分钟
+    queryKey: mediaKeys.list(params),
+    queryFn: () =>
+      api.get<any, typeof MediaContract.ListQuery.static>("/api/v1/media", {
+        params,
+      }),
+    enabled,
   });
 }
 
-// 通过 ID 列表获取媒体信息
-export function useMediaByIds(ids: string[] | undefined) {
+// --- 2. 单个详情 (GET) ---
+// TRes = any
+export function useMediaDetail(id: string, enabled = !!id) {
   return useQuery({
-    queryKey: ["media", "by-ids", ids],
-    queryFn: async () => {
-      if (!ids || ids.length === 0) return [];
-      const res = (await handleEden(
-        rpc.api.v1.media.list.get({ query: { ids } })
-      )) as MediaDTO["Entity"][];
-      return res;
-    },
-    enabled: !!ids && ids.length > 0,
-    staleTime: 5 * 60 * 1000, // 5分钟
+    queryKey: mediaKeys.detail(id),
+    queryFn: () => api.get<any>(`/api/v1/media/${id}`),
+    enabled,
   });
 }
 
-type MediaUploadQueryParams = MyInferQuery<typeof rpc.api.v1.media.upload.post>;
-
-export function useMediaUpload() {
+// --- 3. 创建 (POST) ---
+// TRes = any, TBody = typeof MediaContract.Create.static
+export function useCreateMedia() {
   const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: async (body: MediaUploadQueryParams) =>
-      await handleEden(rpc.api.v1.media.upload.post(body)),
+    mutationFn: (data: typeof MediaContract.Create.static) =>
+      api.post<any, typeof MediaContract.Create.static>("/api/v1/media", data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["media"] });
+      queryClient.invalidateQueries({ queryKey: mediaKeys.lists() });
     },
   });
 }
 
-export function useMediaUpdate() {
+// --- 4. 更新 (PUT) ---
+// TRes = any, TBody = typeof MediaContract.Update.static
+export function useUpdateMedia() {
   const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: any }) =>
-      await handleEden(rpc.api.v1.media({ id }).put(data)),
-    onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: ["media"] });
-      queryClient.invalidateQueries({ queryKey: ["media", id] });
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: typeof MediaContract.Update.static;
+    }) =>
+      api.put<any, typeof MediaContract.Update.static>(
+        `/api/v1/media/${id}`,
+        data
+      ),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: mediaKeys.lists() });
+      queryClient.invalidateQueries({
+        queryKey: mediaKeys.detail(variables.id),
+      });
     },
   });
 }
 
-export function useMediaDelete() {
+// --- 5. 删除 (DELETE) ---
+// TRes = any
+export function useDeleteMedia() {
   const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: async (ids: string[]) =>
-      await handleEden(rpc.api.v1.media.batch.delete({ ids })),
+    mutationFn: (id: string) => api.delete<any>(`/api/v1/media/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["media"] });
+      queryClient.invalidateQueries({ queryKey: mediaKeys.lists() });
     },
   });
 }

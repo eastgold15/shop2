@@ -1,6 +1,6 @@
 import { type UserRoleContract, userRoleTable } from "@repo/contract";
 import { and, eq } from "drizzle-orm";
-import { type ServiceContext } from "../../lib/type";
+import { type ServiceContext } from "../lib/type";
 
 type UserDto = {
   id: string;

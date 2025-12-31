@@ -1,6 +1,6 @@
 import { type TemplateContract, templateTable } from "@repo/contract";
 import { eq } from "drizzle-orm";
-import { type ServiceContext } from "../../lib/type";
+import { type ServiceContext } from "../lib/type";
 
 export class TemplateService {
   public async create(body: TemplateContract["Create"], ctx: ServiceContext) {

@@ -2,7 +2,7 @@ import { type MediaContract, mediaTable } from "@repo/contract";
 import { and, eq, inArray, like, sql } from "drizzle-orm";
 import { HttpError } from "elysia-http-problem-json";
 import { StorageFactory } from "~/lib/media/storage/StorageFactory";
-import { type ServiceContext } from "../../lib/type";
+import { type ServiceContext } from "../lib/type";
 
 export class MediaService {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */

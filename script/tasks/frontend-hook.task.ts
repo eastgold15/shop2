@@ -13,17 +13,15 @@ const GEN_HEADER = `/**
 export const FrontendHookTask: Task = {
   name: "Generating Frontend Hooks",
   run(project: Project, ctx: GenContext) {
-    // 1. 检查是否有 frontendHook 路径，没有则跳过
-    if (!ctx.paths.frontendHook) {
-      return;
-    }
+    // 1. 检查配置：如果没有配置前端输出路径，则跳过
+    if (!ctx.paths.frontendHook) return;
 
-    // 2. 跳过没有对应 Service/Contract 的表
+    // 必须要有 Service 和 Contract 名称才能生成
     if (!(ctx.artifacts.serviceName && ctx.artifacts.contractName)) {
       return;
     }
 
-    // 3. 准备文件 (先移除缓存，确保读取最新)
+    // 2. 准备文件 (先移除缓存，确保读取最新)
     const existingFile = project.getSourceFile(ctx.paths.frontendHook);
     if (existingFile) {
       existingFile.forget();
@@ -34,18 +32,17 @@ export const FrontendHookTask: Task = {
       file = project.addSourceFileAtPath(ctx.paths.frontendHook);
     } catch {
       file = project.createSourceFile(ctx.paths.frontendHook, "", {
-        overwrite: true, // 前端 Hooks 通常是纯生成的，建议直接覆盖
+        overwrite: true, // 前端 Hooks 建议直接全量覆盖
       });
     }
 
-    // 4. 写入 Header
-    if (file.getText().trim().length === 0) {
-      file.insertText(0, `${GEN_HEADER}\n\n`);
-    }
+    // 3. 写入 Header
+    file.replaceWithText(`${GEN_HEADER}\n\n`);
 
-    // 5. 计算 Import 路径
-    // 假设 api-client 在 src/lib/api-client.ts
-    const apiClientPath = "@/lib/rpc";
+    // 4. 处理 Imports
+    // 假设 api-client 在同级目录，或者你可以根据 ctx.paths.root 计算相对路径
+    // 这里默认假设生成在 src/hooks/api/ 下，引用同级的 api-client
+    const apiClientPath = "./api-client";
 
     // 引入 React Query
     ensureImport(file, "@tanstack/react-query", [
@@ -53,111 +50,102 @@ export const FrontendHookTask: Task = {
       "useMutation",
       "useQueryClient",
     ]);
-    // 引入 RPC client
-    ensureImport(file, apiClientPath, ["rpc"]);
-    // 引入类型 (从 @repo/contract 导入)
+    // 引入 API Client
+    ensureImport(file, apiClientPath, ["api"]);
+
+    // 引入 Contract (从 @repo/contract 导入)
     const contract = ctx.artifacts.contractName;
     ensureImport(file, "@repo/contract", [contract!]);
-    // 引入 handleEden 工具函数
-    ensureImport(file, "@/lib/utils/base", ["handleEden"]);
-    // 引入 toast
-    ensureImport(file, "sonner", ["toast"]);
 
-    // 6. 准备变量名
-    const pascalName = ctx.pascalName; // e.g. User
-    const camelName = ctx.tableName; // e.g. user
-    const apiPath = `api.v1.${camelName}`;
-    const contractName = ctx.artifacts.contractName!;
+    // 5. 准备变量名
+    const pascalName = ctx.pascalName; // 例如: Product
+    const camelName = ctx.tableName; // 例如: product (通常作为 queryKey 前缀)
+    // 假设后端 Controller 的 prefix 是全小写的 table 名
+    const apiPath = `/api/v1/${ctx.tableName.toLowerCase()}`;
 
-    // Query Key 常量名
     const queryKeyName = `${camelName}Keys`;
 
-    // 7. 生成代码块
+    // 6. 生成代码内容
+    // 注意：这里使用 Static<typeof Schema> 来获取 TS 类型
     const hooksCode = `
 // --- Query Keys ---
 export const ${queryKeyName} = {
   all: ['${camelName}'] as const,
   lists: () => [...${queryKeyName}.all, 'list'] as const,
-  list: (params: ${contractName}['ListQuery']) => [...${queryKeyName}.lists(), params] as const,
+  list: (params: any) => [...${queryKeyName}.lists(), params] as const,
   details: () => [...${queryKeyName}.all, 'detail'] as const,
   detail: (id: string) => [...${queryKeyName}.details(), id] as const,
 };
 
-// --- 列表查询 ---
-export function use${pascalName}List(params?: ${contractName}['ListQuery'], enabled?: boolean) {
+// --- 1. 列表查询 (GET) ---
+// TRes = any, TQuery = typeof ${contract}.ListQuery.static
+export function use${pascalName}List(
+  params?: typeof ${contract}.ListQuery.static, 
+  enabled: boolean = true
+) {
   return useQuery({
-    queryKey: ${queryKeyName}.list(params || {}),
-    queryFn: async () => await handleEden(rpc.${apiPath}.get({ query: params })),
-    enabled: enabled ?? true,
+    queryKey: ${queryKeyName}.list(params),
+    queryFn: () => api.get<any, typeof ${contract}.ListQuery.static>("${apiPath}", { params }),
+    enabled,
   });
 }
 
-// --- 单个详情 ---
-export function use${pascalName}Detail(id: string, enabled?: boolean) {
+// --- 2. 单个详情 (GET) ---
+// TRes = any
+export function use${pascalName}Detail(id: string, enabled: boolean = !!id) {
   return useQuery({
     queryKey: ${queryKeyName}.detail(id),
-    queryFn: async () => await handleEden(rpc.${apiPath}({ id }).get()),
-    enabled: enabled ?? !!id,
+    queryFn: () => api.get<any>(\`${apiPath}/\${id}\`),
+    enabled,
   });
 }
 
-// --- 创建 ---
+// --- 3. 创建 (POST) ---
+// TRes = any, TBody = typeof ${contract}.Create.static
 export function useCreate${pascalName}() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: ${contractName}['Create']) =>
-      await handleEden(rpc.${apiPath}.post(data)),
+    mutationFn: (data: typeof ${contract}.Create.static) => 
+      api.post<any, typeof ${contract}.Create.static>("${apiPath}", data),
     onSuccess: () => {
-      toast.success("${pascalName}创建成功");
       queryClient.invalidateQueries({ queryKey: ${queryKeyName}.lists() });
-    },
-    onError: (error: any) => {
-      toast.error(error?.message || "创建${pascalName}失败");
     },
   });
 }
 
-// --- 更新 ---
+// --- 4. 更新 (PUT) ---
+// TRes = any, TBody = typeof ${contract}.Update.static
 export function useUpdate${pascalName}() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: ${contractName}['Update'] }) =>
-      await handleEden(rpc.${apiPath}({ id }).put(data)),
+    mutationFn: ({ id, data }: { id: string; data: typeof ${contract}.Update.static }) => 
+      api.put<any, typeof ${contract}.Update.static>(\`${apiPath}/\${id}\`, data), 
     onSuccess: (_, variables) => {
-      toast.success("${pascalName}更新成功");
       queryClient.invalidateQueries({ queryKey: ${queryKeyName}.lists() });
       queryClient.invalidateQueries({ queryKey: ${queryKeyName}.detail(variables.id) });
-    },
-    onError: (error: any) => {
-      toast.error(error?.message || "更新${pascalName}失败");
     },
   });
 }
 
-// --- 删除 ---
+// --- 5. 删除 (DELETE) ---
+// TRes = any
 export function useDelete${pascalName}() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string) =>
-      await handleEden(rpc.${apiPath}({ id }).delete()),
+    mutationFn: (id: string) => api.delete<any>(\`${apiPath}/\${id}\`),
     onSuccess: () => {
-      toast.success("${pascalName}删除成功");
       queryClient.invalidateQueries({ queryKey: ${queryKeyName}.lists() });
-    },
-    onError: (error: any) => {
-      toast.error(error?.message || "删除${pascalName}失败");
     },
   });
 }
 `;
 
-    // 8. 检查是否已存在核心变量，不存在则追加
-    const fileText = file.getText();
-    if (fileText.includes(`export const ${queryKeyName}`)) {
-      console.log(`     🔄 Hooks existing: ${ctx.tableName} (已存在，跳过)`);
-    } else {
-      file.addStatements(hooksCode);
-      console.log(`     ➕ Frontend Hooks: ${ctx.paths.frontendHook}`);
-    }
+    // 7. 追加到文件末尾
+    file.addStatements(hooksCode);
+
+    // 可选：调用 formatting
+    // file.formatText();
+
+    console.log(`✨ Frontend Hooks: use${pascalName} generated.`);
   },
 };

@@ -1,7 +1,7 @@
 import { type SiteCategoryContract, siteCategoryTable } from "@repo/contract";
 import { eq } from "drizzle-orm";
 import { HttpError } from "elysia-http-problem-json";
-import { type ServiceContext } from "../../lib/type";
+import { type ServiceContext } from "../lib/type";
 
 export class SiteCategoryService {
   public async create(

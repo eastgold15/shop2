@@ -1,7 +1,7 @@
 import { type AdContract, adTable } from "@repo/contract";
 import { and, eq, inArray } from "drizzle-orm";
 import { HttpError } from "elysia-http-problem-json";
-import { type ServiceContext } from "../../lib/type";
+import { type ServiceContext } from "../lib/type";
 
 export class AdService {
   public async create(body: AdContract["Create"], ctx: ServiceContext) {

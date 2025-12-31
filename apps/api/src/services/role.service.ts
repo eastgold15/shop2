@@ -1,6 +1,6 @@
 import { type RoleContract, roleTable } from "@repo/contract";
 import { eq } from "drizzle-orm";
-import { type ServiceContext } from "../../lib/type";
+import { type ServiceContext } from "../lib/type";
 
 export class RoleService {
   public async create(body: RoleContract["Create"], ctx: ServiceContext) {

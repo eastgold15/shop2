@@ -1,6 +1,6 @@
 import { type TenantContract, tenantTable } from "@repo/contract";
 import { eq } from "drizzle-orm";
-import { type ServiceContext } from "../../lib/type";
+import { type ServiceContext } from "../lib/type";
 
 export class TenantService {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */

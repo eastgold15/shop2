@@ -1,141 +1,96 @@
-"use client";
-import type { Treaty } from "@elysiajs/eden";
-import type { UserContract } from "@repo/contract";
+/**
+ * 🤖 【Frontend Hooks - 自动生成】
+ * --------------------------------------------------------
+ * ⚠️ 请勿手动修改此文件，下次运行会被覆盖。
+ * 💡 如需自定义，请在 hooks/api 目录下新建文件进行封装。
+ * --------------------------------------------------------
+ */
+
+import { UserContract } from "@repo/contract";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { rpc } from "@/lib/rpc";
-import { handleEden } from "@/lib/utils/base";
-// 主要的 useUser hook（支持站点参数）
-export function useMe(options?: { siteId?: string; enabled?: boolean }) {
-  return useQuery({
-    queryKey: ["user", "me", options?.siteId],
-    queryFn: async () => {
-      return await handleEden(rpc.api.v1.user.me.get()); // 只返回数据
-    },
-    staleTime: 1000 * 60 * 5,
-    retry: false,
-    enabled: options?.enabled ?? true,
-  });
-}
+import { api } from "./api-client";
 
-export type UserMeRes = Treaty.Data<typeof rpc.api.v1.user.me.get>;
+// --- Query Keys ---
+export const userKeys = {
+  all: ["user"] as const,
+  lists: () => [...userKeys.all, "list"] as const,
+  list: (params: any) => [...userKeys.lists(), params] as const,
+  details: () => [...userKeys.all, "detail"] as const,
+  detail: (id: string) => [...userKeys.details(), id] as const,
+};
 
-export function useCreateUser() {
-  return useMutation({
-    mutationFn: async (data: Parameters<typeof rpc.api.v1.user.post>[0]) =>
-      await handleEden(rpc.api.v1.user.post(data)),
-    onSuccess: () => {
-      toast.success("用户代表创建成功");
-    },
-    onError: (error) => {
-      toast.error(error.message || "创建用户代表失败");
-    },
-  });
-}
-
-// 获取可管理的用户列表
-export function useManageableUser(
-  query?: typeof UserContract.ListQuery.static
+// --- 1. 列表查询 (GET) ---
+// TRes = any, TQuery = typeof UserContract.ListQuery.static
+export function useUserList(
+  params?: typeof UserContract.ListQuery.static,
+  enabled = true
 ) {
   return useQuery({
-    queryKey: ["user-management", "user", query],
-    queryFn: async () =>
-      await handleEden(
-        rpc.api.v1.user.get({
-          query,
-        })
-      ),
-    staleTime: 1000 * 60 * 2, // 2 minutes
+    queryKey: userKeys.list(params),
+    queryFn: () =>
+      api.get<any, typeof UserContract.ListQuery.static>("/api/v1/user", {
+        params,
+      }),
+    enabled,
   });
 }
 
-// 更新用户状态
-export function useUpdateUsertatus() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({
-      userId,
-      isActive,
-    }: {
-      userId: string;
-      isActive: boolean;
-    }) =>
-      await handleEden(
-        rpc.api.v1.user({ id: userId }).put({
-          isActive,
-        })
-      ),
-    onSuccess: () => {
-      toast.success("用户状态更新成功");
-      queryClient.invalidateQueries({ queryKey: ["user-management"] });
-    },
-    onError: (error) => {
-      toast.error(error.message || "更新用户状态失败");
-    },
-  });
-}
-
-// 更新当前用户个人资料
-export function useUpdateProfile() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (data: {
-      name?: string;
-      phone?: string;
-      address?: string;
-      city?: string;
-    }) =>
-      await handleEden(
-        rpc.api.v1.user.profile.put({
-          name: data.name,
-          phone: data.phone,
-          address: data.address,
-          city: data.city,
-        })
-      ),
-    onSuccess: () => {
-      toast.success("个人资料更新成功");
-      queryClient.invalidateQueries({ queryKey: ["user", "me"] });
-      queryClient.invalidateQueries({ queryKey: ["user", "settings"] });
-    },
-    onError: (error: any) => {
-      toast.error(error?.message || "更新个人资料失败");
-    },
-  });
-}
-
-// 更新当前用户的站点和公司信息
-export function useUpdateSiteInfo() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (data: {
-      siteName?: string;
-      domain?: string;
-      companyName?: string;
-      companyCode?: string;
-      companyAddress?: string;
-      website?: string;
-      contactPhone?: string;
-    }) => await handleEden(rpc.api.v1.user.site.put(data)),
-    onSuccess: () => {
-      toast.success("站点和公司信息更新成功");
-      queryClient.invalidateQueries({ queryKey: ["user", "me"] });
-      queryClient.invalidateQueries({ queryKey: ["user", "settings"] });
-    },
-    onError: (error) => {
-      toast.error(error.message || "更新站点信息失败");
-    },
-  });
-}
-
-// 获取账号设置信息
-export function useAccountSettings() {
+// --- 2. 单个详情 (GET) ---
+// TRes = any
+export function useUserDetail(id: string, enabled = !!id) {
   return useQuery({
-    queryKey: ["user", "settings"],
-    queryFn: async () => await handleEden(rpc.api.v1.user.settings.get()),
-    staleTime: 1000 * 60 * 5,
+    queryKey: userKeys.detail(id),
+    queryFn: () => api.get<any>(`/api/v1/user/${id}`),
+    enabled,
+  });
+}
+
+// --- 3. 创建 (POST) ---
+// TRes = any, TBody = typeof UserContract.Create.static
+export function useCreateUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: typeof UserContract.Create.static) =>
+      api.post<any, typeof UserContract.Create.static>("/api/v1/user", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: userKeys.lists() });
+    },
+  });
+}
+
+// --- 4. 更新 (PUT) ---
+// TRes = any, TBody = typeof UserContract.Update.static
+export function useUpdateUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: typeof UserContract.Update.static;
+    }) =>
+      api.put<any, typeof UserContract.Update.static>(
+        `/api/v1/user/${id}`,
+        data
+      ),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: userKeys.lists() });
+      queryClient.invalidateQueries({
+        queryKey: userKeys.detail(variables.id),
+      });
+    },
+  });
+}
+
+// --- 5. 删除 (DELETE) ---
+// TRes = any
+export function useDeleteUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.delete<any>(`/api/v1/user/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: userKeys.lists() });
+    },
   });
 }

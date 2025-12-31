@@ -3,7 +3,7 @@ import {
   dailyInquiryCounterTable,
 } from "@repo/contract";
 import { eq } from "drizzle-orm";
-import { type ServiceContext } from "../../lib/type";
+import { type ServiceContext } from "../lib/type";
 
 // import {
 //   type DailyInquiryCounterContract,
