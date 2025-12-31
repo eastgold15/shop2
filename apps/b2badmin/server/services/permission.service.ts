@@ -5,10 +5,7 @@ import { type ServiceContext } from "../lib/type";
 
 export class PermissionService {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  public async create(
-    body: PermissionContract["Create"],
-    ctx: ServiceContext
-  ) {
+  public async create(body: PermissionContract["Create"], ctx: ServiceContext) {
     const insertData = {
       ...body,
       // 自动注入租户信息
@@ -21,7 +18,6 @@ export class PermissionService {
       .returning();
     return res;
   }
-
 
   public async findAll(
     query: PermissionContract["ListQuery"],

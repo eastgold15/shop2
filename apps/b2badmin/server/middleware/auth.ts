@@ -11,12 +11,6 @@ const SCOPE_WEIGHT = {
   self: 1, // 仅本人
 } as const;
 
-
-interface FilterObj {
-  tenantId: string | null;
-  deptId?: string | null | { in: string[] };
-  createdBy?: string | null;
-}
 export interface AUthFilterObj {
   tenantId: string;
   deptId: string | { in: string[] };
@@ -85,9 +79,9 @@ export const authGuardMid = new Elysia({ name: "authGuard" })
     };
 
     const effectiveScope = getMaxScope();
-    const getScopeObj = async (): Promise<FilterObj> => {
+    const getScopeObj = async () => {
       // 计算出最终生效的 scope
-      const filter: FilterObj = {
+      const filter: any = {
         tenantId: user.tenantId,
       };
 
@@ -105,11 +99,11 @@ export const authGuardMid = new Elysia({ name: "authGuard" })
           const childDepts = await db.query.departmentTable.findMany({
             where: { parentId: user.deptId! },
             columns: { id: true },
-          })
+          });
           const deptIds = childDepts.map((item) => item.id);
           filter.deptId = {
-            in: [user.deptId!, ...deptIds]
-          }
+            in: [user.deptId!, ...deptIds],
+          };
           break;
         }
 
@@ -148,6 +142,6 @@ export const authGuardMid = new Elysia({ name: "authGuard" })
       },
     }),
   })
-  .as("global")
+  .as("global");
 
 // .get('/', ({ user,getScopeObj,effectiveScope}) => 'auth guard middleware works')

@@ -15,7 +15,7 @@ export class MasterCategoryService {
       ...body,
       // 自动注入租户信息
       ...(ctx.user
-        ? { tenantId: ctx.user.tenantId!, createdBy: ctx.user.id }
+        ? { tenantId: ctx.user.tenantId, createdBy: ctx.user.id }
         : {}),
     };
     const [res] = await ctx.db
@@ -25,7 +25,6 @@ export class MasterCategoryService {
     return res;
   }
 
-
   public async findAll(
     query: MasterCategoryContract["ListQuery"],
     ctx: ServiceContext
@@ -33,14 +32,16 @@ export class MasterCategoryService {
     const data = await ctx.db.query.masterCategoryTable.findMany({
       where: {
         tenantId: ctx.user.tenantId!,
-        ...(query.isActive !== undefined && query.isActive !== null ? { isActive: query.isActive } : {}),
+        ...(query.isActive !== undefined && query.isActive !== null
+          ? { isActive: query.isActive }
+          : {}),
       },
       orderBy: {
         createdAt: "asc",
-      }
-    })
+      },
+    });
 
-    return data
+    return data;
   }
 
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */

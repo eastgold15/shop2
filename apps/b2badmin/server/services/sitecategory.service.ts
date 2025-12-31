@@ -1,9 +1,9 @@
 import { type SiteCategoryContract, siteCategoryTable } from "@repo/contract";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
+import { HttpError } from "elysia-http-problem-json";
 import { type ServiceContext } from "../lib/type";
 
 export class SiteCategoryService {
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   public async create(
     body: SiteCategoryContract["Create"],
     ctx: ServiceContext
@@ -11,9 +11,7 @@ export class SiteCategoryService {
     const insertData = {
       ...body,
       // 自动注入租户信息
-      ...(ctx.user
-        ? { tenantId: ctx.user.tenantId, createdBy: ctx.user.id }
-        : {}),
+      ...(ctx.user.tenantId ? { tenantId: ctx.user.tenantId } : {}),
     };
     const [res] = await ctx.db
       .insert(siteCategoryTable)
@@ -22,51 +20,261 @@ export class SiteCategoryService {
     return res;
   }
 
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   public async findAll(
     query: SiteCategoryContract["ListQuery"],
     ctx: ServiceContext
   ) {
-    const { limit = 10, page = 0, sort, ...filters } = query;
-    const whereConditions = [];
-    // 租户隔离
-    if (ctx.user?.tenantId)
-      whereConditions.push(eq(siteCategoryTable.tenantId, ctx.user.tenantId));
-
-    const data = await ctx.db
-      .select()
-      .from(siteCategoryTable)
-      .where(and(...whereConditions))
-      .limit(limit)
-      .offset((page - 1) * limit);
-    const total = await ctx.db.$count(
-      siteCategoryTable,
-      and(...whereConditions)
-    );
-    return { data, total };
+    const { search } = query;
+    const scopeObj = ctx.getScopeObj();
+    const res = await ctx.db.query.siteCategoryTable.findMany({
+      where: {
+        deptId: scopeObj.deptId,
+        tenantId: scopeObj.tenantId,
+        ...(search ? { name: { ilike: `%${search}%` } } : {}),
+      },
+    });
+    return res;
   }
 
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   public async update(
     id: string,
     body: SiteCategoryContract["Update"],
     ctx: ServiceContext
   ) {
-    const updateData = { ...body, updatedAt: new Date() };
     const [res] = await ctx.db
       .update(siteCategoryTable)
-      .set(updateData)
+      .set(body)
       .where(eq(siteCategoryTable.id, id))
       .returning();
     return res;
   }
 
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  public async delete(id: string, ctx: ServiceContext) {
-    const [res] = await ctx.db
+  public async delete(ids: string[], ctx: ServiceContext) {
+    const res = await ctx.db
       .delete(siteCategoryTable)
-      .where(eq(siteCategoryTable.id, id))
+      .where(eq(siteCategoryTable.id, ids[0]))
       .returning();
     return res;
+  }
+
+  /**
+   * 获取树形结构的分类列表
+   */
+  async getTree(ctx: ServiceContext) {
+    const scopeObj = ctx.getScopeObj();
+    const categories = await ctx.db.query.siteCategoryTable.findMany({
+      where: {
+        deptId: scopeObj.deptId,
+        tenantId: scopeObj.tenantId,
+      },
+      orderBy: { sortOrder: "asc", createdAt: "asc" },
+    });
+
+    // 构建树形结构
+    const categoryMap = new Map();
+    const rootCategories = [];
+
+    // 先将所有分类存入 map
+    for (const category of categories) {
+      categoryMap.set(category.id, {
+        ...category,
+        children: [],
+      });
+    }
+
+    // 构建父子关系
+    for (const category of categories) {
+      if (category.parentId) {
+        const parent = categoryMap.get(category.parentId);
+        if (parent) {
+          parent.children.push(categoryMap.get(category.id));
+        }
+      } else {
+        rootCategories.push(categoryMap.get(category.id));
+      }
+    }
+
+    return rootCategories;
+  }
+
+  /**
+   * 创建分类（支持层级关系）
+   */
+  async createCategory(data: any, ctx: ServiceContext) {
+    const {
+      name,
+      description,
+      parentId,
+      sortOrder = 0,
+      isActive = true,
+    } = data;
+
+    // 如果有父级，验证父级是否存在
+    if (parentId) {
+      const scopeObj = ctx.getScopeObj();
+      const parent = await ctx.db.query.siteCategoryTable.findFirst({
+        where: {
+          id: parentId,
+          deptId: scopeObj.deptId,
+          tenantId: scopeObj.tenantId,
+        },
+      });
+
+      if (!parent) {
+        throw new HttpError.NotFound("父级分类不存在或无权访问");
+      }
+    }
+
+    return await this.create(
+      {
+        name,
+        description,
+        parentId,
+        sortOrder,
+        isActive,
+      },
+      ctx
+    );
+  }
+
+  /**
+   * 移动分类（更新父级关系）
+   */
+  async moveCategory(
+    id: string,
+    newParentId: string | null,
+    ctx: ServiceContext
+  ) {
+    const scopeObj = ctx.getScopeObj();
+    // 验证分类是否存在
+    const category = await ctx.db.query.siteCategoryTable.findFirst({
+      where: {
+        id,
+        deptId: scopeObj.deptId,
+        tenantId: scopeObj.tenantId,
+      },
+    });
+
+    if (!category) {
+      throw new HttpError.NotFound("分类不存在或无权访问");
+    }
+
+    // 验证不能将分类移动到自己的子级下
+    if (newParentId) {
+      const parent = await ctx.db.query.siteCategoryTable.findFirst({
+        where: {
+          id: newParentId,
+          deptId: scopeObj.deptId,
+          tenantId: scopeObj.tenantId,
+        },
+      });
+
+      if (!parent) {
+        throw new HttpError.NotFound("目标父级分类不存在或无权访问");
+      }
+
+      // 检查是否会形成循环引用
+      const isDescendant = await this.checkIsDescendant(newParentId, id, ctx);
+      if (isDescendant) {
+        throw new HttpError.BadRequest("不能将分类移动到自己的子级下");
+      }
+    }
+
+    // 更新父级关系
+    const [updated] = await ctx.db
+      .update(siteCategoryTable)
+      .set({ parentId: newParentId })
+      .where(eq(siteCategoryTable.id, id))
+      .returning();
+
+    return {
+      id: updated.id,
+      parentId: updated.parentId,
+      message: "分类移动成功",
+    };
+  }
+
+  /**
+   * 批量更新排序
+   */
+  async updateSortOrder(
+    items: Array<{ id: string; sortOrder: number }>,
+    ctx: ServiceContext
+  ) {
+    await ctx.db.transaction(async (tx) => {
+      for (const item of items) {
+        await tx
+          .update(siteCategoryTable)
+          .set({ sortOrder: item.sortOrder })
+          .where(eq(siteCategoryTable.id, item.id));
+      }
+    });
+
+    return { success: true, message: "排序更新成功" };
+  }
+
+  /**
+   * 切换激活状态
+   */
+  async toggleStatus(id: string, ctx: ServiceContext) {
+    const scopeObj = ctx.getScopeObj();
+    const category = await ctx.db.query.siteCategoryTable.findFirst({
+      where: {
+        id,
+        deptId: scopeObj.deptId,
+        tenantId: scopeObj.tenantId,
+      },
+    });
+
+    if (!category) {
+      throw new HttpError.NotFound("分类不存在或无权访问");
+    }
+
+    const [updated] = await ctx.db
+      .update(siteCategoryTable)
+      .set({ isActive: !category.isActive })
+      .where(eq(siteCategoryTable.id, id))
+      .returning();
+
+    return {
+      id: updated.id,
+      isActive: updated.isActive,
+      message: updated.isActive ? "分类已激活" : "分类已停用",
+    };
+  }
+
+  /**
+   * 辅助方法：检查是否为子孙分类
+   */
+  private async checkIsDescendant(
+    ancestorId: string,
+    descendantId: string,
+    ctx: ServiceContext
+  ): Promise<boolean> {
+    const scopeObj = ctx.getScopeObj();
+    const category = await ctx.db.query.siteCategoryTable.findFirst({
+      where: {
+        id: descendantId,
+        deptId: scopeObj.deptId,
+        tenantId: scopeObj.tenantId,
+      },
+    });
+
+    if (!category) {
+      return false;
+    }
+
+    const parentId = category.parentId;
+
+    if (!parentId) {
+      return false;
+    }
+
+    if (parentId === ancestorId) {
+      return true;
+    }
+
+    // 递归检查
+    return await this.checkIsDescendant(ancestorId, parentId, ctx);
   }
 }

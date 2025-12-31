@@ -14,11 +14,8 @@ export const ProductContract = {
   }),
 
   Create: t.Object({
-    ...t.Omit(t.Object(ProductInsertFields), [
-      "id",
-      "createdAt",
-      "updatedAt",
-    ]).properties,
+    ...t.Omit(t.Object(ProductInsertFields), ["id", "createdAt", "updatedAt"])
+      .properties,
     // 站点ID
     siteCategoryId: t.Optional(t.String()),
     // 商品媒体关联
@@ -41,7 +38,7 @@ export const ProductContract = {
       videoIds: t.Optional(t.Array(t.String())),
     })
   ),
- 
+
   Patch: t.Partial(
     t.Object({
       ...t.Omit(t.Object(ProductInsertFields), [

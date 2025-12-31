@@ -20,7 +20,8 @@ export const userroleController = new Elysia({ prefix: "/userrole" })
   .use(authGuardMid)
   .get(
     "/",
-    ({ query, user, db }) => userroleService.findAll(query, { db, user }),
+    ({ query, user, db, getScopeObj }) =>
+      userroleService.findAll(query, { db, user, getScopeObj }),
     {
       allPermissions: ["USERROLE:VIEW"],
       query: UserRoleContract.ListQuery,
@@ -33,7 +34,8 @@ export const userroleController = new Elysia({ prefix: "/userrole" })
   )
   .post(
     "/",
-    ({ body, user, db }) => userroleService.create(body, { db, user }),
+    ({ body, user, db, getScopeObj }) =>
+      userroleService.create(body, { db, user, getScopeObj }),
     {
       allPermissions: ["USERROLE:CREATE"],
       body: UserRoleContract.Create,
@@ -46,7 +48,8 @@ export const userroleController = new Elysia({ prefix: "/userrole" })
   )
   .put(
     "/:id",
-    ({ params, user, db }) => userroleService.update(params.id, { db, user }),
+    ({ params, body, user, db, getScopeObj }) =>
+      userroleService.update(params.id, body, { db, user, getScopeObj }),
     {
       params: t.Object({ id: t.String() }),
       body: UserRoleContract.Update,
@@ -60,7 +63,8 @@ export const userroleController = new Elysia({ prefix: "/userrole" })
   )
   .delete(
     "/:id",
-    ({ params, user, db }) => userroleService.delete(params.id, { db, user }),
+    ({ params, user, db, getScopeObj }) =>
+      userroleService.delete(params.id, { db, user, getScopeObj }),
     {
       params: t.Object({ id: t.String() }),
       allPermissions: ["USERROLE:DELETE"],

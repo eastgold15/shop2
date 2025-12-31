@@ -20,7 +20,8 @@ export const herocardController = new Elysia({ prefix: "/herocard" })
   .use(authGuardMid)
   .get(
     "/",
-    ({ query, user, db }) => herocardService.findAll(query, { db, user }),
+    ({ query, user, db, getScopeObj }) =>
+      herocardService.findAll(query, { db, user, getScopeObj }),
     {
       allPermissions: ["HEROCARD:VIEW"],
       query: HeroCardContract.ListQuery,
@@ -33,7 +34,8 @@ export const herocardController = new Elysia({ prefix: "/herocard" })
   )
   .post(
     "/",
-    ({ body, user, db }) => herocardService.create(body, { db, user }),
+    ({ body, user, db, getScopeObj }) =>
+      herocardService.create(body, { db, user, getScopeObj }),
     {
       allPermissions: ["HEROCARD:CREATE"],
       body: HeroCardContract.Create,
@@ -46,7 +48,8 @@ export const herocardController = new Elysia({ prefix: "/herocard" })
   )
   .put(
     "/:id",
-    ({ params, user, db }) => herocardService.update(params.id, { db, user }),
+    ({ params, body, user, db, getScopeObj }) =>
+      herocardService.update(params.id, body, { db, user, getScopeObj }),
     {
       params: t.Object({ id: t.String() }),
       body: HeroCardContract.Update,
@@ -60,7 +63,8 @@ export const herocardController = new Elysia({ prefix: "/herocard" })
   )
   .delete(
     "/:id",
-    ({ params, user, db }) => herocardService.delete(params.id, { db, user }),
+    ({ params, user, db, getScopeObj }) =>
+      herocardService.delete(params.id, { db, user, getScopeObj }),
     {
       params: t.Object({ id: t.String() }),
       allPermissions: ["HEROCARD:DELETE"],

@@ -1,5 +1,4 @@
 import { t } from "elysia";
-
 import { type InferDTO, spread } from "../helper/utils";
 import { userTable } from "../table.schema";
 
@@ -46,7 +45,7 @@ export const UserContract = {
       ]).properties,
     })
   ),
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+
   ListQuery: t.Object({
     search: t.Optional(t.String()),
   }),

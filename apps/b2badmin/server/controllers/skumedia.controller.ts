@@ -20,7 +20,8 @@ export const skumediaController = new Elysia({ prefix: "/skumedia" })
   .use(authGuardMid)
   .get(
     "/",
-    ({ query, user, db }) => skumediaService.findAll(query, { db, user }),
+    ({ query, user, db, getScopeObj }) =>
+      skumediaService.findAll(query, { db, user, getScopeObj }),
     {
       allPermissions: ["SKUMEDIA:VIEW"],
       query: SkuMediaContract.ListQuery,
@@ -33,7 +34,8 @@ export const skumediaController = new Elysia({ prefix: "/skumedia" })
   )
   .post(
     "/",
-    ({ body, user, db }) => skumediaService.create(body, { db, user }),
+    ({ body, user, db, getScopeObj }) =>
+      skumediaService.create(body, { db, user, getScopeObj }),
     {
       allPermissions: ["SKUMEDIA:CREATE"],
       body: SkuMediaContract.Create,
@@ -46,7 +48,8 @@ export const skumediaController = new Elysia({ prefix: "/skumedia" })
   )
   .put(
     "/:id",
-    ({ params, user, db }) => skumediaService.update(params.id, { db, user }),
+    ({ params, body, user, db, getScopeObj }) =>
+      skumediaService.update(params.id, body, { db, user, getScopeObj }),
     {
       params: t.Object({ id: t.String() }),
       body: SkuMediaContract.Update,
@@ -60,7 +63,8 @@ export const skumediaController = new Elysia({ prefix: "/skumedia" })
   )
   .delete(
     "/:id",
-    ({ params, user, db }) => skumediaService.delete(params.id, { db, user }),
+    ({ params, user, db, getScopeObj }) =>
+      skumediaService.delete(params.id, { db, user, getScopeObj }),
     {
       params: t.Object({ id: t.String() }),
       allPermissions: ["SKUMEDIA:DELETE"],

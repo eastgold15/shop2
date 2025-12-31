@@ -12,15 +12,14 @@ import { MediaContract } from "../../../../packages/contract/src/modules/media.c
 import { MediaService } from "../services/media.service";
 
 const mediaService = new MediaService();
-/**
- * @generated
- */
+
 export const mediaController = new Elysia({ prefix: "/media" })
   .use(dbPlugin)
   .use(authGuardMid)
   .get(
     "/",
-    ({ query, user, db }) => mediaService.findAll(query, { db, user }),
+    ({ query, user, db, getScopeObj }) =>
+      mediaService.findAll(query, { db, user, getScopeObj }),
     {
       allPermissions: ["MEDIA:VIEW"],
       query: MediaContract.ListQuery,

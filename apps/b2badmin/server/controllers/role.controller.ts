@@ -18,27 +18,38 @@ const roleService = new RoleService();
 export const roleController = new Elysia({ prefix: "/role" })
   .use(dbPlugin)
   .use(authGuardMid)
-  .get("/", ({ query, user, db }) => roleService.findAll(query, { db, user }), {
-    allPermissions: ["ROLE:VIEW"],
-    query: RoleContract.ListQuery,
-    detail: {
-      summary: "获取Role列表",
-      description: "分页查询Role数据，支持搜索和排序",
-      tags: ["Role"],
-    },
-  })
-  .post("/", ({ body, user, db }) => roleService.create(body, { db, user }), {
-    allPermissions: ["ROLE:CREATE"],
-    body: RoleContract.Create,
-    detail: {
-      summary: "创建Role",
-      description: "新增一条Role记录",
-      tags: ["Role"],
-    },
-  })
+  .get(
+    "/",
+    ({ query, user, db, getScopeObj }) =>
+      roleService.findAll(query, { db, user, getScopeObj }),
+    {
+      allPermissions: ["ROLE:VIEW"],
+      query: RoleContract.ListQuery,
+      detail: {
+        summary: "获取Role列表",
+        description: "分页查询Role数据，支持搜索和排序",
+        tags: ["Role"],
+      },
+    }
+  )
+  .post(
+    "/",
+    ({ body, user, db, getScopeObj }) =>
+      roleService.create(body, { db, user, getScopeObj }),
+    {
+      allPermissions: ["ROLE:CREATE"],
+      body: RoleContract.Create,
+      detail: {
+        summary: "创建Role",
+        description: "新增一条Role记录",
+        tags: ["Role"],
+      },
+    }
+  )
   .put(
     "/:id",
-    ({ params, user, db }) => roleService.update(params.id, { db, user }),
+    ({ params, body, user, db, getScopeObj }) =>
+      roleService.update(params.id, body, { db, user, getScopeObj }),
     {
       params: t.Object({ id: t.String() }),
       body: RoleContract.Update,
@@ -52,7 +63,8 @@ export const roleController = new Elysia({ prefix: "/role" })
   )
   .delete(
     "/:id",
-    ({ params, user, db }) => roleService.delete(params.id, { db, user }),
+    ({ params, user, db, getScopeObj }) =>
+      roleService.delete(params.id, { db, user, getScopeObj }),
     {
       params: t.Object({ id: t.String() }),
       allPermissions: ["ROLE:DELETE"],

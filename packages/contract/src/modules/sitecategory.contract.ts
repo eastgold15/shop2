@@ -25,12 +25,12 @@ export const SiteCategoryContract = {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Create: t.Object({
     ...t.Omit(t.Object(SiteCategoryInsertFields), [
+      "id",
       "createdAt",
       "updatedAt",
-      "siteId",
     ]).properties,
   }),
- 
+
   Update: t.Partial(
     t.Object({
       ...t.Omit(t.Object(SiteCategoryInsertFields), [
@@ -50,7 +50,7 @@ export const SiteCategoryContract = {
       ]).properties,
     })
   ),
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+
   ListQuery: t.Object({
     search: t.Optional(t.String()),
   }),

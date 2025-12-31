@@ -860,6 +860,10 @@ const siteCategories = [
     isActive: true,
     siteId: site1Id,
     masterCategoryId: masterCategories[0].id,
+    tenantId: tenant1Id,
+    deptId: dept1Factory1Id,
+    createdBy: user2Id,
+    isPublic: true,
   },
   {
     id: siteCategory2Id,
@@ -870,6 +874,10 @@ const siteCategories = [
     isActive: true,
     siteId: site2Id,
     masterCategoryId: masterCategories[3].id,
+    tenantId: tenant1Id,
+    deptId: dept1Factory1Id,
+    createdBy: user2Id,
+    isPublic: true,
   },
 ];
 

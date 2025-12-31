@@ -29,7 +29,7 @@ export const PermissionContract = {
       ]).properties,
     })
   ),
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+
   ListQuery: t.Object({
     search: t.Optional(t.String()),
   }),

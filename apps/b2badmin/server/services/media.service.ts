@@ -10,8 +10,9 @@ export class MediaService {
     const insertData = {
       ...body,
       // 自动注入租户信息
-      ...(ctx.user?.tenantId ? { tenantId: ctx.user.tenantId } : {}),
-      ...(ctx.user?.id ? { createdBy: ctx.user.id } : {}),
+      ...(ctx.user
+        ? { tenantId: ctx.user.tenantId, createdBy: ctx.user.id }
+        : {}),
     };
     const [res] = await ctx.db
       .insert(mediaTable)
@@ -20,10 +21,9 @@ export class MediaService {
     return res;
   }
 
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   public async findAll(query: MediaContract["ListQuery"], ctx: ServiceContext) {
     const { search } = query;
-    const scopeObj = ctx.getScopeObj();
+    const scopeObj = await ctx.getScopeObj();
     const res = await ctx.db.query.mediaTable.findMany({
       where: {
         tenantId: scopeObj.tenantId,
@@ -174,9 +174,7 @@ export class MediaService {
     await Promise.all(files.map((f: any) => storage.deleteFile(f.storageKey)));
 
     // 3. 数据库批量删除
-    await ctx.db
-      .delete(mediaTable)
-      .where(and(...whereConditions));
+    await ctx.db.delete(mediaTable).where(and(...whereConditions));
 
     return { count: files.length };
   }

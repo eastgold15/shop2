@@ -444,15 +444,12 @@ export const productMasterCategoryTable = p.pgTable(
 
 export const siteCategoryTable = p.pgTable("site_category", {
   ...Audit,
+  ...siteScopedCols,
   name: p.varchar("name", { length: 100 }).notNull(),
   description: p.text("description"),
   parentId: p.uuid("parent_id"),
   sortOrder: p.integer("sort_order").default(0),
   isActive: p.boolean("is_active").default(true),
-  siteId: p
-    .uuid("site_id")
-    .references(() => siteTable.id, { onDelete: "cascade" })
-    .notNull(),
   masterCategoryId: p
     .uuid("master_category_id")
     .references(() => masterCategoryTable.id, { onDelete: "set null" }),

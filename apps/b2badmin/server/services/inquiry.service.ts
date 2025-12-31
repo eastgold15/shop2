@@ -3,7 +3,11 @@ import { and, eq } from "drizzle-orm";
 import { type ServiceContext } from "../lib/type";
 
 export class InquiryService {
-  public async create(body: InquiryContract["Create"], inquiryNum: string, ctx: ServiceContext) {
+  public async create(
+    body: InquiryContract["Create"],
+    inquiryNum: string,
+    ctx: ServiceContext
+  ) {
     const insertData = {
       ...body,
       inquiryNum,

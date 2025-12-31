@@ -20,7 +20,8 @@ export const quotationController = new Elysia({ prefix: "/quotation" })
   .use(authGuardMid)
   .get(
     "/",
-    ({ query, user, db }) => quotationService.findAll(query, { db, user }),
+    ({ query, user, db, getScopeObj }) =>
+      quotationService.findAll(query, { db, user, getScopeObj }),
     {
       allPermissions: ["QUOTATION:VIEW"],
       query: QuotationContract.ListQuery,
@@ -33,7 +34,8 @@ export const quotationController = new Elysia({ prefix: "/quotation" })
   )
   .post(
     "/",
-    ({ body, user, db }) => quotationService.create(body, { db, user }),
+    ({ body, user, db, getScopeObj }) =>
+      quotationService.create(body, { db, user, getScopeObj }),
     {
       allPermissions: ["QUOTATION:CREATE"],
       body: QuotationContract.Create,
@@ -46,7 +48,8 @@ export const quotationController = new Elysia({ prefix: "/quotation" })
   )
   .put(
     "/:id",
-    ({ params, user, db }) => quotationService.update(params.id, { db, user }),
+    ({ params, body, user, db, getScopeObj }) =>
+      quotationService.update(params.id, body, { db, user, getScopeObj }),
     {
       params: t.Object({ id: t.String() }),
       body: QuotationContract.Update,
@@ -60,7 +63,8 @@ export const quotationController = new Elysia({ prefix: "/quotation" })
   )
   .delete(
     "/:id",
-    ({ params, user, db }) => quotationService.delete(params.id, { db, user }),
+    ({ params, user, db, getScopeObj }) =>
+      quotationService.delete(params.id, { db, user, getScopeObj }),
     {
       params: t.Object({ id: t.String() }),
       allPermissions: ["QUOTATION:DELETE"],

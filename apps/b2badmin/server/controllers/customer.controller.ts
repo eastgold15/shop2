@@ -20,7 +20,8 @@ export const customerController = new Elysia({ prefix: "/customer" })
   .use(authGuardMid)
   .get(
     "/",
-    ({ query, user, db }) => customerService.findAll(query, { db, user }),
+    ({ query, user, db, getScopeObj }) =>
+      customerService.findAll(query, { db, user, getScopeObj }),
     {
       allPermissions: ["CUSTOMER:VIEW"],
       query: CustomerContract.ListQuery,
@@ -33,7 +34,8 @@ export const customerController = new Elysia({ prefix: "/customer" })
   )
   .post(
     "/",
-    ({ body, user, db }) => customerService.create(body, { db, user }),
+    ({ body, user, db, getScopeObj }) =>
+      customerService.create(body, { db, user, getScopeObj }),
     {
       allPermissions: ["CUSTOMER:CREATE"],
       body: CustomerContract.Create,
@@ -46,7 +48,8 @@ export const customerController = new Elysia({ prefix: "/customer" })
   )
   .put(
     "/:id",
-    ({ params, user, db }) => customerService.update(params.id, { db, user }),
+    ({ params, body, user, db, getScopeObj }) =>
+      customerService.update(params.id, body, { db, user, getScopeObj }),
     {
       params: t.Object({ id: t.String() }),
       body: CustomerContract.Update,
@@ -60,7 +63,8 @@ export const customerController = new Elysia({ prefix: "/customer" })
   )
   .delete(
     "/:id",
-    ({ params, user, db }) => customerService.delete(params.id, { db, user }),
+    ({ params, user, db, getScopeObj }) =>
+      customerService.delete(params.id, { db, user, getScopeObj }),
     {
       params: t.Object({ id: t.String() }),
       allPermissions: ["CUSTOMER:DELETE"],

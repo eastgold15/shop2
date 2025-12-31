@@ -4,7 +4,6 @@ import { HttpError } from "elysia-http-problem-json";
 import { type ServiceContext } from "../lib/type";
 
 export class AdService {
-
   public async create(body: AdContract["Create"], ctx: ServiceContext) {
     const insertData = {
       ...body,
@@ -31,12 +30,11 @@ export class AdService {
         ...(isActive !== undefined && isActive !== null ? { isActive } : {}),
       },
       with: {
-        media: true
-      }
-    })
-    return res
+        media: true,
+      },
+    });
+    return res;
   }
-
 
   public async update(
     id: string,
@@ -44,7 +42,10 @@ export class AdService {
     ctx: ServiceContext
   ) {
     const updateData = {
-      ...body, startDate: new Date(body.startDate || ""), endDate: new Date(body.endDate || ""), updatedAt: new Date()
+      ...body,
+      startDate: new Date(body.startDate || ""),
+      endDate: new Date(body.endDate || ""),
+      updatedAt: new Date(),
     };
     const [res] = await ctx.db
       .update(adTable)

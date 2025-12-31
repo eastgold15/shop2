@@ -69,4 +69,3 @@ export const InquiryContract = {
 } as const;
 
 export type InquiryContract = InferDTO<typeof InquiryContract>;
-

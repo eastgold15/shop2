@@ -4,7 +4,6 @@ import { HttpError } from "elysia-http-problem-json";
 import { type ServiceContext } from "../lib/type";
 
 export class HeroCardService {
-
   public async create(body: HeroCardContract["Create"], ctx: ServiceContext) {
     const insertData = {
       ...body,
@@ -19,31 +18,35 @@ export class HeroCardService {
     return res;
   }
 
-  public async findAll(query: HeroCardContract["ListQuery"], ctx: ServiceContext) {
+  public async findAll(
+    query: HeroCardContract["ListQuery"],
+    ctx: ServiceContext
+  ) {
     const { search } = query;
-    const scopeObj = ctx.getScopeObj();
+    const scopeObj = await ctx.getScopeObj();
     const res = await ctx.db.query.heroCardTable.findMany({
       where: {
         deptId: scopeObj.deptId,
         tenantId: scopeObj.tenantId,
-        ...(search ? {
-          OR: [
-            { title: { ilike: `%${search}%` } },
-            { description: { ilike: `%${search}%` } },
-          ],
-        } : {}),
+        ...(search
+          ? {
+              OR: [
+                { title: { ilike: `%${search}%` } },
+                { description: { ilike: `%${search}%` } },
+              ],
+            }
+          : {}),
       },
       with: {
-        media: true
+        media: true,
       },
       orderBy: {
-        sortOrder: 'asc',
-        createdAt: 'desc',
-      }
+        sortOrder: "asc",
+        createdAt: "desc",
+      },
     });
     return res;
   }
-
 
   public async update(
     id: string,

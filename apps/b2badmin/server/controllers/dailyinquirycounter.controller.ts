@@ -22,8 +22,8 @@ export const dailyinquirycounterController = new Elysia({
   .use(authGuardMid)
   .get(
     "/",
-    ({ query, user, db }) =>
-      dailyinquirycounterService.findAll(query, { db, user }),
+    ({ query, user, db, getScopeObj }) =>
+      dailyinquirycounterService.findAll(query, { db, user, getScopeObj }),
     {
       allPermissions: ["DAILYINQUIRYCOUNTER:VIEW"],
       query: DailyInquiryCounterContract.ListQuery,
@@ -36,8 +36,8 @@ export const dailyinquirycounterController = new Elysia({
   )
   .post(
     "/",
-    ({ body, user, db }) =>
-      dailyinquirycounterService.create(body, { db, user }),
+    ({ body, user, db, getScopeObj }) =>
+      dailyinquirycounterService.create(body, { db, user, getScopeObj }),
     {
       allPermissions: ["DAILYINQUIRYCOUNTER:CREATE"],
       body: DailyInquiryCounterContract.Create,
@@ -50,8 +50,12 @@ export const dailyinquirycounterController = new Elysia({
   )
   .put(
     "/:id",
-    ({ params, user, db }) =>
-      dailyinquirycounterService.update(params.id, { db, user }),
+    ({ params, body, user, db, getScopeObj }) =>
+      dailyinquirycounterService.update(params.id, body, {
+        db,
+        user,
+        getScopeObj,
+      }),
     {
       params: t.Object({ id: t.String() }),
       body: DailyInquiryCounterContract.Update,
@@ -65,8 +69,8 @@ export const dailyinquirycounterController = new Elysia({
   )
   .delete(
     "/:id",
-    ({ params, user, db }) =>
-      dailyinquirycounterService.delete(params.id, { db, user }),
+    ({ params, user, db, getScopeObj }) =>
+      dailyinquirycounterService.delete(params.id, { db, user, getScopeObj }),
     {
       params: t.Object({ id: t.String() }),
       allPermissions: ["DAILYINQUIRYCOUNTER:DELETE"],

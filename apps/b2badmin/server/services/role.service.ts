@@ -3,7 +3,6 @@ import { eq } from "drizzle-orm";
 import { type ServiceContext } from "../lib/type";
 
 export class RoleService {
-
   public async create(body: RoleContract["Create"], ctx: ServiceContext) {
     const insertData = {
       ...body,
@@ -11,13 +10,9 @@ export class RoleService {
       ...(ctx.user?.tenantId ? { tenantId: ctx.user.tenantId } : {}),
       ...(ctx.user?.id ? { createdBy: ctx.user.id } : {}),
     };
-    const [res] = await ctx.db
-      .insert(roleTable)
-      .values(insertData)
-      .returning();
+    const [res] = await ctx.db.insert(roleTable).values(insertData).returning();
     return res;
   }
-
 
   public async findAll(query: RoleContract["ListQuery"], ctx: ServiceContext) {
     const { search } = query;

@@ -22,7 +22,8 @@ export const mastercategoryController = new Elysia({
   .use(authGuardMid)
   .get(
     "/",
-    ({ query, user, db }) => mastercategoryService.findAll(query, { db, user }),
+    ({ query, user, db, getScopeObj }) =>
+      mastercategoryService.findAll(query, { db, user, getScopeObj }),
     {
       allPermissions: ["MASTERCATEGORY:VIEW"],
       query: MasterCategoryContract.ListQuery,
@@ -35,7 +36,8 @@ export const mastercategoryController = new Elysia({
   )
   .post(
     "/",
-    ({ body, user, db }) => mastercategoryService.create(body, { db, user }),
+    ({ body, user, db, getScopeObj }) =>
+      mastercategoryService.create(body, { db, user, getScopeObj }),
     {
       allPermissions: ["MASTERCATEGORY:CREATE"],
       body: MasterCategoryContract.Create,
@@ -48,8 +50,8 @@ export const mastercategoryController = new Elysia({
   )
   .put(
     "/:id",
-    ({ params, user, db }) =>
-      mastercategoryService.update(params.id, { db, user }),
+    ({ params, body, user, db, getScopeObj }) =>
+      mastercategoryService.update(params.id, body, { db, user, getScopeObj }),
     {
       params: t.Object({ id: t.String() }),
       body: MasterCategoryContract.Update,
@@ -63,8 +65,8 @@ export const mastercategoryController = new Elysia({
   )
   .delete(
     "/:id",
-    ({ params, user, db }) =>
-      mastercategoryService.delete(params.id, { db, user }),
+    ({ params, user, db, getScopeObj }) =>
+      mastercategoryService.delete(params.id, { db, user, getScopeObj }),
     {
       params: t.Object({ id: t.String() }),
       allPermissions: ["MASTERCATEGORY:DELETE"],

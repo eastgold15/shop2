@@ -6,7 +6,6 @@
  */
 import type { Elysia } from "elysia";
 
-import { accountController } from "./account.controller";
 import { adController } from "./ad.controller";
 import { customerController } from "./customer.controller";
 import { dailyinquirycounterController } from "./dailyinquirycounter.controller";
@@ -14,7 +13,6 @@ import { herocardController } from "./herocard.controller";
 import { inquiryController } from "./inquiry.controller";
 import { mastercategoryController } from "./mastercategory.controller";
 import { mediaController } from "./media.controller";
-import { mediametadataController } from "./mediametadata.controller";
 import { productController } from "./product.controller";
 import { quotationController } from "./quotation.controller";
 import { roleController } from "./role.controller";
@@ -33,7 +31,6 @@ import { userroleController } from "./userrole.controller";
 
 export const appRouter = (app: Elysia) =>
   app
-    .use(accountController)
     .use(adController)
     .use(customerController)
     .use(dailyinquirycounterController)
@@ -41,7 +38,6 @@ export const appRouter = (app: Elysia) =>
     .use(inquiryController)
     .use(mastercategoryController)
     .use(mediaController)
-    .use(mediametadataController)
     .use(productController)
     .use(quotationController)
     .use(roleController)

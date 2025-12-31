@@ -1,5 +1,5 @@
 import { t } from "elysia";
-import { SortParams } from "../helper/query-types.model";
+import { PaginationParams, SortParams } from "../helper/query-types.model";
 import { type InferDTO, spread } from "../helper/utils";
 import { skuTable } from "../table.schema";
 
@@ -62,6 +62,8 @@ export const SkuContract = {
   }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   ListQuery: t.Object({
+    ...t.Partial(t.Object(SkuInsertFields)).properties,
+    ...PaginationParams.properties,
     ...SortParams.properties,
     search: t.Optional(t.String()),
   }),
