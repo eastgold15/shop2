@@ -7,13 +7,13 @@ export const env = createEnv({
    * 使用 z.coerce 将 process.env 的字符串自动转换为数字或布尔值。
    */
   server: {
+    SERVERPORT: z.coerce.number().min(1).max(65_535).default(5000),
     PORT: z.coerce.number().min(1).max(65_535).default(3000),
     // 必填项
     DATABASE_URL: z.string().min(1, "DATABASE_URL 是必需的"),
     BETTER_AUTH_SECRET: z.string().min(1, "BETTER_AUTH_SECRET 是必需的"),
 
     BETTER_AUTH_BASE_URL: z.url("BETTER_AUTH_BASE_URL 必须是有效的 URL"),
-
     GITHUB_CLIENT_ID: z.string().min(1, "GITHUB_CLIENT_ID 是必需的"),
     GITHUB_CLIENT_SECRET: z.string().min(1, "GITHUB_CLIENT_SECRET 是必需的"),
 
@@ -52,6 +52,7 @@ export const env = createEnv({
    * 注意：在这里直接传 process.env.XXX，Zod 的 coerce 会帮你转换类型。
    */
   runtimeEnv: {
+    SERVERPORT: process.env.SERVERPORT,
     PORT: process.env.PORT,
     DATABASE_URL: process.env.DATABASE_URL,
 

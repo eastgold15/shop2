@@ -170,7 +170,7 @@ function AdsDialog({
 
   return (
     <Dialog onOpenChange={onClose} open={isOpen}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{isEdit ? "编辑广告" : "创建广告"}</DialogTitle>
         </DialogHeader>

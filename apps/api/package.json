@@ -1,0 +1,30 @@
+{
+  "name": "elysia",
+  "version": "1.0.50",
+  "scripts": {
+    "dev": "bun run --watch src/server.ts",
+    "build": " bun run  build",
+    "start": "NODE_ENV=production bun run src/server.ts",
+    "check": "npx ultracite check",
+    "fix": "npx ultracite fix",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@elysiajs/cors": "^1.4.1",
+    "@elysiajs/openapi": "^1.4.13",
+    "@repo/contract": "*",
+    "better-auth": "^1.4.9",
+    "chalk": "^5.6.2",
+    "drizzle-orm": "catalog:",
+    "elysia": "latest",
+    "elysia-http-problem-json": "^0.1.4",
+    "env-var": "^7.5.0",
+    "logixlysia": "^6.0.1",
+    "nodemailer": "^7.0.12"
+  },
+  "devDependencies": {
+    "@types/nodemailer": "^7.0.4",
+    "bun-types": "latest"
+  },
+  "module": "src/index.js"
+}

@@ -9,8 +9,7 @@
     "start": "NODE_ENV=production bun --bun next start",
     "check": "npx ultracite check",
     "fix": "npx ultracite fix",
-    "type-check": "tsc --noEmit",
-    "codegen": "bun run codegen.ts"
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@alicloud/alimt20181012": "1.4.1",

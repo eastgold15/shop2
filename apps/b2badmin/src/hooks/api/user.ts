@@ -1,6 +1,6 @@
 "use client";
 import type { Treaty } from "@elysiajs/eden";
-import type { UsersContract } from "@repo/contract";
+import type { UserContract } from "@repo/contract";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { rpc } from "@/lib/rpc";
@@ -10,7 +10,7 @@ export function useMe(options?: { siteId?: string; enabled?: boolean }) {
   return useQuery({
     queryKey: ["user", "me", options?.siteId],
     queryFn: async () => {
-      return await handleEden(rpc.api.v1.users.me.get()); // 只返回数据
+      return await handleEden(rpc.api.v1.user.me.get()); // 只返回数据
     },
     staleTime: 1000 * 60 * 5,
     retry: false,
@@ -18,12 +18,12 @@ export function useMe(options?: { siteId?: string; enabled?: boolean }) {
   });
 }
 
-export type UserMeRes = Treaty.Data<typeof rpc.api.v1.users.me.get>;
+export type UserMeRes = Treaty.Data<typeof rpc.api.v1.user.me.get>;
 
 export function useCreateUser() {
   return useMutation({
-    mutationFn: async (data: Parameters<typeof rpc.api.v1.users.post>[0]) =>
-      await handleEden(rpc.api.v1.users.post(data)),
+    mutationFn: async (data: Parameters<typeof rpc.api.v1.user.post>[0]) =>
+      await handleEden(rpc.api.v1.user.post(data)),
     onSuccess: () => {
       toast.success("用户代表创建成功");
     },
@@ -34,14 +34,14 @@ export function useCreateUser() {
 }
 
 // 获取可管理的用户列表
-export function useManageableUsers(
-  query?: typeof UsersContract.ListQuery.static
+export function useManageableUser(
+  query?: typeof UserContract.ListQuery.static
 ) {
   return useQuery({
-    queryKey: ["user-management", "users", query],
+    queryKey: ["user-management", "user", query],
     queryFn: async () =>
       await handleEden(
-        rpc.api.v1.users.get({
+        rpc.api.v1.user.get({
           query,
         })
       ),
@@ -50,7 +50,7 @@ export function useManageableUsers(
 }
 
 // 更新用户状态
-export function useUpdateUserStatus() {
+export function useUpdateUsertatus() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -62,7 +62,7 @@ export function useUpdateUserStatus() {
       isActive: boolean;
     }) =>
       await handleEden(
-        rpc.api.v1.users({ id: userId }).put({
+        rpc.api.v1.user({ id: userId }).put({
           isActive,
         })
       ),
@@ -88,7 +88,7 @@ export function useUpdateProfile() {
       city?: string;
     }) =>
       await handleEden(
-        rpc.api.v1.users.me.profile.put({
+        rpc.api.v1.user.profile.put({
           name: data.name,
           phone: data.phone,
           address: data.address,
@@ -119,7 +119,7 @@ export function useUpdateSiteInfo() {
       companyAddress?: string;
       website?: string;
       contactPhone?: string;
-    }) => await handleEden(rpc.api.v1.users.me.site.put(data)),
+    }) => await handleEden(rpc.api.v1.user.site.put(data)),
     onSuccess: () => {
       toast.success("站点和公司信息更新成功");
       queryClient.invalidateQueries({ queryKey: ["user", "me"] });
@@ -135,7 +135,7 @@ export function useUpdateSiteInfo() {
 export function useAccountSettings() {
   return useQuery({
     queryKey: ["user", "settings"],
-    queryFn: async () => await handleEden(rpc.api.v1.users.me.settings.get()),
+    queryFn: async () => await handleEden(rpc.api.v1.user.settings.get()),
     staleTime: 1000 * 60 * 5,
   });
 }
