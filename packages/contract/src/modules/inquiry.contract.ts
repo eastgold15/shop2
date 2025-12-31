@@ -19,7 +19,7 @@ export const InquiryContract = {
         "id",
         "createdAt",
         "updatedAt",
-        "inquiryNumber",
+        "inquiryNum",
       ]).properties
     ),
     t.Object({

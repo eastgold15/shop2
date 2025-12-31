@@ -9,7 +9,7 @@ export class CustomerService {
       ...body,
       // 自动注入租户信息
       ...(ctx.user
-        ? { tenantId: ctx.user.tenantId, createdBy: ctx.user.id }
+        ? { tenantId: ctx.user.tenantId!, createdBy: ctx.user.id }
         : {}),
     };
     const [res] = await ctx.db

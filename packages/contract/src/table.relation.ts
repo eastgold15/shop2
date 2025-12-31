@@ -123,6 +123,7 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.siteTable.id,
       to: r.siteProductTable.siteId,
     }),
+    // 询盘来自该站点
     inquiries: r.many.inquiryTable({
       from: r.siteTable.id,
       to: r.inquiryTable.siteId,
@@ -269,7 +270,7 @@ export const relations = defineRelations(schema, (r) => ({
     // SKU 关联到业务单据
     inquiries: r.many.inquiryTable({
       from: r.skuTable.id,
-      to: r.inquiryTable.skuId,
+      to: r.inquiryTable.siteId,
     }),
     quotation: r.many.quotationTable({
       from: r.skuTable.id,

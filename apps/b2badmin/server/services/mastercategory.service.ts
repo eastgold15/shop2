@@ -2,7 +2,7 @@ import {
   type MasterCategoryContract,
   masterCategoryTable,
 } from "@repo/contract";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { type ServiceContext } from "../lib/type";
 
 export class MasterCategoryService {
@@ -15,7 +15,7 @@ export class MasterCategoryService {
       ...body,
       // 自动注入租户信息
       ...(ctx.user
-        ? { tenantId: ctx.user.tenantId, createdBy: ctx.user.id }
+        ? { tenantId: ctx.user.tenantId!, createdBy: ctx.user.id }
         : {}),
     };
     const [res] = await ctx.db
@@ -25,28 +25,22 @@ export class MasterCategoryService {
     return res;
   }
 
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+
   public async findAll(
     query: MasterCategoryContract["ListQuery"],
     ctx: ServiceContext
   ) {
-    const { limit = 10, page = 0, sort, ...filters } = query;
-    const whereConditions = [];
-    // 租户隔离
-    if (ctx.user?.tenantId)
-      whereConditions.push(eq(masterCategoryTable.tenantId, ctx.user.tenantId));
+    const data = await ctx.db.query.masterCategoryTable.findMany({
+      where: {
+        tenantId: ctx.user.tenantId!,
+        ...(query.isActive !== undefined && query.isActive !== null ? { isActive: query.isActive } : {}),
+      },
+      orderBy: {
+        createdAt: "asc",
+      }
+    })
 
-    const data = await ctx.db
-      .select()
-      .from(masterCategoryTable)
-      .where(and(...whereConditions))
-      .limit(limit)
-      .offset((page - 1) * limit);
-    const total = await ctx.db.$count(
-      masterCategoryTable,
-      and(...whereConditions)
-    );
-    return { data, total };
+    return data
   }
 
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */

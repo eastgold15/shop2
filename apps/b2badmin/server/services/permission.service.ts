@@ -1,10 +1,14 @@
-import { type RoleContract, roleTable } from "@repo/contract";
+import { type PermissionContract, permissionTable } from "@repo/contract";
 import { eq } from "drizzle-orm";
+import { db } from "~/db/connection";
 import { type ServiceContext } from "../lib/type";
 
-export class RoleService {
-
-  public async create(body: RoleContract["Create"], ctx: ServiceContext) {
+export class PermissionService {
+  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+  public async create(
+    body: PermissionContract["Create"],
+    ctx: ServiceContext
+  ) {
     const insertData = {
       ...body,
       // 自动注入租户信息
@@ -12,19 +16,20 @@ export class RoleService {
       ...(ctx.user?.id ? { createdBy: ctx.user.id } : {}),
     };
     const [res] = await ctx.db
-      .insert(roleTable)
+      .insert(permissionTable)
       .values(insertData)
       .returning();
     return res;
   }
 
 
-  public async findAll(query: RoleContract["ListQuery"], ctx: ServiceContext) {
+  public async findAll(
+    query: PermissionContract["ListQuery"],
+    ctx: ServiceContext
+  ) {
     const { search } = query;
-    const scopeObj = ctx.getScopeObj();
-    const res = await ctx.db.query.roleTable.findMany({
+    const res = await ctx.db.query.permissionTable.findMany({
       where: {
-        tenantId: scopeObj.tenantId,
         ...(search ? { name: { ilike: `%${search}%` } } : {}),
       },
     });
@@ -34,14 +39,14 @@ export class RoleService {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   public async update(
     id: string,
-    body: RoleContract["Update"],
+    body: PermissionContract["Update"],
     ctx: ServiceContext
   ) {
     const updateData = { ...body, updatedAt: new Date() };
     const [res] = await ctx.db
-      .update(roleTable)
+      .update(permissionTable)
       .set(updateData)
-      .where(eq(roleTable.id, id))
+      .where(eq(permissionTable.id, id))
       .returning();
     return res;
   }
@@ -49,9 +54,17 @@ export class RoleService {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   public async delete(id: string, ctx: ServiceContext) {
     const [res] = await ctx.db
-      .delete(roleTable)
-      .where(eq(roleTable.id, id))
+      .delete(permissionTable)
+      .where(eq(permissionTable.id, id))
       .returning();
+    return res;
+  }
+
+  /**
+   * 自定义列表查询
+   */
+  async list(ctx: ServiceContext, query: any) {
+    const res = await db.query.permissionTable.findMany();
     return res;
   }
 }

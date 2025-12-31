@@ -3,13 +3,13 @@ import { and, eq } from "drizzle-orm";
 import { type ServiceContext } from "../lib/type";
 
 export class InquiryService {
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  public async create(body: InquiryContract["Create"], ctx: ServiceContext) {
+  public async create(body: InquiryContract["Create"], inquiryNum: string, ctx: ServiceContext) {
     const insertData = {
       ...body,
+      inquiryNum,
       // 自动注入租户信息
       ...(ctx.user
-        ? { tenantId: ctx.user.tenantId, createdBy: ctx.user.id }
+        ? { tenantId: ctx.user.tenantId!, createdBy: ctx.user.id }
         : {}),
     };
     const [res] = await ctx.db

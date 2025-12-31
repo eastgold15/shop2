@@ -267,6 +267,13 @@ const generatePermissions = () => {
 const permissions = generatePermissions();
 
 // ========================================
+// 4. 租户和部门数据（提前定义，因为 masterCategories 需要使用）
+// ========================================
+
+const tenant1Id = randomUUIDv7();
+const tenant2Id = randomUUIDv7();
+
+// ========================================
 // 3. 主分类数据
 // ========================================
 
@@ -280,6 +287,7 @@ const masterCategories = [
     sortOrder: 1,
     isActive: true,
     icon: "electronics",
+    tenantId: tenant1Id, // 🔥 添加租户ID
   },
   {
     id: "095138c7-5eef-476c-ac66-38f86d4697bb",
@@ -290,6 +298,7 @@ const masterCategories = [
     sortOrder: 6,
     isActive: true,
     icon: "clothing",
+    tenantId: tenant1Id, // 🔥 添加租户ID
   },
   {
     id: "019b1bd7-8d03-701e-8722-e6956b408ff7",
@@ -300,6 +309,7 @@ const masterCategories = [
     sortOrder: 3,
     isActive: true,
     icon: "home",
+    tenantId: tenant1Id, // 🔥 添加租户ID
   },
   {
     id: "019b1bd7-8d03-701d-bdc5-fdd947ca7202",
@@ -310,6 +320,7 @@ const masterCategories = [
     sortOrder: 2,
     isActive: true,
     icon: "clothing",
+    tenantId: tenant1Id, // 🔥 添加租户ID
   },
   {
     id: "019b1bd7-8d03-701f-ac04-80e22fe95368",
@@ -320,6 +331,7 @@ const masterCategories = [
     sortOrder: 4,
     isActive: true,
     icon: "sports",
+    tenantId: tenant1Id, // 🔥 添加租户ID
   },
   {
     id: "019b1bd7-8d03-7020-b2a7-38f19eeb860f",
@@ -330,15 +342,9 @@ const masterCategories = [
     sortOrder: 5,
     isActive: true,
     icon: "food",
+    tenantId: tenant1Id, // 🔥 添加租户ID
   },
 ];
-
-// ========================================
-// 4. 租户和部门数据
-// ========================================
-
-const tenant1Id = randomUUIDv7();
-const tenant2Id = randomUUIDv7();
 
 const tenants = [
   {
@@ -907,7 +913,6 @@ const heroCardsMedia = [
     deptId: dept1HeadquartersId,
     createdBy: user2Id,
     isPublic: true,
-    siteId: site1Id,
   },
 ];
 
@@ -995,7 +1000,7 @@ const inquiry1Id = randomUUIDv7();
 const inquiries = [
   {
     id: inquiry1Id,
-    inquiryNumber: "INQ-2024-001",
+    inquiryNum: "INQ-2024-001",
     customerName: "John Smith",
     customerCompany: "美国ABC公司",
     customerEmail: "info@abc-usa.com",
@@ -1011,7 +1016,9 @@ const inquiries = [
     customerRequirements: "需要定制包装，印客户logo",
     tenantId: tenant1Id,
     deptId: dept1Factory1Id,
+    siteId: site1Id,
     createdBy: user4Id,
+    isPublic: false,
   },
 ];
 
@@ -1037,7 +1044,9 @@ const quotations = [
     remark: "包含定制包装费用",
     tenantId: tenant1Id,
     deptId: dept1Factory1Id,
+    siteId: site1Id,
     createdBy: user3Id,
+    isPublic: false,
   },
 ];
 

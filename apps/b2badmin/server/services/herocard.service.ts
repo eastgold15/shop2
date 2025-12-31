@@ -1,16 +1,16 @@
 import { type HeroCardContract, heroCardTable } from "@repo/contract";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
+import { HttpError } from "elysia-http-problem-json";
 import { type ServiceContext } from "../lib/type";
 
 export class HeroCardService {
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+
   public async create(body: HeroCardContract["Create"], ctx: ServiceContext) {
     const insertData = {
       ...body,
       // 自动注入租户信息
-      ...(ctx.user
-        ? { tenantId: ctx.user.tenantId, createdBy: ctx.user.id }
-        : {}),
+      ...(ctx.user?.tenantId ? { tenantId: ctx.user.tenantId } : {}),
+      ...(ctx.user?.id ? { createdBy: ctx.user.id } : {}),
     };
     const [res] = await ctx.db
       .insert(heroCardTable)
@@ -19,28 +19,32 @@ export class HeroCardService {
     return res;
   }
 
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  public async findAll(
-    query: HeroCardContract["ListQuery"],
-    ctx: ServiceContext
-  ) {
-    const { limit = 10, page = 0, sort, ...filters } = query;
-    const whereConditions = [];
-    // 租户隔离
-    if (ctx.user?.tenantId)
-      whereConditions.push(eq(heroCardTable.tenantId, ctx.user.tenantId));
-
-    const data = await ctx.db
-      .select()
-      .from(heroCardTable)
-      .where(and(...whereConditions))
-      .limit(limit)
-      .offset((page - 1) * limit);
-    const total = await ctx.db.$count(heroCardTable, and(...whereConditions));
-    return { data, total };
+  public async findAll(query: HeroCardContract["ListQuery"], ctx: ServiceContext) {
+    const { search } = query;
+    const scopeObj = ctx.getScopeObj();
+    const res = await ctx.db.query.heroCardTable.findMany({
+      where: {
+        deptId: scopeObj.deptId,
+        tenantId: scopeObj.tenantId,
+        ...(search ? {
+          OR: [
+            { title: { ilike: `%${search}%` } },
+            { description: { ilike: `%${search}%` } },
+          ],
+        } : {}),
+      },
+      with: {
+        media: true
+      },
+      orderBy: {
+        sortOrder: 'asc',
+        createdAt: 'desc',
+      }
+    });
+    return res;
   }
 
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+
   public async update(
     id: string,
     body: HeroCardContract["Update"],
@@ -55,12 +59,72 @@ export class HeroCardService {
     return res;
   }
 
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   public async delete(id: string, ctx: ServiceContext) {
     const [res] = await ctx.db
       .delete(heroCardTable)
       .where(eq(heroCardTable.id, id))
       .returning();
     return res;
+  }
+
+  /**
+   * 创建 Hero Card
+   */
+  async createHeroCard(data: any, mediaId: string | null, ctx: ServiceContext) {
+    return await this.create(
+      {
+        ...data,
+        mediaId,
+        sortOrder: data.sortOrder ?? 0,
+        isActive: data.isActive ?? true,
+        backgroundClass: data.backgroundClass ?? "bg-blue-50",
+      },
+      ctx
+    );
+  }
+
+  /**
+   * 更新排序
+   */
+  async updateSortOrder(
+    items: Array<{ id: string; sortOrder: number }>,
+    ctx: ServiceContext
+  ) {
+    await ctx.db.transaction(async (tx) => {
+      for (const item of items) {
+        await tx
+          .update(heroCardTable)
+          .set({ sortOrder: item.sortOrder })
+          .where(eq(heroCardTable.id, item.id));
+      }
+    });
+
+    return { success: true };
+  }
+
+  /**
+   * 切换状态
+   */
+  async toggleStatus(id: string, ctx: ServiceContext) {
+    const scopeObj = ctx.getScopeObj();
+    const card = await ctx.db.query.heroCardTable.findFirst({
+      where: {
+        id,
+        deptId: scopeObj.deptId,
+        tenantId: scopeObj.tenantId,
+      },
+    });
+    if (!card) throw new HttpError.NotFound("记录不存在");
+    const [updated] = await ctx.db
+      .update(heroCardTable)
+      .set({ isActive: !card.isActive })
+      .where(eq(heroCardTable.id, id))
+      .returning();
+
+    return {
+      id: updated.id,
+      isActive: updated.isActive,
+      message: updated.isActive ? "已激活" : "已停用",
+    };
   }
 }

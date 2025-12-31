@@ -179,24 +179,57 @@ export const userRoleTable = p.pgTable(
   (t) => [p.primaryKey({ columns: [t.userId, t.roleId] })]
 );
 
-// --- 4. Tenant Helper (租户字段助手 - 核心修改) ---
-// 这个对象将被 spread 到所有业务表中
-export const tenantCols = {
-  // 1. 硬隔离：属于哪个租户
+// --- 4. Tenant Helper (租户字段助手 - 重构版) ---
+// 将原 tenantCols 拆分为三个独立对象，按需取用
+
+/**
+ * 标准版（给 Product, SKU, MasterCategory, Customer 等核心业务表用）
+ * 只包含物理归属，不包含 siteId，确保资产可以在多个站点间复用
+ */
+export const standardCols = {
+  // 硬隔离：属于哪个租户
   tenantId: p
     .uuid("tenant_id")
     .notNull()
     .references(() => tenantTable.id),
 
-  // 2. 软归属：数据属于哪个部门 (用于数据权限过滤)
+  // 软归属：数据属于哪个部门 (用于数据权限过滤)
   deptId: p.uuid("dept_id").references(() => departmentTable.id),
 
-  // 3. 创建人：数据是谁创建的
+  // 创建人：数据是谁创建的
   createdBy: p.uuid("created_by").references(() => userTable.id),
 
-  // 原有的辅助字段
+  // 可选：是否公开（通常指是否跨部门可见）
   isPublic: p.boolean("is_public").default(false).notNull(),
-  siteId: p.uuid("site_id").references(() => siteTable.id), // 可选：特定属于某个站点
+};
+
+/**
+ * 站点专用版（给 HeroCard, SiteCategory, Ad, SiteConfig 等网站内容表用）
+ * 继承标准版，额外强制绑定站点
+ * 这些表的数据是"网站装修"的一部分，必须属于某个特定站点
+ */
+export const siteScopedCols = {
+  ...standardCols,
+
+  // 只有这里才加 siteId，且通常为必填
+  siteId: p
+    .uuid("site_id")
+    .notNull()
+    .references(() => siteTable.id, { onDelete: "cascade" }),
+};
+
+/**
+ * 追踪专用版（给 Inquiry, Quotation 等交易/行为数据表用）
+ * 继承标准版，额外绑定站点（所有订单都来自线上站点）
+ */
+export const trackingCols = {
+  ...standardCols,
+
+  // 订单来源站点：所有订单都来自线上，所以 notNull
+  siteId: p
+    .uuid("site_id")
+    .notNull()
+    .references(() => siteTable.id, { onDelete: "cascade" }),
 };
 
 // --- 5. Business Tables (业务表 - 已应用 tenantCols) ---
@@ -270,6 +303,7 @@ export const permissionTable = p.pgTable("sys_permission", {
   name: p.text("name").notNull(),
   description: p.text("description"),
 });
+
 /**
  * @onlyGen contract
  */
@@ -301,6 +335,11 @@ export const masterCategoryTable = p.pgTable("master_category", {
   icon: p.varchar("icon", { length: 255 }).default(""),
   createdAt,
   updatedAt,
+
+  tenantId: p
+    .uuid("tenant_id")
+    .notNull()
+    .references(() => tenantTable.id),
 });
 
 export const mediaTable = p.pgTable("media", {
@@ -314,9 +353,12 @@ export const mediaTable = p.pgTable("media", {
   thumbnailUrl: p.text("thumbnail_url"),
   mediaType: mediaTypeEnum("media_type").default("image").notNull(),
 
-  ...tenantCols, // 🔥 引用新助手
+  // 媒体文件是核心资产，使用 standardCols，可在多个站点复用
+  ...standardCols,
 });
-
+/**
+ * @onlyGen contract
+ */
 export const mediaMetadataTable = p.pgTable("media_metadata", {
   id: idUuid,
   fileId: p
@@ -347,8 +389,8 @@ export const adTable = p.pgTable("advertisement", {
   startDate: p.timestamp("start_date").notNull(),
   endDate: p.timestamp("end_date").notNull(),
 
-  // 广告通常由运营创建，最好也加上 tenantCols 以便管理不同租户的广告
-  ...tenantCols,
+  // 广告是网站内容，使用 siteScopedCols，必须属于某个站点
+  ...siteScopedCols,
 });
 
 export const heroCardTable = p.pgTable("hero_card", {
@@ -366,12 +408,9 @@ export const heroCardTable = p.pgTable("hero_card", {
     .uuid("media_id")
     .references(() => mediaTable.id)
     .notNull(),
-  siteId: p
-    .uuid("site_id")
-    .notNull()
-    .references(() => siteTable.id, { onDelete: "cascade" }),
 
-  tenantId: p.uuid("tenant_id").references(() => tenantTable.id),
+  // 轮播图是网站内容，使用 siteScopedCols，必须属于某个站点
+  ...siteScopedCols,
 });
 
 export const productTable = p.pgTable("product", {
@@ -382,7 +421,8 @@ export const productTable = p.pgTable("product", {
   status: p.integer("status").notNull().default(1),
   units: p.varchar("units", { length: 20 }),
 
-  ...tenantCols, // 🔥 核心：包含 tenantId, deptId, createdBy
+  // 商品是核心资产，使用 standardCols，可在多个站点复用
+  ...standardCols,
 });
 /**
  * @onlyGen contract
@@ -522,7 +562,8 @@ export const skuTable = p.pgTable("sku", {
     .references(() => productTable.id, { onDelete: "cascade" })
     .notNull(),
 
-  ...tenantCols,
+  // SKU 是核心资产，使用 standardCols，可在多个站点复用
+  ...standardCols,
 });
 
 export const skuMediaTable = p.pgTable(
@@ -538,7 +579,11 @@ export const skuMediaTable = p.pgTable(
       .references(() => mediaTable.id, { onDelete: "restrict" }),
     isMain: p.boolean("is_main").default(false),
     sortOrder: p.integer("sort_order").default(0),
-    ...tenantCols,
+    // 关联表只需要租户隔离，不需要完整辅助对象
+    tenantId: p
+      .uuid("tenant_id")
+      .notNull()
+      .references(() => tenantTable.id),
   },
   (t) => [p.primaryKey({ columns: [t.skuId, t.mediaId] })]
 );
@@ -573,12 +618,14 @@ export const customerTable = p.pgTable("customer", {
   whatsapp: p.varchar("whatsapp", { length: 50 }),
   phone: p.varchar("phone", { length: 20 }),
   address: p.text("address"),
-  ...tenantCols,
+
+  // 客户是核心资产，使用 standardCols，可在多个站点复用
+  ...standardCols,
 });
 
 export const inquiryTable = p.pgTable("inquiry", {
   ...Audit,
-  inquiryNumber: p.varchar("inquiry_number", { length: 50 }).notNull(),
+  inquiryNum: p.varchar("inquiry_number", { length: 50 }).notNull(),
   customerName: p.varchar("customer_name", { length: 100 }),
   customerCompany: p.varchar("company_name", { length: 200 }).notNull(),
   customerEmail: p.varchar("email", { length: 255 }).notNull(),
@@ -586,7 +633,7 @@ export const inquiryTable = p.pgTable("inquiry", {
   customerWhatsapp: p.varchar("whatsapp", { length: 50 }),
   status: inquiryStatusEnum("status").default("pending").notNull(),
 
-  // 🔥 合并自 inquiryItemsTable - 每次询价只针对单个商品
+  // 询盘关联的 SKU
   skuId: p
     .uuid("sku_id")
     .notNull()
@@ -598,7 +645,8 @@ export const inquiryTable = p.pgTable("inquiry", {
   paymentMethod: p.varchar("payment_method", { length: 255 }).notNull(),
   customerRequirements: p.text("customer_requirements"),
 
-  ...tenantCols,
+  // 询盘是交易数据，使用 trackingCols，sourceSiteId 记录来源站点（可为空）
+  ...trackingCols,
 });
 
 export const quotationTable = p.pgTable("quotation", {
@@ -632,7 +680,8 @@ export const quotationTable = p.pgTable("quotation", {
   totalUsd: p.decimal("total_usd", { precision: 12, scale: 2 }).notNull(),
   remark: p.text("remark"),
 
-  ...tenantCols,
+  // 报价是交易数据，使用 trackingCols，sourceSiteId 记录来源站点（可为空）
+  ...trackingCols,
 });
 
 export const siteConfigTable = p.pgTable("site_config", {
