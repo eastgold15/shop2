@@ -2,7 +2,7 @@ import type { Project } from "ts-morph";
 
 export interface GenConfig {
   skip: boolean;
-  stages: Set<"contract" | "service" | "controller">;
+  stages: Set<"contract" | "service" | "controller" | "frontendHook">;
 }
 
 export interface GenContext {

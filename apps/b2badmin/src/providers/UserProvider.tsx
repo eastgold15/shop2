@@ -2,10 +2,10 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { type ReactNode, useEffect } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { setDeptIdGetter } from "@/hooks/api/api-client";
 import { useMe } from "@/hooks/api/me";
 import { useAuthStore } from "@/stores/auth-store";
-import { Skeleton } from "@/components/ui/skeleton";
 
 // 用户Provider组件
 export function UserProvider({ children }: { children: ReactNode }) {

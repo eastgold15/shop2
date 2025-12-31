@@ -2,7 +2,6 @@
 
 import { Label } from "@radix-ui/react-label";
 import { Switch } from "@radix-ui/react-switch";
-import type { MasterCategoryTree } from "@/hooks/api/mastercategory";
 import {
   ChevronDown,
   ChevronRight,
@@ -34,6 +33,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import type { MasterCategoryTree } from "@/hooks/api/mastercategory";
 import {
   useBatchDeleteMasterCategories,
   useDeleteMasterCategory,

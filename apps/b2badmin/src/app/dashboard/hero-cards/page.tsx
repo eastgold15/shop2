@@ -1,7 +1,5 @@
 "use client";
 
-import type { HeroCardContract } from "@repo/contract";
-import type { HeroCardResponse } from "@/hooks/api/herocard";
 import { Edit, GripVertical, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
@@ -41,6 +39,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import type { HeroCardResponse } from "@/hooks/api/herocard";
 import {
   useHeroCardsCreate,
   useHeroCardsDelete,

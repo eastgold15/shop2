@@ -11,8 +11,8 @@ export * from "./factory"; // 工厂
 export * from "./herocard"; // 首页卡片
 export * from "./inquiry"; // 询价
 export * from "./mastercategory"; // 主分类
-export * from "./media"; // 媒体
 export * from "./me"; // 当前用户
+export * from "./media"; // 媒体
 export * from "./mediametadata"; // 媒体元数据
 export * from "./permission"; // 权限
 export * from "./product"; // 产品

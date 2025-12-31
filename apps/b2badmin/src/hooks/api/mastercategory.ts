@@ -82,10 +82,10 @@ export function useMasterCategories(
   return useQuery({
     queryKey: ["master-categories", "flat", query],
     queryFn: async () => {
-      const categories = await api.get<any, Partial<typeof MasterCategoryContract.ListQuery.static>>(
-        "/api/v1/master",
-        { params: query || {} }
-      );
+      const categories = await api.get<
+        any,
+        Partial<typeof MasterCategoryContract.ListQuery.static>
+      >("/api/v1/master", { params: query || {} });
       return categories || [];
     },
     staleTime: 1000 * 60 * 5,

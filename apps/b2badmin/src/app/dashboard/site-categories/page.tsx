@@ -1,6 +1,5 @@
 "use client";
 
-import type { SiteCategoryTree } from "@/hooks/api/sitecategory";
 import { ChevronDown, ChevronRight, Edit, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -24,6 +23,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import type { SiteCategoryTree } from "@/hooks/api/sitecategory";
 import {
   useDeleteSiteCategory,
   useSiteCategoriesTree,

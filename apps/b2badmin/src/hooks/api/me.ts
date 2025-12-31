@@ -63,9 +63,8 @@ export interface MeResponse {
 export function useMe(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ["user", "me"],
-    queryFn: async (): Promise<MeResponse> => {
-      return await api.get<MeResponse>("/api/v1/user/me");
-    },
+    queryFn: async (): Promise<MeResponse> =>
+      await api.get<MeResponse>("/api/v1/user/me"),
     staleTime: 1000 * 60 * 5, // 5 分钟
     retry: false,
     enabled: options?.enabled ?? true,

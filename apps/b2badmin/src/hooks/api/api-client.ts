@@ -93,6 +93,9 @@ export const api = {
   ) => request<TRes, TBody>(url, { ...opts, method: "DELETE", body }),
 
   // PATCH: 支持 body（用于部分更新）
-  patch: <TRes, TBody>(url: string, body: TBody, opts?: RequestOptions<TBody>) =>
-    request<TRes, TBody>(url, { ...opts, method: "PATCH", body }),
+  patch: <TRes, TBody>(
+    url: string,
+    body: TBody,
+    opts?: RequestOptions<TBody>
+  ) => request<TRes, TBody>(url, { ...opts, method: "PATCH", body }),
 };

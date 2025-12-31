@@ -140,7 +140,10 @@ export function useHeroCardUpdateSort() {
 
   return useMutation({
     mutationFn: (items: Array<{ id: string; sortOrder: number }>) =>
-      api.patch<any, { items: Array<{ id: string; sortOrder: number }> }>("/api/v1/herocards/sort", { items }),
+      api.patch<any, { items: Array<{ id: string; sortOrder: number }> }>(
+        "/api/v1/herocards/sort",
+        { items }
+      ),
     onSuccess: () => {
       toast.success("排序更新成功");
       queryClient.invalidateQueries({ queryKey: herocardKeys.lists() });
@@ -159,7 +162,8 @@ export function useHeroCardToggleStatus() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => api.patch<any, {}>(`/api/v1/herocards/${id}/toggle`, {}),
+    mutationFn: (id: string) =>
+      api.patch<any, {}>(`/api/v1/herocards/${id}/toggle`, {}),
     onSuccess: () => {
       toast.success("状态更新成功");
       queryClient.invalidateQueries({ queryKey: herocardKeys.lists() });

@@ -28,7 +28,9 @@ export function useSiteCategoriesTree(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ["site-categories", "tree"],
     queryFn: async () => {
-      const data = await api.get<SiteCategoryTree[]>("/api/v1/sitecategories/tree");
+      const data = await api.get<SiteCategoryTree[]>(
+        "/api/v1/sitecategories/tree"
+      );
       return data || [];
     },
     staleTime: 1000 * 60 * 5,
@@ -41,7 +43,9 @@ export function useSiteCategories(query?: Record<string, any>) {
   return useQuery({
     queryKey: ["site-categories", "flat", query],
     queryFn: async () => {
-      const categories = await api.get<any>("/api/v1/sitecategories", { params: query || {} });
+      const categories = await api.get<any>("/api/v1/sitecategories", {
+        params: query || {},
+      });
       return categories?.data || [];
     },
     staleTime: 1000 * 60 * 5,
@@ -143,7 +147,9 @@ export function useSiteCategoryBatchDelete() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (ids: string[]) =>
-      api.delete<any, { ids: string[] }>("/api/v1/sitecategories/batch", { ids }),
+      api.delete<any, { ids: string[] }>("/api/v1/sitecategories/batch", {
+        ids,
+      }),
     onSuccess: () => {
       toast.success("批量删除成功");
       queryClient.invalidateQueries({ queryKey: sitecategoryKeys.lists() });
@@ -164,7 +170,10 @@ export function useMoveCategory() {
 
   return useMutation({
     mutationFn: ({ id, newParentId }: { id: string; newParentId?: string }) =>
-      api.patch<any, { newParentId?: string }>(`/api/v1/sitecategories/${id}/move`, { newParentId }),
+      api.patch<any, { newParentId?: string }>(
+        `/api/v1/sitecategories/${id}/move`,
+        { newParentId }
+      ),
     onSuccess: () => {
       toast.success("分类移动成功");
       queryClient.invalidateQueries({ queryKey: ["site-categories"] });
@@ -181,7 +190,10 @@ export function useUpdateCategoriesSort() {
 
   return useMutation({
     mutationFn: (items: Array<{ id: string; sortOrder: number }>) =>
-      api.patch<any, { items: Array<{ id: string; sortOrder: number }> }>("/api/v1/sitecategories/sort", { items }),
+      api.patch<any, { items: Array<{ id: string; sortOrder: number }> }>(
+        "/api/v1/sitecategories/sort",
+        { items }
+      ),
     onSuccess: () => {
       toast.success("排序更新成功");
       queryClient.invalidateQueries({ queryKey: ["site-categories"] });
@@ -197,7 +209,8 @@ export function useToggleCategoryStatus() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => api.patch<any, {}>(`/api/v1/sitecategories/${id}/toggle`, {}),
+    mutationFn: (id: string) =>
+      api.patch<any, {}>(`/api/v1/sitecategories/${id}/toggle`, {}),
     onSuccess: () => {
       toast.success("状态更新成功");
       queryClient.invalidateQueries({ queryKey: ["site-categories"] });
@@ -251,9 +264,7 @@ function findCategoryById(
 }
 
 // 检查分类是否有子分类
-export function hasChildren(
-  category: SiteCategoryTree
-): boolean {
+export function hasChildren(category: SiteCategoryTree): boolean {
   return !!(category.children && category.children.length > 0);
 }
 

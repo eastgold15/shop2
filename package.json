@@ -15,9 +15,6 @@
     "fix": "npx ultracite fix",
     "docker:compose": "docker compose up -d",
     "gen:ai-docs": "bun run  scripts/gen-ai-docs.ts",
-    "gen:final": "bun run packages/contract/scripts/gen-all-final.ts",
-    "postgen:final": "bun run fix",
-    "ast:Gen": "bun run scripts/gen-ast.ts",
     "pipelineGen": "bun run script/gen.ts",
     "postpipelineGen": "bun run fix"
   },

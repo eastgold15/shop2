@@ -9,6 +9,7 @@ import type { Elysia } from "elysia";
 import { adController } from "./ad.controller";
 import { customerController } from "./customer.controller";
 import { dailyinquirycounterController } from "./dailyinquirycounter.controller";
+import { departmentController } from "./department.controller";
 import { herocardController } from "./herocard.controller";
 import { inquiryController } from "./inquiry.controller";
 import { mastercategoryController } from "./mastercategory.controller";
@@ -34,6 +35,7 @@ export const appRouter = (app: Elysia) =>
     .use(adController)
     .use(customerController)
     .use(dailyinquirycounterController)
+    .use(departmentController)
     .use(herocardController)
     .use(inquiryController)
     .use(mastercategoryController)

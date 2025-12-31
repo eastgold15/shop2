@@ -70,7 +70,12 @@ interface AuthState {
   switchDept: (deptId: string) => void;
 
   /** 获取当前站点的信息（兼容旧的组件） */
-  getCurrentSite: () => { id: string; name: string; domain: string; siteType?: string } | null;
+  getCurrentSite: () => {
+    id: string;
+    name: string;
+    domain: string;
+    siteType?: string;
+  } | null;
 }
 
 export const useAuthStore = create<AuthState>()(

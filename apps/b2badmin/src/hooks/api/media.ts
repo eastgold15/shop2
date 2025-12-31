@@ -8,6 +8,7 @@
 
 import { MediaContract } from "@repo/contract";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { api } from "./api-client";
 
 // --- Query Keys ---
@@ -36,6 +37,22 @@ export function useMediaList(
 }
 
 // --- 2. 单个详情 (GET) ---
+/**
+ * @generated
+ */
+export function useDeleteMedia() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.delete<any>(`/api/v1/media/${id}`),
+    onSuccess: () => {
+      toast.success("Media删除成功");
+      queryClient.invalidateQueries({ queryKey: mediaKeys.lists() });
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "删除Media失败");
+    },
+  });
+}
 // TRes = any
 export function useMediaDetail(id: string, enabled = !!id) {
   return useQuery({

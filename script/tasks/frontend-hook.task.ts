@@ -18,12 +18,18 @@ export const FrontendHookTask: Task = {
     // 1. 检查配置：如果没有配置前端输出路径，则跳过
     if (!ctx.paths.frontendHook) return;
 
+    // 2. 检查是否应该生成 frontendHook（@onlyGen contract 会跳过）
+    if (!ctx.config.stages.has("frontendHook")) {
+      console.log("     🛡️ Skipped (@onlyGen contract): frontendHook");
+      return;
+    }
+
     // 必须要有 Contract 名称才能生成
     if (!ctx.artifacts.contractName) {
       return;
     }
 
-    // 2. 准备文件 (先移除缓存，确保读取最新)
+    // 3. 准备文件 (先移除缓存，确保读取最新)
     const existingFile = project.getSourceFile(ctx.paths.frontendHook);
     if (existingFile) {
       existingFile.forget();
@@ -188,7 +194,7 @@ export const FrontendHookTask: Task = {
 
             if (oldCode !== newCode) {
               varDecl.setInitializer(
-                hook.code.replace(/export const \w+ = /, "")
+                hook.code.replace(/export const \w+ = /, "").replace(/;$/, "")
               );
               console.log(`     🔄 Updated: ${hook.name}`);
             }
@@ -203,7 +209,9 @@ export const FrontendHookTask: Task = {
             declarations: [
               {
                 name: hook.name,
-                initializer: hook.code.replace(/export const \w+ = /, ""),
+                initializer: hook.code
+                  .replace(/export const \w+ = /, "")
+                  .replace(/;$/, ""),
               },
             ],
           });

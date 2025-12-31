@@ -28,15 +28,14 @@ export class Pipeline {
       return { skip: true, stages: new Set() };
     }
 
-    const stages = new Set<"contract" | "service" | "controller">([
-      "contract",
-      "service",
-      "controller",
-    ]);
+    const stages = new Set<
+      "contract" | "service" | "controller" | "frontendHook"
+    >(["contract", "service", "controller", "frontendHook"]);
 
     if (docText.includes("@onlyGen contract")) {
       stages.delete("service");
       stages.delete("controller");
+      stages.delete("frontendHook");
     }
 
     return { skip: false, stages };
