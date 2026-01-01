@@ -1,6 +1,7 @@
 import { t } from "elysia";
 import { type InferDTO, spread } from "../helper/utils";
 import { siteCategoryTable } from "../table.schema";
+import { PaginationParams, SortParams } from "../helper/query-types.model";
 
 /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
 export const SiteCategoryInsertFields = spread(siteCategoryTable, "insert");
@@ -16,20 +17,16 @@ const Base = t.Omit(t.Object(SiteCategoryFields), [
 export const SiteCategoryContract = {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Response: t.Object({
-    ...SiteCategoryFields,
-  }),
+                ...SiteCategoryFields
+              }),
   TreeResponse: t.Object({
     ...Base.properties,
     children: t.Optional(t.Array(t.Object(Base.properties))),
   }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Create: t.Object({
-    ...t.Omit(t.Object(SiteCategoryInsertFields), [
-      "id",
-      "createdAt",
-      "updatedAt",
-    ]).properties,
-  }),
+              ...t.Omit(t.Object(SiteCategoryInsertFields), ["id", "createdAt", "updatedAt"]).properties
+            }),
 
   Update: t.Partial(
     t.Object({

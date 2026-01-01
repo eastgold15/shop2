@@ -10,24 +10,16 @@ export const CustomerFields = spread(customerTable, "select");
 export const CustomerContract = {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Response: t.Object({
-    ...CustomerFields,
-  }),
+                ...CustomerFields
+              }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Create: t.Object({
-    ...t.Omit(t.Object(CustomerInsertFields), ["id", "createdAt", "updatedAt"])
-      .properties,
-  }),
+                ...t.Omit(t.Object(CustomerInsertFields), ["id", "createdAt", "updatedAt"]).properties
+              }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  Update: t.Partial(
-    t.Object({
-      ...t.Omit(t.Object(CustomerInsertFields), [
-        "id",
-        "createdAt",
-        "updatedAt",
-        "siteId",
-      ]).properties,
-    })
-  ),
+  Update: t.Partial(t.Object({
+              ...t.Omit(t.Object(CustomerInsertFields), ["id", "createdAt", "updatedAt", "siteId"]).properties
+            })),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   ListQuery: t.Object({
     ...t.Partial(t.Object(CustomerInsertFields)).properties,
@@ -43,3 +35,6 @@ export const CustomerContract = {
 } as const;
 
 export type CustomerContractType = InferDTO<typeof CustomerContract>;
+
+export type CustomerContract = InferDTO<typeof CustomerContract>;
+

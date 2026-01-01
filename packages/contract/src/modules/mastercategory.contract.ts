@@ -10,27 +10,16 @@ export const MasterCategoryFields = spread(masterCategoryTable, "select");
 export const MasterCategoryContract = {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Response: t.Object({
-    ...MasterCategoryFields,
-  }),
+                ...MasterCategoryFields
+              }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Create: t.Object({
-    ...t.Omit(t.Object(MasterCategoryInsertFields), [
-      "id",
-      "createdAt",
-      "updatedAt",
-    ]).properties,
-  }),
+                ...t.Omit(t.Object(MasterCategoryInsertFields), ["id", "createdAt", "updatedAt"]).properties
+              }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  Update: t.Partial(
-    t.Object({
-      ...t.Omit(t.Object(MasterCategoryInsertFields), [
-        "id",
-        "createdAt",
-        "updatedAt",
-        "siteId",
-      ]).properties,
-    })
-  ),
+  Update: t.Partial(t.Object({
+              ...t.Omit(t.Object(MasterCategoryInsertFields), ["id", "createdAt", "updatedAt", "siteId"]).properties
+            })),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   ListQuery: t.Object({
     ...t.Partial(t.Object(MasterCategoryInsertFields)).properties,

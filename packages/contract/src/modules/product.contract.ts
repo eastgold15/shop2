@@ -10,8 +10,8 @@ export const ProductFields = spread(productTable, "select");
 export const ProductContract = {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Response: t.Object({
-    ...ProductFields,
-  }),
+                ...ProductFields
+              }),
 
   Create: t.Object({
     ...t.Omit(t.Object(ProductInsertFields), ["id", "createdAt", "updatedAt"])

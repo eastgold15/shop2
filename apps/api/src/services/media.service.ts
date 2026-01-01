@@ -1,5 +1,5 @@
 import { type MediaContract, mediaTable } from "@repo/contract";
-import { and, eq, inArray, like, sql } from "drizzle-orm";
+import { and, eq, inArray, like, sql, desc } from "drizzle-orm";
 import { HttpError } from "elysia-http-problem-json";
 import { StorageFactory } from "~/lib/media/storage/StorageFactory";
 import { type ServiceContext } from "../lib/type";
@@ -7,18 +7,13 @@ import { type ServiceContext } from "../lib/type";
 export class MediaService {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   public async create(body: MediaContract["Create"], ctx: ServiceContext) {
-    const insertData = {
-      ...body,
-      // 自动注入租户信息
-      ...(ctx.user
-        ? { tenantId: ctx.user.tenantId, createdBy: ctx.user.id }
-        : {}),
-    };
-    const [res] = await ctx.db
-      .insert(mediaTable)
-      .values(insertData)
-      .returning();
-    return res;
+      const insertData = {
+              ...body,
+              // 自动注入租户信息
+              ...(ctx.user ? { tenantId: ctx.user.tenantId, createdBy: ctx.user.id } : {})
+            };
+            const [res] = await ctx.db.insert(mediaTable).values(insertData).returning();
+            return res;
   }
 
   public async findAll(query: MediaContract["ListQuery"], ctx: ServiceContext) {
@@ -34,27 +29,19 @@ export class MediaService {
   }
 
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  public async update(
-    id: string,
-    body: MediaContract["Update"],
-    ctx: ServiceContext
-  ) {
-    const updateData = { ...body, updatedAt: new Date() };
-    const [res] = await ctx.db
-      .update(mediaTable)
-      .set(updateData)
-      .where(eq(mediaTable.id, id))
-      .returning();
-    return res;
+  public async update(id: string, body: MediaContract["Update"], ctx: ServiceContext) {
+      const updateData = { ...body, updatedAt: new Date() };
+             const [res] = await ctx.db.update(mediaTable)
+               .set(updateData)
+               .where(eq(mediaTable.id, id))
+               .returning();
+             return res;
   }
 
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   public async delete(id: string, ctx: ServiceContext) {
-    const [res] = await ctx.db
-      .delete(mediaTable)
-      .where(eq(mediaTable.id, id))
-      .returning();
-    return res;
+      const [res] = await ctx.db.delete(mediaTable).where(eq(mediaTable.id, id)).returning();
+             return res;
   }
 
   /**

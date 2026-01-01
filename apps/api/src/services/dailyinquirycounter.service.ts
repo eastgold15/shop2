@@ -2,7 +2,7 @@ import {
   type DailyInquiryCounterContract,
   dailyInquiryCounterTable,
 } from "@repo/contract";
-import { eq } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { type ServiceContext } from "../lib/type";
 
 // import {
@@ -84,65 +84,46 @@ import { type ServiceContext } from "../lib/type";
 // }
 export class DailyInquiryCounterService {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  public async create(
-    body: DailyInquiryCounterContract["Create"],
-    ctx: ServiceContext
-  ) {
-    const insertData = {
-      ...body,
-      // 自动注入租户信息
-      ...(ctx.user
-        ? { tenantId: ctx.user.tenantId, createdBy: ctx.user.id }
-        : {}),
-    };
-    const [res] = await ctx.db
-      .insert(dailyInquiryCounterTable)
-      .values(insertData)
-      .returning();
-    return res;
+  public async create(body: DailyInquiryCounterContract["Create"], ctx: ServiceContext) {
+      const insertData = {
+              ...body,
+              // 自动注入租户信息
+              ...(ctx.user ? { tenantId: ctx.user.tenantId, createdBy: ctx.user.id } : {})
+            };
+            const [res] = await ctx.db.insert(dailyInquiryCounterTable).values(insertData).returning();
+            return res;
   }
 
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  public async findAll(
-    query: DailyInquiryCounterContract["ListQuery"],
-    ctx: ServiceContext
-  ) {
-    const { sort, ...filters } = query;
+  public async findAll(query: DailyInquiryCounterContract["ListQuery"], ctx: ServiceContext) {
+      const {  sort, ...filters } = query;
 
-    const res = await ctx.db.query.dailyInquiryCounterTable.findMany({
-      where: {
-        deptId: ctx.currentDeptId,
-        tenantId: ctx.user.tenantId!,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+            const res = await ctx.db.query.dailyInquiryCounterTable.findMany({
+              where: {
+                deptId: ctx.currentDeptId,
+                tenantId: ctx.user.tenantId!,
+              },
+              orderBy: {
+              createdAt: "desc",
+            },
+          })
 
-    return res;
+           return res;
   }
 
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  public async update(
-    id: string,
-    body: DailyInquiryCounterContract["Update"],
-    ctx: ServiceContext
-  ) {
-    const updateData = { ...body, updatedAt: new Date() };
-    const [res] = await ctx.db
-      .update(dailyInquiryCounterTable)
-      .set(updateData)
-      .where(eq(dailyInquiryCounterTable.id, id))
-      .returning();
-    return res;
+  public async update(id: string, body: DailyInquiryCounterContract["Update"], ctx: ServiceContext) {
+      const updateData = { ...body, updatedAt: new Date() };
+             const [res] = await ctx.db.update(dailyInquiryCounterTable)
+               .set(updateData)
+               .where(eq(dailyInquiryCounterTable.id, id))
+               .returning();
+             return res;
   }
 
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   public async delete(id: string, ctx: ServiceContext) {
-    const [res] = await ctx.db
-      .delete(dailyInquiryCounterTable)
-      .where(eq(dailyInquiryCounterTable.id, id))
-      .returning();
-    return res;
+      const [res] = await ctx.db.delete(dailyInquiryCounterTable).where(eq(dailyInquiryCounterTable.id, id)).returning();
+             return res;
   }
 }
