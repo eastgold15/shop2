@@ -1,6 +1,8 @@
 import { type UserContract, userTable } from "@repo/contract";
 import { eq } from "drizzle-orm";
 import { type ServiceContext } from "../lib/type";
+import { db } from "~/db/connection";
+import { UserDto } from "~/middleware/auth";
 
 export class UserService {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
@@ -10,7 +12,7 @@ export class UserService {
     const res = await ctx.db.query.userTable.findMany({
       where: {
         deptId: ctx.currentDeptId,
-        tenantId: ctx.user.tenantId!,
+        tenantId: ctx.user.context.tenantId!,
       },
       orderBy: {
         createdAt: "desc",
@@ -48,12 +50,10 @@ export class UserService {
    * 获取租户下所有可切换的部门/站点列表
    * 租户可以切换到其名下的任何工厂/部门
    */
-  async getSwitchableDepartments(ctx: ServiceContext) {
-    const user = ctx.user;
-
+  async getSwitchableDepartments(user: UserDto) {
     // 获取租户下的所有部门
-    const departments = await ctx.db.query.departmentTable.findMany({
-      where: { parentId: user.tenantId! },
+    const departments = await db.query.departmentTable.findMany({
+      where: { parentId: user.context.tenantId! },
       columns: {
         id: true,
         name: true,
@@ -74,10 +74,10 @@ export class UserService {
 
     return {
       current: {
-        id: user.department?.id,
-        name: user.department?.name,
-        category: user.department?.category,
-        site: user.department?.site,
+        id: user.context.department?.id,
+        name: user.context.department?.name,
+        category: user.context.department?.category,
+        site: user.context.site,
       },
       departments: departments.map((dept) => ({
         id: dept.id,
@@ -95,7 +95,7 @@ export class UserService {
       ...body,
       // 自动注入租户信息
       ...(ctx.user
-        ? { tenantId: ctx.user.tenantId, createdBy: ctx.user.id }
+        ? { tenantId: ctx.user.context.tenantId, createdBy: ctx.user.id }
         : {}),
     };
     const [res] = await ctx.db.insert(userTable).values(insertData).returning();

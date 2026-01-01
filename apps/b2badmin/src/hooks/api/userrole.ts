@@ -8,6 +8,7 @@
 
 import { UserRoleContract } from "@repo/contract";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { api } from "./api-client";
 
 // --- Query Keys ---
@@ -20,7 +21,6 @@ export const userroleKeys = {
 };
 
 // --- 1. 列表查询 (GET) ---
-// TRes = any, TQuery = typeof UserRoleContract.ListQuery.static
 export function useUserRoleList(
   params?: typeof UserRoleContract.ListQuery.static,
   enabled = true
@@ -37,7 +37,6 @@ export function useUserRoleList(
 }
 
 // --- 2. 单个详情 (GET) ---
-// TRes = any
 export function useUserRoleDetail(id: string, enabled = !!id) {
   return useQuery({
     queryKey: userroleKeys.detail(id),
@@ -47,7 +46,6 @@ export function useUserRoleDetail(id: string, enabled = !!id) {
 }
 
 // --- 3. 创建 (POST) ---
-// TRes = any, TBody = typeof UserRoleContract.Create.static
 export function useCreateUserRole() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -57,13 +55,16 @@ export function useCreateUserRole() {
         data
       ),
     onSuccess: () => {
+      toast.success("用户角色创建成功");
       queryClient.invalidateQueries({ queryKey: userroleKeys.lists() });
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "创建用户角色失败");
     },
   });
 }
 
 // --- 4. 更新 (PUT) ---
-// TRes = any, TBody = typeof UserRoleContract.Update.static
 export function useUpdateUserRole() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -79,22 +80,29 @@ export function useUpdateUserRole() {
         data
       ),
     onSuccess: (_, variables) => {
+      toast.success("用户角色更新成功");
       queryClient.invalidateQueries({ queryKey: userroleKeys.lists() });
       queryClient.invalidateQueries({
         queryKey: userroleKeys.detail(variables.id),
       });
     },
+    onError: (error: any) => {
+      toast.error(error?.message || "更新用户角色失败");
+    },
   });
 }
 
 // --- 5. 删除 (DELETE) ---
-// TRes = any
 export function useDeleteUserRole() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api.delete<any>(`/api/v1/userrole/${id}`),
     onSuccess: () => {
+      toast.success("用户角色删除成功");
       queryClient.invalidateQueries({ queryKey: userroleKeys.lists() });
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "删除用户角色失败");
     },
   });
 }

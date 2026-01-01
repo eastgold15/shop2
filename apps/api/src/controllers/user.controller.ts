@@ -21,12 +21,8 @@ export const userController = new Elysia({ prefix: "/user" })
   .use(authGuardMid)
   .get(
     "/me",
-    async ({ query, user, db, currentDeptId }) => {
-      const res = await userService.getSwitchableDepartments({
-        db,
-        user,
-        currentDeptId,
-      });
+    async ({ query, user, db, }) => {
+      const res = await userService.getSwitchableDepartments(user);
       return {
         user,
         switchableDept: res,
@@ -34,6 +30,7 @@ export const userController = new Elysia({ prefix: "/user" })
     },
 
     {
+      requireDept: false,
       detail: {
         summary: "获取当前用户信息",
         description:
@@ -42,12 +39,14 @@ export const userController = new Elysia({ prefix: "/user" })
       },
     }
   )
+
   .get(
     "/",
     ({ query, user, db, currentDeptId }) =>
       userService.findAll(query, { db, user, currentDeptId }),
     {
       allPermissions: ["USER:VIEW"],
+      requireDept: true,
       query: UserContract.ListQuery,
       detail: {
         summary: "获取User列表",

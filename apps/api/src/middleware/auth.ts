@@ -3,77 +3,89 @@ import { HttpError } from "elysia-http-problem-json";
 import { dbPlugin } from "~/db/connection";
 import { auth } from "~/lib/auth";
 import { DBtype } from "~/lib/type";
+// 系统没有超管，每个用户登录之后，一定有租户ID、工厂ID等信息，用户信息及部门id 都放在上下文中// 请求头名称
 
-// 系统没有超管，每个用户登录之后，一定有租户ID、工厂ID等信息，用户信息及部门id 都放在上下文中
 // 请求头名称：用于指定当前操作的部门ID
 const CURRENT_DEPT_HEADER = "x-current-dept-id";
-// 导出最终的 user 类型（排除 null）
+
 export const authGuardMid = new Elysia({ name: "authGuard" })
   .use(dbPlugin)
+  // 1. 基础鉴权：获取 User 和 Permissions (这部分是全局必须的)
   .derive(async ({ request, db }) => {
-    // 1. 验证 Session
     const headers = request.headers;
     const session = await auth.api.getSession({ headers });
+
     if (!session) throw new HttpError.Unauthorized("未登录");
-    // 2. fetch user（包含部门信息和父部门ID）
+
     const userRolePermission = await getUserWithRoles(session.user.id, db);
-    const permissions = [
-      ...new Set(
-        userRolePermission.roles
-          .flatMap((role) =>
-            role.permissions.map((permission) => permission.name)
-          )
-          .filter(Boolean)
-      ),
-    ];
+
+
+
     return {
       user: userRolePermission,
-      permissions,
     };
   })
-  .derive(async ({ user, db, request }) => {
-    // 3. 从请求头获取 currentDeptId 并验证
-    const currentDeptIdHeader = request.headers.get(CURRENT_DEPT_HEADER);
-    let currentDeptId: string | null = null;
-    if (!currentDeptIdHeader) {
-      throw new HttpError.BadRequest("应该先登录");
-    }
-    // 验证指定的部门是否属于该用户的租户
-    const targetDept = await db.query.departmentTable.findFirst({
-      where: {
-        id: currentDeptIdHeader,
-      },
-      columns: { id: true, tenantId: true },
-    });
-    if (!targetDept) {
-      throw new HttpError.BadRequest("指定的部门不存在");
-    }
-    if (targetDept.tenantId !== user.tenantId) {
-      throw new HttpError.Forbidden("无权访问该部门");
-    }
-    currentDeptId = currentDeptIdHeader;
-    return {
-      currentDeptId,
-    };
-  })
+  // 2. 定义宏
   .macro({
+    /**
+     * 权限校验宏
+     * 用法: { allPermissions: ['USER:READ'] }
+     */
     allPermissions: (names: string[]) => ({
-      beforeHandle({ permissions, status }) {
-        if (!permissions) {
+      beforeHandle({ user, status }) {
+        if (!user) throw new HttpError.Forbidden("您没有任何权限");
+        if (!user.permissions) {
           throw new HttpError.Forbidden("您没有任何权限");
         }
         for (const n of names) {
-          if (!(permissions.includes(n) || permissions.includes("*"))) {
+          if (!(user.permissions.includes(n) || user.permissions.includes("*"))) {
             return status(403, `权限不足，需要 ${n} 权限`);
           }
         }
       },
     }),
+
+    /**
+     * 部门上下文校验宏
+     * 用法: { requireDept: true }
+     * 效果: 验证 Header 并将 currentDeptId 注入 Context
+     */
+    requireDept: {
+      resolve: async ({ request, db, user }) => {
+        const currentDeptId = request.headers.get(CURRENT_DEPT_HEADER);
+
+        if (!currentDeptId) {
+          throw new HttpError.BadRequest("请选择当前操作的部门");
+        }
+        if (!user) throw new HttpError.Forbidden("您没有任何权限");
+        // ⚠️ 注意：如果你采纳了上一步的 UserDto 改造，这里的 tenantId 路径要改
+        // const userTenantId = user.tenantId; // 旧结构
+        const userTenantId = user.context.tenantId; // 新 DTO 结构
+
+        const targetDept = await db.query.departmentTable.findFirst({
+          where: { id: currentDeptId },
+          columns: { id: true, tenantId: true },
+        });
+
+        if (!targetDept || targetDept.tenantId !== userTenantId) {
+          throw new HttpError.Forbidden("无权访问该部门");
+        }
+
+        // ✅ 返回注入的变量
+        return {
+          currentDeptId,
+        };
+      },
+    },
   })
-  .as("global");
+  .as("global")
+
+
+
+// --- 辅助函数保持不变 ---
 
 async function getUserWithRoles(userID: string, db: DBtype) {
-  const userRolePermission = await db.query.userTable.findFirst({
+  const rawUser = await db.query.userTable.findFirst({
     where: { id: userID },
     with: {
       roles: {
@@ -98,10 +110,59 @@ async function getUserWithRoles(userID: string, db: DBtype) {
         },
       },
     },
-  });
-  if (!userRolePermission) throw new HttpError.NotFound("用户不存在");
 
-  return userRolePermission;
+
+  });
+
+  if (!rawUser) throw new HttpError.NotFound("用户不存在");
+
+  // --- 数据清洗 (Transformer) ---
+  // 1. 扁平化权限 (去重)
+  const permissions = Array.from(
+    new Set(
+      rawUser.roles
+        .flatMap((role) => role.permissions.map((p) => p.name))
+        .filter(Boolean)
+    )
+  );
+
+  // 2. 提取角色名
+  const roles = rawUser.roles.map((r) => ({
+    name: r.name,
+    dataScope: r.dataScope,
+  }));
+  // 3. 构建上下文 (Context)
+  const context = {
+    tenantId: rawUser.tenantId,
+    department: rawUser.department
+      ? {
+        id: rawUser.department.id,
+        name: rawUser.department.name,
+        category: rawUser.department.category,
+      }
+      : null,
+    site: rawUser.department?.site
+      ? {
+        id: rawUser.department.site.id,
+        name: rawUser.department.site.name,
+        domain: rawUser.department.site.domain,
+      }
+      : null,
+  };
+
+  // 4. 返回清洗后的对象
+  return {
+    id: rawUser.id,
+    name: rawUser.name,
+    email: rawUser.email,
+    avatar: rawUser.image, // 映射 image -> avatar
+    phone: rawUser.phone,
+    position: rawUser.position,
+    isSuperAdmin: !!rawUser.isSuperAdmin,
+    context,
+    roles,
+    permissions,
+  };
 }
 
 export type UserDto = Awaited<NonNullable<ReturnType<typeof getUserWithRoles>>>;

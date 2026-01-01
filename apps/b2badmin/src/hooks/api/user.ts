@@ -8,6 +8,7 @@
 
 import { UserContract } from "@repo/contract";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { api } from "./api-client";
 
 // --- Query Keys ---
@@ -20,7 +21,6 @@ export const userKeys = {
 };
 
 // --- 1. 列表查询 (GET) ---
-// TRes = any, TQuery = typeof UserContract.ListQuery.static
 export function useUserList(
   params?: typeof UserContract.ListQuery.static,
   enabled = true
@@ -36,7 +36,6 @@ export function useUserList(
 }
 
 // --- 2. 单个详情 (GET) ---
-// TRes = any
 export function useUserDetail(id: string, enabled = !!id) {
   return useQuery({
     queryKey: userKeys.detail(id),
@@ -46,20 +45,22 @@ export function useUserDetail(id: string, enabled = !!id) {
 }
 
 // --- 3. 创建 (POST) ---
-// TRes = any, TBody = typeof UserContract.Create.static
 export function useCreateUser() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: typeof UserContract.Create.static) =>
       api.post<any, typeof UserContract.Create.static>("/api/v1/user", data),
     onSuccess: () => {
+      toast.success("用户创建成功");
       queryClient.invalidateQueries({ queryKey: userKeys.lists() });
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "创建用户失败");
     },
   });
 }
 
 // --- 4. 更新 (PUT) ---
-// TRes = any, TBody = typeof UserContract.Update.static
 export function useUpdateUser() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -75,22 +76,29 @@ export function useUpdateUser() {
         data
       ),
     onSuccess: (_, variables) => {
+      toast.success("用户更新成功");
       queryClient.invalidateQueries({ queryKey: userKeys.lists() });
       queryClient.invalidateQueries({
         queryKey: userKeys.detail(variables.id),
       });
     },
+    onError: (error: any) => {
+      toast.error(error?.message || "更新用户失败");
+    },
   });
 }
 
 // --- 5. 删除 (DELETE) ---
-// TRes = any
 export function useDeleteUser() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api.delete<any>(`/api/v1/user/${id}`),
     onSuccess: () => {
+      toast.success("用户删除成功");
       queryClient.invalidateQueries({ queryKey: userKeys.lists() });
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "删除用户失败");
     },
   });
 }
