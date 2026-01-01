@@ -12,9 +12,7 @@ import { SiteCategoryContract } from "../../../../packages/contract/src/modules/
 import { SiteCategoryService } from "../services/sitecategory.service";
 
 const sitecategoryService = new SiteCategoryService();
-/**
- * @generated
- */
+
 export const sitecategoryController = new Elysia({ prefix: "/sitecategory" })
   .use(dbPlugin)
   .use(authGuardMid)
@@ -23,7 +21,8 @@ export const sitecategoryController = new Elysia({ prefix: "/sitecategory" })
     ({ query, user, db, currentDeptId }) =>
       sitecategoryService.findAll(query, { db, user, currentDeptId }),
     {
-      allPermissions: ["SITECATEGORY:VIEW"],
+      allPermissions: ["SITECATEGORY_VIEW"],
+      requireDept: true,
       query: SiteCategoryContract.ListQuery,
       detail: {
         summary: "获取SiteCategory列表",
@@ -37,8 +36,9 @@ export const sitecategoryController = new Elysia({ prefix: "/sitecategory" })
     ({ body, user, db, currentDeptId }) =>
       sitecategoryService.create(body, { db, user, currentDeptId }),
     {
-      allPermissions: ["SITECATEGORY:CREATE"],
+      allPermissions: ["SITECATEGORY_CREATE"],
       body: SiteCategoryContract.Create,
+      requireDept: true,
       detail: {
         summary: "创建SiteCategory",
         description: "新增一条SiteCategory记录",
@@ -53,7 +53,8 @@ export const sitecategoryController = new Elysia({ prefix: "/sitecategory" })
     {
       params: t.Object({ id: t.String() }),
       body: SiteCategoryContract.Update,
-      allPermissions: ["SITECATEGORY:EDIT"],
+      requireDept: true,
+      allPermissions: ["SITECATEGORY_EDIT"],
       detail: {
         summary: "更新SiteCategory",
         description: "根据ID更新SiteCategory信息",
@@ -67,11 +68,29 @@ export const sitecategoryController = new Elysia({ prefix: "/sitecategory" })
       sitecategoryService.delete(params.id, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
-      allPermissions: ["SITECATEGORY:DELETE"],
+      allPermissions: ["SITECATEGORY_DELETE"],
+      requireDept: true,
       detail: {
         summary: "删除SiteCategory",
         description: "根据ID删除SiteCategory记录",
         tags: ["SiteCategory"],
       },
     }
-  );
+  )
+
+
+  // 获取树形结构的分类列表
+  .get(
+    "/tree",
+    async ({ db, user, currentDeptId }) =>
+      await sitecategoryService.getTree({ db, user, currentDeptId }),
+    {
+      allPermissions: ["SITECATEGORY_VIEW"],
+      requireDept: true,
+      detail: {
+        summary: "获取树形分类列表",
+        description: "获取当前站点的树形结构分类列表",
+        tags: ["SiteCategories"],
+      },
+    }
+  )

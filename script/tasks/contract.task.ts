@@ -1,9 +1,8 @@
 import {
-  type Project,
-  SyntaxKind,
-  VariableDeclarationKind,
   Node,
   type ObjectLiteralExpression,
+  type Project,
+  VariableDeclarationKind
 } from "ts-morph";
 import {
   ensureImport,

@@ -129,17 +129,17 @@ async function getUserWithRoles(userID: string, db: DBtype) {
     tenantId: rawUser.tenantId,
     department: rawUser.department
       ? {
-          id: rawUser.department.id,
-          name: rawUser.department.name,
-          category: rawUser.department.category,
-        }
+        id: rawUser.department.id,
+        name: rawUser.department.name,
+        category: rawUser.department.category,
+      }
       : null,
     site: rawUser.department?.site
       ? {
-          id: rawUser.department.site.id,
-          name: rawUser.department.site.name,
-          domain: rawUser.department.site.domain,
-        }
+        id: rawUser.department.site.id,
+        name: rawUser.department.site.name,
+        domain: rawUser.department.site.domain,
+      }
       : null,
   };
 
