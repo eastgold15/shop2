@@ -85,10 +85,11 @@ const StatCard = ({ label, value, icon: Icon, color }: any) => (
 );
 
 export default function UserDashboard() {
-  const { user, isSuperAdmin } = useAuthStore();
+  const { user } = useAuthStore();
 
   // 3. 根据当前角色获取配置 (使用 useMemo 优化)
-  const roleName = user?.role.name || "default";
+  // 现在返回的是 roles 数组，取第一个角色
+  const roleName = user?.roles?.[0]?.name || "default";
   const stats =
     STATS_PRESETS[roleName as keyof typeof STATS_PRESETS] ||
     STATS_PRESETS.default;
@@ -107,7 +108,7 @@ export default function UserDashboard() {
           欢迎回来，{user.name} 👋
         </h1>
         <p className="text-slate-500">
-          {user.role.description || "普通用户"} | {user.email}
+          {user.roles?.[0]?.name || "普通用户"} | {user.email}
         </p>
       </header>
 
