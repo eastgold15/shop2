@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun --bun next dev ",
+    "dev": "bun --bun next dev",
     "build": " next build",
     "start": "NODE_ENV=production bun --bun next start",
     "check": "npx ultracite check",

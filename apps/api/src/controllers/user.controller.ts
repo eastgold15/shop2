@@ -21,14 +21,13 @@ export const userController = new Elysia({ prefix: "/user" })
   .use(authGuardMid)
   .get(
     "/me",
-    async ({ query, user, db, }) => {
+    async ({ user }) => {
       const res = await userService.getSwitchableDepartments(user);
       return {
         user,
         switchableDept: res,
       };
     },
-
     {
       requireDept: false,
       detail: {
@@ -55,20 +54,21 @@ export const userController = new Elysia({ prefix: "/user" })
       },
     }
   )
-  .post(
-    "/",
-    ({ body, user, db, currentDeptId }) =>
-      userService.create(body, { db, user, currentDeptId }),
-    {
-      allPermissions: ["USER:CREATE"],
-      body: UserContract.Create,
-      detail: {
-        summary: "创建User",
-        description: "新增一条User记录",
-        tags: ["User"],
-      },
-    }
-  )
+  // .post(
+  //   "/",
+  //   ({ body, user, db, currentDeptId }) =>
+  //     userService.create(body, { db, user, currentDeptId }),
+  //   {
+  //     allPermissions: ["USER:CREATE"],
+  //     requireDept: true,
+  //     body: UserContract.Create,
+  //     detail: {
+  //       summary: "创建User",
+  //       description: "新增一条User记录",
+  //       tags: ["User"],
+  //     },
+  //   }
+  // )
   .put(
     "/:id",
     ({ params, body, user, db, currentDeptId }) =>
@@ -76,6 +76,7 @@ export const userController = new Elysia({ prefix: "/user" })
     {
       params: t.Object({ id: t.String() }),
       body: UserContract.Update,
+      requireDept: true,
       allPermissions: ["USER:EDIT"],
       detail: {
         summary: "更新User",
@@ -90,6 +91,7 @@ export const userController = new Elysia({ prefix: "/user" })
       userService.delete(params.id, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
+      requireDept: true,
       allPermissions: ["USER:DELETE"],
       detail: {
         summary: "删除User",

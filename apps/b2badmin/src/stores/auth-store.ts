@@ -6,22 +6,28 @@ interface UserInfo {
   id: string;
   name: string;
   email: string;
-  tenantId: string;
-  department?: {
-    id: string;
-    name: string;
-    category: "headquarters" | "factory" | "office";
-    site?: {
+  avatar: string;
+  phone: string;
+  position: string;
+  isSuperAdmin: boolean;
+  context: {
+    tenantId: string;
+    department: {
+      id: string;
+      name: string;
+      category: string;
+    };
+    site: {
       id: string;
       name: string;
       domain: string;
     };
   };
-  roles?: Array<{
-    id: string;
+  roles: Array<{
     name: string;
-    description?: string;
+    dataScope: string;
   }>;
+  permissions: string[];
 }
 
 // 可切换部门类型
@@ -76,6 +82,15 @@ interface AuthState {
     domain: string;
     siteType?: string;
   } | null;
+
+  /** 获取当前用户的权限列表 */
+  getPermissions: () => string[];
+
+  /** 检查是否有指定权限 */
+  hasPermission: (permission: string) => boolean;
+
+  /** 获取当前租户 ID */
+  getTenantId: () => string | null;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -129,6 +144,25 @@ export const useAuthStore = create<AuthState>()(
           domain: currentDept.site.domain,
           siteType: siteTypeMap[currentDept.category || ""] || "factory",
         };
+      },
+
+      // 获取当前用户的权限列表
+      getPermissions: () => {
+        const { user } = get();
+        return user?.permissions || [];
+      },
+
+      // 检查是否有指定权限
+      hasPermission: (permission) => {
+        const { user } = get();
+        if (!user) return false;
+        return user.permissions.includes("*") || user.permissions.includes(permission);
+      },
+
+      // 获取当前租户 ID
+      getTenantId: () => {
+        const { user } = get();
+        return user?.context?.tenantId || null;
       },
     }),
     {

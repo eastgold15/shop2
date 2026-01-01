@@ -4,6 +4,73 @@
  */
 
 // ==================== 列表查询 ====================
+export interface UseME {
+  switchableDept: SwitchableDept;
+  user: User;
+
+}
+
+export interface SwitchableDept {
+  current: Current;
+  departments: string[];
+  [property: string]: any;
+}
+
+export interface Current {
+  category: string;
+  id: string;
+  name: string;
+  site: CurrentSite;
+  [property: string]: any;
+}
+
+export interface CurrentSite {
+  domain: string;
+  id: string;
+  name: string;
+  [property: string]: any;
+}
+
+export interface User {
+  avatar: string;
+  context: Context;
+  email: string;
+  id: string;
+  isSuperAdmin: boolean;
+  name: string;
+  permissions: string[];
+  phone: string;
+  position: string;
+  roles: Role[];
+  [property: string]: any;
+}
+
+export interface Context {
+  department: Department;
+  site: ContextSite;
+  tenantId: string;
+  [property: string]: any;
+}
+
+export interface Department {
+  category: string;
+  id: string;
+  name: string;
+  [property: string]: any;
+}
+
+export interface ContextSite {
+  domain: string;
+  id: string;
+  name: string;
+  [property: string]: any;
+}
+
+export interface Role {
+  dataScope?: string;
+  name?: string;
+  [property: string]: any;
+}
 
 /**
  * 用户列表查询参数
@@ -31,26 +98,26 @@ export interface UserListResponse {
 
 // ==================== 用户实体 ====================
 
-/**
- * 用户实体
- */
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  isActive: boolean;
-  isSuperAdmin?: boolean;
-  createdAt: string; // ISO 8601 datetime string
-  updatedAt: string; // ISO 8601 datetime string
+// /**
+//  * 用户实体
+//  */
+// export interface User {
+//   id: string;
+//   name: string;
+//   email: string;
+//   isActive: boolean;
+//   isSuperAdmin?: boolean;
+//   createdAt: string; // ISO 8601 datetime string
+//   updatedAt: string; // ISO 8601 datetime string
 
-  // 扩展字段（可能为null）
-  phone?: string | null;
-  avatar?: string | null;
+//   // 扩展字段（可能为null）
+//   phone?: string | null;
+//   avatar?: string | null;
 
-  // 关联数据
-  roles?: UserRole[];
-  siteRoles?: UserSiteRole[];
-}
+//   // 关联数据
+//   roles?: UserRole[];
+//   siteRoles?: UserSiteRole[];
+// }
 
 /**
  * 用户角色关联（简化）

@@ -2,7 +2,7 @@ import { Elysia } from "elysia";
 import { HttpError } from "elysia-http-problem-json";
 import { dbPlugin } from "~/db/connection";
 import { auth } from "~/lib/auth";
-import { DBtype } from "~/lib/type";
+import type { DBtype } from "~/lib/type";
 // 系统没有超管，每个用户登录之后，一定有租户ID、工厂ID等信息，用户信息及部门id 都放在上下文中// 请求头名称
 
 // 请求头名称：用于指定当前操作的部门ID
@@ -14,13 +14,8 @@ export const authGuardMid = new Elysia({ name: "authGuard" })
   .derive(async ({ request, db }) => {
     const headers = request.headers;
     const session = await auth.api.getSession({ headers });
-
     if (!session) throw new HttpError.Unauthorized("未登录");
-
     const userRolePermission = await getUserWithRoles(session.user.id, db);
-
-
-
     return {
       user: userRolePermission,
     };
@@ -53,7 +48,6 @@ export const authGuardMid = new Elysia({ name: "authGuard" })
     requireDept: {
       resolve: async ({ request, db, user }) => {
         const currentDeptId = request.headers.get(CURRENT_DEPT_HEADER);
-
         if (!currentDeptId) {
           throw new HttpError.BadRequest("请选择当前操作的部门");
         }

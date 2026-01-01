@@ -8,7 +8,6 @@ import type { UserDto } from "~/middleware/auth";
 export class UserService {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   public async findAll(query: UserContract["ListQuery"], ctx: ServiceContext) {
-    const { ...filters } = query;
 
     const res = await ctx.db.query.userTable.findMany({
       where: {
@@ -78,14 +77,26 @@ export class UserService {
         id: user.context.department?.id,
         name: user.context.department?.name,
         category: user.context.department?.category,
-        site: user.context.site,
+        site: user.context.site
+          ? {
+            id: user.context.site.id,
+            name: user.context.site.name,
+            domain: user.context.site.domain,
+          }
+          : undefined,
       },
       departments: departments.map((dept) => ({
         id: dept.id,
         name: dept.name,
         category: dept.category,
         parentId: dept.parentId,
-        site: dept.site,
+        site: dept.site
+          ? {
+            id: dept.site.id,
+            name: dept.site.name,
+            domain: dept.site.domain,
+          }
+          : undefined,
       })),
     };
   }

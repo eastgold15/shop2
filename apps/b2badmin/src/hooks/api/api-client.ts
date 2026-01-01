@@ -56,6 +56,7 @@ async function request<
   const response = await fetch(url.toString(), {
     ...options,
     headers,
+    credentials: "include", // 🔥 关键：允许发送和接收 cookie
     body: body ? JSON.stringify(body) : undefined,
   });
 

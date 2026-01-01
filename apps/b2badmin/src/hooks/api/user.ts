@@ -18,7 +18,60 @@ export const userKeys = {
   list: (params: any) => [...userKeys.lists(), params] as const,
   details: () => [...userKeys.all, "detail"] as const,
   detail: (id: string) => [...userKeys.details(), id] as const,
+  me: () => [...userKeys.all, "me"] as const,
 };
+
+// --- 0. 获取当前用户信息 (GET /me) ---
+export interface MeResponse {
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    avatar: string;
+    phone: string;
+    position: string;
+    isSuperAdmin: boolean;
+    context: {
+      tenantId: string;
+      department: {
+        id: string;
+        name: string;
+        category: string;
+      };
+      site: {
+        id: string;
+        name: string;
+        domain: string;
+      };
+    };
+    roles: Array<{
+      name: string;
+      dataScope: string;
+    }>;
+    permissions: string[];
+  };
+  switchableDept: {
+    current: {
+      id: string;
+      name: string;
+      category: string;
+      site: {
+        id: string;
+        name: string;
+        domain: string;
+      };
+    };
+    departments: any[];
+  };
+}
+
+export function useMe({ enabled = true }) {
+  return useQuery({
+    queryKey: userKeys.me(),
+    queryFn: () => api.get<MeResponse>("/api/v1/user/me"),
+    enabled,
+  });
+}
 
 // --- 1. 列表查询 (GET) ---
 export function useUserList(
