@@ -306,17 +306,44 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
 
   [ROLES.TENANT_ADMIN]: [
     // 系统用户管理
-    ...generateCRUDPermissions("SYS_USERS"),
-    ...generateCRUDPermissions("SYS_DEPTS"),
+    PERMISSIONS.USER_VIEW,
+    PERMISSIONS.USER_CREATE,
+    PERMISSIONS.USER_EDIT,
+    PERMISSIONS.USER_DELETE,
+    PERMISSIONS.DEPARTMENT_VIEW,
+    PERMISSIONS.DEPARTMENT_CREATE,
+    PERMISSIONS.DEPARTMENT_EDIT,
+    PERMISSIONS.DEPARTMENT_DELETE,
     // 站点和产品
-    ...generateCRUDPermissions("SITES"),
-    ...generateCRUDPermissions("PRODUCTS"),
-    ...generateCRUDPermissions("SKUS"),
-    ...generateCRUDPermissions("MEDIA"),
+    PERMISSIONS.SITE_VIEW,
+    PERMISSIONS.SITE_CREATE,
+    PERMISSIONS.SITE_EDIT,
+    PERMISSIONS.SITE_DELETE,
+    PERMISSIONS.PRODUCT_VIEW,
+    PERMISSIONS.PRODUCT_CREATE,
+    PERMISSIONS.PRODUCT_EDIT,
+    PERMISSIONS.PRODUCT_DELETE,
+    PERMISSIONS.SKU_VIEW,
+    PERMISSIONS.SKU_CREATE,
+    PERMISSIONS.SKU_EDIT,
+    PERMISSIONS.SKU_DELETE,
+    PERMISSIONS.MEDIA_VIEW,
+    PERMISSIONS.MEDIA_CREATE,
+    PERMISSIONS.MEDIA_EDIT,
+    PERMISSIONS.MEDIA_DELETE,
     // 业务管理
-    ...generateCRUDPermissions("CUSTOMERS"),
-    ...generateCRUDPermissions("INQUIRIES"),
-    ...generateCRUDPermissions("QUOTATIONS"),
+    PERMISSIONS.CUSTOMER_VIEW,
+    PERMISSIONS.CUSTOMER_CREATE,
+    PERMISSIONS.CUSTOMER_EDIT,
+    PERMISSIONS.CUSTOMER_DELETE,
+    PERMISSIONS.INQUIRY_VIEW,
+    PERMISSIONS.INQUIRY_CREATE,
+    PERMISSIONS.INQUIRY_EDIT,
+    PERMISSIONS.INQUIRY_DELETE,
+    PERMISSIONS.QUOTATION_VIEW,
+    PERMISSIONS.QUOTATION_CREATE,
+    PERMISSIONS.QUOTATION_EDIT,
+    PERMISSIONS.QUOTATION_DELETE,
     // 特殊权限
     PERMISSIONS.SITES_MANAGE,
   ],
@@ -386,14 +413,3 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
     PERMISSIONS.QUOTATION_EDIT,
   ],
 } as const;
-
-// 辅助函数：生成CRUD权限
-function generateCRUDPermissions(resource: string) {
-  const upperResource = resource.toUpperCase();
-  return [
-    `${upperResource}_VIEW`,
-    `${upperResource}_CREATE`,
-    `${upperResource}_EDIT`,
-    `${upperResource}_DELETE`,
-  ];
-}
