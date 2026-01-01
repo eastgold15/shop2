@@ -102,7 +102,8 @@ export const PERMISSION_MODULES = {
   QUOTATION: "QUOTATION",
 } as const;
 
-export type PermissionModule = (typeof PERMISSION_MODULES)[keyof typeof PERMISSION_MODULES];
+export type PermissionModule =
+  (typeof PERMISSION_MODULES)[keyof typeof PERMISSION_MODULES];
 
 // ==================== 权限操作枚举 ====================
 
@@ -120,7 +121,8 @@ export const PERMISSION_ACTIONS = {
   APPROVE: "APPROVE",
 } as const;
 
-export type PermissionAction = (typeof PERMISSION_ACTIONS)[keyof typeof PERMISSION_ACTIONS];
+export type PermissionAction =
+  (typeof PERMISSION_ACTIONS)[keyof typeof PERMISSION_ACTIONS];
 
 // ==================== 权限分组 ====================
 

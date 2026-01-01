@@ -87,8 +87,7 @@ export function useDeleteTemplates() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (id: string) =>
-      api.delete<any>(`/api/v1/template/${id}`),
+    mutationFn: async (id: string) => api.delete<any>(`/api/v1/template/${id}`),
     onSuccess: () => {
       toast.success("模板删除成功");
       queryClient.invalidateQueries({ queryKey: ["templates"] });

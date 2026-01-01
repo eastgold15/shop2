@@ -3,6 +3,7 @@ import { HttpError } from "elysia-http-problem-json";
 import { dbPlugin } from "~/db/connection";
 import { auth } from "~/lib/auth";
 import type { DBtype } from "~/lib/type";
+
 // 系统没有超管，每个用户登录之后，一定有租户ID、工厂ID等信息，用户信息及部门id 都放在上下文中// 请求头名称
 
 // 请求头名称：用于指定当前操作的部门ID
@@ -33,7 +34,9 @@ export const authGuardMid = new Elysia({ name: "authGuard" })
           throw new HttpError.Forbidden("您没有任何权限");
         }
         for (const n of names) {
-          if (!(user.permissions.includes(n) || user.permissions.includes("*"))) {
+          if (
+            !(user.permissions.includes(n) || user.permissions.includes("*"))
+          ) {
             return status(403, `权限不足，需要 ${n} 权限`);
           }
         }
@@ -72,9 +75,7 @@ export const authGuardMid = new Elysia({ name: "authGuard" })
       },
     },
   })
-  .as("global")
-
-
+  .as("global");
 
 // --- 辅助函数保持不变 ---
 
@@ -104,8 +105,6 @@ async function getUserWithRoles(userID: string, db: DBtype) {
         },
       },
     },
-
-
   });
 
   if (!rawUser) throw new HttpError.NotFound("用户不存在");
@@ -130,17 +129,17 @@ async function getUserWithRoles(userID: string, db: DBtype) {
     tenantId: rawUser.tenantId,
     department: rawUser.department
       ? {
-        id: rawUser.department.id,
-        name: rawUser.department.name,
-        category: rawUser.department.category,
-      }
+          id: rawUser.department.id,
+          name: rawUser.department.name,
+          category: rawUser.department.category,
+        }
       : null,
     site: rawUser.department?.site
       ? {
-        id: rawUser.department.site.id,
-        name: rawUser.department.site.name,
-        domain: rawUser.department.site.domain,
-      }
+          id: rawUser.department.site.id,
+          name: rawUser.department.site.name,
+          domain: rawUser.department.site.domain,
+        }
       : null,
   };
 

@@ -156,7 +156,10 @@ export const useAuthStore = create<AuthState>()(
       hasPermission: (permission) => {
         const { user } = get();
         if (!user) return false;
-        return user.permissions.includes("*") || user.permissions.includes(permission);
+        return (
+          user.permissions.includes("*") ||
+          user.permissions.includes(permission)
+        );
       },
 
       // 获取当前租户 ID

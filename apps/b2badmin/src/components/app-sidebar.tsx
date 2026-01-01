@@ -28,8 +28,8 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { useAuthStore } from "@/stores/auth-store";
 import { PERMISSIONS } from "@/config/permissions";
+import { useAuthStore } from "@/stores/auth-store";
 
 // --- 1. 菜单配置文件 (数据驱动) ---
 // 以后加菜单只需要改这里，一眼就能看懂

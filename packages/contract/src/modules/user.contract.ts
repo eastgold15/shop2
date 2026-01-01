@@ -54,7 +54,6 @@ export const UserContract = {
     data: t.Array(t.Object({ ...UserFields })),
     total: t.Number(),
   }),
-}
+};
 
 export type UserContract = InferDTO<typeof UserContract>;
-

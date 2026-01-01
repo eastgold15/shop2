@@ -7,7 +7,6 @@
 export interface UseME {
   switchableDept: SwitchableDept;
   user: User;
-
 }
 
 export interface SwitchableDept {

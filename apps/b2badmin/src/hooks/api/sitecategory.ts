@@ -38,8 +38,6 @@ export function useSiteCategoriesTree(options?: { enabled?: boolean }) {
   });
 }
 
-
-
 // 获取当前站点的扁平化分类列表（用于下拉选择）
 // --- 1. 列表查询 (GET) ---
 export function useSiteCategoryList(
@@ -149,8 +147,6 @@ export function useBatchDeleteSiteCategories() {
     },
   });
 }
-
-
 
 // 移动分类
 export function useMoveCategory() {

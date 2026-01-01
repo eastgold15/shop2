@@ -321,3 +321,4 @@ export const [xxx]Route = new Elysia({
       });
 ```
 
+所有的变量命名[d](./docs/NAMING_CONVENTION.md)

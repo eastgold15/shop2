@@ -34,7 +34,11 @@ export interface TemplateListResponse {
 /**
  * 模板字段输入类型
  */
-export type TemplateFieldInputType = "text" | "number" | "select" | "multiselect";
+export type TemplateFieldInputType =
+  | "text"
+  | "number"
+  | "select"
+  | "multiselect";
 
 /**
  * 模板字段定义

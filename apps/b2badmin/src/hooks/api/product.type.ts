@@ -193,4 +193,5 @@ export const PRODUCT_STATUS = {
   PUBLISHED: 1,
 } as const;
 
-export type ProductStatus = (typeof PRODUCT_STATUS)[keyof typeof PRODUCT_STATUS];
+export type ProductStatus =
+  (typeof PRODUCT_STATUS)[keyof typeof PRODUCT_STATUS];

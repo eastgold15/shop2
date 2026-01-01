@@ -3,7 +3,7 @@
  * @see https://elysiajs.com/recipe/drizzle.html#utility
  */
 
-import { Kind, Static, TSchema, type TObject } from "@sinclair/typebox";
+import { Kind, Static, type TObject, TSchema } from "@sinclair/typebox";
 import type { Table } from "drizzle-orm";
 import {
   type BuildSchema,
@@ -89,8 +89,6 @@ export const spreads = <
   return newSchema as any;
 };
 
-
-
 /**
  * 🛠️ 自动 DTO 推导工具
  * 提取 Contract 中所有 TSchema 字段的静态类型
@@ -98,7 +96,6 @@ export const spreads = <
 export type InferDTO<T> = {
   [K in keyof T]: T[K] extends TSchema ? Static<T[K]> : never;
 };
-
 
 export function pick<T, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
   const result = {} as Pick<T, K>;

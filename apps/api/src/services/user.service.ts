@@ -1,14 +1,12 @@
-import { type UserContract } from "@repo/contract";
-import { userTable } from "@repo/contract";
+import { type UserContract, userTable } from "@repo/contract";
 import { eq } from "drizzle-orm";
-import { type ServiceContext } from "../lib/type";
 import { db } from "~/db/connection";
 import type { UserDto } from "~/middleware/auth";
+import { type ServiceContext } from "../lib/type";
 
 export class UserService {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   public async findAll(query: UserContract["ListQuery"], ctx: ServiceContext) {
-
     const res = await ctx.db.query.userTable.findMany({
       where: {
         deptId: ctx.currentDeptId,
@@ -79,10 +77,10 @@ export class UserService {
         category: user.context.department?.category,
         site: user.context.site
           ? {
-            id: user.context.site.id,
-            name: user.context.site.name,
-            domain: user.context.site.domain,
-          }
+              id: user.context.site.id,
+              name: user.context.site.name,
+              domain: user.context.site.domain,
+            }
           : undefined,
       },
       departments: departments.map((dept) => ({
@@ -92,15 +90,12 @@ export class UserService {
         parentId: dept.parentId,
         site: dept.site
           ? {
-            id: dept.site.id,
-            name: dept.site.name,
-            domain: dept.site.domain,
-          }
+              id: dept.site.id,
+              name: dept.site.name,
+              domain: dept.site.domain,
+            }
           : undefined,
       })),
     };
   }
-
-
 }
-
