@@ -20,13 +20,13 @@ import {
 } from "@/components/ui/sidebar";
 import { SiteCategoryTreeSelect } from "@/components/ui/site-category-tree-select";
 import {
+  useTemplateList as useListTemplates,
   useCreateTemplate,
-  useDeleteTemplates,
-  useListTemplates,
-  useUpdateTemplate, // 确保你有这个 hook
-} from "@/hooks/api/attributetemplate";
+  useDeleteTemplate as useDeleteTemplates,
+  useUpdateTemplate,
+} from "@/hooks/api/template";
 import { useMasterCategories } from "@/hooks/api/mastercategory";
-import { useSiteCategories } from "@/hooks/api/sitecategory";
+import { useSiteCategoryList } from "@/hooks/api/sitecategory";
 import type { TemplateField } from "@/types";
 import { useTemplateForm } from "./useTemplateForm";
 
@@ -54,7 +54,7 @@ export default function TemplateManager() {
     page: 1,
     limit: 100,
   });
-  const { data: siteCategories = [] } = useSiteCategories({
+  const { data: siteCategories = [] } = useSiteCategoryList({
     page: 1,
     limit: 100,
   });

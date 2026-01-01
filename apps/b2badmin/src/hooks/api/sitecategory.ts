@@ -38,20 +38,9 @@ export function useSiteCategoriesTree(options?: { enabled?: boolean }) {
   });
 }
 
-// 获取当前站点的扁平化分类列表（用于下拉选择）
-export function useSiteCategories(query?: Record<string, any>) {
-  return useQuery({
-    queryKey: ["site-categories", "flat", query],
-    queryFn: async () => {
-      const categories = await api.get<any>("/api/v1/sitecategories", {
-        params: query || {},
-      });
-      return categories?.data || [];
-    },
-    staleTime: 1000 * 60 * 5,
-  });
-}
 
+
+// 获取当前站点的扁平化分类列表（用于下拉选择）
 // --- 1. 列表查询 (GET) ---
 export function useSiteCategoryList(
   params?: typeof SiteCategoryContract.ListQuery.static,
@@ -143,7 +132,7 @@ export function useDeleteSiteCategory() {
 }
 
 // 批量删除站点分类
-export function useSiteCategoryBatchDelete() {
+export function useBatchDeleteSiteCategories() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (ids: string[]) =>
@@ -161,8 +150,7 @@ export function useSiteCategoryBatchDelete() {
   });
 }
 
-// 旧名称兼容
-export const useBatchDeleteSiteCategories = useSiteCategoryBatchDelete;
+
 
 // 移动分类
 export function useMoveCategory() {

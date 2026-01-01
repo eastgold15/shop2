@@ -26,7 +26,7 @@ import { Input } from "@/components/ui/input";
 import { MediaSelect } from "@/components/ui/media-select";
 import { SiteCategoryTreeSelect } from "@/components/ui/site-category-tree-select";
 import { Textarea } from "@/components/ui/textarea";
-import { useListTemplates } from "@/hooks/api/attributetemplate";
+import { useTemplateList as useListTemplates } from "@/hooks/api/template";
 import { useProductsCreate, useProductsUpdate } from "@/hooks/api/product";
 
 const formSchema = z.object({
