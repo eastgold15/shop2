@@ -1,10 +1,10 @@
-import { type CustomerContract, customerTable } from "@repo/contract";
+import { type CustomerContract, CustomerContractType, customerTable } from "@repo/contract";
 import { eq } from "drizzle-orm";
 import { type ServiceContext } from "../lib/type";
 
 export class CustomerService {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  public async create(body: CustomerContract["Create"], ctx: ServiceContext) {
+  public async create(body: CustomerContractType["Create"], ctx: ServiceContext) {
     const insertData = {
       ...body,
       // 自动注入租户信息

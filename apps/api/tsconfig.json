@@ -4,16 +4,25 @@
     "target": "ES2021",
     "skipLibCheck": true,
     "strict": true,
-    "noEmit": true,
     "esModuleInterop": true,
-    "moduleResolution": "node",
-    "types": ["bun-types"],
+    "moduleResolution": "bundler",
+    // ✅ 推荐：允许导入 TS 文件不带后缀
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "verbatimModuleSyntax": true,
+    "types": [
+      "bun-types"
+    ],
     "resolveJsonModule": true,
     "isolatedModules": true,
     "rootDir": ".",
     "paths": {
-      "~/*": ["./src/*"],
-      "@repo/contract": ["../../packages/contract/src/index.ts"]
+      "~/*": [
+        "./src/*"
+      ],
+      "@repo/contract": [
+        "../../packages/contract/src/index.ts"
+      ]
     },
     // ✅ 增量编译（关键！）
     "incremental": true,
@@ -24,7 +33,9 @@
     "out", // 如果有静态导出
     "dist"
   ],
-  "include": ["src/**/*"],
+  "include": [
+    "src/**/*"
+  ],
   "references": [
     {
       "path": "../../packages/contract"

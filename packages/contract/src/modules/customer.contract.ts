@@ -42,4 +42,4 @@ export const CustomerContract = {
   }),
 } as const;
 
-export type CustomerContract = InferDTO<typeof CustomerContract>;
+export type CustomerContractType = InferDTO<typeof CustomerContract>;

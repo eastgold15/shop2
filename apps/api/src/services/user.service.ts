@@ -1,13 +1,14 @@
-import { type UserContract, userTable } from "@repo/contract";
+import { type UserContract } from "@repo/contract";
+import { userTable } from "@repo/contract";
 import { eq } from "drizzle-orm";
 import { type ServiceContext } from "../lib/type";
 import { db } from "~/db/connection";
-import { UserDto } from "~/middleware/auth";
+import type { UserDto } from "~/middleware/auth";
 
 export class UserService {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   public async findAll(query: UserContract["ListQuery"], ctx: ServiceContext) {
-    const { sort, ...filters } = query;
+    const { ...filters } = query;
 
     const res = await ctx.db.query.userTable.findMany({
       where: {
@@ -89,16 +90,6 @@ export class UserService {
     };
   }
 
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  public async create(body: UserContract["Create"], ctx: ServiceContext) {
-    const insertData = {
-      ...body,
-      // 自动注入租户信息
-      ...(ctx.user
-        ? { tenantId: ctx.user.context.tenantId, createdBy: ctx.user.id }
-        : {}),
-    };
-    const [res] = await ctx.db.insert(userTable).values(insertData).returning();
-    return res;
-  }
+
 }
+
