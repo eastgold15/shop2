@@ -1,5 +1,6 @@
 // Auto-generated index file for all contracts
 export * from "./tenant.contract";
+export * from "./_custom/ad.contract";
 export * from "./department.contract";
 export * from "./role.contract";
 export * from "./user.contract";
@@ -13,7 +14,6 @@ export * from "./rolepermission.contract";
 export * from "./mastercategory.contract";
 export * from "./media.contract";
 export * from "./mediametadata.contract";
-export * from "./ad.contract";
 export * from "./herocard.contract";
 export * from "./product.contract";
 export * from "./productmastercategory.contract";

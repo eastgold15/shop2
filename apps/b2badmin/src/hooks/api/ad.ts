@@ -48,7 +48,7 @@ export function useAdDetail(id: string, enabled = !!id) {
 
 // --- 3. 创建 (POST) ---
 // TRes = any, TBody = typeof AdContract.Create.static
-export function useCreateAd() {
+export function useAdCreate() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: typeof AdContract.Create.static) =>
@@ -65,7 +65,7 @@ export function useCreateAd() {
 
 // --- 4. 更新 (PUT) ---
 // TRes = any, TBody = typeof AdContract.Update.static
-export function useUpdateAd() {
+export function useAdUpdate() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({
@@ -89,7 +89,7 @@ export function useUpdateAd() {
 
 // --- 5. 删除 (DELETE) ---
 // TRes = any
-export function useDeleteAd() {
+export function useAdDelete() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api.delete<any>(`/api/v1/ad/${id}`),
@@ -103,7 +103,7 @@ export function useDeleteAd() {
   });
 }
 
-// --- 批量删除 ---
+// --- 6. 批量删除 (DELETE /batch) ---
 export function useAdBatchDelete() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -118,3 +118,10 @@ export function useAdBatchDelete() {
     },
   });
 }
+
+// 向后兼容的别名导出（前端使用复数形式）
+export const useAdsList = useAdList;
+export const useAdsCreate = useAdCreate;
+export const useAdsUpdate = useAdUpdate;
+export const useAdsDelete = useAdDelete;
+export const useAdsBatchDelete = useAdBatchDelete;
