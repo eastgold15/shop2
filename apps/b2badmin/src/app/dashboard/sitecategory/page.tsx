@@ -23,14 +23,12 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import type { SiteCategoryTree } from "@/hooks/api/sitecategory";
+
 import {
   useDeleteSiteCategory,
-  useSiteCategoriesTree,
+  useSiteCategoryTree,
 } from "@/hooks/api/sitecategory";
-
-// 使用契约层类型
-type SiteCategory = SiteCategoryTree;
+import { SiteCategoryContract } from "@repo/contract";
 
 // 树形节点组件
 function CategoryTreeNode({
@@ -42,13 +40,13 @@ function CategoryTreeNode({
   onSelect,
   allCategories,
 }: {
-  category: SiteCategory;
+  category: SiteCategoryContract["TreeEntity"];
   level: number;
-  onEdit: (category: SiteCategory) => void;
-  onDelete: (category: SiteCategory) => void;
+  onEdit: (category: SiteCategoryContract["TreeEntity"]) => void;
+  onDelete: (category: SiteCategoryContract["TreeEntity"]) => void;
   selectedIds: Set<string>;
   onSelect: (id: string, checked: boolean) => void;
-  allCategories: SiteCategory[];
+  allCategories: SiteCategoryContract["TreeEntity"][];
 }) {
   const [isExpanded, setIsExpanded] = useState(true);
   const categoryPath = getCategoryPath(category, allCategories);
@@ -161,11 +159,12 @@ function CategoryTreeNode({
 
 // 获取分类路径（用于显示）
 function getCategoryPath(
-  category: SiteCategory,
-  allCategories: SiteCategory[]
+  category: SiteCategoryContract["TreeEntity"],
+  allCategories: SiteCategoryContract["TreeEntity"][]
 ): string {
   const path: string[] = [];
-  let currentCategory: SiteCategory | undefined = category;
+  let currentCategory: SiteCategoryContract["TreeEntity"] | undefined =
+    category;
 
   while (currentCategory) {
     path.unshift(currentCategory.name);
@@ -185,8 +184,8 @@ function getCategoryPath(
 // 根据ID查找分类
 function findCategoryById(
   id: string,
-  categories: SiteCategory[]
-): SiteCategory | undefined {
+  categories: SiteCategoryContract["TreeEntity"][]
+): SiteCategoryContract["TreeEntity"] | undefined {
   for (const category of categories) {
     if (category.id === id) {
       return category;
@@ -202,21 +201,21 @@ function findCategoryById(
 }
 
 export default function SiteCategoryManager() {
-  const { data: flatCategories, isLoading } = useSiteCategoriesTree();
+  const { data: categoryTree, isLoading } = useSiteCategoryTree();
   const deleteMutation = useDeleteSiteCategory();
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<
-    SiteCategory | undefined
+    SiteCategoryContract["TreeEntity"] | undefined
   >();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  const handleEdit = (category: SiteCategory) => {
+  const handleEdit = (category: SiteCategoryContract["TreeEntity"]) => {
     setEditingCategory(category);
     setIsCreateModalOpen(true);
   };
 
-  const handleDelete = async (category: SiteCategory) => {
+  const handleDelete = async (category: SiteCategoryContract["TreeEntity"]) => {
     try {
       await deleteMutation.mutateAsync(category.id);
       toast.success("分类删除成功");
@@ -243,7 +242,7 @@ export default function SiteCategoryManager() {
     if (checked) {
       // 递归收集所有分类ID
       const allIds: string[] = [];
-      const collectIds = (cats: SiteCategory[]) => {
+      const collectIds = (cats: SiteCategoryContract["TreeEntity"][]) => {
         cats.forEach((cat) => {
           allIds.push(cat.id);
           if (cat.children && cat.children.length > 0) {
@@ -251,8 +250,8 @@ export default function SiteCategoryManager() {
           }
         });
       };
-      if (flatCategories) {
-        collectIds(flatCategories);
+      if (categoryTree) {
+        collectIds(categoryTree);
       }
       setSelectedIds(new Set(allIds));
     } else {
@@ -286,7 +285,7 @@ export default function SiteCategoryManager() {
     );
   }
 
-  const hasCategories = flatCategories && flatCategories.length > 0;
+  const hasCategories = categoryTree && categoryTree.length > 0;
 
   return (
     <SidebarProvider>
@@ -359,8 +358,8 @@ export default function SiteCategoryManager() {
                 <label className="flex items-center gap-2 font-medium text-slate-700 text-sm">
                   <input
                     checked={
-                      selectedIds.size > 0 && flatCategories
-                        ? selectedIds.size === flatCategories.length
+                      selectedIds.size > 0 && categoryTree
+                        ? selectedIds.size === categoryTree.length
                         : false
                     }
                     className="rounded border-slate-300 text-slate-600 focus:ring-2 focus:ring-indigo-500"
@@ -369,7 +368,7 @@ export default function SiteCategoryManager() {
                   />
                   全选
                   <span className="text-slate-500">
-                    ({selectedIds.size}/{flatCategories.length})
+                    ({selectedIds.size}/{categoryTree.length})
                   </span>
                 </label>
               </div>
@@ -377,9 +376,9 @@ export default function SiteCategoryManager() {
 
             {hasCategories ? (
               <div className="max-h-[calc(100vh-300px)] overflow-y-auto">
-                {flatCategories.map((category) => (
+                {categoryTree.map((category) => (
                   <CategoryTreeNode
-                    allCategories={flatCategories}
+                    allCategories={categoryTree}
                     category={category}
                     key={category.id}
                     level={0}

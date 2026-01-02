@@ -321,4 +321,6 @@ export const [xxx]Route = new Elysia({
       });
 ```
 
-所有的变量命名[d](./docs/NAMING_CONVENTION.md)
+[# 变量命名规范](./docs/NAMING_CONVENTION.md)
+
+[# API 路径映射规范](./docs/API_PATH_MAPPING.md)

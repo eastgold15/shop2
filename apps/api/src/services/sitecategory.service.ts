@@ -8,10 +8,17 @@ export class SiteCategoryService {
     body: SiteCategoryContract["Create"],
     ctx: ServiceContext
   ) {
+    // 验证是否有站点上下文
+    if (!ctx.user.context.site?.id) {
+      throw new HttpError.BadRequest("当前部门未绑定站点，无法创建站点分类");
+    }
+
     const insertData = {
       ...body,
-      // 自动注入租户信息
-      ...(ctx.user.context.tenantId ? { tenantId: ctx.user.context.tenantId } : {}),
+      // 自动注入租户信息、部门ID和站点ID
+      deptId: ctx.currentDeptId,
+      tenantId: ctx.user.context.tenantId!,
+      siteId: ctx.user.context.site.id,
     };
     const [res] = await ctx.db
       .insert(siteCategoryTable)

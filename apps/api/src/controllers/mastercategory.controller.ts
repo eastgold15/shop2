@@ -12,14 +12,11 @@ import { MasterCategoryContract } from "../../../../packages/contract/src/module
 import { MasterCategoryService } from "../services/mastercategory.service";
 
 const mastercategoryService = new MasterCategoryService();
-/**
- * @generated
- */
 export const mastercategoryController = new Elysia({ prefix: "/mastercategory" })
   .use(dbPlugin)
   .use(authGuardMid)
   .get("/", ({ query, user, db, currentDeptId }) => mastercategoryService.findAll(query, { db, user, currentDeptId }), {
-    allPermissions: ["MASTERCATEGORY:VIEW"],
+    allPermissions: ["MASTERCATEGORY_VIEW"],
     requireDept: true,
     query: MasterCategoryContract.ListQuery,
     detail: {
@@ -29,7 +26,7 @@ export const mastercategoryController = new Elysia({ prefix: "/mastercategory" }
     },
   })
   .post("/", ({ body, user, db, currentDeptId }) => mastercategoryService.create(body, { db, user, currentDeptId }), {
-    allPermissions: ["MASTERCATEGORY:CREATE"],
+    allPermissions: ["MASTERCATEGORY_CREATE"],
     body: MasterCategoryContract.Create,
     requireDept: true,
     detail: {
@@ -42,7 +39,7 @@ export const mastercategoryController = new Elysia({ prefix: "/mastercategory" }
     params: t.Object({ id: t.String() }),
     body: MasterCategoryContract.Update,
     requireDept: true,
-    allPermissions: ["MASTERCATEGORY:EDIT"],
+    allPermissions: ["MASTERCATEGORY_EDIT"],
     detail: {
       summary: "更新MasterCategory",
       description: "根据ID更新MasterCategory信息",
@@ -51,11 +48,27 @@ export const mastercategoryController = new Elysia({ prefix: "/mastercategory" }
   })
   .delete("/:id", ({ params, user, db, currentDeptId }) => mastercategoryService.delete(params.id, { db, user, currentDeptId }), {
     params: t.Object({ id: t.String() }),
-    allPermissions: ["MASTERCATEGORY:DELETE"],
+    allPermissions: ["MASTERCATEGORY_DELETE"],
     requireDept: true,
     detail: {
       summary: "删除MasterCategory",
       description: "根据ID删除MasterCategory记录",
       tags: ["MasterCategory"],
     },
-  });
+  })
+
+  // 获取树形结构的主分类列表
+  .get(
+    "/tree",
+    async ({ db, user, currentDeptId }) =>
+      await mastercategoryService.getTree({ db, user, currentDeptId }),
+    {
+      allPermissions: ["MASTERCATEGORY_VIEW"],
+      requireDept: true,
+      detail: {
+        summary: "获取树形主分类列表",
+        description: "获取当前租户的树形结构主分类列表",
+        tags: ["MasterCategory"],
+      },
+    }
+  );

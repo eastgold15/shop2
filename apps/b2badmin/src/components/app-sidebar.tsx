@@ -63,14 +63,14 @@ const SIDEBAR_CONFIG: NavSection[] = [
     items: [
       {
         title: "站点分类",
-        url: "/dashboard/site-categories",
+        url: "/dashboard/sitecategory",
         icon: Tags,
         permission: PERMISSIONS.SITECATEGORY_VIEW,
       },
 
       {
         title: "商品模版管理",
-        url: "/dashboard/templates",
+        url: "/dashboard/template",
         icon: FileBox,
         permission: PERMISSIONS.TEMPLATE_VIEW,
       },
@@ -83,7 +83,7 @@ const SIDEBAR_CONFIG: NavSection[] = [
       },
       {
         title: "商品管理",
-        url: "/dashboard/products",
+        url: "/dashboard/product",
         icon: ShoppingBag,
         permission: PERMISSIONS.PRODUCT_VIEW,
       },
@@ -106,7 +106,7 @@ const SIDEBAR_CONFIG: NavSection[] = [
       },
       {
         title: "爆款商品卡片",
-        url: "/dashboard/hero-cards",
+        url: "/dashboard/herocard",
         icon: Frame,
         permission: PERMISSIONS.HEROCARD_VIEW,
       },
@@ -129,7 +129,7 @@ const SIDEBAR_CONFIG: NavSection[] = [
       },
       {
         title: "全局分类",
-        url: "/dashboard/master-categories",
+        url: "/dashboard/mastercategory",
         icon: Layers,
         permission: PERMISSIONS.MASTERCATEGORY_VIEW,
       },
@@ -140,7 +140,7 @@ const SIDEBAR_CONFIG: NavSection[] = [
     items: [
       {
         title: "角色管理",
-        url: "/dashboard/roles",
+        url: "/dashboard/role",
         icon: Shield,
         permission: PERMISSIONS.ROLE_VIEW,
       },

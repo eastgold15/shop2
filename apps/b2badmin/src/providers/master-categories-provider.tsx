@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, type ReactNode, useContext, useEffect } from "react";
-import { useMasterCategoriesTree } from "@/hooks/api/mastercategory";
+import { useMasterCategoryTree } from "@/hooks/api/mastercategory";
 import { useAuthStore } from "@/stores/auth-store";
 import { useMasterCategoryStore } from "@/stores/master-categories-store";
 
@@ -29,7 +29,7 @@ export function MasterCategoriesProvider({
     data: categories,
     isLoading,
     refetch,
-  } = useMasterCategoriesTree({
+  } = useMasterCategoryTree({
     enabled: !!user, // 只有当 user 存在时才启用查询
   });
   const { setTreeData, setLoading } = useMasterCategoryStore();

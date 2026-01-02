@@ -11,8 +11,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { api } from "./api-client";
 
-// 树形节点类型
-export type SiteCategoryTree = SiteCategoryContract["TreeResponse"];
+
 
 // --- Query Keys ---
 export const sitecategoryKeys = {
@@ -23,13 +22,12 @@ export const sitecategoryKeys = {
   detail: (id: string) => [...sitecategoryKeys.details(), id] as const,
 };
 
-// 获取当前站点的分类树（旧名称兼容）
-export function useSiteCategoriesTree(options?: { enabled?: boolean }) {
+export function useSiteCategoryTree(options?: { enabled?: boolean }) {
   return useQuery({
-    queryKey: ["site-categories", "tree"],
+    queryKey: ["sitecategory", "tree"],
     queryFn: async () => {
-      const data = await api.get<SiteCategoryTree[]>(
-        "/api/v1/sitecategories/tree"
+      const data = await api.get<SiteCategoryContract["TreeEntity"][]>(
+        "/api/v1/sitecategory/tree"
       );
       return data || [];
     },
@@ -48,7 +46,7 @@ export function useSiteCategoryList(
     queryKey: sitecategoryKeys.list(params),
     queryFn: () =>
       api.get<any, typeof SiteCategoryContract.ListQuery.static>(
-        "/api/v1/sitecategories",
+        "/api/v1/sitecategory/",
         { params }
       ),
     enabled,
@@ -59,7 +57,7 @@ export function useSiteCategoryList(
 export function useSiteCategoryDetail(id: string, enabled = !!id) {
   return useQuery({
     queryKey: sitecategoryKeys.detail(id),
-    queryFn: () => api.get<any>(`/api/v1/sitecategories/${id}`),
+    queryFn: () => api.get<any>(`/api/v1/sitecategory/${id}`),
     enabled,
   });
 }
@@ -70,7 +68,7 @@ export function useCreateSiteCategory() {
   return useMutation({
     mutationFn: (data: typeof SiteCategoryContract.Create.static) =>
       api.post<any, typeof SiteCategoryContract.Create.static>(
-        "/api/v1/sitecategories",
+        "/api/v1/sitecategory/",
         data
       ),
     onSuccess: () => {
@@ -96,7 +94,7 @@ export function useUpdateSiteCategory() {
       data: typeof SiteCategoryContract.Update.static;
     }) =>
       api.put<any, typeof SiteCategoryContract.Update.static>(
-        `/api/v1/sitecategories/${id}`,
+        `/api/v1/sitecategory/${id}`,
         data
       ),
     onSuccess: (_, variables) => {
@@ -117,7 +115,7 @@ export function useUpdateSiteCategory() {
 export function useDeleteSiteCategory() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => api.delete<any>(`/api/v1/sitecategories/${id}`),
+    mutationFn: (id: string) => api.delete<any>(`/api/v1/sitecategory/${id}`),
     onSuccess: () => {
       toast.success("站点分类删除成功");
       queryClient.invalidateQueries({ queryKey: sitecategoryKeys.lists() });
@@ -134,7 +132,7 @@ export function useBatchDeleteSiteCategories() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (ids: string[]) =>
-      api.delete<any, { ids: string[] }>("/api/v1/sitecategories/batch", {
+      api.delete<any, { ids: string[] }>("/api/v1/sitecategory/batch", {
         ids,
       }),
     onSuccess: () => {
@@ -155,7 +153,7 @@ export function useMoveCategory() {
   return useMutation({
     mutationFn: ({ id, newParentId }: { id: string; newParentId?: string }) =>
       api.patch<any, { newParentId?: string }>(
-        `/api/v1/sitecategories/${id}/move`,
+        `/api/v1/sitecategory/${id}/move`,
         { newParentId }
       ),
     onSuccess: () => {
@@ -175,7 +173,7 @@ export function useUpdateCategoriesSort() {
   return useMutation({
     mutationFn: (items: Array<{ id: string; sortOrder: number }>) =>
       api.patch<any, { items: Array<{ id: string; sortOrder: number }> }>(
-        "/api/v1/sitecategories/sort",
+        "/api/v1/sitecategory/sort",
         { items }
       ),
     onSuccess: () => {
@@ -194,7 +192,7 @@ export function useToggleCategoryStatus() {
 
   return useMutation({
     mutationFn: (id: string) =>
-      api.patch<any, {}>(`/api/v1/sitecategories/${id}/toggle`, {}),
+      api.patch<any, {}>(`/api/v1/sitecategory/${id}/toggle`, {}),
     onSuccess: () => {
       toast.success("状态更新成功");
       queryClient.invalidateQueries({ queryKey: ["site-categories"] });
@@ -207,11 +205,11 @@ export function useToggleCategoryStatus() {
 
 // 获取分类的完整路径（如：一级分类 > 二级分类 > 三级分类）
 export function getCategoryPath(
-  category: SiteCategoryTree,
-  allCategories: SiteCategoryTree[]
+  category: SiteCategoryContract["TreeEntity"],
+  allCategories: SiteCategoryContract["TreeEntity"][]
 ): string {
   const path: string[] = [];
-  let currentCategory: SiteCategoryTree | undefined = category;
+  let currentCategory: SiteCategoryContract["TreeEntity"] | undefined = category;
 
   while (currentCategory) {
     path.unshift(currentCategory.name);
@@ -231,8 +229,8 @@ export function getCategoryPath(
 // 根据ID查找分类
 function findCategoryById(
   id: string,
-  categories: SiteCategoryTree[]
-): SiteCategoryTree | undefined {
+  categories: SiteCategoryContract["TreeEntity"][]
+): SiteCategoryContract["TreeEntity"] | undefined {
   for (const category of categories) {
     if (category.id === id) {
       return category;
@@ -248,14 +246,14 @@ function findCategoryById(
 }
 
 // 检查分类是否有子分类
-export function hasChildren(category: SiteCategoryTree): boolean {
+export function hasChildren(category: SiteCategoryContract["TreeEntity"]): boolean {
   return !!(category.children && category.children.length > 0);
 }
 
 // 检查是否可以删除分类（没有子分类）
 export function canDeleteCategory(
-  category: SiteCategoryTree,
-  _allCategories: SiteCategoryTree[]
+  category: SiteCategoryContract["TreeEntity"],
+  _allCategories: SiteCategoryContract["TreeEntity"][]
 ): boolean {
   if (hasChildren(category)) {
     return false;
