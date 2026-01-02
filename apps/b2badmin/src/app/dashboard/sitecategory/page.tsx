@@ -1,5 +1,6 @@
 "use client";
 
+import { SiteCategoryContract } from "@repo/contract";
 import { ChevronDown, ChevronRight, Edit, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -23,12 +24,10 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-
 import {
   useDeleteSiteCategory,
   useSiteCategoryTree,
 } from "@/hooks/api/sitecategory";
-import { SiteCategoryContract } from "@repo/contract";
 
 // 树形节点组件
 function CategoryTreeNode({

@@ -2,6 +2,7 @@
 
 import { Label } from "@radix-ui/react-label";
 import { Switch } from "@radix-ui/react-switch";
+import { MasterCategoryContract } from "@repo/contract";
 import {
   ChevronDown,
   ChevronRight,
@@ -33,14 +34,12 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-
 import {
-  useMasterCategoryBatchDelete,
   useDeleteMasterCategory,
+  useMasterCategoryBatchDelete,
   useMasterCategoryTree,
 } from "@/hooks/api/mastercategory";
 import { useAuthStore } from "@/stores/auth-store";
-import { MasterCategoryContract } from "@repo/contract";
 
 // 树形节点组件
 function MasterCategoryTreeNode({

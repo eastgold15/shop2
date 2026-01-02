@@ -11,8 +11,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { api } from "./api-client";
 
-
-
 // --- Query Keys ---
 export const sitecategoryKeys = {
   all: ["sitecategory"] as const,
@@ -20,11 +18,12 @@ export const sitecategoryKeys = {
   list: (params: any) => [...sitecategoryKeys.lists(), params] as const,
   details: () => [...sitecategoryKeys.all, "detail"] as const,
   detail: (id: string) => [...sitecategoryKeys.details(), id] as const,
+  tree: () => [...sitecategoryKeys.all, "tree"] as const,
 };
 
 export function useSiteCategoryTree(options?: { enabled?: boolean }) {
   return useQuery({
-    queryKey: ["sitecategory", "tree"],
+    queryKey: sitecategoryKeys.tree(),
     queryFn: async () => {
       const data = await api.get<SiteCategoryContract["TreeEntity"][]>(
         "/api/v1/sitecategory/tree"
@@ -74,7 +73,7 @@ export function useCreateSiteCategory() {
     onSuccess: () => {
       toast.success("站点分类创建成功");
       queryClient.invalidateQueries({ queryKey: sitecategoryKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: ["site-categories"] });
+      queryClient.invalidateQueries({ queryKey: sitecategoryKeys.tree() });
     },
     onError: (error: any) => {
       toast.error(error?.message || "创建站点分类失败");
@@ -100,7 +99,7 @@ export function useUpdateSiteCategory() {
     onSuccess: (_, variables) => {
       toast.success("站点分类更新成功");
       queryClient.invalidateQueries({ queryKey: sitecategoryKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: ["site-categories"] });
+      queryClient.invalidateQueries({ queryKey: sitecategoryKeys.tree() });
       queryClient.invalidateQueries({
         queryKey: sitecategoryKeys.detail(variables.id),
       });
@@ -119,7 +118,7 @@ export function useDeleteSiteCategory() {
     onSuccess: () => {
       toast.success("站点分类删除成功");
       queryClient.invalidateQueries({ queryKey: sitecategoryKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: ["site-categories"] });
+      queryClient.invalidateQueries({ queryKey: sitecategoryKeys.tree() });
     },
     onError: (error: any) => {
       toast.error(error?.message || "删除站点分类失败");
@@ -138,7 +137,7 @@ export function useBatchDeleteSiteCategories() {
     onSuccess: () => {
       toast.success("批量删除成功");
       queryClient.invalidateQueries({ queryKey: sitecategoryKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: ["site-categories"] });
+      queryClient.invalidateQueries({ queryKey: sitecategoryKeys.tree() });
     },
     onError: (error: any) => {
       toast.error(error?.message || "批量删除失败");
@@ -158,7 +157,7 @@ export function useMoveCategory() {
       ),
     onSuccess: () => {
       toast.success("分类移动成功");
-      queryClient.invalidateQueries({ queryKey: ["site-categories"] });
+      queryClient.invalidateQueries({ queryKey: sitecategoryKeys.tree() });
     },
     onError: (error: any) => {
       toast.error(error?.message || "移动分类失败");
@@ -178,7 +177,7 @@ export function useUpdateCategoriesSort() {
       ),
     onSuccess: () => {
       toast.success("排序更新成功");
-      queryClient.invalidateQueries({ queryKey: ["site-categories"] });
+      queryClient.invalidateQueries({ queryKey: sitecategoryKeys.tree() });
     },
     onError: (error: any) => {
       toast.error(error?.message || "更新排序失败");
@@ -195,7 +194,7 @@ export function useToggleCategoryStatus() {
       api.patch<any, {}>(`/api/v1/sitecategory/${id}/toggle`, {}),
     onSuccess: () => {
       toast.success("状态更新成功");
-      queryClient.invalidateQueries({ queryKey: ["site-categories"] });
+      queryClient.invalidateQueries({ queryKey: sitecategoryKeys.tree() });
     },
     onError: (error: any) => {
       toast.error(error?.message || "更新状态失败");
@@ -209,7 +208,8 @@ export function getCategoryPath(
   allCategories: SiteCategoryContract["TreeEntity"][]
 ): string {
   const path: string[] = [];
-  let currentCategory: SiteCategoryContract["TreeEntity"] | undefined = category;
+  let currentCategory: SiteCategoryContract["TreeEntity"] | undefined =
+    category;
 
   while (currentCategory) {
     path.unshift(currentCategory.name);
@@ -246,7 +246,9 @@ function findCategoryById(
 }
 
 // 检查分类是否有子分类
-export function hasChildren(category: SiteCategoryContract["TreeEntity"]): boolean {
+export function hasChildren(
+  category: SiteCategoryContract["TreeEntity"]
+): boolean {
   return !!(category.children && category.children.length > 0);
 }
 

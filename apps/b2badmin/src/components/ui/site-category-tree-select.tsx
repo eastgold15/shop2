@@ -50,7 +50,7 @@ export function SiteCategoryTreeSelect({
   placeholder = "选择站点分类",
   className = "",
   disabled = false,
-  allowClear = false,
+  allowClear = true,
   excludeId,
   showFullPath = false,
 }: SiteCategoryTreeSelectProps) {

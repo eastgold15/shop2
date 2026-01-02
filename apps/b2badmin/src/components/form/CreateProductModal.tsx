@@ -27,7 +27,7 @@ import { MediaSelect } from "@/components/ui/media-select";
 import { SiteCategoryTreeSelect } from "@/components/ui/site-category-tree-select";
 import { Textarea } from "@/components/ui/textarea";
 import { useProductsCreate, useProductsUpdate } from "@/hooks/api/product";
-import { useTemplateList as useListTemplates } from "@/hooks/api/template";
+import { useTemplateList } from "@/hooks/api/template";
 
 const formSchema = z.object({
   spuCode: z.string().min(1, "SPU编码不能为空"),
@@ -59,7 +59,7 @@ export function CreateProductModal({
   const createProduct = useProductsCreate();
   const updateProduct = useProductsUpdate();
 
-  const { data: templatesData = [] } = useListTemplates({
+  const { data: templatesData = [] } = useTemplateList({
     page: 1,
     limit: 100,
   });

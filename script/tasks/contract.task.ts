@@ -2,7 +2,7 @@ import {
   Node,
   type ObjectLiteralExpression,
   type Project,
-  VariableDeclarationKind
+  VariableDeclarationKind,
 } from "ts-morph";
 import {
   ensureImport,

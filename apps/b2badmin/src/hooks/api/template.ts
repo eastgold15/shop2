@@ -8,6 +8,7 @@
 
 import { TemplateContract } from "@repo/contract";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { api } from "./api-client";
 
 // --- Query Keys ---
@@ -29,7 +30,7 @@ export function useTemplateList(
     queryKey: templateKeys.list(params),
     queryFn: () =>
       api.get<any, typeof TemplateContract.ListQuery.static>(
-        "/api/v1/template",
+        "/api/v1/template/",
         { params }
       ),
     enabled,
@@ -53,7 +54,7 @@ export function useCreateTemplate() {
   return useMutation({
     mutationFn: (data: typeof TemplateContract.Create.static) =>
       api.post<any, typeof TemplateContract.Create.static>(
-        "/api/v1/template",
+        "/api/v1/template/",
         data
       ),
     onSuccess: () => {
@@ -89,12 +90,19 @@ export function useUpdateTemplate() {
 
 // --- 5. 删除 (DELETE) ---
 // TRes = any
-export function useDeleteTemplate() {
+
+// 删除模板
+export function useDeleteTemplates() {
   const queryClient = useQueryClient();
+
   return useMutation({
-    mutationFn: (id: string) => api.delete<any>(`/api/v1/template/${id}`),
+    mutationFn: async (id: string) => api.delete<any>(`/api/v1/template/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: templateKeys.lists() });
+      toast.success("模板删除成功");
+      queryClient.invalidateQueries({ queryKey: ["templates"] });
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "删除模板失败");
     },
   });
 }

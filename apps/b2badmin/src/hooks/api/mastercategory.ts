@@ -20,6 +20,7 @@ export const mastercategoryKeys = {
   list: (params: any) => [...mastercategoryKeys.lists(), params] as const,
   details: () => [...mastercategoryKeys.all, "detail"] as const,
   detail: (id: string) => [...mastercategoryKeys.details(), id] as const,
+  tree: () => [...mastercategoryKeys.all, "tree"] as const,
 };
 
 // 工具函数：将树形分类数据扁平化为选项列表
@@ -28,7 +29,10 @@ export function flattenCategories(
 ): Array<{ value: string; label: string }> {
   const result: Array<{ value: string; label: string }> = [];
 
-  const traverse = (nodes: MasterCategoryContract["TreeEntity"][], prefix = "") => {
+  const traverse = (
+    nodes: MasterCategoryContract["TreeEntity"][],
+    prefix = ""
+  ) => {
     for (const node of nodes) {
       const label = prefix ? `${prefix} > ${node.name}` : node.name;
       result.push({ value: node.id, label });
@@ -62,9 +66,11 @@ export function useMasterCategoryList(
 // 获取主分类树
 export function useMasterCategoryTree(options?: { enabled?: boolean }) {
   return useQuery({
-    queryKey: ["mastercategory", "tree"],
+    queryKey: mastercategoryKeys.tree(),
     queryFn: async () => {
-      const data = await api.get<MasterCategoryContract["TreeEntity"][]>("/api/v1/mastercategory/tree");
+      const data = await api.get<MasterCategoryContract["TreeEntity"][]>(
+        "/api/v1/mastercategory/tree"
+      );
       return data || [];
     },
     staleTime: 1000 * 60 * 5,
@@ -121,7 +127,7 @@ export function useCreateMasterCategory() {
     onSuccess: () => {
       toast.success("主分类创建成功");
       queryClient.invalidateQueries({ queryKey: mastercategoryKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: ["master-categories"] });
+      queryClient.invalidateQueries({ queryKey: mastercategoryKeys.tree() });
     },
     onError: (error: any) => {
       toast.error(error?.message || "创建主分类失败");
@@ -148,7 +154,7 @@ export function useUpdateMasterCategory() {
     onSuccess: (_, variables) => {
       toast.success("主分类更新成功");
       queryClient.invalidateQueries({ queryKey: mastercategoryKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: ["master-categories"] });
+      queryClient.invalidateQueries({ queryKey: mastercategoryKeys.tree() });
       queryClient.invalidateQueries({
         queryKey: mastercategoryKeys.detail(variables.id),
       });
@@ -168,7 +174,7 @@ export function useDeleteMasterCategory() {
     onSuccess: () => {
       toast.success("主分类删除成功");
       queryClient.invalidateQueries({ queryKey: mastercategoryKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: ["master-categories"] });
+      queryClient.invalidateQueries({ queryKey: mastercategoryKeys.tree() });
     },
     onError: (error: any) => {
       toast.error(error?.message || "删除主分类失败");
@@ -181,16 +187,16 @@ export function useMasterCategoryBatchDelete() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (ids: string[]) =>
-      api.delete<any, { ids: string[] }>("/api/v1/mastercategory/batch", { ids }),
+      api.delete<any, { ids: string[] }>("/api/v1/mastercategory/batch", {
+        ids,
+      }),
     onSuccess: () => {
       toast.success("批量删除成功");
       queryClient.invalidateQueries({ queryKey: mastercategoryKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: ["master-categories"] });
+      queryClient.invalidateQueries({ queryKey: mastercategoryKeys.tree() });
     },
     onError: (error: any) => {
       toast.error(error?.message || "批量删除失败");
     },
   });
 }
-
-
