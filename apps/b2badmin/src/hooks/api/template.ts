@@ -92,7 +92,7 @@ export function useUpdateTemplate() {
 // TRes = any
 
 // 删除模板
-export function useDeleteTemplates() {
+export function useDeleteTemplate() {
   const queryClient = useQueryClient();
 
   return useMutation({
