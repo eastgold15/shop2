@@ -12,9 +12,6 @@ import { toast } from "sonner";
 import { api } from "./api-client";
 
 // 树形节点类型
-export type MasterCategoryTree = MasterCategoryContract["Response"] & {
-  children?: MasterCategoryTree[];
-};
 
 // --- Query Keys ---
 export const mastercategoryKeys = {
@@ -23,15 +20,19 @@ export const mastercategoryKeys = {
   list: (params: any) => [...mastercategoryKeys.lists(), params] as const,
   details: () => [...mastercategoryKeys.all, "detail"] as const,
   detail: (id: string) => [...mastercategoryKeys.details(), id] as const,
+  tree: () => [...mastercategoryKeys.all, "tree"] as const,
 };
 
 // 工具函数：将树形分类数据扁平化为选项列表
 export function flattenCategories(
-  categories: MasterCategoryTree[]
+  categories: MasterCategoryContract["TreeEntity"][]
 ): Array<{ value: string; label: string }> {
   const result: Array<{ value: string; label: string }> = [];
 
-  const traverse = (nodes: MasterCategoryTree[], prefix = "") => {
+  const traverse = (
+    nodes: MasterCategoryContract["TreeEntity"][],
+    prefix = ""
+  ) => {
     for (const node of nodes) {
       const label = prefix ? `${prefix} > ${node.name}` : node.name;
       result.push({ value: node.id, label });
@@ -55,19 +56,21 @@ export function useMasterCategoryList(
     queryKey: mastercategoryKeys.list(params),
     queryFn: () =>
       api.get<any, typeof MasterCategoryContract.ListQuery.static>(
-        "/api/v1/master",
+        "/api/v1/mastercategory/",
         { params }
       ),
     enabled,
   });
 }
 
-// 获取主分类树（旧名称兼容）
-export function useMasterCategoriesTree(options?: { enabled?: boolean }) {
+// 获取主分类树
+export function useMasterCategoryTree(options?: { enabled?: boolean }) {
   return useQuery({
-    queryKey: ["master-categories", "tree"],
+    queryKey: mastercategoryKeys.tree(),
     queryFn: async () => {
-      const data = await api.get<MasterCategoryTree[]>("/api/v1/master/tree");
+      const data = await api.get<MasterCategoryContract["TreeEntity"][]>(
+        "/api/v1/mastercategory/tree"
+      );
       return data || [];
     },
     staleTime: 1000 * 60 * 5,
@@ -85,7 +88,7 @@ export function useMasterCategories(
       const categories = await api.get<
         any,
         Partial<typeof MasterCategoryContract.ListQuery.static>
-      >("/api/v1/master", { params: query || {} });
+      >("/api/v1/mastercategory/", { params: query || {} });
       return categories || [];
     },
     staleTime: 1000 * 60 * 5,
@@ -97,7 +100,7 @@ export function useMasterCategories(
 export function useMasterCategoryDetail(id: string, enabled = !!id) {
   return useQuery({
     queryKey: mastercategoryKeys.detail(id),
-    queryFn: () => api.get<any>(`/api/v1/master/${id}`),
+    queryFn: () => api.get<any>(`/api/v1/mastercategory/${id}`),
     enabled,
   });
 }
@@ -106,7 +109,7 @@ export function useMasterCategoryDetail(id: string, enabled = !!id) {
 export function useMasterCategory(id: string) {
   return useQuery({
     queryKey: ["master-category", id],
-    queryFn: async () => api.get<any>(`/api/v1/master/${id}`),
+    queryFn: async () => api.get<any>(`/api/v1/mastercategory/${id}`),
     enabled: !!id,
   });
 }
@@ -118,13 +121,13 @@ export function useCreateMasterCategory() {
   return useMutation({
     mutationFn: (data: typeof MasterCategoryContract.Create.static) =>
       api.post<any, typeof MasterCategoryContract.Create.static>(
-        "/api/v1/master",
+        "/api/v1/mastercategory/",
         data
       ),
     onSuccess: () => {
       toast.success("主分类创建成功");
       queryClient.invalidateQueries({ queryKey: mastercategoryKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: ["master-categories"] });
+      queryClient.invalidateQueries({ queryKey: mastercategoryKeys.tree() });
     },
     onError: (error: any) => {
       toast.error(error?.message || "创建主分类失败");
@@ -145,13 +148,13 @@ export function useUpdateMasterCategory() {
       data: typeof MasterCategoryContract.Update.static;
     }) =>
       api.put<any, typeof MasterCategoryContract.Update.static>(
-        `/api/v1/master/${id}`,
+        `/api/v1/mastercategory/${id}`,
         data
       ),
     onSuccess: (_, variables) => {
       toast.success("主分类更新成功");
       queryClient.invalidateQueries({ queryKey: mastercategoryKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: ["master-categories"] });
+      queryClient.invalidateQueries({ queryKey: mastercategoryKeys.tree() });
       queryClient.invalidateQueries({
         queryKey: mastercategoryKeys.detail(variables.id),
       });
@@ -167,11 +170,11 @@ export function useUpdateMasterCategory() {
 export function useDeleteMasterCategory() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => api.delete<any>(`/api/v1/master/${id}`),
+    mutationFn: (id: string) => api.delete<any>(`/api/v1/mastercategory/${id}`),
     onSuccess: () => {
       toast.success("主分类删除成功");
       queryClient.invalidateQueries({ queryKey: mastercategoryKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: ["master-categories"] });
+      queryClient.invalidateQueries({ queryKey: mastercategoryKeys.tree() });
     },
     onError: (error: any) => {
       toast.error(error?.message || "删除主分类失败");
@@ -184,17 +187,16 @@ export function useMasterCategoryBatchDelete() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (ids: string[]) =>
-      api.delete<any, { ids: string[] }>("/api/v1/master/batch", { ids }),
+      api.delete<any, { ids: string[] }>("/api/v1/mastercategory/batch", {
+        ids,
+      }),
     onSuccess: () => {
       toast.success("批量删除成功");
       queryClient.invalidateQueries({ queryKey: mastercategoryKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: ["master-categories"] });
+      queryClient.invalidateQueries({ queryKey: mastercategoryKeys.tree() });
     },
     onError: (error: any) => {
       toast.error(error?.message || "批量删除失败");
     },
   });
 }
-
-// 旧名称兼容
-export const useBatchDeleteMasterCategories = useMasterCategoryBatchDelete;

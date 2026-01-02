@@ -40,108 +40,89 @@ export type * from "./template.type";
 // ==================== 有冲突的类型（需要指定来源） ====================
 
 // 部门相关类型
+// 重新导出 Department 类型（添加别名避免冲突）
 export type {
-  DepartmentListQuery,
-  DepartmentListResponse,
-  DepartmentUser,
-  DepartmentCreate,
-  DepartmentCreateResponse,
-  DepartmentUpdate,
-  DepartmentUpdateResponse,
+  Department as DepartmentEntity,
   DepartmentBatchDeleteRequest,
   DepartmentBatchDeleteResponse,
-  DepartmentTreeResponse,
+  DepartmentCreate,
+  DepartmentCreateResponse,
+  DepartmentListQuery,
+  DepartmentListResponse,
   DepartmentOption,
+  DepartmentTreeResponse,
+  DepartmentUpdate,
+  DepartmentUpdateResponse,
+  DepartmentUser,
 } from "./department.type";
-
-// 重新导出 Department 类型（添加别名避免冲突）
-export type { Department as DepartmentEntity } from "./department.type";
-
 // 权限相关类型
-export type {
-  PermissionListQuery,
-  PermissionCreate,
-  PermissionCreateResponse,
-  PermissionBatchDeleteRequest,
-  PermissionBatchDeleteResponse,
-  PermissionModule,
-  PermissionAction,
-} from "./permission.type";
-
 // 重新导出 Permission 和 PermissionListResponse（添加别名避免冲突）
 export type {
   Permission as PermissionEntity,
+  PermissionAction,
+  PermissionBatchDeleteRequest,
+  PermissionBatchDeleteResponse,
+  PermissionCreate,
+  PermissionCreateResponse,
+  PermissionListQuery,
   PermissionListResponse as PermissionListResponseEntity,
+  PermissionModule,
 } from "./permission.type";
-
 // 角色相关类型
+// 重新导出 Role 类型（添加别名避免冲突）
 export type {
-  RoleListQuery,
-  RolePermission,
-  RoleCreate,
-  RoleCreateResponse,
-  RoleUpdate,
-  RoleUpdateResponse,
+  Role as RoleEntity,
   RoleBatchDeleteRequest,
   RoleBatchDeleteResponse,
+  RoleCreate,
+  RoleCreateResponse,
+  RoleListQuery,
+  RolePermission,
   RoleSetPermissionsRequest,
   RoleSetPermissionsResponse,
   RoleType,
+  RoleUpdate,
+  RoleUpdateResponse,
 } from "./role.type";
-
-// 重新导出 Role 类型（添加别名避免冲突）
-export type { Role as RoleEntity } from "./role.type";
-
 // 站点相关类型
-export type {
-  SiteListQuery,
-  SiteListResponse,
-  SiteCreate,
-  SiteCreateResponse,
-  SiteUpdate,
-  SiteUpdateResponse,
-  SiteBatchDeleteRequest,
-  SiteBatchDeleteResponse,
-} from "./site.type";
-
 // 重新导出 Site 和 SiteOption 类型（添加别名避免冲突）
 export type {
   Site as SiteEntity,
+  SiteBatchDeleteRequest,
+  SiteBatchDeleteResponse,
+  SiteCreate,
+  SiteCreateResponse,
+  SiteListQuery,
+  SiteListResponse,
   SiteOption as SiteOptionEntity,
+  SiteUpdate,
+  SiteUpdateResponse,
 } from "./site.type";
-
 // 用户相关类型
-export type {
-  UserListQuery,
-  UserListResponse,
-  UserCreate,
-  UserCreateResponse,
-  UserUpdate,
-  UserUpdateResponse,
-  UserBatchDeleteRequest,
-  UserBatchDeleteResponse,
-} from "./user.type";
-
 // 重新导出 User, Department, Role, UserSiteRole, SwitchableDept 类型（添加别名避免冲突）
 export type {
-  User as UserEntity,
   Department as UserDepartment,
   Role as UserRole,
-  UserSiteRole as UserSiteRoleEntity,
   SwitchableDept,
+  User as UserEntity,
+  UserBatchDeleteRequest,
+  UserBatchDeleteResponse,
+  UserCreate,
+  UserCreateResponse,
+  UserListQuery,
+  UserListResponse,
+  UserSiteRole as UserSiteRoleEntity,
+  UserUpdate,
+  UserUpdateResponse,
 } from "./user.type";
-
 // 用户角色相关类型
+// 重新导出 UserSiteRole 和 SiteOption 类型（添加别名避免冲突）
 export type {
-  UserSiteRoleListQuery,
-  UserSiteRoleListResponse,
   AssignUserRoleRequest,
   AssignUserRoleResponse,
   RoleOption,
-} from "./userrole.type";
-
-// 重新导出 UserSiteRole 和 SiteOption 类型（添加别名避免冲突）
-export type {
-  UserSiteRole as UserSiteRoleRelation,
   SiteOption as SiteOptionRelation,
+  UserSiteRole as UserSiteRoleRelation,
+  UserSiteRoleListQuery,
+  UserSiteRoleListResponse,
 } from "./userrole.type";

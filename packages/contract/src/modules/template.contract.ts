@@ -12,8 +12,8 @@ export const TemplateFields = spread(templateTable, "select");
 export const TemplateContract = {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Response: t.Object({
-    ...TemplateFields,
-  }),
+                ...TemplateFields
+              }),
   // 创建请求 (默认排除系统字段)
   Create: t.Object({
     fields: t.Optional(
@@ -33,16 +33,9 @@ export const TemplateContract = {
     masterCategoryId: TemplateInsertFields.masterCategoryId,
   }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  Update: t.Partial(
-    t.Object({
-      ...t.Omit(t.Object(TemplateInsertFields), [
-        "id",
-        "createdAt",
-        "updatedAt",
-        "siteId",
-      ]).properties,
-    })
-  ),
+  Update: t.Partial(t.Object({
+              ...t.Omit(t.Object(TemplateInsertFields), ["id", "createdAt", "updatedAt", "siteId"]).properties
+            })),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   ListQuery: t.Object({
     ...t.Partial(t.Object(TemplateInsertFields)).properties,

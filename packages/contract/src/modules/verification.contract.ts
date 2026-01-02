@@ -10,27 +10,16 @@ export const VerificationFields = spread(verificationTable, "select");
 export const VerificationContract = {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Response: t.Object({
-    ...VerificationFields,
-  }),
+                ...VerificationFields
+              }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Create: t.Object({
-    ...t.Omit(t.Object(VerificationInsertFields), [
-      "id",
-      "createdAt",
-      "updatedAt",
-    ]).properties,
-  }),
+                ...t.Omit(t.Object(VerificationInsertFields), ["id", "createdAt", "updatedAt"]).properties
+              }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  Update: t.Partial(
-    t.Object({
-      ...t.Omit(t.Object(VerificationInsertFields), [
-        "id",
-        "createdAt",
-        "updatedAt",
-        "siteId",
-      ]).properties,
-    })
-  ),
+  Update: t.Partial(t.Object({
+              ...t.Omit(t.Object(VerificationInsertFields), ["id", "createdAt", "updatedAt", "siteId"]).properties
+            })),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   ListQuery: t.Object({
     ...t.Partial(t.Object(VerificationInsertFields)).properties,

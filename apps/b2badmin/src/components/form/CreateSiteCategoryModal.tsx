@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { SiteCategoriesDTO } from "@repo/contract";
+import type { SiteCategoryContract } from "@repo/contract";
 import { FolderPlus, Loader2 } from "lucide-react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -31,8 +31,6 @@ import {
   useUpdateSiteCategory,
 } from "@/hooks/api/sitecategory";
 
-type SiteCategory = SiteCategoriesDTO["TreeResponse"];
-
 const formSchema = z.object({
   name: z.string().min(1, "分类名称不能为空"),
   parentId: z.string().optional(),
@@ -46,7 +44,7 @@ interface CreateSiteCategoryModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
-  editingCategory?: SiteCategory;
+  editingCategory?: SiteCategoryContract["TreeEntity"];
 }
 
 export function CreateSiteCategoryModal({

@@ -1,5 +1,5 @@
 import { type RoleContract, roleTable } from "@repo/contract";
-import { eq } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { type ServiceContext } from "../lib/type";
 
 export class RoleService {
@@ -27,26 +27,18 @@ export class RoleService {
   }
 
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  public async update(
-    id: string,
-    body: RoleContract["Update"],
-    ctx: ServiceContext
-  ) {
-    const updateData = { ...body, updatedAt: new Date() };
-    const [res] = await ctx.db
-      .update(roleTable)
-      .set(updateData)
-      .where(eq(roleTable.id, id))
-      .returning();
-    return res;
+  public async update(id: string, body: RoleContract["Update"], ctx: ServiceContext) {
+      const updateData = { ...body, updatedAt: new Date() };
+             const [res] = await ctx.db.update(roleTable)
+               .set(updateData)
+               .where(eq(roleTable.id, id))
+               .returning();
+             return res;
   }
 
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   public async delete(id: string, ctx: ServiceContext) {
-    const [res] = await ctx.db
-      .delete(roleTable)
-      .where(eq(roleTable.id, id))
-      .returning();
-    return res;
+      const [res] = await ctx.db.delete(roleTable).where(eq(roleTable.id, id)).returning();
+             return res;
   }
 }

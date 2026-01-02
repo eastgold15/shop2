@@ -22,14 +22,9 @@ export class TemplateService {
   }
 
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  public async update(
-    id: string,
-    body: TemplateContract["Update"],
-    ctx: ServiceContext
-  ) {
+  public async update(id: string, body: TemplateContract["Update"], ctx: ServiceContext) {
     const updateData = { ...body, updatedAt: new Date() };
-    const [res] = await ctx.db
-      .update(templateTable)
+    const [res] = await ctx.db.update(templateTable)
       .set(updateData)
       .where(eq(templateTable.id, id))
       .returning();
@@ -38,10 +33,7 @@ export class TemplateService {
 
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   public async delete(id: string, ctx: ServiceContext) {
-    const [res] = await ctx.db
-      .delete(templateTable)
-      .where(eq(templateTable.id, id))
-      .returning();
+    const [res] = await ctx.db.delete(templateTable).where(eq(templateTable.id, id)).returning();
     return res;
   }
 }

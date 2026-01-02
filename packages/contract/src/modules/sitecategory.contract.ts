@@ -16,19 +16,19 @@ const Base = t.Omit(t.Object(SiteCategoryFields), [
 export const SiteCategoryContract = {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Response: t.Object({
-    ...SiteCategoryFields,
+    ...SiteCategoryFields
   }),
-  TreeResponse: t.Object({
-    ...Base.properties,
-    children: t.Optional(t.Array(t.Object(Base.properties))),
-  }),
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+  TreeEntity: t.Recursive((Self) =>
+    t.Object({
+      // 展开所有基础字段
+      ...SiteCategoryFields,
+      // 递归定义 children
+      children: t.Optional(t.Array(Self)),
+    })
+  ),
+
   Create: t.Object({
-    ...t.Omit(t.Object(SiteCategoryInsertFields), [
-      "id",
-      "createdAt",
-      "updatedAt",
-    ]).properties,
+    ...t.Omit(t.Object(SiteCategoryInsertFields), ["id", "createdAt", "updatedAt", "tenantId", "deptId", "siteId"]).properties
   }),
 
   Update: t.Partial(

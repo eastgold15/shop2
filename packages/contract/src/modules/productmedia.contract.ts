@@ -10,27 +10,16 @@ export const ProductMediaFields = spread(productMediaTable, "select");
 export const ProductMediaContract = {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Response: t.Object({
-    ...ProductMediaFields,
-  }),
+                ...ProductMediaFields
+              }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Create: t.Object({
-    ...t.Omit(t.Object(ProductMediaInsertFields), [
-      "id",
-      "createdAt",
-      "updatedAt",
-    ]).properties,
-  }),
+                ...t.Omit(t.Object(ProductMediaInsertFields), ["id", "createdAt", "updatedAt"]).properties
+              }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  Update: t.Partial(
-    t.Object({
-      ...t.Omit(t.Object(ProductMediaInsertFields), [
-        "id",
-        "createdAt",
-        "updatedAt",
-        "siteId",
-      ]).properties,
-    })
-  ),
+  Update: t.Partial(t.Object({
+              ...t.Omit(t.Object(ProductMediaInsertFields), ["id", "createdAt", "updatedAt", "siteId"]).properties
+            })),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   ListQuery: t.Object({
     ...t.Partial(t.Object(ProductMediaInsertFields)).properties,

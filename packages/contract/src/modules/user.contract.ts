@@ -1,6 +1,7 @@
 import { t } from "elysia";
 import { type InferDTO, spread } from "../helper/utils";
 import { userTable } from "../table.schema";
+import { PaginationParams, SortParams } from "../helper/query-types.model";
 
 /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
 export const UserInsertFields = spread(userTable, "insert");
@@ -9,8 +10,8 @@ export const UserFields = spread(userTable, "select");
 export const UserContract = {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Response: t.Object({
-    ...UserFields,
-  }),
+                ...UserFields
+              }),
 
   Create: t.Composite([
     t.Object(
@@ -23,16 +24,9 @@ export const UserContract = {
     }),
   ]),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  Update: t.Partial(
-    t.Object({
-      ...t.Omit(t.Object(UserInsertFields), [
-        "id",
-        "createdAt",
-        "updatedAt",
-        "siteId",
-      ]).properties,
-    })
-  ),
+  Update: t.Partial(t.Object({
+              ...t.Omit(t.Object(UserInsertFields), ["id", "createdAt", "updatedAt", "siteId"]).properties
+            })),
 
   // Patch 请求 (部分更新)
   Patch: t.Partial(
@@ -54,7 +48,6 @@ export const UserContract = {
     data: t.Array(t.Object({ ...UserFields })),
     total: t.Number(),
   }),
-}
+};
 
 export type UserContract = InferDTO<typeof UserContract>;
-

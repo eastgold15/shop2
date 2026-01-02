@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, type ReactNode, useContext, useEffect } from "react";
-import { useSiteCategoriesTree } from "@/hooks/api/sitecategory";
+import { useSiteCategoryTree } from "@/hooks/api/sitecategory";
 import { useAuthStore } from "@/stores/auth-store";
 import { useSiteCategoryStore } from "@/stores/site-category-store";
 
@@ -25,7 +25,7 @@ export function SiteCategoryProvider({ children }: { children: ReactNode }) {
     data: categories,
     isLoading,
     refetch,
-  } = useSiteCategoriesTree({
+  } = useSiteCategoryTree({
     enabled: !!user, // 只有当 user 存在时才启用查询
   });
   const { setTreeData, setLoading } = useSiteCategoryStore();

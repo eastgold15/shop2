@@ -10,8 +10,8 @@ export const InquiryFields = spread(inquiryTable, "select");
 export const InquiryContract = {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Response: t.Object({
-    ...InquiryFields,
-  }),
+                ...InquiryFields
+              }),
 
   Create: t.Composite([
     t.Object(
@@ -33,16 +33,9 @@ export const InquiryContract = {
     }),
   ]),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  Update: t.Partial(
-    t.Object({
-      ...t.Omit(t.Object(InquiryInsertFields), [
-        "id",
-        "createdAt",
-        "updatedAt",
-        "siteId",
-      ]).properties,
-    })
-  ),
+  Update: t.Partial(t.Object({
+              ...t.Omit(t.Object(InquiryInsertFields), ["id", "createdAt", "updatedAt", "siteId"]).properties
+            })),
   // Patch 请求 (部分更新)
   Patch: t.Partial(
     t.Object({

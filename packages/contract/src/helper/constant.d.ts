@@ -1,0 +1,33 @@
+export declare const SUPPORTED_IMAGE_TYPES: readonly ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
+export declare const MAX_FILE_SIZE: number;
+export declare const IMAGE_MIME_TYPE_MAP: Record<string, string>;
+export declare const FOLDDER_TYPE: {
+    readonly ALL: "all";
+    readonly GENERAL: "general";
+    readonly BANNER: "banner";
+    readonly PRODUCT: "product";
+    readonly LOGO: "logo";
+    readonly USER_AVATAR: "avatar";
+    readonly OTHER: "other";
+};
+export type Folder_Type = keyof typeof FOLDDER_TYPE;
+export type SUPPORTED_IMAGE_TYPES = (typeof SUPPORTED_IMAGE_TYPES)[number];
+export declare const FileType: import("elysia/type-system/types").TUnionEnum<["image", "video", "document", "audio", "other"]>;
+export type FileType = typeof FileType.static;
+export declare const STATISTICS_TYPES: {
+    readonly USER_REGISTRATION: "user_registration";
+    readonly USER_LOGIN: "user_login";
+    readonly USER_ACTIVE: "user_active";
+    readonly ORDER_CREATE: "order_create";
+    readonly ORDER_PAYMENT: "order_payment";
+    readonly ORDER_COMPLETE: "order_complete";
+    readonly PRODUCT_VIEW: "product_view";
+    readonly PRODUCT_SEARCH: "product_search";
+    readonly PRODUCT_FAVORITE: "product_favorite";
+    readonly REVENUE_DAILY: "revenue_daily";
+    readonly REVENUE_MONTHLY: "revenue_monthly";
+    readonly REVENUE_YEARLY: "revenue_yearly";
+    readonly TRAFFIC_PV: "traffic_pv";
+    readonly TRAFFIC_UV: "traffic_uv";
+    readonly TRAFFIC_SESSION: "traffic_session";
+};

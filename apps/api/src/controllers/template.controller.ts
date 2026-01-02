@@ -25,6 +25,7 @@ export const templateController = new Elysia({ prefix: "/template" })
     {
       allPermissions: ["TEMPLATE:VIEW"],
       query: TemplateContract.ListQuery,
+      requireDept: true,
       detail: {
         summary: "获取Template列表",
         description: "分页查询Template数据，支持搜索和排序",
@@ -38,6 +39,7 @@ export const templateController = new Elysia({ prefix: "/template" })
       templateService.create(body, { db, user, currentDeptId }),
     {
       allPermissions: ["TEMPLATE:CREATE"],
+      requireDept: true,
       body: TemplateContract.Create,
       detail: {
         summary: "创建Template",
@@ -53,6 +55,7 @@ export const templateController = new Elysia({ prefix: "/template" })
     {
       params: t.Object({ id: t.String() }),
       body: TemplateContract.Update,
+      requireDept: true,
       allPermissions: ["TEMPLATE:EDIT"],
       detail: {
         summary: "更新Template",
@@ -68,6 +71,7 @@ export const templateController = new Elysia({ prefix: "/template" })
     {
       params: t.Object({ id: t.String() }),
       allPermissions: ["TEMPLATE:DELETE"],
+      requireDept: true,
       detail: {
         summary: "删除Template",
         description: "根据ID删除Template记录",

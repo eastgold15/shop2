@@ -8,10 +8,17 @@ export class SiteCategoryService {
     body: SiteCategoryContract["Create"],
     ctx: ServiceContext
   ) {
+    // 验证是否有站点上下文
+    if (!ctx.user.context.site?.id) {
+      throw new HttpError.BadRequest("当前部门未绑定站点，无法创建站点分类");
+    }
+
     const insertData = {
       ...body,
-      // 自动注入租户信息
-      ...(ctx.user.tenantId ? { tenantId: ctx.user.tenantId } : {}),
+      // 自动注入租户信息、部门ID和站点ID
+      deptId: ctx.currentDeptId,
+      tenantId: ctx.user.context.tenantId!,
+      siteId: ctx.user.context.site.id,
     };
     const [res] = await ctx.db
       .insert(siteCategoryTable)
@@ -25,11 +32,10 @@ export class SiteCategoryService {
     ctx: ServiceContext
   ) {
     const { search } = query;
-    const scopeObj = ctx.getScopeObj();
     const res = await ctx.db.query.siteCategoryTable.findMany({
       where: {
-        deptId: scopeObj.deptId,
-        tenantId: scopeObj.tenantId,
+        deptId: ctx.currentDeptId,
+        tenantId: ctx.user.context.tenantId!,
         ...(search ? { name: { ilike: `%${search}%` } } : {}),
       },
     });
@@ -49,7 +55,7 @@ export class SiteCategoryService {
     return res;
   }
 
-  public async delete(id: string, body: unknown, ctx: ServiceContext) {
+  public async delete(id: string, ctx: ServiceContext) {
     const res = await ctx.db
       .delete(siteCategoryTable)
       .where(eq(siteCategoryTable.id, id))
@@ -61,11 +67,11 @@ export class SiteCategoryService {
    * 获取树形结构的分类列表
    */
   async getTree(ctx: ServiceContext) {
-    const scopeObj = ctx.getScopeObj();
+
     const categories = await ctx.db.query.siteCategoryTable.findMany({
       where: {
-        deptId: scopeObj.deptId,
-        tenantId: scopeObj.tenantId,
+        deptId: ctx.currentDeptId,
+        tenantId: ctx.user.context.tenantId!,
       },
       orderBy: { sortOrder: "asc", createdAt: "asc" },
     });
@@ -98,46 +104,6 @@ export class SiteCategoryService {
   }
 
   /**
-   * 创建分类（支持层级关系）
-   */
-  async createCategory(data: any, ctx: ServiceContext) {
-    const {
-      name,
-      description,
-      parentId,
-      sortOrder = 0,
-      isActive = true,
-    } = data;
-
-    // 如果有父级，验证父级是否存在
-    if (parentId) {
-      const scopeObj = ctx.getScopeObj();
-      const parent = await ctx.db.query.siteCategoryTable.findFirst({
-        where: {
-          id: parentId,
-          deptId: scopeObj.deptId,
-          tenantId: scopeObj.tenantId,
-        },
-      });
-
-      if (!parent) {
-        throw new HttpError.NotFound("父级分类不存在或无权访问");
-      }
-    }
-
-    return await this.create(
-      {
-        name,
-        description,
-        parentId,
-        sortOrder,
-        isActive,
-      },
-      ctx
-    );
-  }
-
-  /**
    * 移动分类（更新父级关系）
    */
   async moveCategory(
@@ -145,13 +111,12 @@ export class SiteCategoryService {
     newParentId: string | null,
     ctx: ServiceContext
   ) {
-    const scopeObj = ctx.getScopeObj();
     // 验证分类是否存在
     const category = await ctx.db.query.siteCategoryTable.findFirst({
       where: {
         id,
-        deptId: scopeObj.deptId,
-        tenantId: scopeObj.tenantId,
+        deptId: ctx.currentDeptId,
+        tenantId: ctx.user.context.tenantId!,
       },
     });
 
@@ -164,8 +129,8 @@ export class SiteCategoryService {
       const parent = await ctx.db.query.siteCategoryTable.findFirst({
         where: {
           id: newParentId,
-          deptId: scopeObj.deptId,
-          tenantId: scopeObj.tenantId,
+          deptId: ctx.currentDeptId,
+          tenantId: ctx.user.context.tenantId!,
         },
       });
 
@@ -217,12 +182,11 @@ export class SiteCategoryService {
    * 切换激活状态
    */
   async toggleStatus(id: string, ctx: ServiceContext) {
-    const scopeObj = ctx.getScopeObj();
     const category = await ctx.db.query.siteCategoryTable.findFirst({
       where: {
         id,
-        deptId: scopeObj.deptId,
-        tenantId: scopeObj.tenantId,
+        deptId: ctx.currentDeptId,
+        tenantId: ctx.user.context.tenantId!,
       },
     });
 
@@ -251,12 +215,11 @@ export class SiteCategoryService {
     descendantId: string,
     ctx: ServiceContext
   ): Promise<boolean> {
-    const scopeObj = ctx.getScopeObj();
     const category = await ctx.db.query.siteCategoryTable.findFirst({
       where: {
         id: descendantId,
-        deptId: scopeObj.deptId,
-        tenantId: scopeObj.tenantId,
+        deptId: ctx.currentDeptId,
+        tenantId: ctx.user.context.tenantId!,
       },
     });
 

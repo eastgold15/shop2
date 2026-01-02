@@ -1,4 +1,9 @@
-import { type Project, SyntaxKind, VariableDeclarationKind } from "ts-morph";
+import {
+  Node,
+  type ObjectLiteralExpression,
+  type Project,
+  VariableDeclarationKind,
+} from "ts-morph";
 import {
   ensureImport,
   upsertExportedConst,
@@ -68,12 +73,31 @@ export const ContractTask: Task = {
         declarations: [{ name: varName, initializer: "{}" }],
       });
       varDec = stmt.getDeclarations()[0];
-      varDec.setInitializer("{} as const"); // 添加 as const
+      varDec.setInitializer("{}");
     }
 
-    const objLiteral = varDec
-      .getInitializerIfKindOrThrow(SyntaxKind.AsExpression)
-      .getExpressionIfKindOrThrow(SyntaxKind.ObjectLiteralExpression);
+    // 🔥【核心修复】智能获取 ObjectLiteralExpression
+    // 兼容: const A = {}  和  const A = {} as const
+    const initializer = varDec.getInitializer();
+    let objLiteral: ObjectLiteralExpression | undefined;
+
+    if (initializer) {
+      if (Node.isObjectLiteralExpression(initializer)) {
+        // 情况 A: const UserContract = { ... }
+        objLiteral = initializer;
+      } else if (Node.isAsExpression(initializer)) {
+        // 情况 B: const UserContract = { ... } as const
+        const expression = initializer.getExpression();
+        if (Node.isObjectLiteralExpression(expression)) {
+          objLiteral = expression;
+        }
+      }
+    }
+
+    if (!objLiteral) {
+      console.error(`❌ 无法解析 ${varName} 的对象结构，请检查代码格式。`);
+      return;
+    }
 
     const sysFields = `["id", "createdAt", "updatedAt"]`;
     const updateOmitFields = `["id", "createdAt", "updatedAt", "siteId"]`;

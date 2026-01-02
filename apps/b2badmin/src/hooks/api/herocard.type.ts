@@ -141,4 +141,5 @@ export const BACKGROUND_CLASSES = {
   GRAY_50: "bg-gray-50",
 } as const;
 
-export type BackgroundClass = (typeof BACKGROUND_CLASSES)[keyof typeof BACKGROUND_CLASSES];
+export type BackgroundClass =
+  (typeof BACKGROUND_CLASSES)[keyof typeof BACKGROUND_CLASSES];

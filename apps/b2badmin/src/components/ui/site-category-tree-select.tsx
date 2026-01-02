@@ -1,6 +1,6 @@
 "use client";
 
-import type { SiteCategoriesDTO } from "@repo/contract";
+import type { SiteCategoryContract } from "@repo/contract";
 import { useMemo } from "react";
 import {
   Select,
@@ -14,67 +14,91 @@ import { useSiteCategoryStore } from "@/stores/site-category-store";
 interface SiteCategoryTreeSelectProps {
   value?: string;
   onChange?: (value: string) => void;
+  onValueChange?: (value: string) => void; // 别名，兼容不同命名习惯
   placeholder?: string;
-  disabled?: boolean;
   className?: string;
+  disabled?: boolean;
   allowClear?: boolean;
   excludeId?: string; // 排除某个ID（用于编辑时防止选择自己）
+  showFullPath?: boolean; // 是否显示完整路径
+}
+
+// 递归获取分类的完整路径
+function getCategoryPath(
+  categoryId: string,
+  flatData: Map<string, SiteCategoryContract["TreeEntity"]>
+): string {
+  const path: string[] = [];
+  let current = flatData.get(categoryId);
+
+  while (current) {
+    path.unshift(current.name);
+    if (current.parentId) {
+      current = flatData.get(current.parentId);
+    } else {
+      break;
+    }
+  }
+
+  return path.join(" > ");
 }
 
 export function SiteCategoryTreeSelect({
   value,
   onChange,
+  onValueChange,
   placeholder = "选择站点分类",
+  className = "",
   disabled = false,
-  className,
-  allowClear = false,
+  allowClear = true,
   excludeId,
+  showFullPath = false,
 }: SiteCategoryTreeSelectProps) {
-  const { treeData, isLoading, getCategoryById } = useSiteCategoryStore();
+  const { treeData, isLoading, flatData, getCategoryById } =
+    useSiteCategoryStore();
 
-  // 扁平化选项用于显示
+  // 统一处理值变化
+  const handleChange = (newValue: string) => {
+    const actualValue = allowClear && newValue === "none" ? "" : newValue;
+    onChange?.(actualValue);
+    onValueChange?.(actualValue);
+  };
+
+  // 扁平化的选项用于显示（带层级信息）
   const flattenedOptions = useMemo(() => {
     const flatten = (
-      cats: SiteCategoriesDTO["TreeResponse"][],
+      cats: SiteCategoryContract["TreeEntity"][],
       level = 0
-    ): Array<{ value: string; label: string }> => {
-      const result: Array<{ value: string; label: string }> = [];
+    ): Array<{ value: string; label: string; level: number }> => {
+      const result: Array<{ value: string; label: string; level: number }> = [];
       cats.forEach((cat) => {
         // 排除指定的ID
         if (cat.id !== excludeId) {
           result.push({
             value: cat.id,
-            label: "  ".repeat(level) + cat.name,
+            label: cat.name,
+            level,
           });
         }
+        // 递归处理子分类
         if (cat.children && cat.children.length > 0) {
           result.push(...flatten(cat.children, level + 1));
         }
       });
       return result;
     };
-
     return flatten(treeData || []);
   }, [treeData, excludeId]);
 
-  // 获取选中的分类名称
-  const selectedCategoryName = useMemo(() => {
-    if (!value) return "";
-    const category = getCategoryById(value);
-    return category?.name || "";
-  }, [value, getCategoryById]);
-
-  // 处理值变化
-  const handleValueChange = (newValue: string) => {
-    if (allowClear && newValue === "none") {
-      onChange?.("");
-    } else if (newValue === "root") {
-      // 选择 root 时视为空值（顶级分类）
-      onChange?.("");
-    } else {
-      onChange?.(newValue);
+  // 获取选中的分类名称或完整路径
+  const selectedCategoryText = useMemo(() => {
+    if (!(value && flatData)) return placeholder;
+    if (showFullPath) {
+      return getCategoryPath(value, flatData);
     }
-  };
+    const category = getCategoryById(value);
+    return category?.name || placeholder;
+  }, [value, flatData, showFullPath, getCategoryById, placeholder]);
 
   if (isLoading) {
     return (
@@ -88,12 +112,13 @@ export function SiteCategoryTreeSelect({
 
   return (
     <Select
-      onValueChange={handleValueChange}
+      disabled={disabled}
+      onValueChange={handleChange}
       value={value || (allowClear ? "none" : "")}
     >
-      <SelectTrigger className={`w-full ${className}`} disabled={disabled}>
+      <SelectTrigger className={`w-full ${className}`}>
         <SelectValue placeholder={placeholder}>
-          {selectedCategoryName || placeholder}
+          {selectedCategoryText}
         </SelectValue>
       </SelectTrigger>
       <SelectContent>
@@ -114,7 +139,18 @@ export function SiteCategoryTreeSelect({
         ) : (
           flattenedOptions.map((option) => (
             <SelectItem key={option.value} value={option.value}>
-              {option.label}
+              <div className="flex items-center gap-2">
+                {/* 层级缩进 */}
+                {option.level > 0 && (
+                  <span style={{ paddingLeft: `${option.level * 16}px` }} />
+                )}
+                <span>{option.label}</span>
+                {showFullPath && option.level > 0 && flatData && (
+                  <span className="text-gray-500 text-xs">
+                    ({getCategoryPath(option.value, flatData)})
+                  </span>
+                )}
+              </div>
             </SelectItem>
           ))
         )}

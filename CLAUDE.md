@@ -224,10 +224,6 @@ packages/contract/src/modules/
 │   ├── products.contract.ts
 │   ├── sites.contract.ts
 │   └── skus.contract.ts
-├── _generated/           # 自动生成的契约（由脚本生成）
-│   ├── account.contract.ts
-│   ├── ads.contract.ts
-│   ├── ...（其他所有表的契约）
 └── index.ts              # 主索引文件（由脚本自动更新）
 ```
 
@@ -321,3 +317,15 @@ export const [xxx]Route = new Elysia({
       });
 ```
 
+[# 变量命名规范](./docs/NAMING_CONVENTION.md)
+
+[# API 路径映射规范](./docs/API_PATH_MAPPING.md)
+
+
+[# 前端所有的表单请放在 apps\b2badmin\src\components\form](./apps/b2badmin/src/components/form)
+
+
+[# 前端所有的组件请放在 apps\b2badmin\src\components](./apps/b2badmin/src/components)
+
+
+- 不使用 `别名导出，兼容旧代码`  而是按照命名规范直接导出

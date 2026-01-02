@@ -2,6 +2,7 @@
 
 import { Label } from "@radix-ui/react-label";
 import { Switch } from "@radix-ui/react-switch";
+import { MasterCategoryContract } from "@repo/contract";
 import {
   ChevronDown,
   ChevronRight,
@@ -33,16 +34,12 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import type { MasterCategoryTree } from "@/hooks/api/mastercategory";
 import {
-  useBatchDeleteMasterCategories,
   useDeleteMasterCategory,
-  useMasterCategoriesTree,
+  useMasterCategoryBatchDelete,
+  useMasterCategoryTree,
 } from "@/hooks/api/mastercategory";
 import { useAuthStore } from "@/stores/auth-store";
-
-// 将契约层的实体类型转换为前端使用的带children的类型
-type MasterCategory = MasterCategoryTree;
 
 // 树形节点组件
 function MasterCategoryTreeNode({
@@ -54,13 +51,13 @@ function MasterCategoryTreeNode({
   onSelect,
   allCategories,
 }: {
-  category: MasterCategory;
+  category: MasterCategoryContract["TreeEntity"];
   level: number;
-  onEdit: (category: MasterCategory) => void;
-  onDelete: (category: MasterCategory) => void;
+  onEdit: (category: MasterCategoryContract["TreeEntity"]) => void;
+  onDelete: (category: MasterCategoryContract["TreeEntity"]) => void;
   selectedIds: Set<string>;
   onSelect: (id: string, checked: boolean) => void;
-  allCategories: MasterCategory[];
+  allCategories: MasterCategoryContract["TreeEntity"][];
 }) {
   const [isExpanded, setIsExpanded] = useState(true);
   const categoryPath = getMasterCategoryPath(category, allCategories);
@@ -178,11 +175,12 @@ function MasterCategoryTreeNode({
 
 // 获取分类路径（用于显示）
 function getMasterCategoryPath(
-  category: MasterCategory,
-  allCategories: MasterCategory[]
+  category: MasterCategoryContract["TreeEntity"],
+  allCategories: MasterCategoryContract["TreeEntity"][]
 ): string {
   const path: string[] = [];
-  let currentCategory: MasterCategory | undefined = category;
+  let currentCategory: MasterCategoryContract["TreeEntity"] | undefined =
+    category;
 
   while (currentCategory) {
     path.unshift(currentCategory.name);
@@ -202,8 +200,8 @@ function getMasterCategoryPath(
 // 根据ID查找分类
 function findMasterCategoryById(
   id: string,
-  categories: MasterCategory[]
-): MasterCategory | undefined {
+  categories: MasterCategoryContract["TreeEntity"][]
+): MasterCategoryContract["TreeEntity"] | undefined {
   for (const category of categories) {
     if (category.id === id) {
       return category;
@@ -221,14 +219,14 @@ function findMasterCategoryById(
 export default function MasterCategoryManager() {
   const user = useAuthStore((state) => state.user);
   const isSuperAdmin = user?.isSuperAdmin;
-  const { data: categoriesTree, isLoading } = useMasterCategoriesTree();
+  const { data: categoriesTree, isLoading } = useMasterCategoryTree();
   const deleteMutation = useDeleteMasterCategory();
-  const batchDeleteMutation = useBatchDeleteMasterCategories();
+  const batchDeleteMutation = useMasterCategoryBatchDelete();
 
   // 所有 hooks 必须在权限检查之前调用
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<
-    MasterCategory | undefined
+    MasterCategoryContract["TreeEntity"] | undefined
   >();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState("");
@@ -264,12 +262,14 @@ export default function MasterCategoryManager() {
       return matchesSearch && matchesVisibility;
     }) || [];
 
-  const handleEdit = (category: MasterCategory) => {
+  const handleEdit = (category: MasterCategoryContract["TreeEntity"]) => {
     setEditingCategory(category);
     setIsCreateModalOpen(true);
   };
 
-  const handleDelete = async (category: MasterCategory) => {
+  const handleDelete = async (
+    category: MasterCategoryContract["TreeEntity"]
+  ) => {
     try {
       await deleteMutation.mutateAsync(category.id);
       toast.success("主分类删除成功");
@@ -285,7 +285,7 @@ export default function MasterCategoryManager() {
     }
 
     try {
-      await batchDeleteMutation.mutateAsync({ ids: Array.from(selectedIds) });
+      await batchDeleteMutation.mutateAsync(Array.from(selectedIds));
       toast.success(`成功删除 ${selectedIds.size} 个主分类`);
       setSelectedIds(new Set());
     } catch (error) {
@@ -297,7 +297,7 @@ export default function MasterCategoryManager() {
     if (checked) {
       // 递归收集所有分类ID
       const allIds: string[] = [];
-      const collectIds = (cats: MasterCategory[]) => {
+      const collectIds = (cats: MasterCategoryContract["TreeEntity"][]) => {
         cats.forEach((cat) => {
           allIds.push(cat.id);
           if (cat.children && cat.children.length > 0) {
@@ -361,14 +361,6 @@ export default function MasterCategoryManager() {
               <h1 className="font-bold text-3xl text-slate-900">主分类管理</h1>
               <p className="mt-2 text-slate-600">
                 管理全局主分类体系，这是所有站点分类的标准参考。出口商的站点分类通过映射关系关联到主分类。
-              </p>
-              <p className="mt-1 text-slate-500 text-sm">
-                <a
-                  className="text-indigo-600 hover:underline"
-                  href="/dashboard/master-categories/demo"
-                >
-                  查看主分类选择器演示
-                </a>
               </p>
             </div>
 

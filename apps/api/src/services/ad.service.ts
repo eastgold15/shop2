@@ -1,5 +1,5 @@
 import { type AdContract, adTable } from "@repo/contract";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, desc } from "drizzle-orm";
 import { HttpError } from "elysia-http-problem-json";
 import { type ServiceContext } from "../lib/type";
 
@@ -56,11 +56,8 @@ export class AdService {
 
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   public async delete(id: string, ctx: ServiceContext) {
-    const [res] = await ctx.db
-      .delete(adTable)
-      .where(eq(adTable.id, id))
-      .returning();
-    return res;
+      const [res] = await ctx.db.delete(adTable).where(eq(adTable.id, id)).returning();
+             return res;
   }
 
   /**

@@ -3,7 +3,7 @@
  * @see https://elysiajs.com/recipe/drizzle.html#utility
  */
 
-import { Kind, Static, TSchema, type TObject } from "@sinclair/typebox";
+import { Kind, Static, type TObject, TSchema } from "@sinclair/typebox";
 import type { Table } from "drizzle-orm";
 import {
   type BuildSchema,
@@ -16,15 +16,15 @@ type Spread<
   Mode extends "select" | "insert" | undefined,
 > = T extends TObject<infer Fields>
   ? {
-      [K in keyof Fields]: Fields[K];
-    }
+    [K in keyof Fields]: Fields[K];
+  }
   : T extends Table
-    ? Mode extends "select"
-      ? BuildSchema<"select", T["_"]["columns"], undefined>["properties"]
-      : Mode extends "insert"
-        ? BuildSchema<"insert", T["_"]["columns"], undefined>["properties"]
-        : {}
-    : {};
+  ? Mode extends "select"
+  ? BuildSchema<"select", T["_"]["columns"], undefined>["properties"]
+  : Mode extends "insert"
+  ? BuildSchema<"insert", T["_"]["columns"], undefined>["properties"]
+  : {}
+  : {};
 
 /**
  * 将 Drizzle 模式展开为一个普通对象
@@ -79,8 +79,8 @@ export const spreads = <
   models: T,
   mode?: Mode
 ): {
-  [K in keyof T]: Spread<T[K], Mode>;
-} => {
+    [K in keyof T]: Spread<T[K], Mode>;
+  } => {
   const newSchema: Record<string, unknown> = {};
   const keys = Object.keys(models);
 
@@ -89,8 +89,6 @@ export const spreads = <
   return newSchema as any;
 };
 
-
-
 /**
  * 🛠️ 自动 DTO 推导工具
  * 提取 Contract 中所有 TSchema 字段的静态类型
@@ -98,7 +96,6 @@ export const spreads = <
 export type InferDTO<T> = {
   [K in keyof T]: T[K] extends TSchema ? Static<T[K]> : never;
 };
-
 
 export function pick<T, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
   const result = {} as Pick<T, K>;

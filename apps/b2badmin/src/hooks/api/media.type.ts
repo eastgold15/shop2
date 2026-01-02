@@ -122,7 +122,8 @@ export const MEDIA_CATEGORIES = {
   GENERAL: "general",
 } as const;
 
-export type MediaCategory = (typeof MEDIA_CATEGORIES)[keyof typeof MEDIA_CATEGORIES];
+export type MediaCategory =
+  (typeof MEDIA_CATEGORIES)[keyof typeof MEDIA_CATEGORIES];
 
 // ==================== 媒体选择器相关 ====================
 

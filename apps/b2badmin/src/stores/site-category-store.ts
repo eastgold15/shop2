@@ -1,26 +1,26 @@
-import type { SiteCategoriesDTO } from "@repo/contract";
+import type { SiteCategoryContract } from "@repo/contract";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 
 interface SiteCategoryState {
   // 树形数据
-  treeData: SiteCategoriesDTO["TreeResponse"][];
+  treeData: SiteCategoryContract["TreeEntity"][];
   // 扁平化数据（用于快速查找）
-  flatData: Map<string, SiteCategoriesDTO["TreeResponse"]>;
+  flatData: Map<string, SiteCategoryContract["TreeEntity"]>;
   // 加载状态
   isLoading: boolean;
   // 最后更新时间
   lastUpdated: Date | null;
 
   // Actions
-  setTreeData: (data: SiteCategoriesDTO["TreeResponse"][]) => void;
+  setTreeData: (data: SiteCategoryContract["TreeEntity"][]) => void;
   setLoading: (loading: boolean) => void;
   // 获取分类的完整路径
   getCategoryPath: (categoryId: string) => string[];
   // 根据ID查找分类
   getCategoryById: (
     categoryId: string
-  ) => SiteCategoriesDTO["TreeResponse"] | undefined;
+  ) => SiteCategoryContract["TreeEntity"] | undefined;
   // 获取所有子分类ID
   getAllChildIds: (categoryId: string) => string[];
   // 清空数据
@@ -29,11 +29,11 @@ interface SiteCategoryState {
 
 // 将树形数据转换为扁平化 Map
 const treeToFlatMap = (
-  tree: SiteCategoriesDTO["TreeResponse"][]
-): Map<string, SiteCategoriesDTO["TreeResponse"]> => {
-  const map = new Map<string, SiteCategoriesDTO["TreeResponse"]>();
+  tree: SiteCategoryContract["TreeEntity"][]
+): Map<string, SiteCategoryContract["TreeEntity"]> => {
+  const map = new Map<string, SiteCategoryContract["TreeEntity"]>();
 
-  const traverse = (nodes: SiteCategoriesDTO["TreeResponse"][]) => {
+  const traverse = (nodes: SiteCategoryContract["TreeEntity"][]) => {
     for (const node of nodes) {
       map.set(node.id, node);
       if (node.children && node.children.length > 0) {
@@ -56,7 +56,7 @@ export const useSiteCategoryStore = create<SiteCategoryState>()(
       lastUpdated: null,
 
       // Actions
-      setTreeData: (data: SiteCategoriesDTO["TreeResponse"][]) => {
+      setTreeData: (data: SiteCategoryContract["TreeEntity"][]) => {
         set({
           treeData: data,
           flatData: treeToFlatMap(data),
@@ -71,7 +71,7 @@ export const useSiteCategoryStore = create<SiteCategoryState>()(
       getCategoryPath: (categoryId: string) => {
         const { flatData } = get();
         const path: string[] = [];
-        let current: SiteCategoriesDTO["TreeResponse"] | undefined =
+        let current: SiteCategoryContract["TreeEntity"] | undefined =
           flatData.get(categoryId);
 
         while (current) {

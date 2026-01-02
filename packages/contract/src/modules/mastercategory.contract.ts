@@ -1,5 +1,4 @@
 import { t } from "elysia";
-import { PaginationParams, SortParams } from "../helper/query-types.model";
 import { type InferDTO, spread } from "../helper/utils";
 import { masterCategoryTable } from "../table.schema";
 
@@ -10,32 +9,19 @@ export const MasterCategoryFields = spread(masterCategoryTable, "select");
 export const MasterCategoryContract = {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Response: t.Object({
-    ...MasterCategoryFields,
+    ...MasterCategoryFields
   }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Create: t.Object({
-    ...t.Omit(t.Object(MasterCategoryInsertFields), [
-      "id",
-      "createdAt",
-      "updatedAt",
-    ]).properties,
+    ...t.Omit(t.Object(MasterCategoryInsertFields), ["id", "createdAt", "updatedAt", "tenantId"]).properties
   }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  Update: t.Partial(
-    t.Object({
-      ...t.Omit(t.Object(MasterCategoryInsertFields), [
-        "id",
-        "createdAt",
-        "updatedAt",
-        "siteId",
-      ]).properties,
-    })
-  ),
+  Update: t.Partial(t.Object({
+    ...t.Omit(t.Object(MasterCategoryInsertFields), ["id", "createdAt", "updatedAt", "tenantId"]).properties
+  })),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   ListQuery: t.Object({
     ...t.Partial(t.Object(MasterCategoryInsertFields)).properties,
-    ...PaginationParams.properties,
-    ...SortParams.properties,
     search: t.Optional(t.String()),
   }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
@@ -43,6 +29,15 @@ export const MasterCategoryContract = {
     data: t.Array(t.Object({ ...MasterCategoryFields })),
     total: t.Number(),
   }),
+
+  TreeEntity: t.Recursive((Self) =>
+    t.Object({
+      // 展开所有基础字段
+      ...MasterCategoryFields,
+      // 递归定义 children
+      children: t.Optional(t.Array(Self)),
+    })
+  )
 } as const;
 
 export type MasterCategoryContract = InferDTO<typeof MasterCategoryContract>;

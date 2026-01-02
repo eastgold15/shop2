@@ -119,7 +119,7 @@ import { isDatabaseError } from "./guards";
 export const errorLoggerPlugin = new Elysia({
   name: "error-logger-plugin",
 }).onError({ as: "global" }, ({ code, error, path, request }) => {
-  console.log('error:', error)
+  console.log("error:", error);
   const method = request?.method || "UNKNOWN";
 
   let processedError: any = error;

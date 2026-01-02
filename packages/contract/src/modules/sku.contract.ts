@@ -10,13 +10,12 @@ export const SkuFields = spread(skuTable, "select");
 export const SkuContract = {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Response: t.Object({
-    ...SkuFields,
-  }),
+                ...SkuFields
+              }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Create: t.Object({
-    ...t.Omit(t.Object(SkuInsertFields), ["id", "createdAt", "updatedAt"])
-      .properties,
-  }),
+                ...t.Omit(t.Object(SkuInsertFields), ["id", "createdAt", "updatedAt"]).properties
+              }),
 
   Update: t.Partial(
     t.Composite([

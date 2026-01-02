@@ -1,6 +1,6 @@
 "use client";
 
-import type { MasterDTO } from "@repo/contract";
+import type { MasterCategoryContract } from "@repo/contract";
 import { useMemo } from "react";
 import {
   Select,
@@ -26,7 +26,7 @@ interface MasterCategorySelectProps {
 // 递归获取分类的完整路径
 function getCategoryPath(
   categoryId: string,
-  flatData: Map<string, MasterDTO["TreeEntity"]>
+  flatData: Map<string, MasterCategoryContract["TreeEntity"]>
 ): string {
   const path: string[] = [];
   let current = flatData.get(categoryId);
@@ -67,7 +67,7 @@ export function MasterCategorySelect({
   // 扁平化的选项用于显示（带层级信息）
   const flattenedOptions = useMemo(() => {
     const flatten = (
-      cats: MasterDTO["TreeEntity"][],
+      cats: MasterCategoryContract["TreeEntity"][],
       level = 0
     ): Array<{ value: string; label: string; level: number }> => {
       const result: Array<{ value: string; label: string; level: number }> = [];
