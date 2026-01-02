@@ -9,17 +9,30 @@ export class AdService {
       ...body,
       startDate: new Date(body.startDate),
       endDate: new Date(body.endDate),
-      // 自动注入租户信息
+      // 自动注入租户信息和站点信息
       ...(ctx.user?.tenantId ? { tenantId: ctx.user.tenantId } : {}),
       ...(ctx.user?.id ? { createdBy: ctx.user.id } : {}),
+      ...(ctx.user?.department?.site?.id ? { siteId: ctx.user.department.site.id } : {}),
     };
-    const [res] = await ctx.db.insert(adTable).values(insertData).returning();
-    return res;
+    const [ad] = await ctx.db.insert(adTable).values(insertData).returning();
+
+    // 获取关联的 media 信息
+    const adWithMedia = await ctx.db.query.adTable.findFirst({
+      where: eq(adTable.id, ad.id),
+      with: {
+        media: true,
+      },
+    });
+
+    return {
+      ...adWithMedia,
+      mediaUrl: adWithMedia?.media?.url || null,
+    };
   }
 
   public async findAll(query: AdContract["ListQuery"], ctx: ServiceContext) {
     const { search, type, position, isActive } = query;
-    const res = await ctx.db.query.adTable.findMany({
+    const ads = await ctx.db.query.adTable.findMany({
       where: {
         deptId: ctx.currentDeptId,
         tenantId: ctx.user.tenantId!,
@@ -32,7 +45,12 @@ export class AdService {
         media: true,
       },
     });
-    return res;
+
+    // 转换格式，将 media 对象转换为 mediaUrl 字符串
+    return ads.map(ad => ({
+      ...ad,
+      mediaUrl: ad.media?.url || null,
+    }));
   }
 
   public async update(
@@ -46,12 +64,24 @@ export class AdService {
       endDate: new Date(body.endDate || ""),
       updatedAt: new Date(),
     };
-    const [res] = await ctx.db
+    const [ad] = await ctx.db
       .update(adTable)
       .set(updateData)
       .where(eq(adTable.id, id))
       .returning();
-    return res;
+
+    // 获取关联的 media 信息
+    const adWithMedia = await ctx.db.query.adTable.findFirst({
+      where: eq(adTable.id, ad.id),
+      with: {
+        media: true,
+      },
+    });
+
+    return {
+      ...adWithMedia,
+      mediaUrl: adWithMedia?.media?.url || null,
+    };
   }
 
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
