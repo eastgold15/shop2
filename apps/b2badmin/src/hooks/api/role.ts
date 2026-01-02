@@ -94,3 +94,6 @@ export function useDeleteRole() {
     },
   });
 }
+
+// 别名：兼容复数形式（前端组件中使用）
+export const useRolesList = useRoleList;

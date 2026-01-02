@@ -71,6 +71,7 @@ export const FrontendHookTask: Task = {
 
     // 5. 准备变量名
     const pascalName = ctx.pascalName; // 例如: User
+    const pascalNamePlural = `${pascalName}s`; // 例如: Users (复数)
     const camelName = ctx.tableName; // 例如: user
     const apiPath = `/api/v1/${camelName}`;
     const contractName = ctx.artifacts.contractName!;
@@ -90,9 +91,9 @@ export const FrontendHookTask: Task = {
 };`,
       },
       {
-        name: `use${pascalName}List`,
+        name: `use${pascalNamePlural}List`,
         kind: "function" as const,
-        code: `export function use${pascalName}List(params?: ${contractName}['ListQuery'], enabled?: boolean) {
+        code: `export function use${pascalNamePlural}List(params?: ${contractName}['ListQuery'], enabled?: boolean) {
   return useQuery({
     queryKey: ${queryKeyName}.list(params),
     queryFn: () => api.get<any, ${contractName}['ListQuery']>("${apiPath}", { params }),

@@ -1,5 +1,5 @@
 import { type ProductContract, productTable } from "@repo/contract";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { type ServiceContext } from "../lib/type";
 
 export class ProductService {
@@ -59,6 +59,20 @@ export class ProductService {
     const [res] = await ctx.db
       .delete(productTable)
       .where(eq(productTable.id, id))
+      .returning();
+    return res;
+  }
+
+  /** 批量删除 - 自定义方法 */
+  public async batchDelete(ids: string[], ctx: ServiceContext) {
+    const res = await ctx.db
+      .delete(productTable)
+      .where(
+        inArray(
+          productTable.id,
+          ids
+        )
+      )
       .returning();
     return res;
   }

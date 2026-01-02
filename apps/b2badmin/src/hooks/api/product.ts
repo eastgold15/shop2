@@ -35,6 +35,9 @@ export function useProductList(
   });
 }
 
+// 别名：兼容复数形式
+export const useProductsList = useProductList;
+
 // --- 2. 单个详情 (GET) ---
 // TRes = any
 export function useProductDetail(id: string, enabled = !!id) {
@@ -92,6 +95,20 @@ export function useDeleteProduct() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api.delete<any>(`/api/v1/product/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: productKeys.lists() });
+    },
+  });
+}
+
+// --- 6. 批量删除 (POST /batch/delete) ---
+export function useProductsBatchDelete() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (ids: string[]) =>
+      api.post<any, { ids: string[] }>("/api/v1/product/batch/delete", {
+        ids,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: productKeys.lists() });
     },

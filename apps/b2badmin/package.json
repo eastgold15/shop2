@@ -4,9 +4,9 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun --bun next dev",
+    "dev": "next dev -p 3501",
     "build": " next build",
-    "start": "NODE_ENV=production bun --bun next start",
+    "start": "NODE_ENV=production  next start",
     "check": "npx ultracite check",
     "fix": "npx ultracite fix",
     "type-check": "tsc --noEmit"

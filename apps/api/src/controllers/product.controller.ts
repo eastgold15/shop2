@@ -74,4 +74,22 @@ export const productController = new Elysia({ prefix: "/product" })
         tags: ["Product"],
       },
     }
+  )
+  .post(
+    "/batch/delete",
+    async ({ body, user, db, currentDeptId }) => {
+      const { ids } = body as { ids: string[] };
+      return productService.batchDelete(ids, { db, user, currentDeptId });
+    },
+    {
+      body: t.Object({
+        ids: t.Array(t.String()),
+      }),
+      allPermissions: ["PRODUCT:DELETE"],
+      detail: {
+        summary: "批量删除Product",
+        description: "根据ID列表批量删除Product记录",
+        tags: ["Product"],
+      },
+    }
   );

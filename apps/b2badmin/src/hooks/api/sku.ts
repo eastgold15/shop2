@@ -89,3 +89,8 @@ export function useDeleteSku() {
     },
   });
 }
+
+// 别名：兼容复数形式（前端组件中使用）
+export const useSkusList = useSkuList;
+export const useSkuDelete = useDeleteSku;
+export const useSkuUpdate = useUpdateSku;
