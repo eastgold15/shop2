@@ -17,10 +17,10 @@ export class MasterCategoryService {
       // 自动注入租户信息
       ...(ctx.user
         ? {
-            tenantId: ctx.user.context.tenantId!,
-            createdBy: ctx.user.id,
-            deptId: ctx.currentDeptId,
-          }
+          tenantId: ctx.user.context.tenantId!,
+          createdBy: ctx.user.id,
+          deptId: ctx.currentDeptId,
+        }
         : {}),
     };
     const [res] = await ctx.db
@@ -76,7 +76,7 @@ export class MasterCategoryService {
   /**
    * 获取树形结构的主分类列表
    */
-  async getTree(ctx: ServiceContext) {
+  async tree(ctx: ServiceContext) {
     const categories = await ctx.db.query.masterCategoryTable.findMany({
       where: {
         tenantId: ctx.user.context.tenantId!,
@@ -114,7 +114,7 @@ export class MasterCategoryService {
   /**
    * 移动主分类（更新父级关系）
    */
-  async moveCategory(
+  async move(
     id: string,
     newParentId: string | null,
     ctx: ServiceContext
@@ -187,7 +187,7 @@ export class MasterCategoryService {
   /**
    * 切换激活状态
    */
-  async toggleStatus(id: string, ctx: ServiceContext) {
+  async patchStatus(id: string, ctx: ServiceContext) {
     const category = await ctx.db.query.masterCategoryTable.findFirst({
       where: {
         id,
@@ -244,4 +244,6 @@ export class MasterCategoryService {
     // 递归检查
     return await this.checkIsDescendant(ancestorId, parentId, ctx);
   }
+
+
 }

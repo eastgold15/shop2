@@ -62,7 +62,7 @@ export class AdService {
     };
   }
 
-  public async findAll(query: AdContract["ListQuery"], ctx: ServiceContext) {
+  public async list(query: AdContract["ListQuery"], ctx: ServiceContext) {
     const { search, type, position, isActive } = query;
     const userContext = ctx.user.context!;
 
@@ -183,4 +183,6 @@ export class AdService {
 
     return { count: ads.length, message: `成功删除 ${ads.length} 个广告` };
   }
+
+
 }

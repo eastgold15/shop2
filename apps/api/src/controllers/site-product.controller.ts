@@ -23,7 +23,8 @@ export const siteProductController = new Elysia({ prefix: "/site-product" })
     ({ query, user, db, currentDeptId }) =>
       siteProductService.findAll(query, { db, user, currentDeptId }),
     {
-      allPermissions: ["SITEPRODUCT:VIEW"],
+      allPermissions: ["SITE-PRODUCT:VIEW"],
+      requireDept: true,
       query: SiteProductContract.ListQuery,
       requireDept: true,
       detail: {
@@ -37,7 +38,8 @@ export const siteProductController = new Elysia({ prefix: "/site-product" })
     "/",
     ({ body, user, db, currentDeptId }) =>
       siteProductService.create(body, { db, user, currentDeptId }),
-    {
+      allPermissions: ["SITE-PRODUCT:CREATE"],
+      requireDept: true,
       allPermissions: ["SITEPRODUCT:CREATE"],
       body: SiteProductContract.Create,
       requireDept: true,

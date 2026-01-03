@@ -24,7 +24,7 @@ export const dailyInquiryCounterController = new Elysia({
   .get(
     "/",
     ({ query, user, db, currentDeptId }) =>
-      dailyInquiryCounterService.findAll(query, { db, user, currentDeptId }),
+      dailyInquiryCounterService.list(query, { db, user, currentDeptId }),
     {
       allPermissions: ["DAILY-INQUIRY-COUNTER:VIEW"],
       requireDept: true,

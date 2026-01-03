@@ -23,7 +23,7 @@ export class InquiryService {
     return res;
   }
 
-  public async findAll(
+  public async list(
     query: InquiryContract["ListQuery"],
     ctx: ServiceContext
   ) {
@@ -61,4 +61,6 @@ export class InquiryService {
       .returning();
     return res;
   }
+
+
 }

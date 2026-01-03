@@ -18,14 +18,15 @@ const templateService = new TemplateService();
 export const templateController = new Elysia({ prefix: "/template" })
   .use(dbPlugin)
   .use(authGuardMid)
+  // @generated
   .get(
     "/",
     ({ query, user, db, currentDeptId }) =>
-      templateService.findAll(query, { db, user, currentDeptId }),
+      templateService.list(query, { db, user, currentDeptId }),
     {
       allPermissions: ["TEMPLATE:VIEW"],
-      query: TemplateContract.ListQuery,
       requireDept: true,
+      query: TemplateContract.ListQuery,
       detail: {
         summary: "获取Template列表",
         description: "分页查询Template数据，支持搜索和排序",
@@ -33,6 +34,7 @@ export const templateController = new Elysia({ prefix: "/template" })
       },
     }
   )
+  // @generated
   .post(
     "/",
     ({ body, user, db, currentDeptId }) =>
@@ -48,6 +50,7 @@ export const templateController = new Elysia({ prefix: "/template" })
       },
     }
   )
+  // @generated
   .put(
     "/:id",
     ({ params, body, user, db, currentDeptId }) =>
@@ -55,8 +58,8 @@ export const templateController = new Elysia({ prefix: "/template" })
     {
       params: t.Object({ id: t.String() }),
       body: TemplateContract.Update,
-      requireDept: true,
       allPermissions: ["TEMPLATE:EDIT"],
+      requireDept: true,
       detail: {
         summary: "更新Template",
         description: "根据ID更新Template信息",
@@ -64,6 +67,7 @@ export const templateController = new Elysia({ prefix: "/template" })
       },
     }
   )
+  // @generated
   .delete(
     "/:id",
     ({ params, user, db, currentDeptId }) =>

@@ -18,7 +18,7 @@ export class ProductService {
   /**
    * 创建商品（支持站点隔离和模板绑定）
    */
-  public async createProduct(body: any, ctx: ServiceContext) {
+  public async create(body: any, ctx: ServiceContext) {
     const {
       name,
       spuCode,
@@ -186,7 +186,7 @@ export class ProductService {
   /**
    * 获取站点商品列表（包含媒体和SKU）
    */
-  public async getSiteProducts(query: any, ctx: ServiceContext) {
+  public async list(query: any, ctx: ServiceContext) {
     const { page = 1, limit = 10, search, categoryId } = query;
 
     const siteId = ctx.user.context.site?.id;
@@ -395,7 +395,7 @@ export class ProductService {
   /**
    * 更新商品（全量关联更新）
    */
-  public async updateProduct(
+  public async update(
     productId: string,
     body: any,
     ctx: ServiceContext
@@ -619,49 +619,6 @@ export class ProductService {
     return { count: ids.length, message: `成功删除 ${ids.length} 个商品` };
   }
 
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  public async create(body: ProductContract["Create"], ctx: ServiceContext) {
-    const insertData = {
-      ...body,
-      // 自动注入租户信息
-      tenantId: ctx.user.context.tenantId!,
-      createdBy: ctx.user.id,
-      deptId: ctx.currentDeptId,
-    };
-    const [res] = await ctx.db
-      .insert(productTable)
-      .values(insertData)
-      .returning();
-    return res;
-  }
-
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  public async list(query: ProductContract["ListQuery"], ctx: ServiceContext) {
-    const { search } = query;
-
-    const res = await ctx.db.query.productTable.findMany({
-      where: {
-        tenantId: ctx.user.context.tenantId!,
-        ...(search ? { originalName: { ilike: `%${search}%` } } : {}),
-      },
-    });
-    return res;
-  }
-
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  public async update(
-    id: string,
-    body: ProductContract["Update"],
-    ctx: ServiceContext
-  ) {
-    const updateData = { ...body, updatedAt: new Date() };
-    const [res] = await ctx.db
-      .update(productTable)
-      .set(updateData)
-      .where(eq(productTable.id, id))
-      .returning();
-    return res;
-  }
 
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   public async delete(id: string, ctx: ServiceContext) {

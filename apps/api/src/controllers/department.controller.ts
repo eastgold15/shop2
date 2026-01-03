@@ -22,7 +22,7 @@ export const departmentController = new Elysia({ prefix: "/department" })
   .get(
     "/",
     ({ query, user, db, currentDeptId }) =>
-      departmentService.findAll(query, { db, user, currentDeptId }),
+      departmentService.list(query, { db, user, currentDeptId }),
     {
       allPermissions: ["DEPARTMENT:VIEW"],
       requireDept: true,

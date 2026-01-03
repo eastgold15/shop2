@@ -220,7 +220,7 @@ export class SkuService {
   /**
    * 获取SKU列表
    */
-  public async skusList(ctx: ServiceContext, query: any) {
+  public async list(ctx: ServiceContext, query: any) {
     const {
       page = 1,
       limit = 10,

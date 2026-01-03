@@ -24,6 +24,7 @@ export const quotationController = new Elysia({ prefix: "/quotation" })
       quotationService.findAll(query, { db, user, currentDeptId }),
     {
       allPermissions: ["QUOTATION:VIEW"],
+      requireDept: true,
       query: QuotationContract.ListQuery,
       detail: {
         summary: "获取Quotation列表",
@@ -68,6 +69,7 @@ export const quotationController = new Elysia({ prefix: "/quotation" })
     {
       params: t.Object({ id: t.String() }),
       allPermissions: ["QUOTATION:DELETE"],
+      requireDept: true,
       detail: {
         summary: "删除Quotation",
         description: "根据ID删除Quotation记录",

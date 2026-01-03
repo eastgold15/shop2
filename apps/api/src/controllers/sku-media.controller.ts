@@ -21,7 +21,7 @@ export const skuMediaController = new Elysia({ prefix: "/sku-media" })
   .get(
     "/",
     ({ query, user, db, currentDeptId }) =>
-      skuMediaService.findAll(query, { db, user, currentDeptId }),
+      skuMediaService.list(query, { db, user, currentDeptId }),
     {
       allPermissions: ["SKUMEDIA:VIEW"],
       requireDept: true,
@@ -38,7 +38,8 @@ export const skuMediaController = new Elysia({ prefix: "/sku-media" })
     ({ body, user, db, currentDeptId }) =>
       skuMediaService.create(body, { db, user, currentDeptId }),
     {
-      allPermissions: ["SKUMEDIA:CREATE"],
+      allPermissions: ["SKU-MEDIA:CREATE"],
+      requireDept: true,
       body: SkuMediaContract.Create,
       requireDept: true,
       detail: {

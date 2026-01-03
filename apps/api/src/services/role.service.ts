@@ -18,32 +18,23 @@ export class RoleService {
 
   async list(
     ctx: ServiceContext,
-    query?: typeof RoleContract.ListQuery.static
+    query?: RoleContract["ListQuery"]
   ) {
-    const res = await db.query.roleTable.findMany({
+    const res = await ctx.db.query.roleTable.findMany({
       where: {
         ...(query?.search ? { name: { like: `%${query.search}%` } } : {}),
         ...(query?.search
           ? { description: { like: `%${query.search}%` } }
           : {}),
         ...(query?.search ? { type: { like: `%${query.search}%` } } : {}),
-      },
-    });
-
-    return res;
-  }
-
-  public async findAll(query: RoleContract["ListQuery"], ctx: ServiceContext) {
-    const { search } = query;
-
-    const res = await ctx.db.query.roleTable.findMany({
-      where: {
         tenantId: ctx.user.context.tenantId!,
-        ...(search ? { name: { ilike: `%${search}%` } } : {}),
       },
     });
+
     return res;
   }
+
+
 
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   public async update(

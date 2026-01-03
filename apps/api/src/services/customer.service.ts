@@ -10,10 +10,10 @@ export class CustomerService {
       // 自动注入租户信息
       ...(ctx.user
         ? {
-            tenantId: ctx.user.context.tenantId!,
-            createdBy: ctx.user.id,
-            deptId: ctx.currentDeptId,
-          }
+          tenantId: ctx.user.context.tenantId!,
+          createdBy: ctx.user.id,
+          deptId: ctx.currentDeptId,
+        }
         : {}),
     };
     const [res] = await ctx.db
@@ -24,7 +24,7 @@ export class CustomerService {
   }
 
   // [Auto-Generated] Do not edit this tag to keep updates. @generated
-  public async findAll(
+  public async list(
     query: CustomerContract["ListQuery"],
     ctx: ServiceContext
   ) {

@@ -19,7 +19,7 @@ export const siteCategoryController = new Elysia({ prefix: "/site-category" })
   .get(
     "/",
     ({ query, user, db, currentDeptId }) =>
-      siteCategoryService.findAll(query, { db, user, currentDeptId }),
+      siteCategoryService.list(query, { db, user, currentDeptId }),
     {
       allPermissions: ["SITECATEGORY_VIEW"],
       requireDept: true,

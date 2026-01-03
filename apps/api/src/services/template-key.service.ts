@@ -13,10 +13,10 @@ export class TemplateKeyService {
       // 自动注入租户信息
       ...(ctx.user
         ? {
-            tenantId: ctx.user.context.tenantId!,
-            createdBy: ctx.user.id,
-            deptId: ctx.currentDeptId,
-          }
+          tenantId: ctx.user.context.tenantId!,
+          createdBy: ctx.user.id,
+          deptId: ctx.currentDeptId,
+        }
         : {}),
     };
     const [res] = await ctx.db
@@ -26,7 +26,7 @@ export class TemplateKeyService {
     return res;
   }
 
-  public async findAll(
+  public async list(
     query: TemplateKeyContract["ListQuery"],
     ctx: ServiceContext
   ) {
@@ -63,4 +63,6 @@ export class TemplateKeyService {
       .returning();
     return res;
   }
+
+
 }

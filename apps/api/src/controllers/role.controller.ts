@@ -21,7 +21,7 @@ export const roleController = new Elysia({ prefix: "/role" })
   .get(
     "/",
     ({ query, user, db, currentDeptId }) =>
-      roleService.findAll(query, { db, user, currentDeptId }),
+      roleService.list(query, { db, user, currentDeptId }),
     {
       allPermissions: ["ROLE:VIEW"],
       query: RoleContract.ListQuery,
@@ -54,6 +54,7 @@ export const roleController = new Elysia({ prefix: "/role" })
       params: t.Object({ id: t.String() }),
       body: RoleContract.Update,
       allPermissions: ["ROLE:EDIT"],
+      requireDept: true,
       detail: {
         summary: "更新Role",
         description: "根据ID更新Role信息",
@@ -68,6 +69,7 @@ export const roleController = new Elysia({ prefix: "/role" })
     {
       params: t.Object({ id: t.String() }),
       allPermissions: ["ROLE:DELETE"],
+      requireDept: true,
       detail: {
         summary: "删除Role",
         description: "根据ID删除Role记录",

@@ -21,7 +21,7 @@ export const siteController = new Elysia({ prefix: "/site" })
   .get(
     "/",
     ({ query, user, db, currentDeptId }) =>
-      siteService.findAll(query, { db, user, currentDeptId }),
+      siteService.list(query, { db, user, currentDeptId }),
     {
       allPermissions: ["SITE:VIEW"],
       query: SiteContract.ListQuery,
@@ -38,6 +38,7 @@ export const siteController = new Elysia({ prefix: "/site" })
       siteService.create(body, { db, user, currentDeptId }),
     {
       allPermissions: ["SITE:CREATE"],
+      requireDept: true,
       body: SiteContract.Create,
       detail: {
         summary: "创建Site",
@@ -54,6 +55,7 @@ export const siteController = new Elysia({ prefix: "/site" })
       params: t.Object({ id: t.String() }),
       body: SiteContract.Update,
       allPermissions: ["SITE:EDIT"],
+      requireDept: true,
       detail: {
         summary: "更新Site",
         description: "根据ID更新Site信息",
@@ -68,6 +70,7 @@ export const siteController = new Elysia({ prefix: "/site" })
     {
       params: t.Object({ id: t.String() }),
       allPermissions: ["SITE:DELETE"],
+      requireDept: true,
       detail: {
         summary: "删除Site",
         description: "根据ID删除Site记录",

@@ -24,6 +24,7 @@ export const productController = new Elysia({ prefix: "/product" })
       productService.findAll(query, { db, user, currentDeptId }),
     {
       allPermissions: ["PRODUCT:VIEW"],
+      requireDept: true,
       query: ProductContract.ListQuery,
       detail: {
         summary: "获取Product列表",
@@ -38,6 +39,7 @@ export const productController = new Elysia({ prefix: "/product" })
       productService.create(body, { db, user, currentDeptId }),
     {
       allPermissions: ["PRODUCT:CREATE"],
+      requireDept: true,
       body: ProductContract.Create,
       detail: {
         summary: "创建Product",
@@ -54,6 +56,7 @@ export const productController = new Elysia({ prefix: "/product" })
       params: t.Object({ id: t.String() }),
       body: ProductContract.Update,
       allPermissions: ["PRODUCT:EDIT"],
+      requireDept: true,
       detail: {
         summary: "更新Product",
         description: "根据ID更新Product信息",
@@ -68,6 +71,7 @@ export const productController = new Elysia({ prefix: "/product" })
     {
       params: t.Object({ id: t.String() }),
       allPermissions: ["PRODUCT:DELETE"],
+      requireDept: true,
       detail: {
         summary: "删除Product",
         description: "根据ID删除Product记录",
@@ -86,6 +90,7 @@ export const productController = new Elysia({ prefix: "/product" })
         ids: t.Array(t.String()),
       }),
       allPermissions: ["PRODUCT:DELETE"],
+      requireDept: true,
       detail: {
         summary: "批量删除Product",
         description: "根据ID列表批量删除Product记录",

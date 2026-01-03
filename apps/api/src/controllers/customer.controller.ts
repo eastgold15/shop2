@@ -22,7 +22,7 @@ export const customerController = new Elysia({ prefix: "/customer" })
   .get(
     "/",
     ({ query, user, db, currentDeptId }) =>
-      customerService.findAll(query, { db, user, currentDeptId }),
+      customerService.list(query, { db, user, currentDeptId }),
     {
       allPermissions: ["CUSTOMER:VIEW"],
       requireDept: true,

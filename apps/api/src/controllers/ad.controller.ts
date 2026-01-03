@@ -22,7 +22,7 @@ export const adController = new Elysia({ prefix: "/ad" })
   .get(
     "/",
     ({ query, user, db, currentDeptId }) =>
-      adService.findAll(query, { db, user, currentDeptId }),
+      adService.list(query, { db, user, currentDeptId }),
     {
       allPermissions: ["AD:VIEW"],
       requireDept: true,

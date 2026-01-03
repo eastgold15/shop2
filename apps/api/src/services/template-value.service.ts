@@ -61,4 +61,20 @@ export class TemplateValueService {
       .returning();
     return res;
   }
+
+  // [Auto-Generated] Do not edit this tag to keep updates. @generated
+  public async list(
+    query: TemplateValueContract["ListQuery"],
+    ctx: ServiceContext
+  ) {
+    const { search } = query;
+
+    const res = await ctx.db.query.templateValueTable.findMany({
+      where: {
+        tenantId: ctx.user.context.tenantId!,
+        ...(search ? { originalName: { ilike: `%${search}%` } } : {}),
+      },
+    });
+    return res;
+  }
 }
