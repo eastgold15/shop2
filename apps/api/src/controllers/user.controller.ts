@@ -12,6 +12,7 @@ import { dbPlugin } from "~/db/connection";
 import { authGuardMid } from "~/middleware/auth";
 import { UserContract } from "../../../../packages/contract/src/modules/user.contract";
 import { UserService } from "../services/user.service";
+import { eq } from "drizzle-orm";
 
 const userService = new UserService();
 
