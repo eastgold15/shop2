@@ -16,16 +16,27 @@ export const DailyInquiryCounterFields = spread(
 export const DailyInquiryCounterContract = {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Response: t.Object({
-                ...DailyInquiryCounterFields
-              }),
+    ...DailyInquiryCounterFields,
+  }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Create: t.Object({
-                ...t.Omit(t.Object(DailyInquiryCounterInsertFields), ["id", "createdAt", "updatedAt"]).properties
-              }),
+    ...t.Omit(t.Object(DailyInquiryCounterInsertFields), [
+      "id",
+      "createdAt",
+      "updatedAt",
+    ]).properties,
+  }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  Update: t.Partial(t.Object({
-              ...t.Omit(t.Object(DailyInquiryCounterInsertFields), ["id", "createdAt", "updatedAt", "siteId"]).properties
-            })),
+  Update: t.Partial(
+    t.Object({
+      ...t.Omit(t.Object(DailyInquiryCounterInsertFields), [
+        "id",
+        "createdAt",
+        "updatedAt",
+        "siteId",
+      ]).properties,
+    })
+  ),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   ListQuery: t.Object({
     ...t.Partial(t.Object(DailyInquiryCounterInsertFields)).properties,

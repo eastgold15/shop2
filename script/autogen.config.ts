@@ -10,20 +10,20 @@ export default {
     contract: ["./packages/contract/src/modules"],
     service: [
       "./apps/admin-api/src/services",
-      "./apps/client-api/src/services"
+      "./apps/client-api/src/services",
     ],
     controller: [
       "./apps/admin-api/src/controllers",
-      "./apps/client-api/src/controllers"
+      "./apps/client-api/src/controllers",
     ],
-    frontendHook: ["./apps/admin-pc/src/hooks/api"]
+    frontendHook: ["./apps/admin-pc/src/hooks/api"],
   },
 
   /**
- * 是否在生成时自动更新 index.ts 或 router.ts（可选）
- */
+   * 是否在生成时自动更新 index.ts 或 router.ts（可选）
+   */
   autoRegister: {
     contractIndex: "./packages/contract/src/modules/index.ts",
-    controllerRouter: "./apps/api-main/src/app-router.ts"
-  }
+    controllerRouter: "./apps/api-main/src/app-router.ts",
+  },
 };

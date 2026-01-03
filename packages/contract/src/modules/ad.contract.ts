@@ -10,8 +10,8 @@ export const AdFields = spread(adTable, "select");
 export const AdContract = {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Response: t.Object({
-                ...AdFields
-              }),
+    ...AdFields,
+  }),
 
   Create: t.Object({
     ...t.Omit(t.Object(AdInsertFields), [

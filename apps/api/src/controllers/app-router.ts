@@ -8,50 +8,50 @@ import type { Elysia } from "elysia";
 
 import { adController } from "./ad.controller";
 import { customerController } from "./customer.controller";
-import { dailyinquirycounterController } from "./dailyinquirycounter.controller";
+import { dailyInquiryCounterController } from "./daily-inquiry-counter.controller";
 import { departmentController } from "./department.controller";
-import { herocardController } from "./herocard.controller";
+import { heroCardController } from "./hero-card.controller";
 import { inquiryController } from "./inquiry.controller";
-import { mastercategoryController } from "./mastercategory.controller";
+import { masterCategoryController } from "./master-category.controller";
 import { mediaController } from "./media.controller";
 import { productController } from "./product.controller";
 import { quotationController } from "./quotation.controller";
 import { roleController } from "./role.controller";
 import { siteController } from "./site.controller";
-import { sitecategoryController } from "./sitecategory.controller";
-import { siteconfigController } from "./siteconfig.controller";
-import { siteproductController } from "./siteproduct.controller";
+import { siteCategoryController } from "./site-category.controller";
+import { siteConfigController } from "./site-config.controller";
+import { siteProductController } from "./site-product.controller";
 import { skuController } from "./sku.controller";
-import { skumediaController } from "./skumedia.controller";
+import { skuMediaController } from "./sku-media.controller";
 import { templateController } from "./template.controller";
-import { templatekeyController } from "./templatekey.controller";
-import { templatevalueController } from "./template-value.controller";
+import { templateKeyController } from "./template-key.controller";
+import { templateValueController } from "./template-value.controller";
 import { tenantController } from "./tenant.controller";
 import { userController } from "./user.controller";
-import { userroleController } from "./user-role.controller";
+import { userRoleController } from "./user-role.controller";
 
 export const appRouter = (app: Elysia) =>
   app
     .use(adController)
     .use(customerController)
-    .use(dailyinquirycounterController)
+    .use(dailyInquiryCounterController)
     .use(departmentController)
-    .use(herocardController)
+    .use(heroCardController)
     .use(inquiryController)
-    .use(mastercategoryController)
+    .use(masterCategoryController)
     .use(mediaController)
     .use(productController)
     .use(quotationController)
     .use(roleController)
     .use(siteController)
-    .use(sitecategoryController)
-    .use(siteconfigController)
-    .use(siteproductController)
+    .use(siteCategoryController)
+    .use(siteConfigController)
+    .use(siteProductController)
     .use(skuController)
-    .use(skumediaController)
+    .use(skuMediaController)
     .use(templateController)
-    .use(templatekeyController)
-    .use(templatevalueController)
+    .use(templateKeyController)
+    .use(templateValueController)
     .use(tenantController)
     .use(userController)
-    .use(userroleController);
+    .use(userRoleController);

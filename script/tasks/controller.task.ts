@@ -73,19 +73,39 @@ export const ControllerTask: Task = {
       return normalizePath(rel);
     };
 
+    // 🔥 计算相对路径
     const contractPath = getRelativeImport(ctx.paths.contract);
     const servicePath = getRelativeImport(ctx.paths.service);
 
-    // 3. Imports
+    // 3. Imports - 清理旧的导入
+    const existingImports = file.getImportDeclarations();
+    existingImports.forEach((imp) => {
+      const modulePath = imp.getModuleSpecifierValue();
+      // 只清理 contract 和 service 的导入，保留其他导入
+      if (
+        modulePath.includes(ctx.artifacts.contractName!) ||
+        modulePath.includes(ctx.artifacts.serviceName!)
+      ) {
+        imp.remove();
+      }
+    });
+
+    // 4. 重新添加导入
     ensureImport(file, "elysia", ["Elysia", "t"]);
     ensureImport(file, "~/db/connection", ["dbPlugin"]);
     ensureImport(file, "~/middleware/auth", ["authGuardMid"]);
     ensureImport(file, contractPath, [ctx.artifacts.contractName]);
     ensureImport(file, servicePath, [ctx.artifacts.serviceName]);
 
-    // 4. 实例化 Service
-    const serviceInstanceName = `${ctx.tableName}Service`;
+    // 5. 实例化 Service - 使用 camelCase
+    const serviceInstanceName = `${toCamelCase(ctx.tableName)}Service`;
     const serviceClassName = ctx.artifacts.serviceName;
+
+    // 🔥 辅助函数：将 kebab-case 转换为 camelCase
+    // site-category -> siteCategory
+    function toCamelCase(str: string): string {
+      return str.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+    }
 
     const serviceVar = file.getVariableDeclaration(serviceInstanceName);
     if (!serviceVar) {
@@ -100,17 +120,17 @@ export const ControllerTask: Task = {
       });
     }
 
-    // 5. 权限配置
+    // 6. 权限配置
     const readPermission = getPermission(ctx.tableName, "VIEW");
     const createPermission = getPermission(ctx.tableName, "CREATE");
     const updatePermission = getPermission(ctx.tableName, "EDIT");
     const deletePermission = getPermission(ctx.tableName, "DELETE");
 
-    // 6. Controller 定义 - 带权限和 OpenAPI 文档
-    const controllerName = `${ctx.tableName}Controller`;
+    // 7. Controller 定义 - 带权限和 OpenAPI 文档
+    const controllerName = `${toCamelCase(ctx.tableName)}Controller`;
     const contract = ctx.artifacts.contractName;
     const pascalName = ctx.pascalName;
-    const prefix = `/${ctx.tableName.toLowerCase()}`;
+    const prefix = `/${ctx.tableName}`; // 🔥 已经是 kebab-case，不需要再 toLowerCase
 
     // 构造带权限和文档的代码
     const controllerCode = `new Elysia({ prefix: "${prefix}" })

@@ -47,10 +47,17 @@ export function generateRouterFile(project: Project, routerFilePath: string) {
   for (const ctrl of controllers) {
     const fileName = ctrl.fileName;
     const pascalName = ctrl.pascalName;
-    const controllerName = `${ctrl.tableName}Controller`; // 变量名如 tenantController
+    // 🔥 将 kebab-case 转换为 camelCase 用于变量名
+    // site-category -> siteCategoryController
+    const controllerName = `${toCamelCase(ctrl.tableName)}Controller`;
 
     importStatements.push(`import { ${controllerName} } from "./${fileName}";`);
     useStatements.push(`    .use(${controllerName})`);
+  }
+
+  // 🔥 辅助函数：将 kebab-case 转换为 camelCase
+  function toCamelCase(str: string): string {
+    return str.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
   }
 
   // 生成文件内容

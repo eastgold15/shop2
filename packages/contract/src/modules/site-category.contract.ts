@@ -16,7 +16,7 @@ const Base = t.Omit(t.Object(SiteCategoryFields), [
 export const SiteCategoryContract = {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Response: t.Object({
-    ...SiteCategoryFields
+    ...SiteCategoryFields,
   }),
   TreeEntity: t.Recursive((Self) =>
     t.Object({
@@ -28,7 +28,14 @@ export const SiteCategoryContract = {
   ),
 
   Create: t.Object({
-    ...t.Omit(t.Object(SiteCategoryInsertFields), ["id", "createdAt", "updatedAt", "tenantId", "deptId", "siteId"]).properties
+    ...t.Omit(t.Object(SiteCategoryInsertFields), [
+      "id",
+      "createdAt",
+      "updatedAt",
+      "tenantId",
+      "deptId",
+      "siteId",
+    ]).properties,
   }),
 
   Update: t.Partial(

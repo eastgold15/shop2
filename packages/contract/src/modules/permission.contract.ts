@@ -1,7 +1,6 @@
 import { t } from "elysia";
 import { type InferDTO, spread } from "../helper/utils";
 import { permissionTable } from "../table.schema";
-import { PaginationParams, SortParams } from "../helper/query-types.model";
 
 /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
 export const PermissionInsertFields = spread(permissionTable, "insert");
@@ -10,8 +9,8 @@ export const PermissionFields = spread(permissionTable, "select");
 export const PermissionContract = {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Response: t.Object({
-                ...PermissionFields
-              }),
+    ...PermissionFields,
+  }),
   Create: t.Object({
     ...t.Omit(t.Object(PermissionInsertFields), [
       "id",
@@ -20,9 +19,16 @@ export const PermissionContract = {
     ]).properties,
   }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  Update: t.Partial(t.Object({
-              ...t.Omit(t.Object(PermissionInsertFields), ["id", "createdAt", "updatedAt", "siteId"]).properties
-            })),
+  Update: t.Partial(
+    t.Object({
+      ...t.Omit(t.Object(PermissionInsertFields), [
+        "id",
+        "createdAt",
+        "updatedAt",
+        "siteId",
+      ]).properties,
+    })
+  ),
 
   ListQuery: t.Object({
     search: t.Optional(t.String()),

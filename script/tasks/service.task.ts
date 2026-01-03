@@ -41,7 +41,8 @@ export const ServiceTask: Task = {
     const contractImportPath = normalizePath(relativePath);
 
     // 2. Imports - 聚合相同路径的导入
-    ensureImport(file, "drizzle-orm", ["eq", "and", "desc"]);
+    ensureImport(file, "drizzle-orm", ["eq", "and", "desc", "sql"]);
+    ensureImport(file, "elysia-http-problem-json", ["HttpError"]);
     // 🔥 @repo/contract 路径的导入聚合（table.schema 是普通导入，Contract 是 type 导入）
     ensureImport(file, "@repo/contract", [ctx.schemaKey]);
     ensureImport(file, "@repo/contract", [ctx.artifacts.contractName], true);
@@ -61,12 +62,16 @@ export const ServiceTask: Task = {
       classDec,
       "create",
       `const insertData = {
-        ...body,
-        // 自动注入租户信息
-        ...(ctx.user ? { tenantId: ctx.user.tenantId, createdBy: ctx.user.id } : {})
-      };
-      const [res] = await ctx.db.insert(${ctx.schemaKey}).values(insertData).returning();
-      return res;`,
+    ...body,
+    // 自动注入租户信息
+    ...(ctx.user ? {
+      tenantId: ctx.user.context.tenantId!,
+      createdBy: ctx.user.id,
+      deptId: ctx.currentDeptId,
+    } : {})
+  };
+  const [res] = await ctx.db.insert(${ctx.schemaKey}).values(insertData).returning();
+  return res;`,
       [
         { name: "body", type: `${contract}["Create"]` },
         { name: "ctx", type: "ServiceContext" },
@@ -76,19 +81,15 @@ export const ServiceTask: Task = {
     upsertMethod(
       classDec,
       "findAll",
-      `const {  sort, ...filters } = query;
+      `const { search } = query;
 
       const res = await ctx.db.query.${ctx.schemaKey}.findMany({
         where: {
-          deptId: ctx.currentDeptId,
-          tenantId: ctx.user.tenantId!,
+          tenantId: ctx.user.context.tenantId!,
+          ...(search ? { originalName: { ilike: \`%\${search}%\` } } : {}),
         },
-        orderBy: {
-        createdAt: "desc",
-      },
-    })
-
-     return res;`,
+      });
+      return res;`,
       [
         { name: "query", type: `${contract}["ListQuery"]` },
         { name: "ctx", type: "ServiceContext" },
@@ -99,11 +100,11 @@ export const ServiceTask: Task = {
       classDec,
       "update",
       `const updateData = { ...body, updatedAt: new Date() };
-       const [res] = await ctx.db.update(${ctx.schemaKey})
-         .set(updateData)
-         .where(eq(${ctx.schemaKey}.id, id))
-         .returning();
-       return res;`,
+  const [res] = await ctx.db.update(${ctx.schemaKey})
+    .set(updateData)
+    .where(eq(${ctx.schemaKey}.id, id))
+    .returning();
+  return res;`,
       [
         { name: "id", type: "string" },
         { name: "body", type: `${contract}["Update"]` },
@@ -115,7 +116,7 @@ export const ServiceTask: Task = {
       classDec,
       "delete",
       `const [res] = await ctx.db.delete(${ctx.schemaKey}).where(eq(${ctx.schemaKey}.id, id)).returning();
-       return res;`,
+  return res;`,
       [
         { name: "id", type: "string" },
         { name: "ctx", type: "ServiceContext" },

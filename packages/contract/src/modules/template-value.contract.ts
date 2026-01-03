@@ -10,16 +10,27 @@ export const TemplateValueFields = spread(templateValueTable, "select");
 export const TemplateValueContract = {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Response: t.Object({
-                ...TemplateValueFields
-              }),
+    ...TemplateValueFields,
+  }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Create: t.Object({
-                ...t.Omit(t.Object(TemplateValueInsertFields), ["id", "createdAt", "updatedAt"]).properties
-              }),
+    ...t.Omit(t.Object(TemplateValueInsertFields), [
+      "id",
+      "createdAt",
+      "updatedAt",
+    ]).properties,
+  }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  Update: t.Partial(t.Object({
-              ...t.Omit(t.Object(TemplateValueInsertFields), ["id", "createdAt", "updatedAt", "siteId"]).properties
-            })),
+  Update: t.Partial(
+    t.Object({
+      ...t.Omit(t.Object(TemplateValueInsertFields), [
+        "id",
+        "createdAt",
+        "updatedAt",
+        "siteId",
+      ]).properties,
+    })
+  ),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   ListQuery: t.Object({
     ...t.Partial(t.Object(TemplateValueInsertFields)).properties,

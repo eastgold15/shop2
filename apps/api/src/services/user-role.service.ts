@@ -1,5 +1,5 @@
 import { type UserRoleContract, userRoleTable } from "@repo/contract";
-import { and, eq, desc } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { type ServiceContext } from "../lib/type";
 
 type UserDto = {
@@ -122,12 +122,9 @@ export class UserRoleService {
         }))
       );
     }
-
-    // 非超管需要过滤租户内的用户
-    const scopeObj = ctx.getScopeObj();
     const users = await ctx.db.query.userTable.findMany({
       where: {
-        tenantId: scopeObj.tenantId,
+        tenantId: ctx.user.context.tenantId!,
       },
       with: {
         roles: true,
@@ -158,45 +155,61 @@ export class UserRoleService {
 
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   public async create(body: UserRoleContract["Create"], ctx: ServiceContext) {
-      const insertData = {
-              ...body,
-              // 自动注入租户信息
-              ...(ctx.user ? { tenantId: ctx.user.tenantId, createdBy: ctx.user.id } : {})
-            };
-            const [res] = await ctx.db.insert(userRoleTable).values(insertData).returning();
-            return res;
+    const insertData = {
+      ...body,
+      // 自动注入租户信息
+      ...(ctx.user
+        ? {
+          tenantId: ctx.user.context.tenantId!,
+          createdBy: ctx.user.id,
+          deptId: ctx.currentDeptId,
+        }
+        : {}),
+    };
+    const [res] = await ctx.db
+      .insert(userRoleTable)
+      .values(insertData)
+      .returning();
+    return res;
   }
 
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  public async findAll(query: UserRoleContract["ListQuery"], ctx: ServiceContext) {
-      const {  sort, ...filters } = query;
+  public async findAll(
+    query: UserRoleContract["ListQuery"],
+    ctx: ServiceContext
+  ) {
+    const { search } = query;
 
-            const res = await ctx.db.query.userRoleTable.findMany({
-              where: {
-                deptId: ctx.currentDeptId,
-                tenantId: ctx.user.tenantId!,
-              },
-              orderBy: {
-              createdAt: "desc",
-            },
-          })
-
-           return res;
+    const res = await ctx.db.query.userRoleTable.findMany({
+      where: {
+        tenantId: ctx.user.context.tenantId!,
+        ...(search ? { originalName: { ilike: `%${search}%` } } : {}),
+      },
+    });
+    return res;
   }
 
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  public async update(id: string, body: UserRoleContract["Update"], ctx: ServiceContext) {
-      const updateData = { ...body, updatedAt: new Date() };
-             const [res] = await ctx.db.update(userRoleTable)
-               .set(updateData)
-               .where(eq(userRoleTable.id, id))
-               .returning();
-             return res;
+  public async update(
+    id: string,
+    body: UserRoleContract["Update"],
+    ctx: ServiceContext
+  ) {
+    const updateData = { ...body, updatedAt: new Date() };
+    const [res] = await ctx.db
+      .update(userRoleTable)
+      .set(updateData)
+      .where(eq(userRoleTable.id, id))
+      .returning();
+    return res;
   }
 
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   public async delete(id: string, ctx: ServiceContext) {
-      const [res] = await ctx.db.delete(userRoleTable).where(eq(userRoleTable.id, id)).returning();
-             return res;
+    const [res] = await ctx.db
+      .delete(userRoleTable)
+      .where(eq(userRoleTable.id, id))
+      .returning();
+    return res;
   }
 }

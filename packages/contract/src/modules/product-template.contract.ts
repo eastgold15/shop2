@@ -13,16 +13,27 @@ export const ProductTemplateFields = spread(productTemplateTable, "select");
 export const ProductTemplateContract = {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Response: t.Object({
-                ...ProductTemplateFields
-              }),
+    ...ProductTemplateFields,
+  }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Create: t.Object({
-                ...t.Omit(t.Object(ProductTemplateInsertFields), ["id", "createdAt", "updatedAt"]).properties
-              }),
+    ...t.Omit(t.Object(ProductTemplateInsertFields), [
+      "id",
+      "createdAt",
+      "updatedAt",
+    ]).properties,
+  }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  Update: t.Partial(t.Object({
-              ...t.Omit(t.Object(ProductTemplateInsertFields), ["id", "createdAt", "updatedAt", "siteId"]).properties
-            })),
+  Update: t.Partial(
+    t.Object({
+      ...t.Omit(t.Object(ProductTemplateInsertFields), [
+        "id",
+        "createdAt",
+        "updatedAt",
+        "siteId",
+      ]).properties,
+    })
+  ),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   ListQuery: t.Object({
     ...t.Partial(t.Object(ProductTemplateInsertFields)).properties,

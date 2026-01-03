@@ -10,16 +10,27 @@ export const MediaMetadataFields = spread(mediaMetadataTable, "select");
 export const MediaMetadataContract = {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Response: t.Object({
-                ...MediaMetadataFields
-              }),
+    ...MediaMetadataFields,
+  }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Create: t.Object({
-                ...t.Omit(t.Object(MediaMetadataInsertFields), ["id", "createdAt", "updatedAt"]).properties
-              }),
+    ...t.Omit(t.Object(MediaMetadataInsertFields), [
+      "id",
+      "createdAt",
+      "updatedAt",
+    ]).properties,
+  }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  Update: t.Partial(t.Object({
-              ...t.Omit(t.Object(MediaMetadataInsertFields), ["id", "createdAt", "updatedAt", "siteId"]).properties
-            })),
+  Update: t.Partial(
+    t.Object({
+      ...t.Omit(t.Object(MediaMetadataInsertFields), [
+        "id",
+        "createdAt",
+        "updatedAt",
+        "siteId",
+      ]).properties,
+    })
+  ),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   ListQuery: t.Object({
     ...t.Partial(t.Object(MediaMetadataInsertFields)).properties,

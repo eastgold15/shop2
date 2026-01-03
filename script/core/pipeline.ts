@@ -87,8 +87,19 @@ export class Pipeline {
       }
 
       const rawName = varName.replace("Table", ""); // "users"
-      const tableName = rawName.toLowerCase();
+      // 🔥 使用 kebab-case 转换函数（支持驼峰命名转连字符）
+      const tableName = toKebabCase(rawName);
       const pascalName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+
+      // 🔥 辅助函数：将驼峰命名转换为 kebab-case
+      // siteCategory -> site-category
+      // media -> media
+      function toKebabCase(str: string): string {
+        return str
+          .replace(/([a-z])([A-Z])/g, "$1-$2") // 在小写和大写字母之间插入连字符
+          .replace(/([A-Z])([A-Z][a-z])/g, "$1-$2") // 处理连续大写字母
+          .toLowerCase();
+      }
 
       // 🔥 核心修改：文件名平铺，不再拼接 /tableName/ 文件夹
       const ctx: GenContext = {

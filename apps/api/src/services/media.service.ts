@@ -7,21 +7,27 @@ import { type ServiceContext } from "../lib/type";
 export class MediaService {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   public async create(body: MediaContract["Create"], ctx: ServiceContext) {
-      const insertData = {
-              ...body,
-              // 自动注入租户信息
-              ...(ctx.user ? { tenantId: ctx.user.tenantId, createdBy: ctx.user.id } : {})
-            };
-            const [res] = await ctx.db.insert(mediaTable).values(insertData).returning();
-            return res;
+    const insertData = {
+      ...body,
+      // 自动注入租户信息
+      ...(ctx.user ?
+        {
+          tenantId: ctx.user.context.tenantId!,
+          createdBy: ctx.user.id,
+          deptId: ctx.currentDeptId,
+        } : {})
+
+    };
+    const [res] = await ctx.db.insert(mediaTable).values(insertData).returning();
+    return res;
   }
 
   public async findAll(query: MediaContract["ListQuery"], ctx: ServiceContext) {
     const { search } = query;
-    const scopeObj = ctx.getScopeObj();
+
     const res = await ctx.db.query.mediaTable.findMany({
       where: {
-        tenantId: scopeObj.tenantId,
+        tenantId: ctx.user.context.tenantId!,
         ...(search ? { originalName: { ilike: `%${search}%` } } : {}),
       },
     });
@@ -30,18 +36,18 @@ export class MediaService {
 
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   public async update(id: string, body: MediaContract["Update"], ctx: ServiceContext) {
-      const updateData = { ...body, updatedAt: new Date() };
-             const [res] = await ctx.db.update(mediaTable)
-               .set(updateData)
-               .where(eq(mediaTable.id, id))
-               .returning();
-             return res;
+    const updateData = { ...body, updatedAt: new Date() };
+    const [res] = await ctx.db.update(mediaTable)
+      .set(updateData)
+      .where(eq(mediaTable.id, id))
+      .returning();
+    return res;
   }
 
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   public async delete(id: string, ctx: ServiceContext) {
-      const [res] = await ctx.db.delete(mediaTable).where(eq(mediaTable.id, id)).returning();
-             return res;
+    const [res] = await ctx.db.delete(mediaTable).where(eq(mediaTable.id, id)).returning();
+    return res;
   }
 
   /**
@@ -72,7 +78,7 @@ export class MediaService {
       isPublic: true,
       status: true,
       // 自动注入租户信息
-      tenantId: ctx.user?.tenantId ?? "",
+      tenantId: ctx.user?.context.tenantId ?? "",
       createdBy: ctx.user?.id,
     };
 
@@ -93,8 +99,8 @@ export class MediaService {
     const filters: any[] = [];
 
     // 租户隔离
-    if (ctx.user?.tenantId)
-      filters.push(eq(mediaTable.tenantId, ctx.user.tenantId));
+    if (ctx.user?.context.tenantId)
+      filters.push(eq(mediaTable.tenantId, ctx.user.context.tenantId!));
 
     if (query.category) filters.push(eq(mediaTable.category, query.category));
     if (query.search)
@@ -121,8 +127,8 @@ export class MediaService {
   async deletePhysical(id: string, ctx: ServiceContext) {
     // 1. 先查出记录
     const whereConditions: any[] = [eq(mediaTable.id, id)];
-    if (ctx.user?.tenantId)
-      whereConditions.push(eq(mediaTable.tenantId, ctx.user.tenantId));
+    if (ctx.user?.context.tenantId)
+      whereConditions.push(eq(mediaTable.tenantId, ctx.user.context.tenantId!));
 
     const [file] = await ctx.db
       .select()
@@ -145,8 +151,8 @@ export class MediaService {
    */
   async batchDeletePhysical(ids: string[], ctx: ServiceContext) {
     const whereConditions: any[] = [inArray(mediaTable.id, ids)];
-    if (ctx.user?.tenantId)
-      whereConditions.push(eq(mediaTable.tenantId, ctx.user.tenantId));
+    if (ctx.user?.context.tenantId)
+      whereConditions.push(eq(mediaTable.tenantId, ctx.user.context.tenantId!));
 
     // 1. 查找所有符合条件的文件
     const files = await ctx.db

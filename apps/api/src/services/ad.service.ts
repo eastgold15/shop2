@@ -1,5 +1,5 @@
 import { type AdContract, adTable } from "@repo/contract";
-import { and, eq, inArray, desc } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { HttpError } from "elysia-http-problem-json";
 import { type ServiceContext } from "../lib/type";
 
@@ -11,7 +11,7 @@ export class AdService {
     const endDate = body.endDate ? new Date(body.endDate) : now;
 
     // 验证日期有效性
-    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+    if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
       throw new HttpError.BadRequest("无效的日期格式");
     }
 
@@ -116,8 +116,12 @@ export class AdService {
     }
 
     // 复制其他字段（除了 startDate 和 endDate）
-    Object.keys(body).forEach(key => {
-      if (key !== 'startDate' && key !== 'endDate' && body[key as keyof typeof body] !== undefined) {
+    Object.keys(body).forEach((key) => {
+      if (
+        key !== "startDate" &&
+        key !== "endDate" &&
+        body[key as keyof typeof body] !== undefined
+      ) {
         updateData[key] = body[key as keyof typeof body];
       }
     });
@@ -142,10 +146,12 @@ export class AdService {
     };
   }
 
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   public async delete(id: string, ctx: ServiceContext) {
-      const [res] = await ctx.db.delete(adTable).where(eq(adTable.id, id)).returning();
-             return res;
+    const [res] = await ctx.db
+      .delete(adTable)
+      .where(eq(adTable.id, id))
+      .returning();
+    return res;
   }
 
   /**

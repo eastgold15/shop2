@@ -10,16 +10,16 @@ export const ProductFields = spread(productTable, "select");
 export const ProductContract = {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Response: t.Object({
-                ...ProductFields
-              }),
+    ...ProductFields,
+  }),
 
   Create: t.Object({
     ...t.Omit(t.Object(ProductInsertFields), [
       "id",
       "createdAt",
       "updatedAt",
-      "tenantId",  // 后端从 ctx.user.context.tenantId 注入
-      "deptId",    // 后端从 ctx.currentDeptId 注入
+      "tenantId", // 后端从 ctx.user.context.tenantId 注入
+      "deptId", // 后端从 ctx.currentDeptId 注入
       "createdBy", // 后端从 ctx.user.id 注入
     ]).properties,
     // 站点ID
@@ -37,8 +37,8 @@ export const ProductContract = {
         "createdAt",
         "updatedAt",
         "siteId",
-        "tenantId",  // 不允许修改租户
-        "deptId",    // 不允许修改部门
+        "tenantId", // 不允许修改租户
+        "deptId", // 不允许修改部门
         "createdBy", // 不允许修改创建者
       ]).properties,
       // 商品媒体关联（更新时可全量替换）
@@ -55,8 +55,8 @@ export const ProductContract = {
         "createdAt",
         "updatedAt",
         "siteId",
-        "tenantId",  // 不允许修改租户
-        "deptId",    // 不允许修改部门
+        "tenantId", // 不允许修改租户
+        "deptId", // 不允许修改部门
         "createdBy", // 不允许修改创建者
       ]).properties,
       mediaIds: t.Optional(t.Array(t.String())),

@@ -377,9 +377,7 @@ export const adTable = p.pgTable("advertisement", {
   title: p.varchar("title", { length: 255 }).notNull(),
   description: p.varchar("description", { length: 255 }).notNull(),
   type: adTypeEnum("type").notNull(),
-  mediaId: p
-    .uuid("media_id")
-    .references(() => mediaTable.id),
+  mediaId: p.uuid("media_id").references(() => mediaTable.id),
   link: p.varchar("link", { length: 500 }).notNull(),
   position: adPositionEnum("ads_position").default("home-top"),
   sortOrder: p.integer("sort_order").default(0),

@@ -9,22 +9,33 @@ export const MasterCategoryFields = spread(masterCategoryTable, "select");
 export const MasterCategoryContract = {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Response: t.Object({
-    ...MasterCategoryFields
+    ...MasterCategoryFields,
   }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Create: t.Object({
-    ...t.Omit(t.Object(MasterCategoryInsertFields), ["id", "createdAt", "updatedAt", "tenantId"]).properties
+    ...t.Omit(t.Object(MasterCategoryInsertFields), [
+      "id",
+      "createdAt",
+      "updatedAt",
+    ]).properties,
   }),
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  Update: t.Partial(t.Object({
-    ...t.Omit(t.Object(MasterCategoryInsertFields), ["id", "createdAt", "updatedAt", "tenantId"]).properties
-  })),
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+
+  Update: t.Partial(
+    t.Object({
+      ...t.Omit(t.Object(MasterCategoryInsertFields), [
+        "id",
+        "createdAt",
+        "updatedAt",
+        "tenantId",
+      ]).properties,
+    })
+  ),
+
   ListQuery: t.Object({
     ...t.Partial(t.Object(MasterCategoryInsertFields)).properties,
     search: t.Optional(t.String()),
   }),
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+
   ListResponse: t.Object({
     data: t.Array(t.Object({ ...MasterCategoryFields })),
     total: t.Number(),
@@ -37,7 +48,7 @@ export const MasterCategoryContract = {
       // 递归定义 children
       children: t.Optional(t.Array(Self)),
     })
-  )
+  ),
 } as const;
 
 export type MasterCategoryContract = InferDTO<typeof MasterCategoryContract>;

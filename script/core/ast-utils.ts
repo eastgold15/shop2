@@ -10,7 +10,8 @@ import {
 } from "ts-morph";
 
 const GEN_TAG = "@generated";
-const DOC_BLOCK = `/** [Auto-Generated] Do not edit this tag to keep updates. ${GEN_TAG} */`;
+// 🔥 使用双斜线注释
+const DOC_BLOCK = `// [Auto-Generated] Do not edit this tag to keep updates. ${GEN_TAG}`;
 
 /**
  * 🛠️ 路径标准化：强制将 Windows 反斜杠转换为正斜杠
@@ -162,6 +163,7 @@ export function upsertMethod(
   const method = classDec.getMethod(name);
 
   if (!method) {
+    // 🔥 使用 leadingTrivia 添加双斜线注释
     const m = classDec.addMethod({
       name,
       parameters: params,
@@ -169,9 +171,9 @@ export function upsertMethod(
       isAsync: true,
       scope: Scope.Public,
       statements: body,
+      // 🔥 添加双斜线注释作为前导杂项
+      leadingTrivia: (writer) => writer.writeLine(DOC_BLOCK),
     });
-    // addJsDoc 不需要 /** */ 包裹
-    m.addJsDoc(DOC_BLOCK.replace("/**", "").replace("*/", "").trim());
     console.log(`     ➕ Method: ${name}`);
     return;
   }
@@ -247,7 +249,7 @@ export function upsertExportedConst(
     });
 
     // 添加 JSDoc 到 Statement 层级
-    stmt.addJsDoc(DOC_BLOCK.replace("/**", "").replace("*/", "").trim());
+    stmt.addJsDoc(DOC_BLOCK);
     console.log(`     ➕ Const: ${name}`);
     return;
   }
