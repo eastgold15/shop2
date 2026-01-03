@@ -1,0 +1,32 @@
+{
+  "siteCategoryTable": {
+    "service": [
+      "@list",
+      "@detail",
+      "@create",
+      "@update",
+      "@delete",
+      "@tree"
+    ],
+    "controller": [
+      "@list",
+      "@detail",
+      "@create",
+      "@update",
+      "@delete"
+    ],
+    "contract": [
+      "@full"
+    ]
+  },
+  "productTable": {
+    "service": [
+      "@list",
+      "@create"
+    ],
+    "controller": [
+      "@list",
+      "@create"
+    ]
+  }
+}

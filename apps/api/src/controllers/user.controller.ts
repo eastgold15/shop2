@@ -19,6 +19,8 @@ const userService = new UserService();
 export const userController = new Elysia({ prefix: "/user" })
   .use(dbPlugin)
   .use(authGuardMid)
+
+  // @generated
   .get(
     "/me",
     async ({ user }) => {

@@ -1,35 +1,84 @@
-# 项目命名规范文档
+# 项目命名规范文档 (架构师修订版)
 
-> **目标**: 实现从数据库到前端的自动化代码生成
+> **目标**: 建立"内外有别"的极致调理体系，实现从连字符文件名到全栈代码的自动化映射，达成最小记忆负担。
+
+> **核心理念**: 根据物理边界切换命名规范 - 文件/URL用连字符，代码变量用驼峰，数据库用下划线
 
 ## 📋 目录
 
-1. [数据库层](#1-数据库层)
-2. [契约层 (Contract)](#2-契约层-contract)
-3. [服务层 (Service)](#3-服务层-service)
-4. [控制器层 (Controller)](#4-控制器层-controller)
-5. [前端 API Hooks](#5-前端-api-hooks)
-6. [权限命名](#6-权限命名)
-7. [完整示例](#7-完整示例)
+1. [四维空间命名体系](#1-四维空间命名体系)
+2. [数据库层](#2-数据库层)
+3. [契约层 (Contract)](#3-契约层-contract)
+4. [服务层 (Service)](#4-服务层-service)
+5. [控制器层 (Controller)](#5-控制器层-controller)
+6. [前端 API Hooks](#6-前端-api-hooks)
+7. [权限命名](#7-权限命名)
+8. [完整示例](#8-完整示例)
+9. [自动化转换规则](#9-自动化转换规则)
+10. [总结](#10-总结)
 
 ---
 
-## 1. 数据库层
+## 1. 四维空间命名体系
 
-### 1.1 表名规范
+### 1.1 核心原则
+
+我们将系统分为**五个物理边界**，每个边界执行唯一的命名标准：
+
+| 边界 | 命名规范 | 示例 | 应用场景 |
+|------|---------|------|----------|
+| **磁盘边界** | `kebab-case` | `site-category.service.ts` | 文件、目录名 |
+| **网络边界** | `kebab-case` | `/api/v1/site-category` | URL 路径、API 路由 |
+| **内存边界** | `camelCase` | `siteCategoryService` | 变量、函数、实例、Schema |
+| **类型边界** | `PascalCase` | `SiteCategoryContract` | 类名、接口、类型、Contract 导出 |
+| **存储边界** | `snake_case` | `site_category` | 数据库表名、字段名 |
+
+### 1.2 为什么这样设计？
+
+#### 磁盘/网络边界使用 `kebab-case` (连字符)
+- ✅ **视觉清晰**: `daily-inquiry-counter` 比 `dailyinquirycounter` 更易读
+- ✅ **SEO 友好**: 搜索引擎将连字符视为单词分隔符
+- ✅ **消除歧义**: 强制全小写，避免大小写不敏感服务器的问题
+- ✅ **工业标准**: 符合 RFC 3986 URI 规范
+
+#### 内存边界使用 `camelCase` (驼峰)
+- ✅ **原生审美**: 符合 JavaScript/TypeScript 语言习惯
+- ✅ **IDE 友好**: 自动补全和重构工具支持最佳
+- ✅ **开发体验**: 输入流畅，无需切换大小写
+
+#### 存储边界使用 `snake_case` (下划线)
+- ✅ **数据库传统**: PostgreSQL、MySQL 等主流数据库的惯例
+- ✅ **ORM 默认**: Drizzle、Prisma 等 ORM 的默认映射规则
+- ✅ **字段区分**: 与系统关键字自然分离
+
+### 1.3 四维空间对照表
+
+| 维度 | 规范标准 | 示例 | 场景 |
+|------|---------|------|------|
+| **物理空间** | `kebab-case` | `site-category.service.ts` | 磁盘文件、目录 |
+| **网络空间** | `kebab-case` | `/api/v1/site-category` | 浏览器 URL、路由前缀 |
+| **逻辑空间** | `camelCase` | `siteCategoryService` | 内存变量、函数、实例 |
+| **定义空间** | `PascalCase` | `SiteCategoryContract` | 类型、类、契约导出 |
+| **持久空间** | `snake_case` | `site_category` | 数据库表、字段 |
+
+---
+
+## 2. 数据库层
+
+### 2.1 表名规范
 
 **规则**: `模块_实体名` (全小写 + 下划线 + **单数**)
 
-| 业务模块 | 表名示例 | 说明 |
-|---------|---------|------|
-| 系统模块 | `sys_tenant` | 系统租户表 |
-| 系统模块 | `sys_dept` | 系统部门表 |
-| 站点模块 | `site` | 站点表 |
-| 站点模块 | `site_category` | 站点分类表 |
-| 产品模块 | `product` | 产品表 |
-| 产品模块 | `product_site_category` | 产品站点分类关联表 |
-| 媒体模块 | `media` | 媒体表 |
-| 用户模块 | `user_site_role` | 用户站点角色关联表 |
+| 业务模块 | 表名示例 | 变量命名 (`camelCase` + Table) |
+|---------|---------|-------------------------------|
+| 系统模块 | `sys_tenant` | `tenantTable` |
+| 系统模块 | `sys_dept` | `deptTable` |
+| 站点模块 | `site` | `siteTable` |
+| 站点模块 | `site_category` | `siteCategoryTable` |
+| 产品模块 | `product` | `productTable` |
+| 产品模块 | `product_media` | `productMediaTable` |
+| 媒体模块 | `media` | `mediaTable` |
+| 用户模块 | `user_site_role` | `userSiteRoleTable` |
 
 **注意事项**:
 - ✅ 使用 **单数** 形式: `site` ❌ `sites`
@@ -37,11 +86,11 @@
 - ✅ 关联表: `父表_子表` 如 `product_media`
 - ✅ 系统表加 `sys_` 前缀
 
-### 1.2 Drizzle Schema 定义
+### 2.2 Drizzle Schema 定义
 
 **文件**: `packages/contract/src/table.schema.ts`
 
-**变量命名**: `{实体名}Table` (驼峰式 + Table 后缀)
+**变量命名**: `{camelCase}Table` (小驼峰 + Table 后缀)
 
 ```typescript
 // ✅ 正确示例
@@ -49,14 +98,16 @@ export const tenantTable = p.pgTable("sys_tenant", { ... });
 export const siteTable = p.pgTable("site", { ... });
 export const siteCategoryTable = p.pgTable("site_category", { ... });
 export const productTable = p.pgTable("product", { ... });
-export const productSiteCategoryTable = p.pgTable("product_site_category", { ... });
+export const productMediaTable = p.pgTable("product_media", { ... });
+export const userSiteRoleTable = p.pgTable("user_site_role", { ... });
 
 // ❌ 错误示例
-export const SitesTable = p.pgTable("sites", { ... }); // ❌ 复数
+export const SitesTable = p.pgTable("sites", { ... });           // ❌ 复数形式
 export const site_categoryTable = p.pgTable("site_category", { ... }); // ❌ 下划线变量名
+export const SiteCategoryTable = p.pgTable("site_category", { ... });   // ❌ 大驼峰变量名
 ```
 
-### 1.3 字段命名规范
+### 2.3 字段命名规范
 
 **规则**: `snake_case` (全小写 + 下划线)
 
@@ -64,15 +115,15 @@ export const site_categoryTable = p.pgTable("site_category", { ... }); // ❌ �
 export const siteCategoryTable = p.pgTable("site_category", {
   id: idUuid,
   name: p.varchar("name", { length: 200 }).notNull(),
-  parent_id: p.uuid("parent_id"), // ✅ snake_case
-  sort_order: p.integer("sort_order").default(0),
-  is_active: p.boolean("is_active").default(true),
-  created_at: createdAt,
-  updated_at: updatedAt,
+  parentId: p.uuid("parent_id"),  // ✅ snake_case
+  sortOrder: p.integer("sort_order").default(0),
+  isActive: p.boolean("is_active").default(true),
+  createdAt: createdAt,
+  updatedAt: updatedAt,
 });
 ```
 
-**特殊字段**:
+**特殊字段命名**:
 - 主键: `id` (uuid)
 - 外键: `{实体}_id` 如 `parent_id`, `site_id`, `user_id`
 - 时间戳: `created_at`, `updated_at`
@@ -80,11 +131,11 @@ export const siteCategoryTable = p.pgTable("site_category", {
 
 ---
 
-## 2. 契约层 (Contract)
+## 3. 契约层 (Contract)
 
-### 2.1 文件命名
+### 3.1 文件命名
 
-**规则**: `{实体名}.contract.ts` (全小写 + kebab-case)
+**规则**: `{kebab-case}.contract.ts` (连字符分隔)
 
 **位置**: `packages/contract/src/modules/`
 
@@ -93,28 +144,27 @@ packages/contract/src/modules/
 ├── tenant.contract.ts
 ├── department.contract.ts
 ├── site.contract.ts
-├── site-category.contract.ts  ❌ 不用下划线
-├── sitecategory.contract.ts    ✅ 正确 (合并为一个词)
-├── product.contract.ts
-├── product-media.contract.ts   ✅ 关联表用连字符
+├── site-category.contract.ts     # ✅ 连字符清晰区分单词
+├── product-media.contract.ts     # ✅ 关联表结构一眼识破
+├── daily-inquiry-counter.contract.ts  # ✅ 复杂业务名易于阅读
 ├── user.contract.ts
 └── user-role.contract.ts
 ```
 
-**转换规则**:
-- 数据库 `site_category` → 文件名 `sitecategory.contract.ts` (去掉下划线)
-- 数据库 `product_media` → 文件名 `productmedia.contract.ts` (去掉下划线)
+### 3.2 契约导出命名
 
-### 2.2 契约导出命名
+**规则**: `{PascalCase}Contract` (大驼峰 + Contract 后缀)
 
 ```typescript
-// sitecategory.contract.ts
+// site-category.contract.ts
 export const SiteCategoryContract = {
   Response: t.Object({ ... }),
   Create: t.Object({ ... }),
   Update: t.Partial(t.Object({ ... })),
+  Patch: t.Partial(t.Object({ ... })),
   ListQuery: t.Object({ ... }),
   ListResponse: t.Object({ ... }),
+
   // 自定义扩展
   TreeResponse: t.Object({ ... }),
   MoveRequest: t.Object({ ... }),
@@ -123,261 +173,420 @@ export const SiteCategoryContract = {
 export type SiteCategoryContract = InferDTO<typeof SiteCategoryContract>;
 ```
 
-**命名模式**: `{实体名}Contract` (PascalCase + Contract 后缀)
-
-### 2.3 类型导出
+### 3.3 类型导出
 
 ```typescript
-// 自动生成的基础类型
+// 自动推断的基础类型
+export type SiteCategoryContract = InferDTO<typeof SiteCategoryContract>;
+
+// 常用类型别名
 export type SiteCategoryResponse = SiteCategoryContract["Response"];
 export type SiteCategoryCreate = SiteCategoryContract["Create"];
 export type SiteCategoryUpdate = SiteCategoryContract["Update"];
 export type SiteCategoryListQuery = SiteCategoryContract["ListQuery"];
-export type SiteCategoryListResponse = SiteCategoryContract["ListResponse"];
-
-// 自定义扩展类型
-export type SiteCategoryTreeResponse = SiteCategoryContract["TreeResponse"];
-export type SiteCategoryMoveRequest = SiteCategoryContract["MoveRequest"];
 ```
 
 ---
 
-## 3. 服务层 (Service)
+## 4. 服务层 (Service)
 
-### 3.1 文件命名
+### 4.1 文件命名
 
-**规则**: `{实体名}.service.ts` (全小写，对应表名去掉下划线)
+**规则**: `{kebab-case}.service.ts` (连字符分隔，对应表名转换)
 
-**位置**: `apps/api/src/services/`
+**位置**: `apps/api/src/server/modules/`
 
 ```
-apps/api/src/services/
+apps/api/src/server/modules/
 ├── tenant.service.ts
 ├── department.service.ts
 ├── site.service.ts
-├── sitecategory.service.ts      // site_category → sitecategory
+├── site-category.service.ts      # 对应 site_category 表
 ├── product.service.ts
-├── productmedia.service.ts      // product_media → productmedia
-└── userrole.service.ts          // user_site_role → usersiterole
+├── product-media.service.ts      # 对应 product_media 表
+└── user-role.service.ts          # 对应 user_site_role 表 (可简化)
 ```
 
-### 3.2 类命名
+### 4.2 类与实例命名
+
+**规则**:
+- 类名: `{PascalCase}Service`
+- 实例: `{camelCase}Service`
 
 ```typescript
+// site-category.service.ts
 export class SiteCategoryService {
-  async findAll(query, ctx) { ... }
-  async findOne(id, ctx) { ... }
-  async create(body, ctx) { ... }
-  async update(id, body, ctx) { ... }
-  async delete(id, ctx) { ... }
+  // 标准方法
+  async list(query, ctx) { ... }           // 列表查询
+  async detail(id, ctx) { ... }            // 详情查询
+  async create(body, ctx) { ... }          // 创建数据
+  async update(id, body, ctx) { ... }      // 全量更新
+  async patch(id, body, ctx) { ... }       // 局部更新
+  async delete(id, ctx) { ... }            // 删除数据
 
   // 自定义业务方法
-  async getTree(ctx) { ... }
-  async moveCategory(id, newParentId, ctx) { ... }
-  async toggleStatus(id, ctx) { ... }
+  async tree(ctx) { ... }                  // GET /site-category/tree
+  async move(id, newParentId, ctx) { ... } // PATCH /site-category/:id/move
+  async patchStatus(id, status, ctx) { ... } // PATCH /site-category/:id/status
 }
+
+// 导出实例 (小驼峰)
+export const siteCategoryService = new SiteCategoryService();
 ```
 
-**命名模式**: `{实体名}Service` (PascalCase + Service 后缀)
+### 4.3 标准方法签名
 
-### 3.3 标准方法签名
+**动宾结构统一规范**:
+
+| 业务动作 | Service 方法 | 后端路由 | 前端 Hook |
+|---------|-------------|---------|-----------|
+| 分页列表 | `list` | `GET /` | `useSiteCategoryList` |
+| 详情查询 | `detail` | `GET /:id` | `useSiteCategoryDetail` |
+| 树形结构 | `tree` | `GET /tree` | `useSiteCategoryTree` |
+| 创建数据 | `create` | `POST /` | `useCreateSiteCategory` |
+| 全量更新 | `update` | `PUT /:id` | `useUpdateSiteCategory` |
+| 局部修改 | `patch` | `PATCH /:id` | `usePatchSiteCategory` |
+| 状态切换 | `patchStatus` | `PATCH /:id/status` | `usePatchSiteCategoryStatus` |
+| 删除数据 | `delete` | `DELETE /:id` | `useDeleteSiteCategory` |
 
 ```typescript
-class XxxService {
+class SiteCategoryService {
   // 列表查询
-  async findAll(
-    query: XxxContract["ListQuery"],
+  async list(
+    query: SiteCategoryContract["ListQuery"],
     ctx: ServiceContext
-  ): Promise<XxxContract["ListResponse"]> { ... }
+  ): Promise<SiteCategoryContract["ListResponse"]> { ... }
+
+  // 详情查询
+  async detail(
+    id: string,
+    ctx: ServiceContext
+  ): Promise<SiteCategoryContract["Response"]> { ... }
 
   // 创建
   async create(
-    body: XxxContract["Create"],
+    body: SiteCategoryContract["Create"],
     ctx: ServiceContext
-  ): Promise<XxxContract["Response"]> { ... }
+  ): Promise<SiteCategoryContract["Response"]> { ... }
 
-  // 更新
+  // 全量更新
   async update(
     id: string,
-    body: XxxContract["Update"],
+    body: SiteCategoryContract["Update"],
     ctx: ServiceContext
-  ): Promise<XxxContract["Response"]> { ... }
+  ): Promise<SiteCategoryContract["Response"]> { ... }
+
+  // 局部更新
+  async patch(
+    id: string,
+    body: SiteCategoryContract["Patch"],
+    ctx: ServiceContext
+  ): Promise<SiteCategoryContract["Response"]> { ... }
 
   // 删除
   async delete(
     id: string,
     ctx: ServiceContext
-  ): Promise<XxxContract["Response"]> { ... }
+  ): Promise<SiteCategoryContract["Response"]> { ... }
 
-  // 自定义方法命名: 动词 + 名词
-  async get{扩展名}(ctx) { ... }           // GET /xxx/{扩展名}
-  async {动作}{名词}(id, params, ctx) { ... }  // PATCH /xxx/:id/{动作}
+  // 自定义方法命名: 动词直接使用 + 必要参数
+  async tree(ctx: ServiceContext) { ... }                    // GET /xxx/tree
+  async move(id: string, newParentId: string, ctx) { ... }    // PATCH /xxx/:id/move
+  async patchStatus(id: string, status: boolean, ctx) { ... } // PATCH /xxx/:id/status
 }
 ```
 
 ---
 
-## 4. 控制器层 (Controller)
+## 5. 控制器层 (Controller)
 
-### 4.1 文件命名
+### 5.1 文件命名
 
-**规则**: `{实体名}.controller.ts`
+**规则**: `{kebab-case}.controller.ts` (连字符分隔)
 
-**位置**: `apps/api/src/controllers/`
+**位置**: `apps/api/src/server/controllers/`
 
 ```
-apps/api/src/controllers/
+apps/api/src/server/controllers/
 ├── tenant.controller.ts
 ├── department.controller.ts
 ├── site.controller.ts
-├── sitecategory.controller.ts
+├── site-category.controller.ts
 └── user.controller.ts
 ```
 
-### 4.2 路由命名
+### 5.2 路由与变量命名
+
+**规则**:
+- 路由 Prefix: `/{kebab-case}` (与文件名严格一致)
+- 变量命名: `{camelCase}Controller`
+- 路由 Tags: `{PascalCase}` (用于 OpenAPI 分组)
+
+**⚠️ Elysia 路由顺序关键原则**:
+
+Elysia 按照路由**定义顺序**进行匹配，因此：
+
+1. **固定路径必须在动态路径之前定义**
+   - ✅ 正确: `.get("/tree")` 在 `.get("/:id")` 之前
+   - ❌ 错误: `.get("/:id")` 会捕获 `/tree`，将 `tree` 当作 `id`
+
+2. **标准路由定义顺序**:
+   ```typescript
+   .get("/tree", ...)           // 1. 自定义固定路由（必须在最前）
+   .get("/", ...)               // 2. 列表路由
+   .get("/:id", ...)            // 3. 详情路由
+   .post("/", ...)              // 4. 创建路由
+   .put("/:id", ...)            // 5. 更新路由
+   .patch("/:id", ...)          // 6. 部分更新路由
+   .delete("/:id", ...)         // 7. 删除路由
+   .patch("/:id/move", ...)     // 8. 自定义动态路由
+   .patch("/:id/status", ...)   // 9. 自定义动态路由
+   ```
 
 ```typescript
-export const sitecategoryController = new Elysia({
-  prefix: "/sitecategory",  // ✅ 全小写，对应表名(去掉下划线)
-  tags: ["SiteCategory"],   // ✅ PascalCase，用于 API 文档分组
+// site-category.controller.ts
+export const siteCategoryController = new Elysia({
+  prefix: "/site-category",  // ✅ 网络边界使用连字符
+  tags: ["SiteCategory"],    // ✅ 文档分组使用大驼峰
 })
-  .get("/", ...)           // GET /sitecategory
-  .post("/", ...)          // POST /sitecategory
-  .put("/:id", ...)        // PUT /sitecategory/:id
-  .delete("/:id", ...)     // DELETE /sitecategory/:id
-```
-
-**prefix 规则**: `/实体名` (全小写，去掉下划线)
-
-| 数据库表 | prefix | 示例路由 |
-|---------|--------|---------|
-| `site` | `/site` | `GET /site` |
-| `site_category` | `/sitecategory` | `GET /sitecategory` |
-| `product_media` | `/productmedia` | `GET /productmedia` |
-| `user_site_role` | `/usersiterole` | `GET /usersiterole` |
-
-### 4.3 控制器变量命名
-
-```typescript
-// ✅ 正确
-export const sitecategoryController = new Elysia({ prefix: "/sitecategory" })
-export const userController = new Elysia({ prefix: "/user" })
-export const productmediaController = new Elysia({ prefix: "/productmedia" })
-
-// ❌ 错误
-export const siteCategoryController = ...  // ❌ 不要大写
-export const site_categoriesController = ... // ❌ 不要用下划线
-```
-
-**命名模式**: `{实体名}controller` (全小写)
-
-### 4.4 路由定义
-
-```typescript
-export const sitecategoryController = new Elysia({ prefix: "/sitecategory" })
   .use(dbPlugin)
-  .use(authGuardMid)
+  .use(betterAuthPlugin)
+
+  // ⚠️ 重要：自定义固定路由必须在动态路由之前定义！
+  .get("/tree", ...)       // GET /site-category/tree
+  .get("/", ...)           // GET /site-category
+  .get("/:id", ...)        // GET /site-category/:id
+
   // 基础 CRUD
-  .get("/", ({ query, user, db, currentDeptId }) =>
-    sitecategoryService.findAll(query, { db, user, currentDeptId }),
-    {
-      allPermissions: ["SITECATEGORY_VIEW"],  // 权限常量
-      query: SiteCategoryContract.ListQuery,
-      detail: {
-        summary: "获取站点分类列表",
-        description: "分页查询站点分类数据，支持搜索和排序",
-        tags: ["SiteCategory"],
-      },
-    }
-  )
-  .post("/", ({ body, user, db, currentDeptId }) =>
-    sitecategoryService.create(body, { db, user, currentDeptId }),
-    {
-      allPermissions: ["SITECATEGORY_CREATE"],
-      body: SiteCategoryContract.Create,
-      detail: {
-        summary: "创建站点分类",
-        tags: ["SiteCategory"],
-      },
-    }
-  )
-  // 自定义路由
-  .get("/tree", ({ user, db, currentDeptId }) =>
-    sitecategoryService.getTree({ db, user, currentDeptId }),
-    {
-      allPermissions: ["SITECATEGORY_VIEW"],
-      detail: {
-        summary: "获取站点分类树形结构",
-        tags: ["SiteCategory"],
-      },
-    }
-  )
-  .patch("/:id/move", ({ params, body, user, db, currentDeptId }) =>
-    sitecategoryService.moveCategory(params.id, body.newParentId, { db, user, currentDeptId }),
-    {
-      params: t.Object({ id: t.String() }),
-      body: t.Object({ newParentId: t.Optional(t.String()) }),
-      allPermissions: ["SITECATEGORY_EDIT"],
-      detail: {
-        summary: "移动站点分类",
-        tags: ["SiteCategory"],
-      },
-    }
-  );
+  .post("/", ...)          // POST /site-category
+  .put("/:id", ...)        // PUT /site-category/:id
+  .patch("/:id", ...)      // PATCH /site-category/:id
+  .delete("/:id", ...)     // DELETE /site-category/:id
+
+  // 自定义动态路由（在基础路由之后）
+  .patch("/:id/move", ...) // PATCH /site-category/:id/move
+  .patch("/:id/status", ...); // PATCH /site-category/:id/status
+```
+
+### 5.3 Prefix 映射表
+
+| 数据库表 | 文件名 | 变量命名 | 路由 Prefix | 示例路由 |
+|---------|-------|---------|------------|---------|
+| `site` | `site.controller.ts` | `siteController` | `/site` | `GET /site` |
+| `site_category` | `site-category.controller.ts` | `siteCategoryController` | `/site-category` | `GET /site-category` |
+| `product_media` | `product-media.controller.ts` | `productMediaController` | `/product-media` | `GET /product-media` |
+| `user_site_role` | `user-role.controller.ts` | `userRoleController` | `/user-role` | `GET /user-role` |
+
+**转换规则**:
+1. 表名 `site_category` → 去下划线转小驼峰 `siteCategory`
+2. 文件名加连字符 `site-category.controller.ts`
+3. 路由加前缀 `/site-category`
+4. 关联表可选简化: `user_site_role` → `user-role`
+
+### 5.4 控制器完整示例
+
+```typescript
+// site-category.controller.ts
+import { Elysia, t } from "elysia";
+import { siteCategoryService } from "../modules/site-category.service";
+import { SiteCategoryContract } from "@repo/contract";
+
+export const siteCategoryController = new Elysia({
+  prefix: "/site-category",
+  tags: ["SiteCategory"],
+})
+  .use(dbPlugin)
+  .use(betterAuthPlugin)
+
+  // ⚠️ 重要：自定义路由必须在动态路由之前定义！
+  // GET /site-category/tree - 获取树形结构
+  .get("/tree", async ({ userInfo, db }) => {
+    return siteCategoryService.tree({ db, userInfo });
+  }, {
+    auth: true,
+    detail: {
+      summary: "获取站点分类树形结构",
+      tags: ["SiteCategory"],
+    },
+  })
+
+  // GET /site-category/ - 获取列表
+  .get("/", async ({ query, userInfo, db }) => {
+    return siteCategoryService.list(query, { db, userInfo });
+  }, {
+    auth: true,
+    query: SiteCategoryContract.ListQuery,
+    detail: {
+      summary: "获取站点分类列表",
+      description: "分页查询站点分类数据，支持搜索和排序",
+      tags: ["SiteCategory"],
+    },
+  })
+
+  // GET /site-category/:id - 获取详情
+  .get("/:id", async ({ params, userInfo, db }) => {
+    return siteCategoryService.detail(params.id, { db, userInfo });
+  }, {
+    auth: true,
+    params: t.Object({ id: t.String() }),
+    detail: {
+      summary: "获取站点分类详情",
+      tags: ["SiteCategory"],
+    },
+  })
+
+  // POST /site-category - 创建
+  .post("/", async ({ body, userInfo, db }) => {
+    return siteCategoryService.create(body, { db, userInfo });
+  }, {
+    auth: true,
+    body: SiteCategoryContract.Create,
+    detail: {
+      summary: "创建站点分类",
+      tags: ["SiteCategory"],
+    },
+  })
+
+  // PUT /site-category/:id - 全量更新
+  .put("/:id", async ({ params, body, userInfo, db }) => {
+    return siteCategoryService.update(params.id, body, { db, userInfo });
+  }, {
+    auth: true,
+    body: SiteCategoryContract.Update,
+    detail: {
+      summary: "更新站点分类",
+      tags: ["SiteCategory"],
+    },
+  })
+
+  // PATCH /site-category/:id - 局部更新
+  .patch("/:id", async ({ params, body, userInfo, db }) => {
+    return siteCategoryService.patch(params.id, body, { db, userInfo });
+  }, {
+    auth: true,
+    body: SiteCategoryContract.Patch,
+    detail: {
+      summary: "部分更新站点分类",
+      tags: ["SiteCategory"],
+    },
+  })
+
+  // DELETE /site-category/:id - 删除
+  .delete("/:id", async ({ params, userInfo, db }) => {
+    return siteCategoryService.delete(params.id, { db, userInfo });
+  }, {
+    auth: true,
+    detail: {
+      summary: "删除站点分类",
+      tags: ["SiteCategory"],
+    },
+  })
+
+  // PATCH /site-category/:id/move - 移动分类
+  .patch("/:id/move", async ({ params, body, userInfo, db }) => {
+    return siteCategoryService.move(params.id, body.newParentId, { db, userInfo });
+  }, {
+    auth: true,
+    body: t.Object({ newParentId: t.Optional(t.String()) }),
+    detail: {
+      summary: "移动站点分类",
+      tags: ["SiteCategory"],
+    },
+  })
+
+  // PATCH /site-category/:id/status - 切换状态
+  .patch("/:id/status", async ({ params, body, userInfo, db }) => {
+    return siteCategoryService.patchStatus(params.id, body.isActive, { db, userInfo });
+  }, {
+    auth: true,
+    body: t.Object({ isActive: t.Boolean() }),
+    detail: {
+      summary: "切换站点分类状态",
+      tags: ["SiteCategory"],
+    },
+  });
 ```
 
 ---
 
-## 5. 前端 API Hooks
+## 6. 前端 API Hooks
 
-### 5.1 文件命名
+### 6.1 文件命名
 
-**规则**: `{实体名}.ts` (全小写，对应后端路由)
+**规则**: `{kebab-case}.ts` (连字符分隔，对应后端路由)
 
-**位置**: `apps/b2badmin/src/hooks/api/`
+**位置**: `apps/api/src/hooks/api/`
 
 ```
-apps/b2badmin/src/hooks/api/
+apps/api/src/hooks/api/
 ├── tenant.ts
 ├── department.ts
 ├── site.ts
-├── sitecategory.ts           // /sitecategory 路由
+├── site-category.ts         # 对应 /site-category 路由
 ├── product.ts
-├── productmedia.ts           // /productmedia 路由
-└── userrole.ts               // /usersiterole 路由
+├── product-media.ts         # 对应 /product-media 路由
+└── user-role.ts             # 对应 /user-role 路由
 ```
 
-### 5.2 类型文件 (可选)
+### 6.2 类型文件 (可选)
 
-**规则**: `{实体名}.type.ts` (用于前端自定义类型)
+**规则**: `{kebab-case}.type.ts` (用于前端自定义类型扩展)
 
 ```
-apps/b2badmin/src/hooks/api/
-├── sitecategory.ts
-├── sitecategory.type.ts      // 前端扩展类型
+apps/api/src/hooks/api/
+├── site-category.ts
+├── site-category.type.ts    # 前端扩展类型
 ├── user.ts
-└── user.type.ts              // 前端扩展类型
+└── user.type.ts             # 前端扩展类型
 ```
 
-### 5.3 Hook 命名规范
+### 6.3 Hook 命名规范
+
+**命名模式**:
+- Query (读): `use{PascalCase}{Action}` 如 `useSiteCategoryList`, `useSiteCategoryTree`
+- Mutation (写): `use{Action}{PascalCase}` 如 `useCreateSiteCategory`, `useUpdateSiteCategory`
 
 ```typescript
+// site-category.ts
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import type { SiteCategoryContract } from "@repo/contract";
+
+// Query Key 工厂
+const keys = {
+  all: ["site-category"] as const,
+  lists: () => [...keys.all, "list"] as const,
+  detail: (id: string) => [...keys.all, "detail", id] as const,
+  tree: () => [...keys.all, "tree"] as const,
+};
+
 // Query Hooks (获取数据)
 export function useSiteCategoryList(
-  params?: typeof SiteCategoryContract.ListQuery.static,
+  params?: SiteCategoryContract["ListQuery"],
   enabled = true
 ) {
   return useQuery({
-    queryKey: ["sitecategory", "list", params],
-    queryFn: () => api.get<SiteCategoryListResponse>("/api/v1/sitecategory", params),
+    queryKey: keys.lists(),
+    queryFn: () => api.get<SiteCategoryContract["ListResponse"]>("/api/v1/site-category", params),
     enabled,
+  });
+}
+
+export function useSiteCategoryDetail(
+  id: string,
+  enabled = true
+) {
+  return useQuery({
+    queryKey: keys.detail(id),
+    queryFn: () => api.get<SiteCategoryContract["Response"]>(`/api/v1/site-category/${id}`),
+    enabled: enabled && !!id,
   });
 }
 
 export function useSiteCategoryTree(enabled = true) {
   return useQuery({
-    queryKey: ["sitecategory", "tree"],
-    queryFn: () => api.get<SiteCategoryTreeResponse>("/api/v1/sitecategory/tree"),
+    queryKey: keys.tree(),
+    queryFn: () => api.get<SiteCategoryContract["TreeResponse"][]>("/api/v1/site-category/tree"),
     enabled,
   });
 }
@@ -386,10 +595,10 @@ export function useSiteCategoryTree(enabled = true) {
 export function useCreateSiteCategory() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: SiteCategoryCreate) =>
-      api.post<SiteCategoryResponse>("/api/v1/sitecategory", data),
+    mutationFn: (data: SiteCategoryContract["Create"]) =>
+      api.post<SiteCategoryContract["Response"]>("/api/v1/site-category", data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["sitecategory"] });
+      queryClient.invalidateQueries({ queryKey: keys.all });
     },
   });
 }
@@ -397,10 +606,21 @@ export function useCreateSiteCategory() {
 export function useUpdateSiteCategory() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: SiteCategoryUpdate }) =>
-      api.put<SiteCategoryResponse>(`/api/v1/sitecategory/${id}`, data),
+    mutationFn: ({ id, data }: { id: string; data: SiteCategoryContract["Update"] }) =>
+      api.put<SiteCategoryContract["Response"]>(`/api/v1/site-category/${id}`, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["sitecategory"] });
+      queryClient.invalidateQueries({ queryKey: keys.all });
+    },
+  });
+}
+
+export function usePatchSiteCategory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: SiteCategoryContract["Patch"] }) =>
+      api.patch<SiteCategoryContract["Response"]>(`/api/v1/site-category/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: keys.all });
     },
   });
 }
@@ -409,9 +629,9 @@ export function useDeleteSiteCategory() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) =>
-      api.delete<SiteCategoryResponse>(`/api/v1/sitecategory/${id}`),
+      api.delete<SiteCategoryContract["Response"]>(`/api/v1/site-category/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["sitecategory"] });
+      queryClient.invalidateQueries({ queryKey: keys.all });
     },
   });
 }
@@ -421,118 +641,125 @@ export function useMoveSiteCategory() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, newParentId }: { id: string; newParentId?: string }) =>
-      api.patch(`/api/v1/sitecategory/${id}/move`, { newParentId }),
+      api.patch(`/api/v1/site-category/${id}/move`, { newParentId }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["sitecategory"] });
+      queryClient.invalidateQueries({ queryKey: keys.all });
     },
   });
 }
 
-export function useToggleSiteCategory() {
+export function usePatchSiteCategoryStatus() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) =>
-      api.patch(`/api/v1/sitecategory/${id}/toggle`),
+    mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
+      api.patch(`/api/v1/site-category/${id}/status`, { isActive }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["sitecategory"] });
+      queryClient.invalidateQueries({ queryKey: keys.all });
     },
   });
 }
 ```
 
-**命名模式**:
-- Query: `use{实体名}{操作}` 如 `useSiteCategoryList`, `useSiteCategoryTree`
-- Mutation: `use{动词}{实体名}` 如 `useCreateSiteCategory`, `useUpdateSiteCategory`
+### 6.4 动词对照表
 
-**动词对照表**:
+| 操作 | Query Hook | Mutation Hook | 后端路由 |
+|-----|-----------|--------------|---------|
+| 列表 | `use{Entity}List` | - | `GET /` |
+| 详情 | `use{Entity}Detail` | - | `GET /:id` |
+| 创建 | - | `useCreate{Entity}` | `POST /` |
+| 全量更新 | - | `useUpdate{Entity}` | `PUT /:id` |
+| 局部更新 | - | `usePatch{Entity}` | `PATCH /:id` |
+| 删除 | - | `useDelete{Entity}` | `DELETE /:id` |
+| 批量删除 | - | `useBatchDelete{Entities}` | `DELETE /batch` |
+| 自定义操作 | `use{Entity}{Custom}` | `use{Custom}{Entity}` | 自定义 |
 
-| 操作 | Query Hook | Mutation Hook |
-|-----|-----------|--------------|
-| 列表 | `use{Entity}List` | - |
-| 详情 | `use{Entity}` / `use{Entity}Detail` | - |
-| 创建 | - | `useCreate{Entity}` |
-| 更新 | - | `useUpdate{Entity}` |
-| 删除 | - | `useDelete{Entity}` |
-| 批量删除 | - | `useBatchDelete{Entities}` |
-| 自定义 | `use{Entity}{Custom}` | `use{Custom}{Entity}` |
-
-### 5.4 Query Key 规范
+### 6.5 Query Key 规范
 
 ```typescript
 // ✅ 标准格式
-["{entity}", "{action}", params?]
+const keys = {
+  all: ["kebab-entity"] as const,
+  lists: () => [...keys.all, "list"] as const,
+  detail: (id: string) => [...keys.all, "detail", id] as const,
+};
 
 // 示例
-["sitecategory", "list", { page: 1 }]
-["sitecategory", "tree"]
-["user", "detail", "123"]
-["product", "search", { keyword: "phone" }]
+["site-category", "list", { page: 1 }]
+["site-category", "detail", "123"]
+["site-category", "tree"]
+["product-media", "search", { keyword: "phone" }]
 ```
 
 ---
 
-## 6. 权限命名
+## 7. 权限命名
 
-### 6.1 权限常量格式
+### 7.1 权限常量格式
 
-**规则**: `{模块}_{操作}` (全大写 + 下划线)
+**规则**: `{MODULE}_{ACTION}` (全大写 + 下划线)
 
 ```typescript
 export const PERMISSIONS = {
   // 基础 CRUD
-  SITECATEGORY_VIEW: "SITECATEGORY_VIEW",
-  SITECATEGORY_CREATE: "SITECATEGORY_CREATE",
-  SITECATEGORY_EDIT: "SITECATEGORY_EDIT",
-  SITECATEGORY_DELETE: "SITECATEGORY_DELETE",
+  SITE_CATEGORY_VIEW: "SITE_CATEGORY_VIEW",
+  SITE_CATEGORY_CREATE: "SITE_CATEGORY_CREATE",
+  SITE_CATEGORY_EDIT: "SITE_CATEGORY_EDIT",
+  SITE_CATEGORY_DELETE: "SITE_CATEGORY_DELETE",
 
   // 特殊权限
+  SITE_CATEGORY_MANAGE: "SITE_CATEGORY_MANAGE",
+  PRODUCT_MEDIA_UPLOAD: "PRODUCT_MEDIA_UPLOAD",
+
+  // 系统权限
   SITES_MANAGE: "SITES_MANAGE",
   TENANTS_MANAGE: "TENANTS_MANAGE",
   SUPER: "*",
 } as const;
 ```
 
-### 6.2 模块映射
+### 7.2 模块映射表
 
-| 数据库表 | 模块前缀 | 示例权限 |
-|---------|---------|---------|
-| `site` | `SITE` | `SITE_VIEW`, `SITE_CREATE` |
-| `site_category` | `SITECATEGORY` | `SITECATEGORY_VIEW`, `SITECATEGORY_EDIT` |
-| `product` | `PRODUCT` | `PRODUCT_VIEW`, `PRODUCT_DELETE` |
-| `user_site_role` | `USITESITEROLE` 或 `USER_ROLE` | `USER_ROLE_VIEW` |
+| 数据库表 | 文件名 | 权限前缀 | 示例权限 |
+|---------|-------|---------|----------|
+| `site` | `site.ts` | `SITE` | `SITE_VIEW`, `SITE_CREATE` |
+| `site_category` | `site-category.ts` | `SITE_CATEGORY` | `SITE_CATEGORY_VIEW`, `SITE_CATEGORY_EDIT` |
+| `product` | `product.ts` | `PRODUCT` | `PRODUCT_VIEW`, `PRODUCT_DELETE` |
+| `product_media` | `product-media.ts` | `PRODUCT_MEDIA` | `PRODUCT_MEDIA_UPLOAD` |
+| `user_site_role` | `user-role.ts` | `USER_ROLE` | `USER_ROLE_VIEW` |
 
 **转换规则**:
-- 去掉下划线，合并为大写: `site_category` → `SITECATEGORY`
-- 关联表可选简化: `user_site_role` → `USER_ROLE`
+1. 表名 `site_category` → 文件名 `site-category`
+2. 文件名 `site-category` → 权限前缀 `SITE_CATEGORY` (连字符转下划线，全大写)
+3. 关联表可选简化: `user_site_role` → `user-role` → `USER_ROLE`
 
 ---
 
-## 7. 完整示例
+## 8. 完整示例
 
 ### 示例: 站点分类 (Site Category)
 
-#### 7.1 数据库层
+#### 8.1 数据库层
 
 ```typescript
-// table.schema.ts
+// packages/contract/src/table.schema.ts
 export const siteCategoryTable = p.pgTable("site_category", {
   id: idUuid,
   name: p.varchar("name", { length: 200 }).notNull(),
   description: p.text("description"),
-  parent_id: p.uuid("parent_id").references(() => siteCategoryTable.id),
-  sort_order: p.integer("sort_order").default(0),
-  is_active: p.boolean("is_active").default(true),
-  tenant_id: p.uuid("tenant_id").references(() => tenantTable.id),
-  dept_id: p.uuid("dept_id").references(() => departmentTable.id),
-  created_at: createdAt,
-  updated_at: updatedAt,
+  parentId: p.uuid("parent_id").references(() => siteCategoryTable.id),
+  sortOrder: p.integer("sort_order").default(0),
+  isActive: p.boolean("is_active").default(true),
+  tenantId: p.uuid("tenant_id").references(() => tenantTable.id),
+  deptId: p.uuid("dept_id").references(() => deptTable.id),
+  createdAt: createdAt,
+  updatedAt: updatedAt,
 });
 ```
 
-#### 7.2 契约层
+#### 8.2 契约层
 
 ```typescript
-// modules/sitecategory.contract.ts
+// packages/contract/src/modules/site-category.contract.ts
 import { t } from "elysia";
 import { type InferDTO, spread } from "../helper/utils";
 import { siteCategoryTable } from "../table.schema";
@@ -548,7 +775,14 @@ export const SiteCategoryContract = {
     sortOrder: t.Optional(t.Number()),
     isActive: t.Optional(t.Boolean()),
   }),
-  Update: t.Partial(t.Object({
+  Update: t.Object({
+    name: t.String(),
+    description: t.Optional(t.String()),
+    parentId: t.Optional(t.String()),
+    sortOrder: t.Optional(t.Number()),
+    isActive: t.Optional(t.Boolean()),
+  }),
+  Patch: t.Partial(t.Object({
     name: t.String(),
     description: t.String(),
     parentId: t.String(),
@@ -557,10 +791,14 @@ export const SiteCategoryContract = {
   })),
   ListQuery: t.Object({
     search: t.Optional(t.String()),
+    page: t.Optional(t.Number()),
+    pageSize: t.Optional(t.Number()),
   }),
   ListResponse: t.Object({
     data: t.Array(t.Object({ ...SiteCategoryFields })),
     total: t.Number(),
+    page: t.Number(),
+    pageSize: t.Number(),
   }),
   // 自定义扩展
   TreeResponse: t.Object({
@@ -572,102 +810,378 @@ export const SiteCategoryContract = {
 export type SiteCategoryContract = InferDTO<typeof SiteCategoryContract>;
 ```
 
-#### 7.3 服务层
+#### 8.3 服务层
 
 ```typescript
-// services/sitecategory.service.ts
+// apps/api/src/server/modules/site-category.service.ts
+import { db } from "@/db";
+import { siteCategoryTable } from "@repo/contract";
+import type { SiteCategoryContract } from "@repo/contract";
+
 export class SiteCategoryService {
-  async findAll(query: SiteCategoryContract["ListQuery"], ctx: ServiceContext) {
-    const { search } = query;
-    const scopeObj = ctx.getScopeObj();
-    return await ctx.db.query.siteCategoryTable.findMany({
+  async list(query: SiteCategoryContract["ListQuery"], ctx: ServiceContext) {
+    const { search, page = 1, pageSize = 20 } = query;
+    const scope = ctx.getScope();
+
+    const where = {
+      tenantId: scope.tenantId,
+      deptId: scope.deptId,
+      ...(search ? { name: { ilike: `%${search}%` } } : {}),
+    };
+
+    const [data, totalResult] = await Promise.all([
+      db.query.siteCategoryTable.findMany({
+        where,
+        orderBy: { sortOrder: "asc" },
+        limit: pageSize,
+        offset: (page - 1) * pageSize,
+      }),
+      db.select({ count: sql<number>`count(*)::int` })
+        .from(siteCategoryTable)
+        .where(where),
+    ]);
+
+    return {
+      data,
+      total: totalResult[0].count,
+      page,
+      pageSize,
+    };
+  }
+
+  async detail(id: string, ctx: ServiceContext) {
+    const scope = ctx.getScope();
+    return db.query.siteCategoryTable.findFirst({
       where: {
-        deptId: scopeObj.deptId,
-        tenantId: scopeObj.tenantId,
-        ...(search ? { name: { ilike: `%${search}%` } } : {}),
+        id,
+        tenantId: scope.tenantId,
+        deptId: scope.deptId,
       },
     });
   }
 
-  async getTree(ctx: ServiceContext) {
-    const scopeObj = ctx.getScopeObj();
-    const categories = await ctx.db.query.siteCategoryTable.findMany({
+  async create(body: SiteCategoryContract["Create"], ctx: ServiceContext) {
+    const scope = ctx.getScope();
+    const result = await db.insert(siteCategoryTable)
+      .values({
+        ...body,
+        tenantId: scope.tenantId,
+        deptId: scope.deptId,
+      })
+      .returning();
+
+    return result[0];
+  }
+
+  async update(id: string, body: SiteCategoryContract["Update"], ctx: ServiceContext) {
+    const scope = ctx.getScope();
+    const result = await db.update(siteCategoryTable)
+      .set({
+        ...body,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(siteCategoryTable.id, id),
+          eq(siteCategoryTable.tenantId, scope.tenantId),
+          eq(siteCategoryTable.deptId, scope.deptId)
+        )
+      )
+      .returning();
+
+    return result[0];
+  }
+
+  async patch(id: string, body: SiteCategoryContract["Patch"], ctx: ServiceContext) {
+    return this.update(id, body as any, ctx);
+  }
+
+  async delete(id: string, ctx: ServiceContext) {
+    const scope = ctx.getScope();
+    const result = await db.delete(siteCategoryTable)
+      .where(
+        and(
+          eq(siteCategoryTable.id, id),
+          eq(siteCategoryTable.tenantId, scope.tenantId),
+          eq(siteCategoryTable.deptId, scope.deptId)
+        )
+      )
+      .returning();
+
+    return result[0];
+  }
+
+  async tree(ctx: ServiceContext) {
+    const scope = ctx.getScope();
+    const categories = await db.query.siteCategoryTable.findMany({
       where: {
-        deptId: scopeObj.deptId,
-        tenantId: scopeObj.tenantId,
+        tenantId: scope.tenantId,
+        deptId: scope.deptId,
+        isActive: true,
       },
       orderBy: { sortOrder: "asc" },
     });
-    // 构建树形结构...
-    return treeData;
+
+    // 构建树形结构
+    const buildTree = (parentId: string | null = null) => {
+      return categories
+        .filter(cat => cat.parentId === parentId)
+        .map(cat => ({
+          ...cat,
+          children: buildTree(cat.id),
+        }));
+    };
+
+    return buildTree();
   }
 
-  async moveCategory(id: string, newParentId: string | null, ctx: ServiceContext) {
-    // 移动逻辑...
+  async move(id: string, newParentId: string | null, ctx: ServiceContext) {
+    const scope = ctx.getScope();
+    const result = await db.update(siteCategoryTable)
+      .set({ parentId: newParentId, updatedAt: new Date() })
+      .where(
+        and(
+          eq(siteCategoryTable.id, id),
+          eq(siteCategoryTable.tenantId, scope.tenantId),
+          eq(siteCategoryTable.deptId, scope.deptId)
+        )
+      )
+      .returning();
+
+    return result[0];
+  }
+
+  async patchStatus(id: string, isActive: boolean, ctx: ServiceContext) {
+    const scope = ctx.getScope();
+    const result = await db.update(siteCategoryTable)
+      .set({ isActive, updatedAt: new Date() })
+      .where(
+        and(
+          eq(siteCategoryTable.id, id),
+          eq(siteCategoryTable.tenantId, scope.tenantId),
+          eq(siteCategoryTable.deptId, scope.deptId)
+        )
+      )
+      .returning();
+
+    return result[0];
   }
 }
+
+export const siteCategoryService = new SiteCategoryService();
 ```
 
-#### 7.4 控制器层
+#### 8.4 控制器层
 
 ```typescript
-// controllers/sitecategory.controller.ts
-export const sitecategoryController = new Elysia({
-  prefix: "/sitecategory",
+// apps/api/src/server/controllers/site-category.controller.ts
+import { Elysia, t } from "elysia";
+import { siteCategoryService } from "../modules/site-category.service";
+import { SiteCategoryContract } from "@repo/contract";
+import { PERMISSIONS } from "@/config/permissions";
+
+export const siteCategoryController = new Elysia({
+  prefix: "/site-category",
   tags: ["SiteCategory"],
 })
   .use(dbPlugin)
-  .use(authGuardMid)
-  .get("/", ...,
-    {
-      allPermissions: ["SITECATEGORY_VIEW"],
-      query: SiteCategoryContract.ListQuery,
-      detail: {
-        summary: "获取站点分类列表",
-        tags: ["SiteCategory"],
-      },
-    }
-  )
-  .get("/tree", ...,
-    {
-      allPermissions: ["SITECATEGORY_VIEW"],
-      detail: {
-        summary: "获取站点分类树形结构",
-        tags: ["SiteCategory"],
-      },
-    }
-  )
-  .patch("/:id/move", ...,
-    {
-      allPermissions: ["SITECATEGORY_EDIT"],
-      detail: {
-        summary: "移动站点分类",
-        tags: ["SiteCategory"],
-      },
-    }
-  );
+  .use(betterAuthPlugin)
+
+  // ⚠️ 重要：自定义路由必须在动态路由之前定义！
+  // GET /site-category/tree - 获取树形结构
+  .get("/tree", async ({ userInfo, db }) => {
+    return siteCategoryService.tree({ db, userInfo });
+  }, {
+    auth: true,
+    detail: {
+      summary: "获取站点分类树形结构",
+      tags: ["SiteCategory"],
+    },
+  })
+
+  // GET /site-category/ - 获取列表
+  .get("/", async ({ query, userInfo, db }) => {
+    return siteCategoryService.list(query, { db, userInfo });
+  }, {
+    auth: true,
+    query: SiteCategoryContract.ListQuery,
+    detail: {
+      summary: "获取站点分类列表",
+      description: "分页查询站点分类数据，支持搜索和排序",
+      tags: ["SiteCategory"],
+    },
+  })
+
+  // GET /site-category/:id - 获取详情
+  .get("/:id", async ({ params, userInfo, db }) => {
+    return siteCategoryService.detail(params.id, { db, userInfo });
+  }, {
+    auth: true,
+    params: t.Object({ id: t.String() }),
+    detail: {
+      summary: "获取站点分类详情",
+      tags: ["SiteCategory"],
+    },
+  })
+
+  // POST /site-category - 创建
+  .post("/", async ({ body, userInfo, db }) => {
+    return siteCategoryService.create(body, { db, userInfo });
+  }, {
+    auth: true,
+    body: SiteCategoryContract.Create,
+    detail: {
+      summary: "创建站点分类",
+      tags: ["SiteCategory"],
+    },
+  })
+
+  // PUT /site-category/:id - 全量更新
+  .put("/:id", async ({ params, body, userInfo, db }) => {
+    return siteCategoryService.update(params.id, body, { db, userInfo });
+  }, {
+    auth: true,
+    body: SiteCategoryContract.Update,
+    detail: {
+      summary: "更新站点分类",
+      tags: ["SiteCategory"],
+    },
+  })
+
+  // PATCH /site-category/:id - 局部更新
+  .patch("/:id", async ({ params, body, userInfo, db }) => {
+    return siteCategoryService.patch(params.id, body, { db, userInfo });
+  }, {
+    auth: true,
+    body: SiteCategoryContract.Patch,
+    detail: {
+      summary: "部分更新站点分类",
+      tags: ["SiteCategory"],
+    },
+  })
+
+  // DELETE /site-category/:id - 删除
+  .delete("/:id", async ({ params, userInfo, db }) => {
+    return siteCategoryService.delete(params.id, { db, userInfo });
+  }, {
+    auth: true,
+    detail: {
+      summary: "删除站点分类",
+      tags: ["SiteCategory"],
+    },
+  })
+
+  // PATCH /site-category/:id/move - 移动分类
+  .patch("/:id/move", async ({ params, body, userInfo, db }) => {
+    return siteCategoryService.move(params.id, body.newParentId, { db, userInfo });
+  }, {
+    auth: true,
+    body: t.Object({ newParentId: t.Optional(t.String()) }),
+    detail: {
+      summary: "移动站点分类",
+      tags: ["SiteCategory"],
+    },
+  })
+
+  // PATCH /site-category/:id/status - 切换状态
+  .patch("/:id/status", async ({ params, body, userInfo, db }) => {
+    return siteCategoryService.patchStatus(params.id, body.isActive, { db, userInfo });
+  }, {
+    auth: true,
+    body: t.Object({ isActive: t.Boolean() }),
+    detail: {
+      summary: "切换站点分类状态",
+      tags: ["SiteCategory"],
+    },
+  });
 ```
 
-#### 7.5 前端 Hooks
+#### 8.5 前端 Hooks
 
 ```typescript
-// hooks/api/sitecategory.ts
+// apps/api/src/hooks/api/site-category.ts
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import type { SiteCategoryContract } from "@repo/contract";
+
+// Query Key 工厂
+const keys = {
+  all: ["site-category"] as const,
+  lists: () => [...keys.all, "list"] as const,
+  detail: (id: string) => [...keys.all, "detail", id] as const,
+  tree: () => [...keys.all, "tree"] as const,
+};
+
+// Query Hooks
 export function useSiteCategoryList(
-  params?: typeof SiteCategoryContract.ListQuery.static,
+  params?: SiteCategoryContract["ListQuery"],
   enabled = true
 ) {
   return useQuery({
-    queryKey: ["sitecategory", "list", params],
-    queryFn: () => api.get<SiteCategoryListResponse>("/api/v1/sitecategory", params),
+    queryKey: keys.lists(),
+    queryFn: () => api.get<SiteCategoryContract["ListResponse"]>("/api/v1/site-category", params),
     enabled,
+  });
+}
+
+export function useSiteCategoryDetail(id: string, enabled = true) {
+  return useQuery({
+    queryKey: keys.detail(id),
+    queryFn: () => api.get<SiteCategoryContract["Response"]>(`/api/v1/site-category/${id}`),
+    enabled: enabled && !!id,
   });
 }
 
 export function useSiteCategoryTree(enabled = true) {
   return useQuery({
-    queryKey: ["sitecategory", "tree"],
-    queryFn: () => api.get<SiteCategoryTreeResponse[]>("/api/v1/sitecategory/tree"),
+    queryKey: keys.tree(),
+    queryFn: () => api.get<SiteCategoryContract["TreeResponse"][]>("/api/v1/site-category/tree"),
     enabled,
+  });
+}
+
+// Mutation Hooks
+export function useCreateSiteCategory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: SiteCategoryContract["Create"]) =>
+      api.post<SiteCategoryContract["Response"]>("/api/v1/site-category", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: keys.all });
+    },
+  });
+}
+
+export function useUpdateSiteCategory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: SiteCategoryContract["Update"] }) =>
+      api.put<SiteCategoryContract["Response"]>(`/api/v1/site-category/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: keys.all });
+    },
+  });
+}
+
+export function usePatchSiteCategory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: SiteCategoryContract["Patch"] }) =>
+      api.patch<SiteCategoryContract["Response"]>(`/api/v1/site-category/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: keys.all });
+    },
+  });
+}
+
+export function useDeleteSiteCategory() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      api.delete<SiteCategoryContract["Response"]>(`/api/v1/site-category/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: keys.all });
+    },
   });
 }
 
@@ -675,122 +1189,314 @@ export function useMoveSiteCategory() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, newParentId }: { id: string; newParentId?: string }) =>
-      api.patch(`/api/v1/sitecategory/${id}/move`, { newParentId }),
+      api.patch(`/api/v1/site-category/${id}/move`, { newParentId }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["sitecategory"] });
+      queryClient.invalidateQueries({ queryKey: keys.all });
+    },
+  });
+}
+
+export function usePatchSiteCategoryStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
+      api.patch(`/api/v1/site-category/${id}/status`, { isActive }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: keys.all });
     },
   });
 }
 ```
 
-#### 7.6 权限配置
+#### 8.6 权限配置
 
 ```typescript
-// config/permissions.ts
+// apps/api/src/server/config/permissions.ts
 export const PERMISSIONS = {
-  SITECATEGORY_VIEW: "SITECATEGORY_VIEW",
-  SITECATEGORY_CREATE: "SITECATEGORY_CREATE",
-  SITECATEGORY_EDIT: "SITECATEGORY_EDIT",
-  SITECATEGORY_DELETE: "SITECATEGORY_DELETE",
+  // 站点分类模块
+  SITE_CATEGORY_VIEW: "SITE_CATEGORY_VIEW",
+  SITE_CATEGORY_CREATE: "SITE_CATEGORY_CREATE",
+  SITE_CATEGORY_EDIT: "SITE_CATEGORY_EDIT",
+  SITE_CATEGORY_DELETE: "SITE_CATEGORY_DELETE",
+
+  // 其他模块...
 } as const;
 
-// 使用
+// 在控制器中使用
 import { PERMISSIONS } from "@/config/permissions";
 
-allPermissions: [PERMISSIONS.SITECATEGORY_VIEW]
+// 在路由配置中
+detail: {
+  summary: "获取站点分类列表",
+  tags: ["SiteCategory"],
+  security: [{ BearerAuth: [PERMISSIONS.SITE_CATEGORY_VIEW] }],
+}
 ```
 
 ---
 
-## 8. 自动化转换规则
+## 9. 自动化转换规则
 
-### 8.1 表名 → 各层命名
+### 9.1 完整映射表
 
-| 数据库表名 | Schema 变量 | Contract 文件 | Service 文件 | Controller 变量 | 路由 prefix | Hook 文件 | 权限前缀 |
-|-----------|------------|--------------|-------------|----------------|-------------|-----------|---------|
-| `site` | `siteTable` | `site.contract.ts` | `site.service.ts` | `siteController` | `/site` | `site.ts` | `SITE` |
-| `site_category` | `siteCategoryTable` | `sitecategory.contract.ts` | `sitecategory.service.ts` | `sitecategoryController` | `/sitecategory` | `sitecategory.ts` | `SITECATEGORY` |
-| `product_media` | `productMediaTable` | `productmedia.contract.ts` | `productmedia.service.ts` | `productmediaController` | `/productmedia` | `productmedia.ts` | `PRODUCTMEDIA` |
-| `user_site_role` | `userSiteRoleTable` | `usersiterole.contract.ts` | `usersiterole.service.ts` | `usersiteroleController` | `/usersiterole` | `usersiterole.ts` | `USER_ROLE` |
+当输入模块名为 `site-category` (文件名/路由名) 时：
 
-### 8.2 转换算法
+| 目标层级 | 转换逻辑 | 结果示例 |
+|---------|---------|---------|
+| **数据库表名** | `toSnakeCase(input)` | `site_category` |
+| **Schema 变量** | `toCamelCase(table)` + `Table` | `siteCategoryTable` |
+| **文件名** | `input` + `.type.ts` | `site-category.contract.ts` |
+| **URL 路径** | `/` + `input` | `/site-category` |
+| **代码变量** | `toCamelCase(input)` | `siteCategory` |
+| **类型/类名** | `toPascalCase(input)` + `Type` | `SiteCategoryContract` |
+| **权限前缀** | `toUpperSnake(input)` | `SITE_CATEGORY` |
+
+### 9.2 核心转换算法 (TypeScript)
 
 ```typescript
-// 1. 表名 → Schema 变量
-function tableNameToSchema(tableName: string): string {
-  return tableName.replace(/_([a-z])/g, (_, c) => c.toUpperCase()) + "Table";
+/**
+ * 连字符转驼峰 (kebab-case → camelCase)
+ * site-category → siteCategory
+ */
+function toCamelCase(str: string): string {
+  return str.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
 }
-// "site_category" → "siteCategoryTable"
 
-// 2. 表名 → 文件名 (全小写，去掉下划线)
-function tableNameToFile(tableName: string): string {
-  return tableName.replace(/_/g, "");
+/**
+ * 驼峰转大驼峰 (camelCase → PascalCase)
+ * siteCategory → SiteCategory
+ */
+function toPascalCase(str: string): string {
+  return str.charAt(0).toUpperCase() + toCamelCase(str.slice(1));
 }
-// "site_category" → "sitecategory"
 
-// 3. 表名 → PascalCase (用于类型)
-function tableNameToPascalCase(tableName: string): string {
-  return tableName
-    .split("_")
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join("");
+/**
+ * 连字符转下划线 (kebab-case → snake_case)
+ * site-category → site_category
+ */
+function toSnakeCase(str: string): string {
+  return str.replace(/-/g, '_');
 }
-// "site_category" → "SiteCategory"
 
-// 4. 表名 → 权限前缀 (全大写，去掉下划线)
-function tableNameToPermissionPrefix(tableName: string): string {
-  return tableName.replace(/_/g, "").toUpperCase();
+/**
+ * 连字符转大写下划线 (kebab-case → UPPER_SNAKE_CASE)
+ * site-category → SITE_CATEGORY
+ */
+function toUpperSnake(str: string): string {
+  return toSnakeCase(str).toUpperCase();
 }
-// "site_category" → "SITECATEGORY"
 
-// 5. Schema 变量 → 表名 (反推)
-function schemaToTableName(schemaName: string): string {
-  return schemaName.replace(/([A-Z])/g, "_$1").toLowerCase().replace("table", "");
+/**
+ * 下划线转驼峰 (snake_case → camelCase)
+ * site_category → siteCategory
+ */
+function snakeToCamel(str: string): string {
+  return str.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
 }
-// "siteCategoryTable" → "site_category"
+
+/**
+ * 下划线转连字符 (snake_case → kebab-case)
+ * site_category → site-category
+ */
+function snakeToKebab(str: string): string {
+  return str.replace(/_/g, '-');
+}
+
+// 使用示例
+const moduleName = "site-category";
+
+console.log(toCamelCase(moduleName));        // "siteCategory"
+console.log(toPascalCase(moduleName));       // "SiteCategory"
+console.log(toSnakeCase(moduleName));        // "site_category"
+console.log(toUpperSnake(moduleName));       // "SITE_CATEGORY"
+
+const tableName = "site_category";
+console.log(snakeToCamel(tableName));        // "siteCategory"
+console.log(snakeToKebab(tableName));        // "site-category"
+```
+
+### 9.3 自动推导示例
+
+从**数据库表名**推导所有层级:
+
+```typescript
+// 输入: "site_category"
+const tableName = "site_category";
+
+// 1. 数据库层
+const table = tableName;  // "site_category"
+
+// 2. Schema 变量
+const schemaVar = snakeToCamel(tableName) + "Table";  // "siteCategoryTable"
+
+// 3. 文件名 (契约/服务/控制器)
+const fileName = snakeToKebab(tableName);  // "site-category"
+
+// 4. URL 路由
+const routePrefix = "/" + fileName;  // "/site-category"
+
+// 5. 代码变量 (服务/控制器实例)
+const codeVar = snakeToCamel(tableName);  // "siteCategory"
+
+// 6. 类型名 (契约/服务类)
+const typeName = snakeToCamel(tableName).split('').map((c, i) =>
+  i === 0 ? c.toUpperCase() : c
+).join('');  // "SiteCategory"
+
+// 7. 权限前缀
+const permissionPrefix = tableName.toUpperCase();  // "SITE_CATEGORY"
 ```
 
 ---
 
-## 9. 总结
+## 10. 总结
 
-### 9.1 核心原则
+### 10.1 一致性检查清单
 
-1. **数据库表**: `snake_case` + **单数**
-2. **Schema 变量**: `camelCase` + `Table` 后缀
-3. **文件名**: 全小写，去掉下划线
-4. **类型名**: `PascalCase` + 类型后缀
-5. **路由**: 全小写，对应文件名
-6. **权限**: `UPPER_CASE` + 下划线分隔
+开发时请对照以下清单进行检查：
 
-### 9.2 一致性检查清单
+#### 数据库层
+- [ ] 数据库表使用 `snake_case` + **单数** 形式
+- [ ] Schema 变量使用 `camelCase` + `Table` 后缀
+- [ ] 字段名使用 `snake_case`
+- [ ] 外键字段格式为 `{实体}_id`
 
-- [ ] 数据库表使用单数形式
-- [ ] Schema 变量以 `Table` 结尾
-- [ ] Contract 文件以 `.contract.ts` 结尾
-- [ ] Service 文件以 `.service.ts` 结尾
-- [ ] Controller 变量全小写 + `controller` 后缀
-- [ ] 路由 prefix 全小写，无下划线
-- [ ] Hook 命名遵循 `use{Entity}{Action}` 模式
-- [ ] 权限常量全大写 + 下划线
+#### 契约层
+- [ ] 文件名使用 `kebab-case` + `.contract.ts` 后缀
+- [ ] 契约导出使用 `PascalCase` + `Contract` 后缀
+- [ ] 类型导出使用 `PascalCase` + `DTO` 后缀
+
+#### 服务层
+- [ ] 文件名使用 `kebab-case` + `.service.ts` 后缀
+- [ ] 类名使用 `PascalCase` + `Service` 后缀
+- [ ] 实例使用 `camelCase` + `Service` 后缀
+- [ ] 方法名遵循动宾结构 (list, detail, create, update, patch, delete)
+
+#### 控制器层
+- [ ] 文件名使用 `kebab-case` + `.controller.ts` 后缀
+- [ ] 变量使用 `camelCase` + `Controller` 后缀
+- [ ] 路由 prefix 使用 `/{kebab-case}` 格式
+- [ ] 路由 tags 使用 `PascalCase` 格式
+
+#### 前端层
+- [ ] Hook 文件使用 `kebab-case.ts` 格式
+- [ ] Query Hook 命名遵循 `use{Entity}{Action}` 模式
+- [ ] Mutation Hook 命名遵循 `use{Action}{Entity}` 模式
+- [ ] Query Key 使用 `["kebab-entity", "action"]` 格式
+
+#### 权限层
+- [ ] 权限常量使用 `UPPER_SNAKE_CASE` 格式
+- [ ] 权限前缀与模块名对应 (使用下划线分隔)
+
+### 10.2 快速参考表
+
+| 层级 | 命名规则 | 示例 | 说明 |
+|-----|---------|------|------|
+| **数据库表** | `snake_case` + 单数 | `site_category` | 存储边界 |
+| **Schema 变量** | `camelCase` + `Table` | `siteCategoryTable` | 内存边界 |
+| **Contract 文件** | `kebab-case` + `.contract.ts` | `site-category.contract.ts` | 磁盘边界 |
+| **Contract 导出** | `PascalCase` + `Contract` | `SiteCategoryContract` | 类型边界 |
+| **Service 文件** | `kebab-case` + `.service.ts` | `site-category.service.ts` | 磁盘边界 |
+| **Service 类** | `PascalCase` + `Service` | `SiteCategoryService` | 类型边界 |
+| **Service 实例** | `camelCase` + `Service` | `siteCategoryService` | 内存边界 |
+| **Controller 文件** | `kebab-case` + `.controller.ts` | `site-category.controller.ts` | 磁盘边界 |
+| **Controller 变量** | `camelCase` + `Controller` | `siteCategoryController` | 内存边界 |
+| **路由 prefix** | `/kebab-case` | `/site-category` | 网络边界 |
+| **路由 tags** | `PascalCase` | `"SiteCategory"` | 文档分组 |
+| **Hook 文件** | `kebab-case.ts` | `site-category.ts` | 磁盘边界 |
+| **Hook Query** | `use{Entity}{Action}` | `useSiteCategoryList` | 内存边界 |
+| **Hook Mutation** | `use{Action}{Entity}` | `useCreateSiteCategory` | 内存边界 |
+| **权限常量** | `UPPER_SNAKE_CASE` | `SITE_CATEGORY_VIEW` | 逻辑边界 |
+
+### 10.3 核心原则回顾
+
+1. **物理空间 (磁盘/网络)**: 使用 `kebab-case`，保证视觉清晰和标准兼容
+2. **逻辑空间 (内存/代码)**: 使用 `camelCase`/`PascalCase`，符合语言习惯
+3. **持久空间 (数据库)**: 使用 `snake_case`，遵循数据库惯例
+4. **类型边界**: 使用 `PascalCase`，清晰区分实例与类型
+5. **自动化映射**: 通过转换函数实现各层级的自动推导
+
+### 10.4 最佳实践
+
 
 ---
 
-## 附录: 快速参考表
+## 附录: 常用转换工具函数
 
-| 层级 | 命名规则 | 示例 |
-|-----|---------|------|
-| **数据库表** | `snake_case` + 单数 | `site_category` |
-| **Schema** | `camelCase` + `Table` | `siteCategoryTable` |
-| **Contract 文件** | `lowercase` + `.contract.ts` | `sitecategory.contract.ts` |
-| **Contract 导出** | `PascalCase` + `Contract` | `SiteCategoryContract` |
-| **Service 文件** | `lowercase` + `.service.ts` | `sitecategory.service.ts` |
-| **Service 类** | `PascalCase` + `Service` | `SiteCategoryService` |
-| **Controller 文件** | `lowercase` + `.controller.ts` | `sitecategory.controller.ts` |
-| **Controller 变量** | `lowercase` + `controller` | `sitecategoryController` |
-| **路由 prefix** | `/lowercase` | `/sitecategory` |
-| **路由 tags** | `PascalCase` | `"SiteCategory"` |
-| **Hook 文件** | `lowercase.ts` | `sitecategory.ts` |
-| **Hook Query** | `use{Entity}{Action}` | `useSiteCategoryList` |
-| **Hook Mutation** | `use{Action}{Entity}` | `useCreateSiteCategory` |
-| **权限常量** | `UPPER_SNAKE_CASE` | `SITECATEGORY_VIEW` |
+```typescript
+/**
+ * 命名转换工具集
+ * 用于代码生成器和自动化脚本
+ */
+export const NamingUtils = {
+  /**
+   * kebab-case → camelCase
+   * site-category → siteCategory
+   */
+  kebabToCamel(str: string): string {
+    return str.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+  },
+
+  /**
+   * kebab-case → PascalCase
+   * site-category → SiteCategory
+   */
+  kebabToPascal(str: string): string {
+    return str.charAt(0).toUpperCase() + this.kebabToCamel(str.slice(1));
+  },
+
+  /**
+   * kebab-case → snake_case
+   * site-category → site_category
+   */
+  kebabToSnake(str: string): string {
+    return str.replace(/-/g, '_');
+  },
+
+  /**
+   * kebab-case → UPPER_SNAKE_CASE
+   * site-category → SITE_CATEGORY
+   */
+  kebabToUpperSnake(str: string): string {
+    return this.kebabToSnake(str).toUpperCase();
+  },
+
+  /**
+   * snake_case → camelCase
+   * site_category → siteCategory
+   */
+  snakeToCamel(str: string): string {
+    return str.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+  },
+
+  /**
+   * snake_case → kebab-case
+   * site_category → site-category
+   */
+  snakeToKebab(str: string): string {
+    return str.replace(/_/g, '-');
+  },
+
+  /**
+   * camelCase → kebab-case
+   * siteCategory → site-category
+   */
+  camelToKebab(str: string): string {
+    return str.replace(/([A-Z])/g, '-$1').toLowerCase();
+  },
+
+  /**
+   * camelCase → snake_case
+   * siteCategory → site_category
+   */
+  camelToSnake(str: string): string {
+    return str.replace(/([A-Z])/g, '_$1').toLowerCase();
+  },
+};
+```
+
+---
+
+**文档版本**: v2.0 (架构师修订版)
+**最后更新**: 2026-01-02
+**维护者**: 项目架构组
