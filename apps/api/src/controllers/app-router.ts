@@ -7,7 +7,7 @@
 import type { Elysia } from "elysia";
 
 import { adController } from "./ad.controller";
-import { customerController } from "./customer.controller";
+
 import { dailyInquiryCounterController } from "./daily-inquiry-counter.controller";
 import { departmentController } from "./department.controller";
 import { heroCardController } from "./hero-card.controller";
@@ -27,7 +27,7 @@ import { templateKeyController } from "./template-key.controller";
 import { templateValueController } from "./template-value.controller";
 import { tenantController } from "./tenant.controller";
 import { userController } from "./user.controller";
-
+import { customerController } from "./customer.controller";
 export const appRouter = (app: Elysia) =>
   app
     .use(adController)
