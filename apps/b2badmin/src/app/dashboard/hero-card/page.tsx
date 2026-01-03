@@ -39,14 +39,14 @@ import {
 } from "@/components/ui/sidebar";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import type { HeroCardResponse } from "@/hooks/api/herocard";
+import type { HeroCardResponse } from "@/hooks/api/hero-card";
 import {
   useHeroCardsCreate,
   useHeroCardsDelete,
   useHeroCardsList,
   useHeroCardsToggleStatus,
   useHeroCardsUpdate,
-} from "@/hooks/api/herocard";
+} from "@/hooks/api/hero-card";
 
 export default function HeroCardsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
