@@ -8,8 +8,8 @@
 import { Elysia, t } from "elysia";
 import { dbPlugin } from "~/db/connection";
 import { authGuardMid } from "~/middleware/auth";
-import { SiteConfigContract } from "site-config.contract"";
-import { SiteConfigService } from "site-config.service"";
+import { SiteConfigService } from "~/services/site-config.service";
+
 
 const siteConfigService = new SiteConfigService();
 /**

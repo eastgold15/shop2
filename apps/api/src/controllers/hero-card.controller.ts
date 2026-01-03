@@ -5,11 +5,12 @@
  * 💡 如需自定义，请删除下方的 @generated 标记，或新建一个 controller。
  * --------------------------------------------------------
  */
+import { HeroCardContract } from "@repo/contract";
 import { Elysia, t } from "elysia";
 import { dbPlugin } from "~/db/connection";
 import { authGuardMid } from "~/middleware/auth";
-import { HeroCardContract } from "hero-card.contract"";
-import { HeroCardService } from "hero-card.service"";
+import { HeroCardService } from "~/services/hero-card.service";
+
 
 const heroCardService = new HeroCardService();
 /**
