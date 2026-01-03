@@ -115,9 +115,8 @@ const getAllTableNames = () => [
 ];
 
 // 生成标准CRUD权限 - 将驼峰式转换为蛇形后再大写
-const toSnakeCase = (str: string) => {
-  return str.replace(/([A-Z])/g, '_$1').toLowerCase();
-};
+const toSnakeCase = (str: string) =>
+  str.replace(/([A-Z])/g, "_$1").toLowerCase();
 
 const generateCRUDPermissions = (resource: string) => {
   const snakeCaseResource = toSnakeCase(resource);
@@ -1231,7 +1230,7 @@ async function seedCompleteDatabase() {
     }
 
     const batchSize = 100;
-    for (let i = 0;i < rolePermissionRelations.length;i += batchSize) {
+    for (let i = 0; i < rolePermissionRelations.length; i += batchSize) {
       const batch = rolePermissionRelations.slice(i, i + batchSize);
       await db.insert(rolePermissionTable).values(batch);
     }

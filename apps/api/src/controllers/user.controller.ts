@@ -6,12 +6,12 @@
  * --------------------------------------------------------
  */
 
+import { userTable } from "@repo/contract";
 import { Elysia, t } from "elysia";
 import { dbPlugin } from "~/db/connection";
 import { authGuardMid } from "~/middleware/auth";
 import { UserContract } from "../../../../packages/contract/src/modules/user.contract";
 import { UserService } from "../services/user.service";
-import { userTable } from "@repo/contract";
 
 const userService = new UserService();
 

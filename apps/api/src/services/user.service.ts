@@ -75,10 +75,10 @@ export class UserService {
         category: user.context.department?.category,
         site: user.context.site
           ? {
-            id: user.context.site.id,
-            name: user.context.site.name,
-            domain: user.context.site.domain,
-          }
+              id: user.context.site.id,
+              name: user.context.site.name,
+              domain: user.context.site.domain,
+            }
           : undefined,
       },
       departments: departments.map((dept) => ({
@@ -88,10 +88,10 @@ export class UserService {
         parentId: dept.parentId,
         site: dept.site
           ? {
-            id: dept.site.id,
-            name: dept.site.name,
-            domain: dept.site.domain,
-          }
+              id: dept.site.id,
+              name: dept.site.name,
+              domain: dept.site.domain,
+            }
           : undefined,
       })),
     };
@@ -104,15 +104,13 @@ export class UserService {
       // 自动注入租户信息
       ...(ctx.user
         ? {
-          tenantId: ctx.user.context.tenantId!,
-          createdBy: ctx.user.id,
-          deptId: ctx.currentDeptId,
-        }
+            tenantId: ctx.user.context.tenantId!,
+            createdBy: ctx.user.id,
+            deptId: ctx.currentDeptId,
+          }
         : {}),
     };
     const [res] = await ctx.db.insert(userTable).values(insertData).returning();
     return res;
   }
-
-
 }

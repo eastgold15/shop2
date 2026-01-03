@@ -1,6 +1,5 @@
 import {
   mediaTable,
-  type ProductContract,
   productMasterCategoryTable,
   productMediaTable,
   productTable,
@@ -395,11 +394,7 @@ export class ProductService {
   /**
    * 更新商品（全量关联更新）
    */
-  public async update(
-    productId: string,
-    body: any,
-    ctx: ServiceContext
-  ) {
+  public async update(productId: string, body: any, ctx: ServiceContext) {
     const {
       // 1. 基础信息
       name,
@@ -618,7 +613,6 @@ export class ProductService {
 
     return { count: ids.length, message: `成功删除 ${ids.length} 个商品` };
   }
-
 
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   public async delete(id: string, ctx: ServiceContext) {

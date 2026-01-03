@@ -23,10 +23,7 @@ export class InquiryService {
     return res;
   }
 
-  public async list(
-    query: InquiryContract["ListQuery"],
-    ctx: ServiceContext
-  ) {
+  public async list(query: InquiryContract["ListQuery"], ctx: ServiceContext) {
     const { search } = query;
 
     const res = await ctx.db.query.inquiryTable.findMany({
@@ -61,6 +58,4 @@ export class InquiryService {
       .returning();
     return res;
   }
-
-
 }

@@ -10,10 +10,10 @@ export class TenantService {
       // 自动注入租户信息
       ...(ctx.user
         ? {
-          tenantId: ctx.user.context.tenantId!,
-          createdBy: ctx.user.id,
-          deptId: ctx.currentDeptId,
-        }
+            tenantId: ctx.user.context.tenantId!,
+            createdBy: ctx.user.id,
+            deptId: ctx.currentDeptId,
+          }
         : {}),
     };
     const [res] = await ctx.db
@@ -23,10 +23,7 @@ export class TenantService {
     return res;
   }
 
-  public async list(
-    query: TenantContract["ListQuery"],
-    ctx: ServiceContext
-  ) {
+  public async list(query: TenantContract["ListQuery"], ctx: ServiceContext) {
     const { search } = query;
 
     const res = await ctx.db.query.tenantTable.findMany({
@@ -61,6 +58,4 @@ export class TenantService {
       .returning();
     return res;
   }
-
-
 }

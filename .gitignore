@@ -155,3 +155,7 @@ apps/web/server/modules/_health/
 packages/contract/src/modules/**.d.ts
 
 packages/contract/src/**.d.ts
+packages/contract/src/helper/constant.d.ts
+packages/contract/src/helper/query-types.model.d.ts
+packages/contract/src/helper/utils.d.ts
+packages/contract/src/helper/utils.types.d.ts

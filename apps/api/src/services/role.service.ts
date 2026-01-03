@@ -16,10 +16,7 @@ export class RoleService {
     return res;
   }
 
-  async list(
-    ctx: ServiceContext,
-    query?: RoleContract["ListQuery"]
-  ) {
+  async list(ctx: ServiceContext, query?: RoleContract["ListQuery"]) {
     const res = await ctx.db.query.roleTable.findMany({
       where: {
         ...(query?.search ? { name: { like: `%${query.search}%` } } : {}),
@@ -33,8 +30,6 @@ export class RoleService {
 
     return res;
   }
-
-
 
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   public async update(

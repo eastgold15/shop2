@@ -183,6 +183,4 @@ export class AdService {
 
     return { count: ads.length, message: `成功删除 ${ads.length} 个广告` };
   }
-
-
 }

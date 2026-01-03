@@ -73,24 +73,33 @@ export const FrontendHookTask: Task = {
     const camelName = pascalName.charAt(0).toLowerCase() + pascalName.slice(1);
     const queryKeyVar = `${camelName}Keys`;
 
-    // 动态生成 Keys：除了基础的 all/lists/details，还要把扫描到的自定义路由加进去
+    // 根据路由动态生成 Keys，支持标准方法和自定义方法
+    // list -> list, pagelist -> pagelist, detail -> detail, tree -> tree, move -> move, etc.
     const customKeys = routes
-      .filter((r) => r.queryKeyTag !== "list" && r.queryKeyTag !== "detail")
-      .map(
-        (r) =>
-          `${r.queryKeyTag}: (params?: any) => [...${queryKeyVar}.all, '${r.queryKeyTag}', params] as const,`
-      )
+      .map((r) => {
+        const key = r.queryKeyTag;
+        // 标准方法已有固定的 key，这里生成自定义方法的 key
+        if (["list", "pagelist", "detail"].includes(key)) return null;
+
+        // 根据是否有参数决定 key 的签名
+        // 例如: tree(ctx) 无参数 -> tree: () => [...]
+        // 例如: move(id, newParentId, ctx) 有参数 -> move: (params) => [...]
+        const hasParams = r.hasParams || r.method !== "get";
+        return `${key}: ${hasParams ? `(params?: any)` : `()`} => [...${queryKeyVar}.all, '${key}'${hasParams ? ', params' : ''}] as const`;
+      })
+      .filter(Boolean)
       .join("\n  ");
 
     const queryKeysCode = `
-    export const ${queryKeyVar} = {
-      all: ['${entityName}'] as const,
-      lists: () => [...${queryKeyVar}.all, 'list'] as const,
-      list: (params: any) => [...${queryKeyVar}.lists(), params] as const,
-      details: () => [...${queryKeyVar}.all, 'detail'] as const,
-      detail: (id: string) => [...${queryKeyVar}.details(), id] as const,
-      ${customKeys}
-    };`;
+// --- Query Keys ---
+export const ${queryKeyVar} = {
+  all: ["${entityName}"] as const,
+  lists: () => [...${queryKeyVar}.all, "list"] as const,
+  list: (params: any) => [...${queryKeyVar}.lists(), params] as const,
+  pagelist: (params: any) => [...${queryKeyVar}.lists(), "pagelist", params] as const,
+  details: () => [...${queryKeyVar}.all, "detail"] as const,
+  detail: (id: string) => [...${queryKeyVar}.details(), id] as const,${customKeys ? '\n  ' + customKeys : ''}
+};`;
 
     file.addStatements(queryKeysCode);
 
@@ -194,44 +203,67 @@ function parseControllerRoutes(
       routePath = pathArg.getText().replace(/['"]/g, "");
     }
 
-    // 💡 智能推断 Hook 名称
-    // 组合: method + routePath
-    // GET / -> List
-    // GET /:id -> Detail
-    // POST / -> Create
-    // PUT /:id -> Update
-    // DELETE /:id -> Delete
-    // GET /tree -> Tree
-    // PATCH /:id/move -> Move
+    // 💡 智能推断 Hook 名称和 Query Key
+    // 根据 Service 标准方法：
+    // GET / -> list -> useSiteCategoryList
+    // GET /pagelist -> pagelist -> useSiteCategoryPagelist
+    // GET /:id -> detail -> useSiteCategoryDetail
+    // POST / -> create -> useCreateSiteCategory
+    // PUT /:id -> update -> useUpdateSiteCategory
+    // PATCH /:id -> patch -> usePatchSiteCategory
+    // DELETE /:id -> delete -> useDeleteSiteCategory
+    // PATCH /:id/status -> patchStatus -> usePatchSiteCategoryStatus
+    // PATCH /:id/move -> move -> useMoveSiteCategory
 
     let hookAction = "";
     let queryKeyTag = "";
     const isIdRoute = routePath.includes(":id");
-    const cleanPath = routePath.replace("/:id", "").replace(/^\//, ""); // remove leading slash
+    const cleanPath = routePath
+      .replace("/:id", "")
+      .replace(/^\/+/, "") // remove leading slashes
+      .replace(/\/+$/, ""); // remove trailing slashes
 
     if (method === "get") {
       if (routePath === "/" || routePath === "") {
         hookAction = "List";
         queryKeyTag = "list";
+      } else if (cleanPath === "pagelist") {
+        hookAction = "Pagelist";
+        queryKeyTag = "pagelist";
       } else if (isIdRoute && cleanPath === "") {
         hookAction = "Detail";
         queryKeyTag = "detail";
       } else {
-        // e.g. /tree -> Tree, /stats/daily -> StatsDaily
-        hookAction = toPascalCase(cleanPath);
-        queryKeyTag = toCamelCase(cleanPath);
+        // 自定义 GET 方法: /tree, /stats/daily
+        hookAction = toPascalCase(cleanPath.replace(/\//g, "_"));
+        queryKeyTag = toCamelCase(cleanPath.replace(/\//g, "_"));
       }
     }
-    // Mutation
+    // Mutation 方法
     else if (method === "post" && (routePath === "/" || routePath === "")) {
       hookAction = "Create";
-    } else if (method === "put" && isIdRoute) {
+      queryKeyTag = "create";
+    } else if (method === "put" && isIdRoute && cleanPath === "") {
       hookAction = "Update";
+      queryKeyTag = "update";
+    } else if (method === "patch") {
+      if (cleanPath === "") {
+        // PATCH /:id -> patch
+        hookAction = "Patch";
+        queryKeyTag = "patch";
+      } else {
+        // PATCH /:id/status -> patchStatus, PATCH /:id/move -> move
+        const actionName = cleanPath.replace(/^_+/, ""); // remove leading underscores
+        hookAction = toPascalCase(actionName);
+        queryKeyTag = toCamelCase(actionName);
+      }
     } else if (method === "delete" && isIdRoute) {
       hookAction = "Delete";
+      queryKeyTag = "delete";
     } else {
-      // PATCH /:id/move -> Move
-      hookAction = toPascalCase(cleanPath || method); // fallback to method name
+      // 其他自定义方法
+      hookAction = toPascalCase(cleanPath || method);
+      queryKeyTag = toCamelCase(cleanPath || method);
     }
 
     // 构造完整 API 路径 (处理 :id)
@@ -275,13 +307,29 @@ function generateHookCode(
     // List
     if (route.queryKeyTag === "list") {
       return `
+// --- ${route.hookName} (GET ${route.path}) ---
 export function ${route.hookName}(
-  params?: ${contractName}['ListQuery'],
-  enabled: boolean = true
+  params?: typeof ${contractName}.ListQuery.static,
+  enabled = true
 ) {
   return useQuery({
     queryKey: ${queryKeyVar}.list(params),
-    queryFn: () => api.get<${contractName}['ListResponse'], ${contractName}['ListQuery']>(${urlStr}, { params }),
+    queryFn: () => api.get<any, typeof ${contractName}.ListQuery.static>(${urlStr}, { params }),
+    enabled,
+  });
+}`;
+    }
+    // Pagelist
+    if (route.queryKeyTag === "pagelist") {
+      return `
+// --- ${route.hookName} (GET ${route.path}) ---
+export function ${route.hookName}(
+  params?: typeof ${contractName}.ListQuery.static,
+  enabled = true
+) {
+  return useQuery({
+    queryKey: ${queryKeyVar}.pagelist(params),
+    queryFn: () => api.get<any, typeof ${contractName}.ListQuery.static>(${urlStr}, { params }),
     enabled,
   });
 }`;
@@ -289,60 +337,89 @@ export function ${route.hookName}(
     // Detail
     if (route.queryKeyTag === "detail") {
       return `
-export function ${route.hookName}(id: string, enabled: boolean = !!id) {
+// --- ${route.hookName} (GET ${route.path}) ---
+export function ${route.hookName}(id: string, enabled = !!id) {
   return useQuery({
     queryKey: ${queryKeyVar}.detail(id),
-    queryFn: () => api.get<${contractName}['Response']>(${urlStr}),
+    queryFn: () => api.get<any>(\`${urlTemplate}\`),
     enabled,
   });
 }`;
     }
     // Custom GET (e.g. Tree)
     return `
-export function ${route.hookName}(params?: any, enabled: boolean = true) {
+// --- ${route.hookName} (GET ${route.path}) ---
+export function ${route.hookName}(params?: any, enabled = true) {
   return useQuery({
-    queryKey: [ ...${queryKeyVar}.all, '${route.queryKeyTag}', params],
+    queryKey: ${queryKeyVar}.${route.queryKeyTag}(params),
     queryFn: () => api.get<any>(${urlStr}, { params }),
     enabled,
   });
 }`;
   }
 
-  // 2. Mutation Hooks (POST/PUT/DELETE/PATCH)
-  const isUpdate = route.method === "put" || route.method === "patch";
+  // 2. Mutation Hooks (POST/PUT/PATCH/DELETE)
+  const isPut = route.method === "put";
+  const isPatch = route.method === "patch";
   const isDelete = route.method === "delete";
+  const isIdOnlyPatch = isPatch && route.hasParams && route.path.match(/\/:id$/);
 
-  // 参数类型推断
+  // 参数类型和 API 调用
   let payloadType = "any";
   let payloadArg = "data";
   let apiCall = "";
+  let mutationFnType = "";
 
-  if (route.hookName.includes("Create")) {
-    payloadType = `${contractName}['Create']`;
-    apiCall = `api.post<${contractName}['Response'], ${payloadType}>(${urlStr}, data)`;
-  } else if (isUpdate && route.hasParams) {
-    payloadType = `${contractName}['Update']`;
+  // POST / -> Create
+  if (route.queryKeyTag === "create") {
+    payloadType = `typeof ${contractName}.Create.static`;
+    mutationFnType = payloadType;
+    apiCall = `api.post<any, ${payloadType}>(${urlStr}, data)`;
+  }
+  // PUT /:id -> Update
+  else if (isPut && route.hasParams) {
+    payloadType = `typeof ${contractName}.Update.static`;
+    mutationFnType = `{ id: string; data: ${payloadType} }`;
     payloadArg = "{ id, data }";
-    apiCall = `api.${route.method}<${contractName}['Response'], ${payloadType}>(${urlStr}, data)`; // urlStr contains ${id}
-  } else if (isDelete) {
+    apiCall = `api.put<any, ${payloadType}>(\`${urlTemplate}\`, data)`;
+  }
+  // PATCH /:id -> Patch (局部更新)
+  else if (isIdOnlyPatch) {
+    payloadType = `typeof ${contractName}.Patch.static`;
+    mutationFnType = `{ id: string; data: ${payloadType} }`;
+    payloadArg = "{ id, data }";
+    apiCall = `api.patch<any, ${payloadType}>(\`${urlTemplate}\`, data)`;
+  }
+  // DELETE /:id -> Delete
+  else if (isDelete) {
+    mutationFnType = "string";
     payloadArg = "id";
-    apiCall = `api.delete<${contractName}['Response']>(${urlStr})`;
-  } else {
-    // Custom Mutation (e.g. Move)
-    // 假设参数是 { id, ...rest }
+    apiCall = `api.delete<any>(\`${urlTemplate}\`)`;
+  }
+  // PATCH /:id/xxx, PUT /:id/xxx 等自定义方法
+  else {
+    mutationFnType = "any";
+    // 如果路径包含 :id，参数应该是 { id, ...data }
     payloadArg = route.hasParams ? "{ id, ...data }" : "data";
-    apiCall = `api.${route.method}(${urlStr}, data)`;
+    apiCall = `api.${route.method}<any, any>(\`${urlTemplate}\`, data)`;
   }
 
   return `
+// --- ${route.hookName} (${route.method.toUpperCase()} ${route.path}) ---
 export function ${route.hookName}() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (${payloadArg}: ${route.hasParams && isUpdate ? `{ id: string; data: ${payloadType} }` : route.hasParams && !isUpdate ? "string" : payloadType}) => 
-      ${apiCall},
-    onSuccess: () => {
-      // 简单粗暴：让整个实体的缓存失效
-      queryClient.invalidateQueries({ queryKey: ${queryKeyVar}.all });
+    mutationFn: (${payloadArg}: ${mutationFnType}) => ${apiCall},
+    onSuccess: (_, variables) => {
+      // 如果有 id，同时失效列表和详情缓存
+      if (typeof variables === "object" && "id" in variables) {
+        queryClient.invalidateQueries({ queryKey: ${queryKeyVar}.lists() });
+        queryClient.invalidateQueries({
+          queryKey: ${queryKeyVar}.detail((variables as any).id),
+        });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ${queryKeyVar}.lists() });
+      }
     },
   });
 }`;
