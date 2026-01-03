@@ -5,6 +5,7 @@
  * 💡 如需自定义，请删除下方的 @generated 标记，或新建一个 controller。
  * --------------------------------------------------------
  */
+import { SiteConfigContract } from "@repo/contract";
 import { Elysia, t } from "elysia";
 import { dbPlugin } from "~/db/connection";
 import { authGuardMid } from "~/middleware/auth";
@@ -25,6 +26,7 @@ export const siteConfigController = new Elysia({ prefix: "/site-config" })
     {
       allPermissions: ["SITECONFIG:VIEW"],
       query: SiteConfigContract.ListQuery,
+      requireDept: true,
       detail: {
         summary: "获取SiteConfig列表",
         description: "分页查询SiteConfig数据，支持搜索和排序",
@@ -39,6 +41,7 @@ export const siteConfigController = new Elysia({ prefix: "/site-config" })
     {
       allPermissions: ["SITECONFIG:CREATE"],
       body: SiteConfigContract.Create,
+      requireDept: true,
       detail: {
         summary: "创建SiteConfig",
         description: "新增一条SiteConfig记录",
@@ -53,6 +56,7 @@ export const siteConfigController = new Elysia({ prefix: "/site-config" })
     {
       params: t.Object({ id: t.String() }),
       body: SiteConfigContract.Update,
+      requireDept: true,
       allPermissions: ["SITECONFIG:EDIT"],
       detail: {
         summary: "更新SiteConfig",
@@ -68,6 +72,7 @@ export const siteConfigController = new Elysia({ prefix: "/site-config" })
     {
       params: t.Object({ id: t.String() }),
       allPermissions: ["SITECONFIG:DELETE"],
+      requireDept: true,
       detail: {
         summary: "删除SiteConfig",
         description: "根据ID删除SiteConfig记录",

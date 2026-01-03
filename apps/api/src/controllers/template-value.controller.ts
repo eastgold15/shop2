@@ -16,7 +16,7 @@ const templatevalueService = new TemplateValueService();
 /**
  * @generated
  */
-export const templatevalueController = new Elysia({ prefix: "/templatevalue" })
+export const templateValueController = new Elysia({ prefix: "/templatevalue" })
   .use(dbPlugin)
   .use(authGuardMid)
   .get(

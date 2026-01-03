@@ -5,6 +5,7 @@
  * 💡 如需自定义，请删除下方的 @generated 标记，或新建一个 controller。
  * --------------------------------------------------------
  */
+import { SiteProductContract } from "@repo/contract";
 import { Elysia, t } from "elysia";
 import { dbPlugin } from "~/db/connection";
 import { authGuardMid } from "~/middleware/auth";
@@ -25,6 +26,7 @@ export const siteProductController = new Elysia({ prefix: "/site-product" })
     {
       allPermissions: ["SITEPRODUCT:VIEW"],
       query: SiteProductContract.ListQuery,
+      requireDept: true,
       detail: {
         summary: "获取SiteProduct列表",
         description: "分页查询SiteProduct数据，支持搜索和排序",
@@ -39,6 +41,7 @@ export const siteProductController = new Elysia({ prefix: "/site-product" })
     {
       allPermissions: ["SITEPRODUCT:CREATE"],
       body: SiteProductContract.Create,
+      requireDept: true,
       detail: {
         summary: "创建SiteProduct",
         description: "新增一条SiteProduct记录",
@@ -54,6 +57,7 @@ export const siteProductController = new Elysia({ prefix: "/site-product" })
       params: t.Object({ id: t.String() }),
       body: SiteProductContract.Update,
       allPermissions: ["SITEPRODUCT:EDIT"],
+      requireDept: true,
       detail: {
         summary: "更新SiteProduct",
         description: "根据ID更新SiteProduct信息",
@@ -68,6 +72,7 @@ export const siteProductController = new Elysia({ prefix: "/site-product" })
     {
       params: t.Object({ id: t.String() }),
       allPermissions: ["SITEPRODUCT:DELETE"],
+      requireDept: true,
       detail: {
         summary: "删除SiteProduct",
         description: "根据ID删除SiteProduct记录",
