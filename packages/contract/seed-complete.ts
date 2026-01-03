@@ -225,32 +225,32 @@ const roles = [
   },
 ];
 
-// 生成权限数据
+// 生成权限数据 - 使用蛇形命名
 const generatePermissions = () => {
   const permissions: any[] = [];
   const allTables = getAllTableNames();
 
   allTables.forEach((table) => {
-    const resource = table.toUpperCase();
+    const snakeCaseResource = toSnakeCase(table).toUpperCase();
     permissions.push(
       {
         id: randomUUIDv7(),
-        name: `${resource}_VIEW`,
+        name: `${snakeCaseResource}_VIEW`,
         description: `查看${table}`,
       },
       {
         id: randomUUIDv7(),
-        name: `${resource}_CREATE`,
+        name: `${snakeCaseResource}_CREATE`,
         description: `创建${table}`,
       },
       {
         id: randomUUIDv7(),
-        name: `${resource}_EDIT`,
+        name: `${snakeCaseResource}_EDIT`,
         description: `编辑${table}`,
       },
       {
         id: randomUUIDv7(),
-        name: `${resource}_DELETE`,
+        name: `${snakeCaseResource}_DELETE`,
         description: `删除${table}`,
       }
     );
