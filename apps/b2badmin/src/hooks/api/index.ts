@@ -23,8 +23,8 @@ export * from "./sku"; // SKU
 export * from "./skumedia"; // SKU媒体
 export * from "./template"; // 模板
 export * from "./templatekey"; // 模板键
-export * from "./templatevalue"; // 模板值
+export * from "./template-value"; // 模板值
 export * from "./tenant"; // 租户
 export * from "./user"; // 用户
-export * from "./userrole"; // 用户角色
+export * from "./user-role"; // 用户角色
 export * from "./utils"; // 工具函数

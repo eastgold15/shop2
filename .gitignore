@@ -150,3 +150,6 @@ local.json
 # 测试生成的文件
 test-error.js
 apps/web/server/modules/_health/
+
+
+packages/contract/src/modules/**.d.ts

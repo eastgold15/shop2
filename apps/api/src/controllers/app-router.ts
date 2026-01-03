@@ -25,10 +25,10 @@ import { skuController } from "./sku.controller";
 import { skumediaController } from "./skumedia.controller";
 import { templateController } from "./template.controller";
 import { templatekeyController } from "./templatekey.controller";
-import { templatevalueController } from "./templatevalue.controller";
+import { templatevalueController } from "./template-value.controller";
 import { tenantController } from "./tenant.controller";
 import { userController } from "./user.controller";
-import { userroleController } from "./userrole.controller";
+import { userroleController } from "./user-role.controller";
 
 export const appRouter = (app: Elysia) =>
   app

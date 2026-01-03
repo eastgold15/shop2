@@ -125,4 +125,4 @@ export type {
   UserSiteRole as UserSiteRoleRelation,
   UserSiteRoleListQuery,
   UserSiteRoleListResponse,
-} from "./userrole.type";
+} from "./user-role.type";
