@@ -23,12 +23,12 @@ export class HeroCardService {
       ...body,
       // 自动注入租户信息
       ...(ctx.user?.context.tenantId
-        ? { tenantId: ctx.user.context.tenantId }
+        ? { tenantId: ctx.user.context.tenantId! }
         : {}),
       ...(ctx.user?.id ? { createdBy: ctx.user.id } : {}),
       ...(ctx.currentDeptId ? { deptId: ctx.currentDeptId } : {}),
       ...(ctx.user?.context.site?.id
-        ? { siteId: ctx.user.context.site.id }
+        ? { siteId: ctx.user.context.site.id! }
         : {}),
     };
     const [res] = await ctx.db
@@ -123,11 +123,11 @@ export class HeroCardService {
         tenantId: ctx.user?.context.tenantId!,
         ...(search
           ? {
-              OR: [
-                { title: { ilike: `%${search}%` } },
-                { description: { ilike: `%${search}%` } },
-              ],
-            }
+            OR: [
+              { title: { ilike: `%${search}%` } },
+              { description: { ilike: `%${search}%` } },
+            ],
+          }
           : {}),
       },
       with: {

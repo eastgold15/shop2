@@ -14,10 +14,11 @@ export const heroCardController = new Elysia({ prefix: "/hero-card" })
   .get(
     "/",
     ({ query, user, db, currentDeptId }) =>
-      heroCardService.findAll(query, { db, user, currentDeptId }),
+      heroCardService.list(query, { db, user, currentDeptId }),
     {
-      allPermissions: ["HEROCARD:VIEW"],
+      allPermissions: ["HERO_CARD_VIEW"],
       query: HeroCardContract.ListQuery,
+      requireDept: true,
       detail: {
         summary: "获取HeroCard列表",
         description: "分页查询HeroCard数据，支持搜索和排序",
@@ -30,8 +31,9 @@ export const heroCardController = new Elysia({ prefix: "/hero-card" })
     ({ body, user, db, currentDeptId }) =>
       heroCardService.create(body, { db, user, currentDeptId }),
     {
-      allPermissions: ["HEROCARD:CREATE"],
+      allPermissions: ["HERO_CARD_CREATE"],
       body: HeroCardContract.Create,
+      requireDept: true,
       detail: {
         summary: "创建HeroCard",
         description: "新增一条HeroCard记录",
@@ -46,7 +48,8 @@ export const heroCardController = new Elysia({ prefix: "/hero-card" })
     {
       params: t.Object({ id: t.String() }),
       body: HeroCardContract.Update,
-      allPermissions: ["HEROCARD:EDIT"],
+      allPermissions: ["HERO_CARD_EDIT"],
+      requireDept: true,
       detail: {
         summary: "更新HeroCard",
         description: "根据ID更新HeroCard信息",
@@ -60,7 +63,8 @@ export const heroCardController = new Elysia({ prefix: "/hero-card" })
       heroCardService.delete(params.id, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
-      allPermissions: ["HEROCARD:DELETE"],
+      allPermissions: ["HERO_CARD_DELETE"],
+      requireDept: true,
       detail: {
         summary: "删除HeroCard",
         description: "根据ID删除HeroCard记录",

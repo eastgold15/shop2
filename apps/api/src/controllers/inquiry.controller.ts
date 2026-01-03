@@ -10,6 +10,7 @@ import { dbPlugin } from "~/db/connection";
 import { authGuardMid } from "~/middleware/auth";
 import { InquiryContract } from "../../../../packages/contract/src/modules/inquiry.contract";
 import { InquiryService } from "../services/inquiry.service";
+import { generateInquiryNumber } from "~/modules/_lib/dayCount";
 
 const inquiryService = new InquiryService();
 /**
@@ -21,10 +22,11 @@ export const inquiryController = new Elysia({ prefix: "/inquiry" })
   .get(
     "/",
     ({ query, user, db, currentDeptId }) =>
-      inquiryService.findAll(query, { db, user, currentDeptId }),
+      inquiryService.list(query, { db, user, currentDeptId }),
     {
       allPermissions: ["INQUIRY:VIEW"],
       query: InquiryContract.ListQuery,
+      requireDept: true,
       detail: {
         summary: "获取Inquiry列表",
         description: "分页查询Inquiry数据，支持搜索和排序",
@@ -34,11 +36,15 @@ export const inquiryController = new Elysia({ prefix: "/inquiry" })
   )
   .post(
     "/",
-    ({ body, user, db, currentDeptId }) =>
-      inquiryService.create(body, { db, user, currentDeptId }),
+    async ({ body, user, db, currentDeptId }) => {
+      const inquiryNumber = await generateInquiryNumber()
+
+      return inquiryService.create(body, inquiryNumber, { db, user, currentDeptId })
+    },
     {
       allPermissions: ["INQUIRY:CREATE"],
       body: InquiryContract.Create,
+      requireDept: true,
       detail: {
         summary: "创建Inquiry",
         description: "新增一条Inquiry记录",
@@ -53,6 +59,7 @@ export const inquiryController = new Elysia({ prefix: "/inquiry" })
     {
       params: t.Object({ id: t.String() }),
       body: InquiryContract.Update,
+      requireDept: true,
       allPermissions: ["INQUIRY:EDIT"],
       detail: {
         summary: "更新Inquiry",
@@ -67,6 +74,7 @@ export const inquiryController = new Elysia({ prefix: "/inquiry" })
       inquiryService.delete(params.id, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
+      requireDept: true,
       allPermissions: ["INQUIRY:DELETE"],
       detail: {
         summary: "删除Inquiry",

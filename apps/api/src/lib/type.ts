@@ -1,5 +1,5 @@
 import type { db } from "~/db/connection";
-import { UserDto } from "~/middleware/auth";
+import type { UserDto } from "~/middleware/auth";
 
 // // 用户类型（从 middleware 的 db.query.userTable.findFirst 返回）
 // export type ServiceUser = typeof userTable.$inferSelect & {

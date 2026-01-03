@@ -10,10 +10,10 @@ export class SiteConfigService {
       // 自动注入租户信息
       ...(ctx.user
         ? {
-            tenantId: ctx.user.context.tenantId!,
-            createdBy: ctx.user.id,
-            deptId: ctx.currentDeptId,
-          }
+          tenantId: ctx.user.context.tenantId!,
+          createdBy: ctx.user.id,
+          deptId: ctx.currentDeptId,
+        }
         : {}),
     };
     const [res] = await ctx.db
@@ -23,7 +23,7 @@ export class SiteConfigService {
     return res;
   }
 
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+
   public async list(
     query: SiteConfigContract["ListQuery"],
     ctx: ServiceContext
@@ -32,8 +32,7 @@ export class SiteConfigService {
 
     const res = await ctx.db.query.siteConfigTable.findMany({
       where: {
-        tenantId: ctx.user.context.tenantId!,
-        ...(search ? { originalName: { ilike: `%${search}%` } } : {}),
+        ...(search ? { key: { ilike: `%${search}%` } } : {}),
       },
     });
     return res;

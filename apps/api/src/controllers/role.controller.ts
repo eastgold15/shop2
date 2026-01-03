@@ -21,7 +21,7 @@ export const roleController = new Elysia({ prefix: "/role" })
   .get(
     "/",
     ({ query, user, db, currentDeptId }) =>
-      roleService.list(query, { db, user, currentDeptId }),
+      roleService.list({ db, user, currentDeptId }, query),
     {
       allPermissions: ["ROLE:VIEW"],
       query: RoleContract.ListQuery,
