@@ -23,7 +23,7 @@ export class InquiryService {
     return res;
   }
 
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+
   public async findAll(
     query: InquiryContract["ListQuery"],
     ctx: ServiceContext

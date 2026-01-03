@@ -20,7 +20,6 @@ export class SiteService {
     return res;
   }
 
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   public async findAll(query: SiteContract["ListQuery"], ctx: ServiceContext) {
     const { search } = query;
 

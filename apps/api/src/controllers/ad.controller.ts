@@ -18,12 +18,14 @@ const adService = new AdService();
 export const adController = new Elysia({ prefix: "/ad" })
   .use(dbPlugin)
   .use(authGuardMid)
+  // @generated
   .get(
     "/",
     ({ query, user, db, currentDeptId }) =>
       adService.findAll(query, { db, user, currentDeptId }),
     {
       allPermissions: ["AD:VIEW"],
+      requireDept: true,
       query: AdContract.ListQuery,
       detail: {
         summary: "获取Ad列表",
@@ -32,12 +34,14 @@ export const adController = new Elysia({ prefix: "/ad" })
       },
     }
   )
+  // @generated
   .post(
     "/",
     ({ body, user, db, currentDeptId }) =>
       adService.create(body, { db, user, currentDeptId }),
     {
       allPermissions: ["AD:CREATE"],
+      requireDept: true,
       body: AdContract.Create,
       detail: {
         summary: "创建Ad",
@@ -46,6 +50,7 @@ export const adController = new Elysia({ prefix: "/ad" })
       },
     }
   )
+  // @generated
   .put(
     "/:id",
     ({ params, body, user, db, currentDeptId }) =>
@@ -54,6 +59,7 @@ export const adController = new Elysia({ prefix: "/ad" })
       params: t.Object({ id: t.String() }),
       body: AdContract.Update,
       allPermissions: ["AD:EDIT"],
+      requireDept: true,
       detail: {
         summary: "更新Ad",
         description: "根据ID更新Ad信息",
@@ -61,6 +67,7 @@ export const adController = new Elysia({ prefix: "/ad" })
       },
     }
   )
+  // @generated
   .delete(
     "/:id",
     ({ params, user, db, currentDeptId }) =>
@@ -68,6 +75,7 @@ export const adController = new Elysia({ prefix: "/ad" })
     {
       params: t.Object({ id: t.String() }),
       allPermissions: ["AD:DELETE"],
+      requireDept: true,
       detail: {
         summary: "删除Ad",
         description: "根据ID删除Ad记录",

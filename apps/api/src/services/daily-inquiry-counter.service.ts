@@ -83,7 +83,6 @@ import { type ServiceContext } from "../lib/type";
 //   }
 // }
 export class DailyInquiryCounterService {
- 
   public async create(
     body: DailyInquiryCounterContract["Create"],
     ctx: ServiceContext
@@ -93,10 +92,10 @@ export class DailyInquiryCounterService {
       // 自动注入租户信息
       ...(ctx.user
         ? {
-          tenantId: ctx.user.context.tenantId!,
-          createdBy: ctx.user.id,
-          deptId: ctx.currentDeptId,
-        }
+            tenantId: ctx.user.context.tenantId!,
+            createdBy: ctx.user.id,
+            deptId: ctx.currentDeptId,
+          }
         : {}),
     };
     const [res] = await ctx.db
@@ -106,19 +105,15 @@ export class DailyInquiryCounterService {
     return res;
   }
 
- 
   public async findAll(
     query: DailyInquiryCounterContract["ListQuery"],
     ctx: ServiceContext
   ) {
     const { search } = query;
 
-    const res = await ctx.db.query.dailyInquiryCounterTable.findMany({
-
-    });
+    const res = await ctx.db.query.dailyInquiryCounterTable.findMany({});
     return res;
   }
-
 
   public async update(
     id: string,
@@ -133,7 +128,6 @@ export class DailyInquiryCounterService {
       .returning();
     return res;
   }
-
 
   public async delete(id: string, ctx: ServiceContext) {
     const [res] = await ctx.db

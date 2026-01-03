@@ -24,7 +24,6 @@ export * from "./site.contract";
 export * from "./site-category.contract";
 export * from "./site-config.contract";
 export * from "./site-product.contract";
-export * from "./sku.contract";
 export * from "./sku-media.contract";
 export * from "./template.contract";
 export * from "./template-key.contract";

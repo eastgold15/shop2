@@ -535,6 +535,7 @@ export const productTemplateTable = p.pgTable("product_template", {
     .references(() => templateTable.id),
 });
 
+// @skipGen
 export const skuTable = p.pgTable("sku", {
   ...Audit,
   skuCode: p.varchar("sku_code", { length: 100 }).notNull(), // 同样建议去重逻辑需带上 tenantId

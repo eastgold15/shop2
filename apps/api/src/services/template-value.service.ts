@@ -13,10 +13,10 @@ export class TemplateValueService {
       // 自动注入租户信息
       ...(ctx.user
         ? {
-          tenantId: ctx.user.context.tenantId!,
-          createdBy: ctx.user.id,
-          deptId: ctx.currentDeptId,
-        }
+            tenantId: ctx.user.context.tenantId!,
+            createdBy: ctx.user.id,
+            deptId: ctx.currentDeptId,
+          }
         : {}),
     };
     const [res] = await ctx.db
@@ -26,7 +26,6 @@ export class TemplateValueService {
     return res;
   }
 
-
   public async findAll(
     query: TemplateValueContract["ListQuery"],
     ctx: ServiceContext
@@ -34,9 +33,7 @@ export class TemplateValueService {
     const { search } = query;
 
     const res = await ctx.db.query.templateValueTable.findMany({
-      where: {
-
-      },
+      where: {},
     });
     return res;
   }

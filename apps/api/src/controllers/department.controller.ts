@@ -18,12 +18,14 @@ const departmentService = new DepartmentService();
 export const departmentController = new Elysia({ prefix: "/department" })
   .use(dbPlugin)
   .use(authGuardMid)
+  // @generated
   .get(
     "/",
     ({ query, user, db, currentDeptId }) =>
       departmentService.findAll(query, { db, user, currentDeptId }),
     {
       allPermissions: ["DEPARTMENT:VIEW"],
+      requireDept: true,
       query: DepartmentContract.ListQuery,
       detail: {
         summary: "获取Department列表",
@@ -32,12 +34,14 @@ export const departmentController = new Elysia({ prefix: "/department" })
       },
     }
   )
+  // @generated
   .post(
     "/",
     ({ body, user, db, currentDeptId }) =>
       departmentService.create(body, { db, user, currentDeptId }),
     {
       allPermissions: ["DEPARTMENT:CREATE"],
+      requireDept: true,
       body: DepartmentContract.Create,
       detail: {
         summary: "创建Department",
@@ -46,6 +50,7 @@ export const departmentController = new Elysia({ prefix: "/department" })
       },
     }
   )
+  // @generated
   .put(
     "/:id",
     ({ params, body, user, db, currentDeptId }) =>
@@ -54,6 +59,7 @@ export const departmentController = new Elysia({ prefix: "/department" })
       params: t.Object({ id: t.String() }),
       body: DepartmentContract.Update,
       allPermissions: ["DEPARTMENT:EDIT"],
+      requireDept: true,
       detail: {
         summary: "更新Department",
         description: "根据ID更新Department信息",
@@ -61,6 +67,7 @@ export const departmentController = new Elysia({ prefix: "/department" })
       },
     }
   )
+  // @generated
   .delete(
     "/:id",
     ({ params, user, db, currentDeptId }) =>
@@ -68,6 +75,7 @@ export const departmentController = new Elysia({ prefix: "/department" })
     {
       params: t.Object({ id: t.String() }),
       allPermissions: ["DEPARTMENT:DELETE"],
+      requireDept: true,
       detail: {
         summary: "删除Department",
         description: "根据ID删除Department记录",

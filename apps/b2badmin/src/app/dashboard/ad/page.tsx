@@ -150,7 +150,9 @@ function AdsDialog({
         sortOrder: formData.sortOrder,
         isActive: formData.isActive,
         // 如果 mediaId 为空字符串，则不发送这个字段
-        ...(formData.mediaId && formData.mediaId.trim() !== "" ? { mediaId: formData.mediaId } : {}),
+        ...(formData.mediaId && formData.mediaId.trim() !== ""
+          ? { mediaId: formData.mediaId }
+          : {}),
       };
 
       if (isEdit && ad) {

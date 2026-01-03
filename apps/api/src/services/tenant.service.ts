@@ -23,7 +23,6 @@ export class TenantService {
     return res;
   }
 
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   public async findAll(
     query: TenantContract["ListQuery"],
     ctx: ServiceContext

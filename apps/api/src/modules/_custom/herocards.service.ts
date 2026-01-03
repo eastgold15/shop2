@@ -10,7 +10,7 @@ import {
   type SQL,
 } from "drizzle-orm";
 import { HttpError } from "elysia-http-problem-json";
-import { HeroCardsGeneratedService } from "../_generated/herocards.service";
+
 import type { ServiceContext } from "../_lib/base-service";
 
 export class HeroCardsService extends HeroCardsGeneratedService {

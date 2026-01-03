@@ -18,12 +18,14 @@ const customerService = new CustomerService();
 export const customerController = new Elysia({ prefix: "/customer" })
   .use(dbPlugin)
   .use(authGuardMid)
+  // @generated
   .get(
     "/",
     ({ query, user, db, currentDeptId }) =>
       customerService.findAll(query, { db, user, currentDeptId }),
     {
       allPermissions: ["CUSTOMER:VIEW"],
+      requireDept: true,
       query: CustomerContract.ListQuery,
       detail: {
         summary: "获取Customer列表",
@@ -32,12 +34,14 @@ export const customerController = new Elysia({ prefix: "/customer" })
       },
     }
   )
+  // @generated
   .post(
     "/",
     ({ body, user, db, currentDeptId }) =>
       customerService.create(body, { db, user, currentDeptId }),
     {
       allPermissions: ["CUSTOMER:CREATE"],
+      requireDept: true,
       body: CustomerContract.Create,
       detail: {
         summary: "创建Customer",
@@ -46,6 +50,7 @@ export const customerController = new Elysia({ prefix: "/customer" })
       },
     }
   )
+  // @generated
   .put(
     "/:id",
     ({ params, body, user, db, currentDeptId }) =>
@@ -54,6 +59,7 @@ export const customerController = new Elysia({ prefix: "/customer" })
       params: t.Object({ id: t.String() }),
       body: CustomerContract.Update,
       allPermissions: ["CUSTOMER:EDIT"],
+      requireDept: true,
       detail: {
         summary: "更新Customer",
         description: "根据ID更新Customer信息",
@@ -61,6 +67,7 @@ export const customerController = new Elysia({ prefix: "/customer" })
       },
     }
   )
+  // @generated
   .delete(
     "/:id",
     ({ params, user, db, currentDeptId }) =>
@@ -68,6 +75,7 @@ export const customerController = new Elysia({ prefix: "/customer" })
     {
       params: t.Object({ id: t.String() }),
       allPermissions: ["CUSTOMER:DELETE"],
+      requireDept: true,
       detail: {
         summary: "删除Customer",
         description: "根据ID删除Customer记录",

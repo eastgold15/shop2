@@ -7,7 +7,9 @@ export class RoleService {
     const insertData = {
       ...body,
       // 自动注入租户信息
-      ...(ctx.user?.context.tenantId ? { tenantId: ctx.user.context.tenantId } : {}),
+      ...(ctx.user?.context.tenantId
+        ? { tenantId: ctx.user.context.tenantId }
+        : {}),
       ...(ctx.user?.id ? { createdBy: ctx.user.id } : {}),
     };
     const [res] = await ctx.db.insert(roleTable).values(insertData).returning();

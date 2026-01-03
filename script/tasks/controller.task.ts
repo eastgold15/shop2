@@ -132,81 +132,117 @@ export const ControllerTask: Task = {
     const pascalName = ctx.pascalName;
     const prefix = `/${ctx.tableName}`; // 🔥 已经是 kebab-case，不需要再 toLowerCase
 
-    // 构造带权限和文档的代码
-    const controllerCode = `new Elysia({ prefix: "${prefix}" })
-  .use(dbPlugin)
-  .use(authGuardMid)
-  .get("/", ({ query, user, db, currentDeptId }) => ${serviceInstanceName}.findAll(query, { db, user, currentDeptId }), {
+    // 🔥 定义标准 CRUD 路由，每个都带 // @generated 标记
+    const routes = [
+      {
+        method: "get",
+        path: "/",
+        code: `.get("/", ({ query, user, db, currentDeptId }) => ${serviceInstanceName}.findAll(query, { db, user, currentDeptId }), {
     allPermissions: ["${readPermission}"],
+    requireDept: true,
     query: ${contract}.ListQuery,
     detail: {
       summary: "获取${pascalName}列表",
       description: "分页查询${pascalName}数据，支持搜索和排序",
       tags: ["${pascalName}"],
     },
-  })
-  .post("/", ({ body, user, db, currentDeptId }) => ${serviceInstanceName}.create(body, { db, user, currentDeptId }), {
+  })`,
+      },
+      {
+        method: "post",
+        path: "/",
+        code: `.post("/", ({ body, user, db, currentDeptId }) => ${serviceInstanceName}.create(body, { db, user, currentDeptId }), {
     allPermissions: ["${createPermission}"],
+    requireDept: true,
     body: ${contract}.Create,
     detail: {
       summary: "创建${pascalName}",
       description: "新增一条${pascalName}记录",
       tags: ["${pascalName}"],
     },
-  })
-  .put("/:id", ({ params, body, user, db, currentDeptId }) => ${serviceInstanceName}.update(params.id, body, { db, user, currentDeptId }), {
+  })`,
+      },
+      {
+        method: "put",
+        path: "/:id",
+        code: `.put("/:id", ({ params, body, user, db, currentDeptId }) => ${serviceInstanceName}.update(params.id, body, { db, user, currentDeptId }), {
     params: t.Object({ id: t.String() }),
     body: ${contract}.Update,
     allPermissions: ["${updatePermission}"],
+    requireDept: true,
     detail: {
       summary: "更新${pascalName}",
       description: "根据ID更新${pascalName}信息",
       tags: ["${pascalName}"],
     },
-  })
-  .delete("/:id", ({ params, user, db, currentDeptId }) => ${serviceInstanceName}.delete(params.id, { db, user, currentDeptId }), {
+  })`,
+      },
+      {
+        method: "delete",
+        path: "/:id",
+        code: `.delete("/:id", ({ params, user, db, currentDeptId }) => ${serviceInstanceName}.delete(params.id, { db, user, currentDeptId }), {
     params: t.Object({ id: t.String() }),
     allPermissions: ["${deletePermission}"],
+    requireDept: true,
     detail: {
       summary: "删除${pascalName}",
       description: "根据ID删除${pascalName}记录",
       tags: ["${pascalName}"],
     },
-  })`;
+  })`,
+      },
+    ];
 
     const controllerVar = file.getVariableDeclaration(controllerName);
 
     if (controllerVar) {
-      // 存在：检查是否自动生成
+      // 🔥 存在：使用智能局部更新
+      const initializer = controllerVar.getInitializer();
+      if (!initializer) {
+        console.log(`     ⚠️ Invalid controller: ${controllerName}`);
+        return;
+      }
+
+      // 检查整个 controller 是否有 @generated 标记
       const stmt = controllerVar.getVariableStatement();
       const docs = stmt?.getJsDocs() || [];
-      // 使用 some 检查，兼容性更好
-      const isGenerated = docs.some((d) => d.getInnerText().includes(GEN_TAG));
+      const isFullyGenerated = docs.some((d) =>
+        d.getInnerText().includes(GEN_TAG)
+      );
 
-      if (isGenerated) {
-        // 去空格对比，避免格式化导致的无限更新
-        const oldCode = controllerVar
-          .getInitializer()
-          ?.getText()
-          .replace(/\s/g, "");
-        const newCode = controllerCode.replace(/\s/g, "");
+      if (isFullyGenerated) {
+        // 完全替换整个 controller
+        const fullCode = `new Elysia({ prefix: "${prefix}" })
+  .use(dbPlugin)
+  .use(authGuardMid)
+${routes.map((r) => `  // @generated\n${r.code}`).join("\n")}`;
+
+        const oldCode = initializer.getText().replace(/\s/g, "");
+        const newCode = fullCode.replace(/\s/g, "");
 
         if (oldCode !== newCode) {
-          controllerVar.setInitializer(controllerCode);
+          controllerVar.setInitializer(fullCode);
           console.log(`     🔄 Updated: ${controllerName}`);
         }
       } else {
-        console.log(`     🛡️ Skipped (Custom): ${controllerName}`);
+        // 🔥 智能局部更新：只更新带 // @generated 的路由
+        console.log(`     🔍 Smart Update: ${controllerName}`);
+        smartUpdateRoutes(initializer, routes);
       }
     } else {
       // 不存在：新建
+      const fullCode = `new Elysia({ prefix: "${prefix}" })
+  .use(dbPlugin)
+  .use(authGuardMid)
+${routes.map((r) => `  // @generated\n${r.code}`).join("\n")}`;
+
       const stmt = file.addVariableStatement({
         declarationKind: VariableDeclarationKind.Const,
         isExported: true,
         declarations: [
           {
             name: controllerName,
-            initializer: controllerCode,
+            initializer: fullCode,
           },
         ],
       });
@@ -216,3 +252,14 @@ export const ControllerTask: Task = {
     }
   },
 };
+
+/**
+ * 🔥 智能局部更新路由
+ * 只更新带有 // @generated 标记的链式调用，保留自定义路由
+ */
+function smartUpdateRoutes(initializer: any, routes: any[]) {
+  // TODO: 实现智能局部更新逻辑
+  // 这需要解析 CallExpression 链条，找到带 // @generated 的节点并替换
+  // 暂时跳过，保持现有行为
+  console.log("     ⚠️ Smart update not implemented yet");
+}
