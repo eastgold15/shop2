@@ -116,7 +116,7 @@ export class HeroCardService {
     const res = await ctx.db.query.heroCardTable.findMany({
       where: {
         deptId: ctx.currentDeptId,
-        tenantId: ctx.user?.context.tenantId!,
+        tenantId: ctx.user.context.tenantId!,
         ...(search
           ? {
             OR: [
@@ -202,7 +202,7 @@ export class HeroCardService {
       where: {
         id,
         deptId: ctx.currentDeptId,
-        tenantId: ctx.user?.context.tenantId!,
+        tenantId: ctx.user.context.tenantId!,
       },
     });
     if (!card) throw new HttpError.NotFound("记录不存在");

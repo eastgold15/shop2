@@ -18,9 +18,12 @@ export const HeroCardContract = {
       "createdAt",
       "updatedAt",
       "siteId",
+      "createdBy", // 不允许修改创建者
+      "deptId", // 不允许修改部门
+      "tenantId", // 不允许修改租户
     ]).properties,
   }),
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+
   Update: t.Partial(
     t.Object({
       ...t.Omit(t.Object(HeroCardInsertFields), [
@@ -28,6 +31,9 @@ export const HeroCardContract = {
         "createdAt",
         "updatedAt",
         "siteId",
+        "createdBy", // 不允许修改创建者
+        "deptId", // 不允许修改部门
+        "tenantId", // 不允许修改租户
       ]).properties,
     })
   ),

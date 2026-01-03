@@ -65,7 +65,7 @@ export const adController = new Elysia({ prefix: "/ad" })
       },
     }
   )
-  // @generated
+
   .delete(
     "/:id",
     ({ params, user, db, currentDeptId }) =>
