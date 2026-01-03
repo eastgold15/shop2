@@ -147,9 +147,8 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
     ...generateCRUDPermissions("customer"),
     ...generateCRUDPermissions("inquiry"),
     ...generateCRUDPermissions("quotation"),
-    "SITE_VIEW",
-    "SITE_CREATE",
-    "SITE_EDIT",
+    ...generateCRUDPermissions("ad"),
+    ...generateCRUDPermissions("heroCard"),
   ],
   dept_manager: [
     // 部门经理权限
@@ -162,6 +161,14 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
     ...generateCRUDPermissions("quotation"),
     "SITE_VIEW",
     "SITE_EDIT",
+    "AD_VIEW",
+    "AD_CREATE",
+    "AD_EDIT",
+    "AD_DELETE",
+    "HERO_CARD_VIEW",
+    "HERO_CARD_CREATE",
+    "HERO_CARD_EDIT",
+    "HERO_CARD_DELETE",
   ],
   salesperson: [
     // 业务员权限
@@ -1239,11 +1246,15 @@ async function seedCompleteDatabase() {
     console.log("📦 插入主分类数据...");
     await db.insert(masterCategoryTable).values(masterCategories);
 
-    // 7. 插入用户数据
+    // ✅ 7. 先插入站点数据（因为用户需要通过 department.site 获取 siteId）
+    console.log("🌐 插入站点数据...");
+    await db.insert(siteTable).values(sites);
+
+    // 8. 插入用户数据
     console.log("👥 插入用户数据...");
     await db.insert(userTable).values(users);
 
-    // 8. 创建Better Auth账户记录
+    // 9. 创建Better Auth账户记录
     console.log("🔐 创建Better Auth账户记录...");
     const accounts = users.map((user) => ({
       id: randomUUIDv7(),
@@ -1255,7 +1266,7 @@ async function seedCompleteDatabase() {
     }));
     await db.insert(accountTable).values(accounts);
 
-    // 9. 插入用户角色关联
+    // 10. 插入用户角色关联
     console.log("👑 插入用户角色关联...");
     const userRoles = [
       // 超级管理员
@@ -1270,10 +1281,6 @@ async function seedCompleteDatabase() {
       { userId: user6Id, roleId: roles[2].id },
     ];
     await db.insert(userRoleTable).values(userRoles);
-
-    // 10. 插入站点数据
-    console.log("🌐 插入站点数据...");
-    await db.insert(siteTable).values(sites);
 
     // 11. 插入站点分类数据
     console.log("📂 插入站点分类数据...");

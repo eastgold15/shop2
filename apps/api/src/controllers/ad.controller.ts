@@ -18,7 +18,6 @@ const adService = new AdService();
 export const adController = new Elysia({ prefix: "/ad" })
   .use(dbPlugin)
   .use(authGuardMid)
-  // @generated
   .get(
     "/",
     ({ query, user, db, currentDeptId }) =>
@@ -34,7 +33,7 @@ export const adController = new Elysia({ prefix: "/ad" })
       },
     }
   )
-  // @generated
+
   .post(
     "/",
     ({ body, user, db, currentDeptId }) =>
@@ -50,7 +49,6 @@ export const adController = new Elysia({ prefix: "/ad" })
       },
     }
   )
-  // @generated
   .put(
     "/:id",
     ({ params, body, user, db, currentDeptId }) =>
