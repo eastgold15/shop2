@@ -198,28 +198,34 @@ export const ControllerTask: Task = {
     const controllerVar = file.getVariableDeclaration(controllerName);
 
     if (controllerVar) {
-      // 🔥 存在：使用智能局部更新
+      // 🔥 存在：检查是否需要更新
       const initializer = controllerVar.getInitializer();
       if (!initializer) {
         console.log(`     ⚠️ Invalid controller: ${controllerName}`);
         return;
       }
 
-      // 检查整个 controller 是否有 @generated 标记
-      const stmt = controllerVar.getVariableStatement();
-      const docs = stmt?.getJsDocs() || [];
-      const isFullyGenerated = docs.some((d) =>
-        d.getInnerText().includes(GEN_TAG)
-      );
+      // 获取当前代码文本
+      const currentCode = initializer.getText();
 
-      if (isFullyGenerated) {
-        // 完全替换整个 controller
+      // 检查是否所有路由都有 // @generated 标记
+      // 逻辑：如果代码中包含 .get( 或 .post( 等方法，检查它们前面是否有 // @generated
+      const hasGeneratedRoutes = routes.some((route) => {
+        const methodPattern = new RegExp(
+          `// @generated\\s*\\\\?\\.${route.method}\\(`,
+          "m"
+        );
+        return methodPattern.test(currentCode);
+      });
+
+      if (hasGeneratedRoutes) {
+        // 有带 @generated 标记的路由，执行完全替换
         const fullCode = `new Elysia({ prefix: "${prefix}" })
   .use(dbPlugin)
   .use(authGuardMid)
 ${routes.map((r) => `  // @generated\n${r.code}`).join("\n")}`;
 
-        const oldCode = initializer.getText().replace(/\s/g, "");
+        const oldCode = currentCode.replace(/\s/g, "");
         const newCode = fullCode.replace(/\s/g, "");
 
         if (oldCode !== newCode) {
@@ -227,9 +233,8 @@ ${routes.map((r) => `  // @generated\n${r.code}`).join("\n")}`;
           console.log(`     🔄 Updated: ${controllerName}`);
         }
       } else {
-        // 🔥 智能局部更新：只更新带 // @generated 的路由
-        console.log(`     🔍 Smart Update: ${controllerName}`);
-        smartUpdateRoutes(initializer, routes);
+        // 没有任何 @generated 路由，完全跳过
+        console.log(`     ⏭️  Skipped (manual routes): ${controllerName}`);
       }
     } else {
       // 不存在：新建
@@ -254,14 +259,3 @@ ${routes.map((r) => `  // @generated\n${r.code}`).join("\n")}`;
     }
   },
 };
-
-/**
- * 🔥 智能局部更新路由
- * 只更新带有 // @generated 标记的链式调用，保留自定义路由
- */
-function smartUpdateRoutes(initializer: any, routes: any[]) {
-  // TODO: 实现智能局部更新逻辑
-  // 这需要解析 CallExpression 链条，找到带 // @generated 的节点并替换
-  // 暂时跳过，保持现有行为
-  console.log("     ⚠️ Smart update not implemented yet");
-}

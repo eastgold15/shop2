@@ -1,15 +1,8 @@
-/**
- * 🤖 【B2B Controller - 自动生成基类】
- * --------------------------------------------------------
- * ⚠️ 请勿手动修改此文件，下次运行会被覆盖。
- * 💡 如需自定义，请删除下方的 @generated 标记，或新建一个 controller。
- * --------------------------------------------------------
- */
-import { MasterCategoryContract } from "@repo/contract";
 import { Elysia, t } from "elysia";
 import { dbPlugin } from "~/db/connection";
 import { authGuardMid } from "~/middleware/auth";
-import { MasterCategoryService } from "~/services/master-category.service";
+import { MasterCategoryContract } from "../../../../packages/contract/src/modules/master-category.contract";
+import { MasterCategoryService } from "../services/master-category.service";
 
 const masterCategoryService = new MasterCategoryService();
 export const masterCategoryController = new Elysia({
@@ -87,7 +80,7 @@ export const masterCategoryController = new Elysia({
   .get(
     "/tree",
     async ({ db, user, currentDeptId }) =>
-      await masterCategoryService.getTree({ db, user, currentDeptId }),
+      await masterCategoryService.tree({ db, user, currentDeptId }),
     {
       allPermissions: ["MASTERCATEGORY_VIEW"],
       requireDept: true,

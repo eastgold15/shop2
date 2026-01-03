@@ -6,13 +6,12 @@
  * --------------------------------------------------------
  */
 
-import { userTable } from "@repo/contract";
-import { eq } from "drizzle-orm";
 import { Elysia, t } from "elysia";
 import { dbPlugin } from "~/db/connection";
 import { authGuardMid } from "~/middleware/auth";
 import { UserContract } from "../../../../packages/contract/src/modules/user.contract";
 import { UserService } from "../services/user.service";
+import { userTable } from "@repo/contract";
 
 const userService = new UserService();
 
@@ -20,7 +19,6 @@ export const userController = new Elysia({ prefix: "/user" })
   .use(dbPlugin)
   .use(authGuardMid)
 
-  // @generated
   .get(
     "/me",
     async ({ user }) => {
@@ -56,21 +54,23 @@ export const userController = new Elysia({ prefix: "/user" })
       },
     }
   )
-  // .post(
-  //   "/",
-  //   ({ body, user, db, currentDeptId }) =>
-  //     userService.create(body, { db, user, currentDeptId }),
-  //   {
-  //     allPermissions: ["USER:CREATE"],
-  //     requireDept: true,
-  //     body: UserContract.Create,
-  //     detail: {
-  //       summary: "创建User",
-  //       description: "新增一条User记录",
-  //       tags: ["User"],
-  //     },
-  //   }
-  // )
+
+  .post(
+    "/",
+    ({ body, user, db, currentDeptId }) =>
+      userService.create(body, { db, user, currentDeptId }),
+    {
+      allPermissions: ["USER:CREATE"],
+      requireDept: true,
+      body: UserContract.Create,
+      detail: {
+        summary: "创建User",
+        description: "新增一条User记录",
+        tags: ["User"],
+      },
+    }
+  )
+
   .put(
     "/:id",
     ({ params, body, user, db, currentDeptId }) =>
@@ -78,8 +78,8 @@ export const userController = new Elysia({ prefix: "/user" })
     {
       params: t.Object({ id: t.String() }),
       body: UserContract.Update,
-      requireDept: true,
       allPermissions: ["USER:EDIT"],
+      requireDept: true,
       detail: {
         summary: "更新User",
         description: "根据ID更新User信息",
@@ -87,14 +87,15 @@ export const userController = new Elysia({ prefix: "/user" })
       },
     }
   )
+
   .delete(
     "/:id",
     ({ params, user, db, currentDeptId }) =>
       userService.delete(params.id, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
-      requireDept: true,
       allPermissions: ["USER:DELETE"],
+      requireDept: true,
       detail: {
         summary: "删除User",
         description: "根据ID删除User记录",

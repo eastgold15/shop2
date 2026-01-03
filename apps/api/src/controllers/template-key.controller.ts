@@ -1,15 +1,8 @@
-/**
- * 🤖 【B2B Controller - 自动生成基类】
- * --------------------------------------------------------
- * ⚠️ 请勿手动修改此文件，下次运行会被覆盖。
- * 💡 如需自定义，请删除下方的 @generated 标记，或新建一个 controller。
- * --------------------------------------------------------
- */
-import { TemplateKeyContract } from "@repo/contract";
 import { Elysia, t } from "elysia";
 import { dbPlugin } from "~/db/connection";
 import { authGuardMid } from "~/middleware/auth";
-import { TemplateKeyService } from "~/services/template-key.service";
+import { TemplateKeyContract } from "../../../../packages/contract/src/modules/template-key.contract";
+import { TemplateKeyService } from "../services/template-key.service";
 
 const templateKeyService = new TemplateKeyService();
 /**

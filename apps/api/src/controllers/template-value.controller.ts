@@ -6,10 +6,10 @@
  * --------------------------------------------------------
  */
 
-import { TemplateValueContract } from "@repo/contract";
 import { Elysia, t } from "elysia";
 import { dbPlugin } from "~/db/connection";
 import { authGuardMid } from "~/middleware/auth";
+import { TemplateValueContract } from "../../../../packages/contract/src/modules/template-value.contract";
 import { TemplateValueService } from "../services/template-value.service";
 
 const templateValueService = new TemplateValueService();
