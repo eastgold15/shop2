@@ -21,10 +21,12 @@ export const templateKeyController = new Elysia({ prefix: "/template-key" })
   .get(
     "/",
     ({ query, user, db, currentDeptId }) =>
-      templateKeyService.findAll(query, { db, user, currentDeptId }),
+      templateKeyService.list(query, { db, user, currentDeptId }),
     {
-      allPermissions: ["TEMPLATEKEY:VIEW"],
+      allPermissions: ["TEMPLATE_KEY:VIEW"],
       query: TemplateKeyContract.ListQuery,
+      requireDept: true,
+
       detail: {
         summary: "获取TemplateKey列表",
         description: "分页查询TemplateKey数据，支持搜索和排序",
@@ -37,8 +39,9 @@ export const templateKeyController = new Elysia({ prefix: "/template-key" })
     ({ body, user, db, currentDeptId }) =>
       templateKeyService.create(body, { db, user, currentDeptId }),
     {
-      allPermissions: ["TEMPLATEKEY:CREATE"],
+      allPermissions: ["TEMPLATE_KEY:CREATE"],
       body: TemplateKeyContract.Create,
+      requireDept: true,
       detail: {
         summary: "创建TemplateKey",
         description: "新增一条TemplateKey记录",
@@ -53,7 +56,8 @@ export const templateKeyController = new Elysia({ prefix: "/template-key" })
     {
       params: t.Object({ id: t.String() }),
       body: TemplateKeyContract.Update,
-      allPermissions: ["TEMPLATEKEY:EDIT"],
+      allPermissions: ["TEMPLATE_KEY:EDIT"],
+      requireDept: true,
       detail: {
         summary: "更新TemplateKey",
         description: "根据ID更新TemplateKey信息",
@@ -67,7 +71,8 @@ export const templateKeyController = new Elysia({ prefix: "/template-key" })
       templateKeyService.delete(params.id, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
-      allPermissions: ["TEMPLATEKEY:DELETE"],
+      allPermissions: ["TEMPLATE_KEY:DELETE"],
+      requireDept: true,
       detail: {
         summary: "删除TemplateKey",
         description: "根据ID删除TemplateKey记录",

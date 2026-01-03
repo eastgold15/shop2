@@ -19,9 +19,10 @@ export const mediaController = new Elysia({ prefix: "/media" })
   .get(
     "/",
     ({ query, user, db, currentDeptId }) =>
-      mediaService.findAll(query, { db, user, currentDeptId }),
+      mediaService.list(query, { db, user, currentDeptId }),
     {
       allPermissions: ["MEDIA:VIEW"],
+      requireDept: true,
       query: MediaContract.ListQuery,
       detail: {
         summary: "获取Media列表",
@@ -36,6 +37,7 @@ export const mediaController = new Elysia({ prefix: "/media" })
       mediaService.create(body, { db, user, currentDeptId }),
     {
       allPermissions: ["MEDIA:CREATE"],
+      requireDept: true,
       body: MediaContract.Create,
       detail: {
         summary: "创建Media",
@@ -52,6 +54,7 @@ export const mediaController = new Elysia({ prefix: "/media" })
       params: t.Object({ id: t.String() }),
       body: MediaContract.Update,
       allPermissions: ["MEDIA:EDIT"],
+      requireDept: true,
       detail: {
         summary: "更新Media",
         description: "根据ID更新Media信息",
@@ -65,6 +68,7 @@ export const mediaController = new Elysia({ prefix: "/media" })
       mediaService.delete(params.id, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
+      requireDept: true,
       allPermissions: ["MEDIA:DELETE"],
       detail: {
         summary: "删除Media",

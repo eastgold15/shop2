@@ -21,7 +21,7 @@ export const siteCategoryController = new Elysia({ prefix: "/site-category" })
     ({ query, user, db, currentDeptId }) =>
       siteCategoryService.list(query, { db, user, currentDeptId }),
     {
-      allPermissions: ["SITECATEGORY_VIEW"],
+      allPermissions: ["SITE_CATEGORY_VIEW"],
       requireDept: true,
       query: SiteCategoryContract.ListQuery,
       detail: {
@@ -36,7 +36,7 @@ export const siteCategoryController = new Elysia({ prefix: "/site-category" })
     ({ body, user, db, currentDeptId }) =>
       siteCategoryService.create(body, { db, user, currentDeptId }),
     {
-      allPermissions: ["SITECATEGORY_CREATE"],
+      allPermissions: ["SITE_CATEGORY_CREATE"],
       body: SiteCategoryContract.Create,
       requireDept: true,
       detail: {
@@ -54,7 +54,7 @@ export const siteCategoryController = new Elysia({ prefix: "/site-category" })
       params: t.Object({ id: t.String() }),
       body: SiteCategoryContract.Update,
       requireDept: true,
-      allPermissions: ["SITECATEGORY_EDIT"],
+      allPermissions: ["SITE_CATEGORY_EDIT"],
       detail: {
         summary: "更新SiteCategory",
         description: "根据ID更新SiteCategory信息",
@@ -68,7 +68,7 @@ export const siteCategoryController = new Elysia({ prefix: "/site-category" })
       siteCategoryService.delete(params.id, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
-      allPermissions: ["SITECATEGORY_DELETE"],
+      allPermissions: ["SITE_CATEGORY_DELETE"],
       requireDept: true,
       detail: {
         summary: "删除SiteCategory",
@@ -82,9 +82,9 @@ export const siteCategoryController = new Elysia({ prefix: "/site-category" })
   .get(
     "/tree",
     async ({ db, user, currentDeptId }) =>
-      await siteCategoryService.getTree({ db, user, currentDeptId }),
+      await siteCategoryService.tree({ db, user, currentDeptId }),
     {
-      allPermissions: ["SITECATEGORY_VIEW"],
+      allPermissions: ["SITE_CATEGORY_VIEW"],
       requireDept: true,
       detail: {
         summary: "获取树形分类列表",

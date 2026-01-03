@@ -21,7 +21,7 @@ export const quotationController = new Elysia({ prefix: "/quotation" })
   .get(
     "/",
     ({ query, user, db, currentDeptId }) =>
-      quotationService.findAll(query, { db, user, currentDeptId }),
+      quotationService.list(query, { db, user, currentDeptId }),
     {
       allPermissions: ["QUOTATION:VIEW"],
       requireDept: true,
@@ -40,6 +40,7 @@ export const quotationController = new Elysia({ prefix: "/quotation" })
     {
       allPermissions: ["QUOTATION:CREATE"],
       body: QuotationContract.Create,
+      requireDept: true,
       detail: {
         summary: "创建Quotation",
         description: "新增一条Quotation记录",
@@ -55,6 +56,7 @@ export const quotationController = new Elysia({ prefix: "/quotation" })
       params: t.Object({ id: t.String() }),
       body: QuotationContract.Update,
       allPermissions: ["QUOTATION:EDIT"],
+      requireDept: true,
       detail: {
         summary: "更新Quotation",
         description: "根据ID更新Quotation信息",

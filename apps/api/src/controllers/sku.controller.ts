@@ -21,10 +21,11 @@ export const skuController = new Elysia({ prefix: "/sku" })
   .get(
     "/",
     ({ query, user, db, currentDeptId }) =>
-      skuService.findAll(query, { db, user, currentDeptId }),
+      skuService.list(query, { db, user, currentDeptId }),
     {
       allPermissions: ["SKU:VIEW"],
       query: SkuContract.ListQuery,
+      requireDept: true,
       detail: {
         summary: "获取Sku列表",
         description: "分页查询Sku数据，支持搜索和排序",
@@ -39,6 +40,7 @@ export const skuController = new Elysia({ prefix: "/sku" })
     {
       allPermissions: ["SKU:CREATE"],
       body: SkuContract.Create,
+      requireDept: true,
       detail: {
         summary: "创建Sku",
         description: "新增一条Sku记录",
@@ -53,6 +55,7 @@ export const skuController = new Elysia({ prefix: "/sku" })
     {
       params: t.Object({ id: t.String() }),
       body: SkuContract.Update,
+      requireDept: true,
       allPermissions: ["SKU:EDIT"],
       detail: {
         summary: "更新Sku",
@@ -68,6 +71,7 @@ export const skuController = new Elysia({ prefix: "/sku" })
     {
       params: t.Object({ id: t.String() }),
       allPermissions: ["SKU:DELETE"],
+      requireDept: true,
       detail: {
         summary: "删除Sku",
         description: "根据ID删除Sku记录",

@@ -21,9 +21,9 @@ export const siteConfigController = new Elysia({ prefix: "/site-config" })
   .get(
     "/",
     ({ query, user, db, currentDeptId }) =>
-      siteConfigService.findAll(query, { db, user, currentDeptId }),
+      siteConfigService.list(query, { db, user, currentDeptId }),
     {
-      allPermissions: ["SITECONFIG:VIEW"],
+      allPermissions: ["SITE_CONFIG:VIEW"],
       query: SiteConfigContract.ListQuery,
       requireDept: true,
       detail: {
@@ -38,7 +38,7 @@ export const siteConfigController = new Elysia({ prefix: "/site-config" })
     ({ body, user, db, currentDeptId }) =>
       siteConfigService.create(body, { db, user, currentDeptId }),
     {
-      allPermissions: ["SITECONFIG:CREATE"],
+      allPermissions: ["SITE_CONFIG:CREATE"],
       body: SiteConfigContract.Create,
       requireDept: true,
       detail: {
@@ -56,7 +56,7 @@ export const siteConfigController = new Elysia({ prefix: "/site-config" })
       params: t.Object({ id: t.String() }),
       body: SiteConfigContract.Update,
       requireDept: true,
-      allPermissions: ["SITECONFIG:EDIT"],
+      allPermissions: ["SITE_CONFIG:EDIT"],
       detail: {
         summary: "更新SiteConfig",
         description: "根据ID更新SiteConfig信息",
@@ -70,7 +70,7 @@ export const siteConfigController = new Elysia({ prefix: "/site-config" })
       siteConfigService.delete(params.id, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
-      allPermissions: ["SITECONFIG:DELETE"],
+      allPermissions: ["SITE_CONFIG:DELETE"],
       requireDept: true,
       detail: {
         summary: "删除SiteConfig",

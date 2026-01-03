@@ -12,7 +12,7 @@ import { dbPlugin } from "~/db/connection";
 import { authGuardMid } from "~/middleware/auth";
 import { TemplateValueService } from "../services/template-value.service";
 
-const templatevalueService = new TemplateValueService();
+const templateValueService = new TemplateValueService();
 /**
  * @generated
  */
@@ -22,9 +22,9 @@ export const templateValueController = new Elysia({ prefix: "/templatevalue" })
   .get(
     "/",
     ({ query, user, db, currentDeptId }) =>
-      templatevalueService.findAll(query, { db, user, currentDeptId }),
+      templateValueService.list(query, { db, user, currentDeptId }),
     {
-      allPermissions: ["TEMPLATEVALUE:VIEW"],
+      allPermissions: ["TEMPLATE_VALUE:VIEW"],
       query: TemplateValueContract.ListQuery,
       requireDept: true,
       detail: {
@@ -37,9 +37,9 @@ export const templateValueController = new Elysia({ prefix: "/templatevalue" })
   .post(
     "/",
     ({ body, user, db, currentDeptId }) =>
-      templatevalueService.create(body, { db, user, currentDeptId }),
+      templateValueService.create(body, { db, user, currentDeptId }),
     {
-      allPermissions: ["TEMPLATEVALUE:CREATE"],
+      allPermissions: ["TEMPLATE_VALUE:CREATE"],
       body: TemplateValueContract.Create,
       requireDept: true,
       detail: {
@@ -52,12 +52,12 @@ export const templateValueController = new Elysia({ prefix: "/templatevalue" })
   .put(
     "/:id",
     ({ params, body, user, db, currentDeptId }) =>
-      templatevalueService.update(params.id, body, { db, user, currentDeptId }),
+      templateValueService.update(params.id, body, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
       body: TemplateValueContract.Update,
       requireDept: true,
-      allPermissions: ["TEMPLATEVALUE:EDIT"],
+      allPermissions: ["TEMPLATE_VALUE:EDIT"],
       detail: {
         summary: "更新TemplateValue",
         description: "根据ID更新TemplateValue信息",
@@ -68,11 +68,11 @@ export const templateValueController = new Elysia({ prefix: "/templatevalue" })
   .delete(
     "/:id",
     ({ params, user, db, currentDeptId }) =>
-      templatevalueService.delete(params.id, { db, user, currentDeptId }),
+      templateValueService.delete(params.id, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
       requireDept: true,
-      allPermissions: ["TEMPLATEVALUE:DELETE"],
+      allPermissions: ["TEMPLATE_VALUE:DELETE"],
       detail: {
         summary: "删除TemplateValue",
         description: "根据ID删除TemplateValue记录",

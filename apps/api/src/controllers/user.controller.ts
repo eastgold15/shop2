@@ -44,7 +44,7 @@ export const userController = new Elysia({ prefix: "/user" })
   .get(
     "/",
     ({ query, user, db, currentDeptId }) =>
-      userService.findAll(query, { db, user, currentDeptId }),
+      userService.list(query, { db, user, currentDeptId }),
     {
       allPermissions: ["USER:VIEW"],
       requireDept: true,

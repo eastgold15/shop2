@@ -14,16 +14,18 @@ const GEN_HEADER = `/**
 const GEN_TAG = "@generated";
 
 /**
- * 将表名转换为权限前缀
+ * 将表名转换为权限前缀（使用 SNAKE_CASE）
  * templateTable -> TEMPLATE
- * productMediaTable -> PRODUCTMEDIA
+ * productMediaTable -> PRODUCT_MEDIA
+ * siteCategory -> SITE_CATEGORY
  */
 function toPermissionPrefix(tableName: string): string {
   let tableNameUpper = tableName.toUpperCase();
   if (tableNameUpper.includes("TABLE")) {
-    tableNameUpper = tableName.replace("TABLE", "");
+    tableNameUpper = tableNameUpper.replace("TABLE", "");
   }
-  return tableNameUpper;
+  // 将 kebab-case 转换为 SNAKE_CASE（处理带连字符的情况）
+  return tableNameUpper.replace(/-/g, "_");
 }
 
 /**

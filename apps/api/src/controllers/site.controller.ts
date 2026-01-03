@@ -24,6 +24,7 @@ export const siteController = new Elysia({ prefix: "/site" })
       siteService.list(query, { db, user, currentDeptId }),
     {
       allPermissions: ["SITE:VIEW"],
+      requireDept: true,
       query: SiteContract.ListQuery,
       detail: {
         summary: "获取Site列表",

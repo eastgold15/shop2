@@ -21,7 +21,7 @@ export const productController = new Elysia({ prefix: "/product" })
   .get(
     "/",
     ({ query, user, db, currentDeptId }) =>
-      productService.findAll(query, { db, user, currentDeptId }),
+      productService.list(query, { db, user, currentDeptId }),
     {
       allPermissions: ["PRODUCT:VIEW"],
       requireDept: true,

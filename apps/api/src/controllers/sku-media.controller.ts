@@ -23,7 +23,7 @@ export const skuMediaController = new Elysia({ prefix: "/sku-media" })
     ({ query, user, db, currentDeptId }) =>
       skuMediaService.list(query, { db, user, currentDeptId }),
     {
-      allPermissions: ["SKUMEDIA:VIEW"],
+      allPermissions: ["SKU_MEDIA:VIEW"],
       requireDept: true,
       query: SkuMediaContract.ListQuery,
       detail: {
@@ -38,10 +38,9 @@ export const skuMediaController = new Elysia({ prefix: "/sku-media" })
     ({ body, user, db, currentDeptId }) =>
       skuMediaService.create(body, { db, user, currentDeptId }),
     {
-      allPermissions: ["SKU-MEDIA:CREATE"],
+      allPermissions: ["SKU_MEDIA:CREATE"],
       requireDept: true,
       body: SkuMediaContract.Create,
-      requireDept: true,
       detail: {
         summary: "创建SkuMedia",
         description: "新增一条SkuMedia记录",
@@ -57,7 +56,7 @@ export const skuMediaController = new Elysia({ prefix: "/sku-media" })
       params: t.Object({ id: t.String() }),
       body: SkuMediaContract.Update,
       requireDept: true,
-      allPermissions: ["SKUMEDIA:EDIT"],
+      allPermissions: ["SKU_MEDIA:EDIT"],
       detail: {
         summary: "更新SkuMedia",
         description: "根据ID更新SkuMedia信息",
@@ -71,7 +70,7 @@ export const skuMediaController = new Elysia({ prefix: "/sku-media" })
       skuMediaService.delete(params.id, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
-      allPermissions: ["SKUMEDIA:DELETE"],
+      allPermissions: ["SKU_MEDIA:DELETE"],
       requireDept: true,
       detail: {
         summary: "删除SkuMedia",

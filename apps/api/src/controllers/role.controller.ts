@@ -25,6 +25,7 @@ export const roleController = new Elysia({ prefix: "/role" })
     {
       allPermissions: ["ROLE:VIEW"],
       query: RoleContract.ListQuery,
+      requireDept: true,
       detail: {
         summary: "获取Role列表",
         description: "分页查询Role数据，支持搜索和排序",
@@ -38,6 +39,7 @@ export const roleController = new Elysia({ prefix: "/role" })
       roleService.create(body, { db, user, currentDeptId }),
     {
       allPermissions: ["ROLE:CREATE"],
+      requireDept: true,
       body: RoleContract.Create,
       detail: {
         summary: "创建Role",

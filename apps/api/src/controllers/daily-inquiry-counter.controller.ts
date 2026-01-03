@@ -26,7 +26,7 @@ export const dailyInquiryCounterController = new Elysia({
     ({ query, user, db, currentDeptId }) =>
       dailyInquiryCounterService.list(query, { db, user, currentDeptId }),
     {
-      allPermissions: ["DAILY-INQUIRY-COUNTER:VIEW"],
+      allPermissions: ["DAILY_INQUIRY_COUNTER:VIEW"],
       requireDept: true,
       query: DailyInquiryCounterContract.ListQuery,
       detail: {
@@ -42,7 +42,7 @@ export const dailyInquiryCounterController = new Elysia({
     ({ body, user, db, currentDeptId }) =>
       dailyInquiryCounterService.create(body, { db, user, currentDeptId }),
     {
-      allPermissions: ["DAILY-INQUIRY-COUNTER:CREATE"],
+      allPermissions: ["DAILY_INQUIRY_COUNTER:CREATE"],
       requireDept: true,
       body: DailyInquiryCounterContract.Create,
       detail: {
@@ -64,7 +64,7 @@ export const dailyInquiryCounterController = new Elysia({
     {
       params: t.Object({ id: t.String() }),
       body: DailyInquiryCounterContract.Update,
-      allPermissions: ["DAILY-INQUIRY-COUNTER:EDIT"],
+      allPermissions: ["DAILY_INQUIRY_COUNTER:EDIT"],
       requireDept: true,
       detail: {
         summary: "更新DailyInquiryCounter",
@@ -80,7 +80,7 @@ export const dailyInquiryCounterController = new Elysia({
       dailyInquiryCounterService.delete(params.id, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
-      allPermissions: ["DAILY-INQUIRY-COUNTER:DELETE"],
+      allPermissions: ["DAILY_INQUIRY_COUNTER:DELETE"],
       requireDept: true,
       detail: {
         summary: "删除DailyInquiryCounter",

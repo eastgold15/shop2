@@ -21,12 +21,12 @@ export const siteProductController = new Elysia({ prefix: "/site-product" })
   .get(
     "/",
     ({ query, user, db, currentDeptId }) =>
-      siteProductService.findAll(query, { db, user, currentDeptId }),
+      siteProductService.list(query, { db, user, currentDeptId }),
     {
-      allPermissions: ["SITE-PRODUCT:VIEW"],
+      allPermissions: ["SITE_PRODUCT:VIEW"],
       requireDept: true,
       query: SiteProductContract.ListQuery,
-      requireDept: true,
+
       detail: {
         summary: "获取SiteProduct列表",
         description: "分页查询SiteProduct数据，支持搜索和排序",
@@ -38,9 +38,8 @@ export const siteProductController = new Elysia({ prefix: "/site-product" })
     "/",
     ({ body, user, db, currentDeptId }) =>
       siteProductService.create(body, { db, user, currentDeptId }),
-      allPermissions: ["SITE-PRODUCT:CREATE"],
-      requireDept: true,
-      allPermissions: ["SITEPRODUCT:CREATE"],
+    {
+      allPermissions: ["SITE_PRODUCT:CREATE"],
       body: SiteProductContract.Create,
       requireDept: true,
       detail: {
@@ -57,7 +56,7 @@ export const siteProductController = new Elysia({ prefix: "/site-product" })
     {
       params: t.Object({ id: t.String() }),
       body: SiteProductContract.Update,
-      allPermissions: ["SITEPRODUCT:EDIT"],
+      allPermissions: ["SITE_PRODUCT:EDIT"],
       requireDept: true,
       detail: {
         summary: "更新SiteProduct",
@@ -72,7 +71,7 @@ export const siteProductController = new Elysia({ prefix: "/site-product" })
       siteProductService.delete(params.id, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
-      allPermissions: ["SITEPRODUCT:DELETE"],
+      allPermissions: ["SITE_PRODUCT:DELETE"],
       requireDept: true,
       detail: {
         summary: "删除SiteProduct",
