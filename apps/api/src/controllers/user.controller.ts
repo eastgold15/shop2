@@ -35,7 +35,7 @@ export const userController = new Elysia({ prefix: "/user" })
         summary: "获取当前用户信息",
         description:
           "返回当前登录用户的详细信息，包括基础信息、权限范围、关联站点和角色",
-        tags: ["Users"],
+        tags: ["User"],
       },
     }
   )
@@ -127,7 +127,7 @@ export const userController = new Elysia({ prefix: "/user" })
       detail: {
         summary: "更新当前用户个人资料",
         description: "允许用户更新自己的个人信息，包括姓名、电话、地址和城市",
-        tags: ["Users"],
+        tags: ["User"],
       },
     }
   );

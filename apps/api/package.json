@@ -2,7 +2,7 @@
   "name": "elysia",
   "version": "1.0.50",
   "scripts": {
-    "dev": "NODE_ENV=development bun run --watch --watch.exclude='node_modules/**' --watch.exclude='../**' src/server.ts",
+    "dev": " bun run --watch  src/server.ts",
     "build": "bun build --compile --minify-whitespace --minify-syntax --target bun --outfile server src/server.ts",
     "start": "NODE_ENV=production bun run src/server.ts",
     "check": "npx ultracite check",
@@ -20,7 +20,8 @@
     "elysia-http-problem-json": "^0.1.4",
     "env-var": "^7.5.0",
     "logixlysia": "^6.0.1",
-    "nodemailer": "^7.0.12"
+    "nodemailer": "^7.0.12",
+    "pg": "^8.16.3"
   },
   "devDependencies": {
     "@types/nodemailer": "^7.0.4",

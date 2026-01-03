@@ -23,20 +23,6 @@ export const server = new Elysia({ name: "server", prefix: "/api" })
           description: "基于 Elysia + Drizzle + TypeScript 的电商后端 API",
         },
         tags: [
-          { name: "Product V2", description: "商品管理 V2" },
-          { name: "商品管理", description: "工厂级商品管理" },
-          { name: "SKU管理", description: "商品SKU管理" },
-          { name: "商品图片管理", description: "商品图片关联管理" },
-          { name: "站点商品管理", description: "出口商站点产品聚合管理" },
-          { name: "站点分类管理", description: "站点分类管理" },
-          { name: "主分类管理", description: "主分类管理" },
-          { name: "Categories", description: "分类管理" },
-          { name: "Factory", description: "工厂管理" },
-          { name: "Media", description: "媒体文件管理" }, // 新的媒体管理标签
-          { name: "Partners", description: "合作伙伴管理" },
-          { name: "Advertisements", description: "广告管理" },
-          { name: "Hero Cards", description: "首页展示卡片管理" },
-          { name: "Site Config", description: "站点配置" },
         ],
       },
       references: fromTypes(
