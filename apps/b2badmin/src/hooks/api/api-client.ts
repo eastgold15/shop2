@@ -45,7 +45,12 @@ async function request<
   }
 
   const headers = new Headers(options.headers);
-  headers.set("Content-Type", "application/json");
+
+  // 🔥 检查是否是 FormData，FormData 不需要设置 Content-Type
+  const isFormData = body instanceof FormData;
+  if (!isFormData) {
+    headers.set("Content-Type", "application/json");
+  }
 
   // 🔥 添加 x-current-dept-id header（从 auth store 获取当前部门 ID）
   const currentDeptId = getCurrentDeptId();
@@ -57,7 +62,7 @@ async function request<
     ...options,
     headers,
     credentials: "include", // 🔥 关键：允许发送和接收 cookie
-    body: body ? JSON.stringify(body) : undefined,
+    body: isFormData ? body : body ? JSON.stringify(body) : undefined,
   });
 
   if (!response.ok) {

@@ -10,7 +10,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useBatchUploadMedia } from "@/hooks/api";
-import { Loader2 } from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
 import {
@@ -25,7 +24,7 @@ import { Upload } from "@/components/ui/upload";
 
 const CATEGORY_OPTIONS = [
   { value: "product", label: "商品图片" },
-  { value: "hero_card", label: "首页卡片" },
+  { value: "hero_card", label: "爆款卡片" },
   { value: "ad", label: "广告图片" },
   { value: "document", label: "文档资料" },
   { value: "general", label: "通用文件" },
@@ -42,12 +41,38 @@ export function MediaUpload({
   const [category, setCategory] = React.useState<string>("general");
   const { mutateAsync, isPending } = useBatchUploadMedia();
 
+  // 处理文件上传（一次性上传所有文件）
+  const handleBatchUpload = async (files: File[]) => {
+    if (files.length === 0) return;
+
+    try {
+      console.log("开始批量上传文件数量:", files.length, "分类:", category);
+
+      // 一次性上传所有文件
+      const result = await mutateAsync({
+        files,
+        category,
+      });
+      console.log("所有文件上传成功:", result);
+
+      toast.success(`成功上传 ${files.length} 个文件！`);
+      setOpen(false); // 上传成功自动关窗
+      setCategory("general"); // 重置分类选择
+      onUploadComplete?.(); // 刷新列表数据
+    } catch (error) {
+      console.error("批量上传失败:", error);
+      const errorMessage = error instanceof Error ? error.message : "上传失败";
+      toast.error(errorMessage);
+      throw error; // 抛出错误让 Upload 组件处理
+    }
+  };
+
   return (
     <Dialog onOpenChange={setOpen} open={open}>
       {/* asChild 必须加上，它会将 Dialog 的打开逻辑绑定到你的 Button 上 */}
       <DialogTrigger asChild>{children}</DialogTrigger>
 
-      <DialogContent className="max-w-3xl sm:rounded-2xl">
+      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto sm:rounded-2xl">
         <DialogHeader>
           <DialogTitle className="font-bold text-xl">上传媒体资源</DialogTitle>
           <DialogDescription>
@@ -82,39 +107,22 @@ export function MediaUpload({
         <div className="py-4">
           <Upload
             autoUpload={false}
-            multiple // 手动上传模式
-            onUpload={async (files) => {
-              console.log("开始上传文件数量:", files.length, "分类:", category);
-
-              try {
-                // 一次性上传所有文件（后端支持数组）
-                const result = await mutateAsync({
-                  files,
-                  category, // 使用用户选择的分类
-                });
-                console.log("所有文件上传成功:", result);
-
-                toast.success(`成功上传 ${files.length} 个文件！`);
-                setOpen(false); // 上传成功自动关窗
-                setCategory("general"); // 重置分类选择
-                onUploadComplete?.(); // 刷新列表数据
-              } catch (error) {
-                console.error("批量上传失败:", error);
-                const errorMessage =
-                  error instanceof Error ? error.message : "上传失败";
-                toast.error(errorMessage);
-                // 不要重新抛出错误，让 Upload 组件自己标记失败状态
-              }
+            batchMode={true}
+            multiple
+            onUpload={handleBatchUpload}
+            onSuccess={() => {
+              // 上传成功后关闭弹窗
+              setTimeout(() => {
+                setOpen(false);
+                setCategory("general");
+                onUploadComplete?.();
+              }, 500);
+            }}
+            onError={(error) => {
+              toast.error(error);
             }}
           />
         </div>
-
-        {isPending && (
-          <div className="flex items-center justify-center gap-2 pb-4 font-medium text-indigo-600 text-sm">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            正在同步到服务器...
-          </div>
-        )}
       </DialogContent>
     </Dialog>
   );

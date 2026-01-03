@@ -21,7 +21,7 @@ export const mediaController = new Elysia({ prefix: "/media" })
     ({ query, user, db, currentDeptId }) =>
       mediaService.list(query, { db, user, currentDeptId }),
     {
-      allPermissions: ["MEDIA:VIEW"],
+      allPermissions: ["MEDIA_VIEW"],
       requireDept: true,
       query: MediaContract.ListQuery,
       detail: {
@@ -36,7 +36,7 @@ export const mediaController = new Elysia({ prefix: "/media" })
     ({ body, user, db, currentDeptId }) =>
       mediaService.create(body, { db, user, currentDeptId }),
     {
-      allPermissions: ["MEDIA:CREATE"],
+      allPermissions: ["MEDIA_CREATE"],
       requireDept: true,
       body: MediaContract.Create,
       detail: {
@@ -51,7 +51,7 @@ export const mediaController = new Elysia({ prefix: "/media" })
     async ({ body, user, db, currentDeptId }) =>
       mediaService.upload(body, { db, user, currentDeptId }),
     {
-      allPermissions: ["MEDIA:CREATE"],
+      allPermissions: ["MEDIA_CREATE"],
       requireDept: true,
       body: MediaContract.Uploads,
       detail: {
@@ -68,7 +68,7 @@ export const mediaController = new Elysia({ prefix: "/media" })
     {
       params: t.Object({ id: t.String() }),
       body: MediaContract.Update,
-      allPermissions: ["MEDIA:EDIT"],
+      allPermissions: ["MEDIA_EDIT"],
       requireDept: true,
       detail: {
         summary: "更新Media",
@@ -84,7 +84,7 @@ export const mediaController = new Elysia({ prefix: "/media" })
     {
       params: t.Object({ id: t.String() }),
       requireDept: true,
-      allPermissions: ["MEDIA:DELETE"],
+      allPermissions: ["MEDIA_DELETE"],
       detail: {
         summary: "删除Media",
         description: "根据ID删除Media记录",
@@ -101,7 +101,7 @@ export const mediaController = new Elysia({ prefix: "/media" })
         ids: t.Array(t.String()),
       }),
       requireDept: true,
-      allPermissions: ["MEDIA:DELETE"],
+      allPermissions: ["MEDIA_DELETE"],
       detail: {
         summary: "批量删除Media",
         description: "根据ID数组批量删除Media记录",

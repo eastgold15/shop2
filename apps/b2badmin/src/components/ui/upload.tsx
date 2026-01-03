@@ -8,7 +8,6 @@ import {
   Upload as UploadIcon,
   X,
 } from "lucide-react";
-import Image from "next/image";
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "./button";
@@ -39,6 +38,7 @@ interface UploadProps {
   className?: string;
   disabled?: boolean;
   autoUpload?: boolean; // 是否自动上传
+  batchMode?: boolean; // 是否批量上传模式（一次性上传所有文件）
 }
 
 type FilePropertyBag = {
@@ -57,6 +57,7 @@ export function Upload({
   className,
   disabled = false,
   autoUpload = false,
+  batchMode = false,
 }: UploadProps) {
   const [files, setFiles] = React.useState<UploadFile[]>([]);
   const [isDragOver, setIsDragOver] = React.useState(false);
@@ -155,10 +156,9 @@ export function Upload({
     );
 
     try {
-      // 逐个上传文件，确保每个文件都被正确处理
+      // 准备所有要上传的文件
       const uploadFiles = pendingFiles.map((uploadFile) => {
         // 创建新的 File 对象，使用编辑后的名称（如果名称被修改了）
-
         const fileToUpload =
           uploadFile.name !== uploadFile.originalName
             ? new File([uploadFile.file], uploadFile.name, {
@@ -170,58 +170,102 @@ export function Upload({
         return { fileToUpload, uploadFile };
       });
 
-      // 逐个处理上传
-      for (const { fileToUpload, uploadFile } of uploadFiles) {
+      if (batchMode) {
+        // 批量上传模式：一次性上传所有文件
         try {
-          // 更新进度
+          // 更新所有文件进度到 50%
           setFiles((prev) =>
             prev.map((f) =>
-              f.id === uploadFile.id ? { ...f, progress: 50 } : f
+              f.status === "uploading" ? { ...f, progress: 50 } : f
             )
           );
 
-          // 调用上传回调（如果 onUpload 支持单个文件）
-          // 如果 onUpload 支持批量上传，需要修改这里的逻辑
-          await onUpload([fileToUpload]);
+          // 一次性上传所有文件
+          const allFiles = uploadFiles.map((f) => f.fileToUpload);
+          await onUpload(allFiles);
 
-          // 标记为成功
+          // 标记所有为成功
           setFiles((prev) =>
             prev.map((f) =>
-              f.id === uploadFile.id
+              f.status === "uploading"
                 ? { ...f, status: "success" as const, progress: 100 }
                 : f
             )
           );
+
+          const successfulFiles = files.filter((f) => f.status === "success");
+          if (successfulFiles.length > 0) {
+            onSuccess?.(successfulFiles);
+          }
+
+          // 清理已上传的文件
+          setTimeout(() => {
+            setFiles((prev) => prev.filter((f) => f.status !== "success"));
+          }, 2000);
         } catch (error) {
-          // 单个文件失败，标记为错误但继续处理其他文件
+          // 批量上传失败，所有文件标记为错误
           setFiles((prev) =>
             prev.map((f) =>
-              f.id === uploadFile.id
+              f.status === "uploading"
                 ? { ...f, status: "error" as const, error: "上传失败" }
                 : f
             )
           );
+          onError?.("批量上传失败，请重试");
         }
-      }
+      } else {
+        // 逐个上传模式（原有逻辑）
+        for (const { fileToUpload, uploadFile } of uploadFiles) {
+          try {
+            // 更新进度
+            setFiles((prev) =>
+              prev.map((f) =>
+                f.id === uploadFile.id ? { ...f, progress: 50 } : f
+              )
+            );
 
-      // 检查是否有成功的文件
-      const successfulFiles = files.filter((f) => f.status === "success");
-      if (successfulFiles.length > 0) {
-        onSuccess?.(successfulFiles);
-      }
+            // 调用上传回调
+            await onUpload([fileToUpload]);
 
-      // 检查是否所有文件都失败了
-      const failedFiles = files.filter((f) => f.status === "error");
-      if (failedFiles.length === pendingFiles.length) {
-        onError?.("所有文件上传失败，请重试");
-      } else if (failedFiles.length > 0) {
-        onError?.(`${failedFiles.length} 个文件上传失败`);
-      }
+            // 标记为成功
+            setFiles((prev) =>
+              prev.map((f) =>
+                f.id === uploadFile.id
+                  ? { ...f, status: "success" as const, progress: 100 }
+                  : f
+              )
+            );
+          } catch (error) {
+            // 单个文件失败，标记为错误但继续处理其他文件
+            setFiles((prev) =>
+              prev.map((f) =>
+                f.id === uploadFile.id
+                  ? { ...f, status: "error" as const, error: "上传失败" }
+                  : f
+              )
+            );
+          }
+        }
 
-      // 清理已上传的文件
-      setTimeout(() => {
-        setFiles((prev) => prev.filter((f) => f.status !== "success"));
-      }, 2000);
+        // 检查是否有成功的文件
+        const successfulFiles = files.filter((f) => f.status === "success");
+        if (successfulFiles.length > 0) {
+          onSuccess?.(successfulFiles);
+        }
+
+        // 检查是否所有文件都失败了
+        const failedFiles = files.filter((f) => f.status === "error");
+        if (failedFiles.length === pendingFiles.length) {
+          onError?.("所有文件上传失败，请重试");
+        } else if (failedFiles.length > 0) {
+          onError?.(`${failedFiles.length} 个文件上传失败`);
+        }
+
+        // 清理已上传的文件
+        setTimeout(() => {
+          setFiles((prev) => prev.filter((f) => f.status !== "success"));
+        }, 2000);
+      }
     } catch (error) {
       // 整体上传失败
       setFiles((prev) =>
@@ -322,7 +366,7 @@ export function Upload({
               <Card className="p-3" key={uploadFile.id}>
                 <div className="flex items-start gap-3">
                   {uploadFile.preview ? (
-                    <Image
+                    <img
                       alt={uploadFile.name}
                       className="mt-0.5 size-10 rounded object-cover"
                       src={uploadFile.preview}

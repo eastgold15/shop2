@@ -80,7 +80,7 @@ export function useCreateMedia() {
 export function useBatchUploadMedia() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: typeof MediaContract.Uploads.static) => {
+    mutationFn: (data: { files: File[]; category?: string }) => {
       const formData = new FormData();
       // 支持多个文件上传
       data.files.forEach((file) => {
