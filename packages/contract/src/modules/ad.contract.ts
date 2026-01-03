@@ -20,6 +20,10 @@ export const AdContract = {
       "updatedAt",
       "startDate",
       "endDate",
+      "tenantId",  // 后端从 ctx.user.context.tenantId 注入
+      "siteId",    // 后端从 ctx.user.context.site.id 注入
+      "deptId",    // 后端从 ctx.currentDeptId 注入
+      "createdBy", // 后端从 ctx.user.id 注入
     ]).properties,
     startDate: t.String(),
     endDate: t.String(),
@@ -31,9 +35,12 @@ export const AdContract = {
         "id",
         "createdAt",
         "updatedAt",
-        "siteId",
         "startDate",
         "endDate",
+        "siteId",    // 不允许修改站点
+        "tenantId",  // 不允许修改租户
+        "deptId",    // 不允许修改部门
+        "createdBy", // 不允许修改创建者
       ]).properties,
       startDate: t.String(),
       endDate: t.String(),
