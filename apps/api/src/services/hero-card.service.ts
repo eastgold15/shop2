@@ -1,5 +1,19 @@
-import { type HeroCardContract, heroCardTable } from "@repo/contract";
-import { eq } from "drizzle-orm";
+import {
+  type HeroCardContract,
+  heroCardTable,
+  mediasTable,
+} from "@repo/contract";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  getColumns,
+  ilike,
+  or,
+  sql,
+  type SQL,
+} from "drizzle-orm";
 import { HttpError } from "elysia-http-problem-json";
 import { type ServiceContext } from "../lib/type";
 
@@ -13,8 +27,8 @@ export class HeroCardService {
         : {}),
       ...(ctx.user?.id ? { createdBy: ctx.user.id } : {}),
       ...(ctx.currentDeptId ? { deptId: ctx.currentDeptId } : {}),
-      ...(ctx.user?.context.department?.site?.id
-        ? { siteId: ctx.user.context.department.site.id }
+      ...(ctx.user?.context.site?.id
+        ? { siteId: ctx.user.context.site.id }
         : {}),
     };
     const [res] = await ctx.db
@@ -22,6 +36,77 @@ export class HeroCardService {
       .values(insertData)
       .returning();
     return res;
+  }
+
+  /**
+   * 获取所有首页展示卡片（后台管理）
+   */
+  async findAllWithMedia(query: any, ctx: ServiceContext) {
+    const { page = 1, limit = 10, search } = query;
+
+    // 1. 确保 filters 始终是一个干净的数组
+    const filters: SQL[] = [];
+    if (search) {
+      filters.push(
+        or(
+          ilike(heroCardTable.title, `%${search}%`),
+          ilike(heroCardTable.description, `%${search}%`)
+        )!
+      );
+    }
+
+    // 2. 构建基础查询
+    const baseQuery = ctx.db
+      .select({
+        ...getColumns(heroCardTable),
+        mediaUrl: mediasTable.url,
+      })
+      .from(heroCardTable)
+      .leftJoin(mediasTable, eq(heroCardTable.mediaId, mediasTable.id));
+
+    // 3. 添加查询条件
+    const whereConditions: SQL[] = [];
+    if (ctx.currentDeptId) {
+      whereConditions.push(eq(heroCardTable.deptId, ctx.currentDeptId));
+    }
+    if (ctx.user?.context.tenantId) {
+      whereConditions.push(
+        eq(heroCardTable.tenantId, ctx.user.context.tenantId)
+      );
+    }
+
+    const finalQuery =
+      whereConditions.length > 0 || filters.length > 0
+        ? baseQuery.where(and(...whereConditions, ...filters))
+        : baseQuery;
+
+    const results = await finalQuery
+      .orderBy(asc(heroCardTable.sortOrder), desc(heroCardTable.createdAt))
+      .limit(Number(limit))
+      .offset((Number(page) - 1) * Number(limit));
+
+    // 4. 计算总数
+    const countConditions = [
+      ctx.currentDeptId
+        ? eq(heroCardTable.deptId, ctx.currentDeptId)
+        : undefined,
+      ctx.user?.context.tenantId
+        ? eq(heroCardTable.tenantId, ctx.user.context.tenantId)
+        : undefined,
+      ...filters,
+    ].filter((c): c is SQL => c !== undefined);
+
+    const [{ count }] = await ctx.db
+      .select({ count: sql<number>`count(*)` })
+      .from(heroCardTable)
+      .where(countConditions.length > 0 ? and(...countConditions) : undefined);
+
+    // 5. 格式化数据
+    const data = results.map((item) => ({
+      ...item,
+    }));
+
+    return { data, total: Number(count), page: Number(page), limit: Number(limit) };
   }
 
   public async findAll(
@@ -33,7 +118,7 @@ export class HeroCardService {
     const res = await ctx.db.query.heroCardTable.findMany({
       where: {
         deptId: ctx.currentDeptId,
-        tenantId: ctx.user.tenantId!,
+        tenantId: ctx.user?.context.tenantId!,
         ...(search
           ? {
               OR: [
@@ -119,7 +204,7 @@ export class HeroCardService {
       where: {
         id,
         deptId: ctx.currentDeptId,
-        tenantId: ctx.user.context.tenantId!,
+        tenantId: ctx.user?.context.tenantId!,
       },
     });
     if (!card) throw new HttpError.NotFound("记录不存在");
