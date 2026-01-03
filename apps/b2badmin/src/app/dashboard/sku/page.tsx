@@ -32,7 +32,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { useDeleteSku, useProductsForSKU, useSkuList } from "@/hooks/api/sku";
+import { useAllSkusForManagement, useBatchDeleteSku } from "@/hooks/api/sku";
 import { useSiteCategoryStore } from "@/stores/site-category-store";
 
 interface SKU {
@@ -61,10 +61,9 @@ interface SKU {
 }
 
 export default function SKUManagementPage() {
-  const { data: skusData, isLoading, refetch } = useSkuList();
+  const { data: skusData, isLoading, refetch } = useAllSkusForManagement();
 
-  const deleteMutation = useDeleteSku();
-  const { data: productsData } = useProductsForSKU();
+  const deleteMutation = useBatchDeleteSku();
 
   const { getCategoryById } = useSiteCategoryStore();
 
@@ -81,9 +80,13 @@ export default function SKUManagementPage() {
     return null;
   }
 
-  if (!productsData) {
-    return null;
-  }
+  // 从 SKU 数据中提取唯一商品列表，用于筛选
+  const uniqueProducts = skusData.reduce((acc: any[], sku) => {
+    if (sku.product && !acc.find((p) => p.id === sku.product.id)) {
+      acc.push(sku.product);
+    }
+    return acc;
+  }, []);
   const handleDelete = async (ids: string | string[]) => {
     try {
       const idsToDelete = Array.isArray(ids) ? ids : [ids];
@@ -242,7 +245,7 @@ export default function SKUManagementPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">全部商品</SelectItem>
-                  {productsData.data.map((product) => (
+                  {uniqueProducts.map((product) => (
                     <SelectItem key={product.id} value={product.id}>
                       {product.name}
                     </SelectItem>

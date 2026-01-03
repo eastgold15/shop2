@@ -114,6 +114,19 @@ export function useBatchDeleteSku() {
   });
 }
 
+// 获取所有SKU（用于SKU管理页面，返回站点所有SKU及关联商品信息）
+export function useAllSkusForManagement(enabled = true) {
+  return useQuery({
+    queryKey: ["sku", "all", "management"],
+    queryFn: () =>
+      api.get<any, any>("/api/v1/sku", {
+        params: { page: 1, limit: 1000 }, // 获取所有数据，前端自行过滤
+      }),
+    staleTime: 2 * 60 * 1000, // 2分钟
+    enabled,
+  });
+}
+
 // 获取商品列表（用于SKU创建时选择）
 export function useProductsForSKU(id: string, enabled = true) {
   return useQuery({
@@ -124,7 +137,5 @@ export function useProductsForSKU(id: string, enabled = true) {
     enabled,
   });
 }
-
-
 
 

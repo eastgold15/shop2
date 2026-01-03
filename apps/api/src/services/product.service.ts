@@ -4,6 +4,7 @@ import {
   productMediaTable,
   productTable,
   productTemplateTable,
+  SiteProductContract,
   siteCategoryTable,
   siteProductTable,
   skuTable,
@@ -183,20 +184,19 @@ export class ProductService {
   }
 
   /**
-   * 获取站点商品列表（包含媒体和SKU）
+   * 管理端获取站点商品列表（包含媒体和SKU）
    */
-  public async list(query: any, ctx: ServiceContext) {
-    const { page = 1, limit = 10, search, categoryId } = query;
+  public async pagelist(
+    query: typeof SiteProductContract.ListQuery.static,
+    ctx: ServiceContext
+  ) {
+    const { page = 1, limit = 10, search, siteCategoryId, isVisible } = query;
 
-    const siteId = ctx.user.context.site?.id;
-    if (!siteId) {
-      throw new HttpError.BadRequest("当前部门未绑定站点");
-    }
-
+    const siteId = ctx.user.context.site.id;
     // 构建查询条件
     const conditions = [
       eq(siteProductTable.siteId, siteId),
-      eq(siteProductTable.isVisible, true),
+      ...(isVisible ? [eq(siteProductTable.isVisible, isVisible)] : []),
     ];
 
     if (search) {
@@ -623,9 +623,6 @@ export class ProductService {
     return res;
   }
 
-
-
-
   public async getSkuList(id: string, ctx: ServiceContext) {
     const [res] = await ctx.db.query.skuTable.findMany({
       where: {
@@ -638,10 +635,10 @@ export class ProductService {
           columns: {
             mediaId: true,
             isMain: true,
-          }
-        }
-      }
-    })
+          },
+        },
+      },
+    });
     return res;
   }
 }

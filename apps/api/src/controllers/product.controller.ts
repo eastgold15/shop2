@@ -19,9 +19,9 @@ export const productController = new Elysia({ prefix: "/product" })
   .use(dbPlugin)
   .use(authGuardMid)
   .get(
-    "/",
+    "/page-list",
     ({ query, user, db, currentDeptId }) =>
-      productService.list(query, { db, user, currentDeptId }),
+      productService.pagelist(query, { db, user, currentDeptId }),
     {
       allPermissions: ["PRODUCT_VIEW"],
       requireDept: true,

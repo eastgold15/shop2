@@ -1,4 +1,3 @@
-import type { AttributeDTO } from "@repo/contract";
 
 export type FieldType =
   | "text"
@@ -7,18 +6,8 @@ export type FieldType =
   | "multiselect"
   | "richtext";
 
-export interface ProductTemplate {
-  id: string;
-  name: string;
-  description?: string;
-  fields: TemplateField[];
-  createdAt: string;
-}
 
-export type TemplateField = AttributeDTO["Entity"] & {
-  value?: string; // text/number 类型的占位符或默认值
-  options?: string[]; // select/multiselect 类型的选项数组
-};
+
 
 export interface MediaAsset {
   id: string;
@@ -51,17 +40,7 @@ export interface Factory {
   contactPerson: string;
 }
 
-export interface Product {
-  id: string;
-  name: string;
-  templateId: string;
-  categoryId: string;
-  factoryId: string;
-  baseData: Record<string, any>; // Non-SKU fields
-  skus: SkuVariant[];
-  status: "draft" | "pending_review" | "published";
-  createdAt: string;
-}
+
 
 export interface User {
   id: string;
