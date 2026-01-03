@@ -8,8 +8,9 @@
 import { Elysia, t } from "elysia";
 import { dbPlugin } from "~/db/connection";
 import { authGuardMid } from "~/middleware/auth";
-import { TemplateValueContract } from "../../../../packages/contract/src/modules/templatevalue.contract";
+
 import { TemplateValueService } from "../services/template-value.service";
+import { TemplateValueContract } from "@repo/contract";
 
 const templatevalueService = new TemplateValueService();
 /**
@@ -25,6 +26,7 @@ export const templatevalueController = new Elysia({ prefix: "/templatevalue" })
     {
       allPermissions: ["TEMPLATEVALUE:VIEW"],
       query: TemplateValueContract.ListQuery,
+      requireDept: true,
       detail: {
         summary: "获取TemplateValue列表",
         description: "分页查询TemplateValue数据，支持搜索和排序",
@@ -39,6 +41,7 @@ export const templatevalueController = new Elysia({ prefix: "/templatevalue" })
     {
       allPermissions: ["TEMPLATEVALUE:CREATE"],
       body: TemplateValueContract.Create,
+      requireDept: true,
       detail: {
         summary: "创建TemplateValue",
         description: "新增一条TemplateValue记录",
@@ -53,6 +56,7 @@ export const templatevalueController = new Elysia({ prefix: "/templatevalue" })
     {
       params: t.Object({ id: t.String() }),
       body: TemplateValueContract.Update,
+      requireDept: true,
       allPermissions: ["TEMPLATEVALUE:EDIT"],
       detail: {
         summary: "更新TemplateValue",
@@ -67,6 +71,7 @@ export const templatevalueController = new Elysia({ prefix: "/templatevalue" })
       templatevalueService.delete(params.id, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
+      requireDept: true,
       allPermissions: ["TEMPLATEVALUE:DELETE"],
       detail: {
         summary: "删除TemplateValue",

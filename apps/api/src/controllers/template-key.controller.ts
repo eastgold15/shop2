@@ -5,11 +5,12 @@
  * 💡 如需自定义，请删除下方的 @generated 标记，或新建一个 controller。
  * --------------------------------------------------------
  */
+import { TemplateKeyContract } from "@repo/contract";
 import { Elysia, t } from "elysia";
 import { dbPlugin } from "~/db/connection";
 import { authGuardMid } from "~/middleware/auth";
-import { TemplateKeyContract } from "template-key.contract"";
-import { TemplateKeyService } from "template-key.service"";
+import { TemplateKeyService } from "~/services/template-key.service";
+
 
 const templateKeyService = new TemplateKeyService();
 /**

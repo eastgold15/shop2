@@ -5,11 +5,12 @@
  * 💡 如需自定义，请删除下方的 @generated 标记，或新建一个 controller。
  * --------------------------------------------------------
  */
+import { SkuMediaContract } from "@repo/contract";
 import { Elysia, t } from "elysia";
 import { dbPlugin } from "~/db/connection";
 import { authGuardMid } from "~/middleware/auth";
-import { SkuMediaContract } from "sku-media.contract"";
-import { SkuMediaService } from "sku-media.service"";
+import { SkuMediaService } from "~/services/sku-media.service";
+
 
 const skuMediaService = new SkuMediaService();
 /**

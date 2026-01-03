@@ -2,8 +2,9 @@ import { t } from "elysia";
 import { PaginationParams, SortParams } from "../helper/query-types.model";
 import { type InferDTO, spread } from "../helper/utils";
 import { templateTable } from "../table.schema";
-import { TemplateKeyInsertFields } from "./templatekey.contract";
-import { TemplateValueInsertFields } from "./templatevalue.contract";
+import { TemplateKeyInsertFields } from "./template-key.contract";
+import { TemplateValueInsertFields } from "./template-value.contract";
+
 
 /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
 export const TemplateInsertFields = spread(templateTable, "insert");

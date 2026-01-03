@@ -5,11 +5,12 @@
  * 💡 如需自定义，请删除下方的 @generated 标记，或新建一个 controller。
  * --------------------------------------------------------
  */
+import { SiteCategoryContract } from "@repo/contract";
 import { Elysia, t } from "elysia";
 import { dbPlugin } from "~/db/connection";
 import { authGuardMid } from "~/middleware/auth";
-import { SiteCategoryContract } from "site-category.contract";
-import { SiteCategoryService } from "site-category.service";
+import { SiteCategoryService } from "~/services/site-category.service";
+
 
 const siteCategoryService = new SiteCategoryService();
 
