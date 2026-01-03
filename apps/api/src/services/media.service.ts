@@ -12,10 +12,10 @@ export class MediaService {
       // 自动注入租户信息
       ...(ctx.user
         ? {
-            tenantId: ctx.user.context.tenantId!,
-            createdBy: ctx.user.id,
-            deptId: ctx.currentDeptId,
-          }
+          tenantId: ctx.user.context.tenantId!,
+          createdBy: ctx.user.id,
+          deptId: ctx.currentDeptId,
+        }
         : {}),
     };
     const [res] = await ctx.db
@@ -62,42 +62,52 @@ export class MediaService {
   }
 
   /**
-   * 处理文件上传逻辑
+   * 处理文件上传逻辑（支持单个或多个文件）
    */
-  async upload(file: File, ctx: ServiceContext, category = "general") {
+  async upload(body: MediaContract["Uploads"], ctx: ServiceContext) {
+    const { files, category = "general" } = body;
     const storage = StorageFactory.createStorageFromEnv();
 
-    // 1. 生成唯一文件名
-    const fileName = file.name || "unknown";
-    const uniqueName = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}_${fileName}`;
+    // 支持单个或多个文件上传
+    const results = await Promise.all(
+      files.map(async (file) => {
+        // 1. 生成唯一文件名
+        const fileName = file.name || "unknown";
+        const uniqueName = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}_${fileName}`;
 
-    // 2. 物理上传
-    const uploadResult = await storage.uploadFile(
-      file,
-      uniqueName,
-      category,
-      file.type
+        // 2. 物理上传
+        const uploadResult = await storage.uploadFile(
+          file,
+          uniqueName,
+          category,
+          file.type
+        );
+
+        // 3. 直接插入数据库
+        const insertData = {
+          url: uploadResult.url || "",
+          storageKey: uploadResult.key || uniqueName,
+          originalName: fileName,
+          mimeType: file.type,
+          category,
+          isPublic: true,
+          status: true,
+          // 自动注入租户信息
+          tenantId: ctx.user.context.tenantId,
+          siteId: ctx.user.context.site.id,
+          deptId: ctx.currentDeptId!,
+          createdBy: ctx.user.id,
+        };
+
+        const [res] = await ctx.db
+          .insert(mediaTable)
+          .values(insertData)
+          .returning();
+        return res;
+      })
     );
 
-    // 3. 直接插入数据库
-    const insertData = {
-      url: uploadResult.url || "",
-      storageKey: uploadResult.key || uniqueName,
-      originalName: fileName,
-      mimeType: file.type,
-      category,
-      isPublic: true,
-      status: true,
-      // 自动注入租户信息
-      tenantId: ctx.user?.context.tenantId ?? "",
-      createdBy: ctx.user?.id,
-    };
-
-    const [res] = await ctx.db
-      .insert(mediaTable)
-      .values(insertData)
-      .returning();
-    return res;
+    return results;
   }
 
   /**
@@ -160,7 +170,7 @@ export class MediaService {
   /**
    * 批量物理删除
    */
-  async batchDeletePhysical(ids: string[], ctx: ServiceContext) {
+  async batchDelete(ids: string[], ctx: ServiceContext) {
     const whereConditions: any[] = [inArray(mediaTable.id, ids)];
     if (ctx.user?.context.tenantId)
       whereConditions.push(eq(mediaTable.tenantId, ctx.user.context.tenantId!));

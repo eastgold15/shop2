@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  ChevronLeft,
+  ChevronRight,
   FileIcon,
   Loader2,
   MoreHorizontal,
@@ -32,7 +34,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { useMediaDelete, useMediaList } from "@/hooks/api";
+import { useBatchDeleteMedia, useMediaList } from "@/hooks/api";
 import { cn } from "@/lib/utils";
 
 interface UseMediaList {
@@ -51,6 +53,14 @@ interface UseMediaList {
   isPublic: boolean;
   siteId: string;
 }
+
+interface MediaListResponse {
+  data: UseMediaList[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
 export default function MediaLibrary() {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch] = useDebounce(searchTerm, 500); // 500ms 防抖
@@ -60,13 +70,18 @@ export default function MediaLibrary() {
 
   // 1. 获取数据 (使用防抖后的搜索词)
   const { data, isLoading, error, refetch } = useMediaList({
+    page,
+    limit: 10,
     category: category || undefined,
     search: debouncedSearch || undefined,
   });
 
-  const mediaItems = (data as unknown as UseMediaList[]) || [];
+  const response = data as MediaListResponse | undefined;
+  const mediaItems = response?.data || [];
+  const total = response?.total || 0;
+  const totalPages = Math.ceil(total / 10);
 
-  const deleteMediaMutation = useMediaDelete();
+  const deleteMediaMutation = useBatchDeleteMedia();
 
   // 2. 处理删除逻辑
   const handleDelete = async (ids: string[]) => {
@@ -89,6 +104,13 @@ export default function MediaLibrary() {
     } else {
       setSelectedItems(mediaItems.map((item: any) => item.id));
     }
+  };
+
+  // 4. 处理页码变化
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > totalPages) return;
+    setPage(newPage);
+    setSelectedItems([]); // 切换页面时清空选中
   };
 
   return (
@@ -226,6 +248,67 @@ export default function MediaLibrary() {
               ))
             )}
           </div>
+
+          {/* 分页控件 */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between border-t pt-4">
+              <div className="text-slate-600 text-sm">
+                共 {total} 个文件，第 {page} / {totalPages} 页
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  disabled={page === 1 || isLoading}
+                  onClick={() => handlePageChange(page - 1)}
+                  size="sm"
+                  variant="outline"
+                >
+                  <ChevronLeft className="mr-1 size-4" />
+                  上一页
+                </Button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (page <= 3) {
+                      pageNum = i + 1;
+                    } else if (page >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = page - 2 + i;
+                    }
+
+                    return (
+                      <Button
+                        className={cn(
+                          "size-10 p-0",
+                          page === pageNum
+                            ? "bg-indigo-600 text-white hover:bg-indigo-700"
+                            : "bg-white"
+                        )}
+                        disabled={isLoading}
+                        key={pageNum}
+                        onClick={() => handlePageChange(pageNum)}
+                        size="sm"
+                        variant={page === pageNum ? "default" : "outline"}
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  })}
+                </div>
+                <Button
+                  disabled={page === totalPages || isLoading}
+                  onClick={() => handlePageChange(page + 1)}
+                  size="sm"
+                  variant="outline"
+                >
+                  下一页
+                  <ChevronRight className="ml-1 size-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </SidebarInset>
     </SidebarProvider>

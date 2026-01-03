@@ -75,6 +75,28 @@ export function useCreateMedia() {
   });
 }
 
+// --- 4. 上传文件 (POST) ---
+// TRes = any
+export function useBatchUploadMedia() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: typeof MediaContract.Uploads.static) => {
+      const formData = new FormData();
+      // 支持多个文件上传
+      data.files.forEach((file) => {
+        formData.append("files", file);
+      });
+      if (data.category) {
+        formData.append("category", data.category);
+      }
+      return api.post<any, any>("/api/v1/media/upload", formData as any);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: mediaKeys.lists() });
+    },
+  });
+}
+
 // --- 4. 更新 (PUT) ---
 // TRes = any, TBody = typeof MediaContract.Update.static
 export function useUpdateMedia() {
@@ -102,13 +124,11 @@ export function useUpdateMedia() {
 
 // --- 5. 删除 (DELETE) ---
 // TRes = any
-export function useMediaDelete() {
+export function useBatchDeleteMedia() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (ids: string | string[]) =>
-      Array.isArray(ids)
-        ? api.delete<any>("/api/v1/media/batch", { ids })
-        : api.delete<any>(`/api/v1/media/${ids}`),
+      api.delete<any, any>("/api/v1/media/batch", { ids }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: mediaKeys.lists() });
     },

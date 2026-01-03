@@ -18,6 +18,11 @@ export const MediaContract = {
     ...t.Omit(t.Object(MediaInsertFields), ["id", "createdAt", "updatedAt"])
       .properties,
   }),
+
+  Uploads: t.Object({
+    files: t.Files(), // 支持多个文件
+    category: t.Optional(MediaInsertFields.category),
+  }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Update: t.Partial(
     t.Object({

@@ -46,6 +46,21 @@ export const mediaController = new Elysia({ prefix: "/media" })
       },
     }
   )
+  .post(
+    "/upload",
+    async ({ body, user, db, currentDeptId }) =>
+      mediaService.upload(body, { db, user, currentDeptId }),
+    {
+      allPermissions: ["MEDIA:CREATE"],
+      requireDept: true,
+      body: MediaContract.Uploads,
+      detail: {
+        summary: "上传媒体文件",
+        description: "上传单个或多个媒体文件到OSS并记录到数据库",
+        tags: ["Media"],
+      },
+    }
+  )
   .put(
     "/:id",
     ({ params, user, db, body, currentDeptId }) =>
@@ -73,6 +88,23 @@ export const mediaController = new Elysia({ prefix: "/media" })
       detail: {
         summary: "删除Media",
         description: "根据ID删除Media记录",
+        tags: ["Media"],
+      },
+    }
+  )
+  .delete(
+    "/batch",
+    ({ body, user, db, currentDeptId }) =>
+      mediaService.batchDelete(body.ids, { db, user, currentDeptId }),
+    {
+      body: t.Object({
+        ids: t.Array(t.String()),
+      }),
+      requireDept: true,
+      allPermissions: ["MEDIA:DELETE"],
+      detail: {
+        summary: "批量删除Media",
+        description: "根据ID数组批量删除Media记录",
         tags: ["Media"],
       },
     }
