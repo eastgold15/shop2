@@ -66,7 +66,7 @@ const db = drizzle("postgres://shop:shop@localhost:5444/shop", { relations });
 
 // 预定义密码哈希 (12345678)
 const hashedPassword =
-  "948ca608bf8799e01f412bc8e42e4384:18a873f36c8ccb79a0954f6ae5c66ecc0a1c14f113e6d3f0de65dd3d0deeb3257cdc3fa840021fe627cf6f399cb8beb9c597ed30967a8959badb5e782db934065";
+  "324a47dbba1940e92c117ea2e00d786e:1f8c985446a32c0c9c65c6dd522e0d8c7505a6c6e923cf1ddc3a6a62f04c8ece5ddb0e8a78af1d7a75b39caf847d5a0ea54434d46e0b3e827d8982bf435177f0";
 
 // 获取所有数据库表名并生成对应的权限
 // 使用变量名去掉 Table 后缀
@@ -114,15 +114,22 @@ const getAllTableNames = () => [
   "dailyInquiryCounter",
 ];
 
-// 生成标准CRUD权限
-const generateCRUDPermissions = (resource: string) => [
-  `${resource.toUpperCase()}_VIEW`,
-  `${resource.toUpperCase()}_CREATE`,
-  `${resource.toUpperCase()}_EDIT`,
-  `${resource.toUpperCase()}_DELETE`,
-];
+// 生成标准CRUD权限 - 将驼峰式转换为蛇形后再大写
+const toSnakeCase = (str: string) => {
+  return str.replace(/([A-Z])/g, '_$1').toLowerCase();
+};
 
-// 角色权限映射
+const generateCRUDPermissions = (resource: string) => {
+  const snakeCaseResource = toSnakeCase(resource);
+  return [
+    `${snakeCaseResource.toUpperCase()}_VIEW`,
+    `${snakeCaseResource.toUpperCase()}_CREATE`,
+    `${snakeCaseResource.toUpperCase()}_EDIT`,
+    `${snakeCaseResource.toUpperCase()}_DELETE`,
+  ];
+};
+
+// 角色权限映射 - 使用大写蛇形命名，引用 getAllTableNames 中的名称
 const ROLE_PERMISSIONS: Record<string, string[]> = {
   super_admin: [
     // 超级管理员拥有所有权限
@@ -131,51 +138,51 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
     "TENANTS_MANAGE",
   ],
   tenant_admin: [
-    // 租户管理员权限
-    ...generateCRUDPermissions("sys_users"),
-    ...generateCRUDPermissions("sys_depts"),
-    ...generateCRUDPermissions("sites"),
-    ...generateCRUDPermissions("products"),
-    ...generateCRUDPermissions("skus"),
+    // 租户管理员权限 - 使用 getAllTableNames 中的名称
+    ...generateCRUDPermissions("user"),
+    ...generateCRUDPermissions("department"),
+    ...generateCRUDPermissions("site"),
+    ...generateCRUDPermissions("product"),
+    ...generateCRUDPermissions("sku"),
     ...generateCRUDPermissions("media"),
-    ...generateCRUDPermissions("customers"),
-    ...generateCRUDPermissions("inquiries"),
-    ...generateCRUDPermissions("quotations"),
-    "SITES_VIEW",
-    "SITES_CREATE",
-    "SITES_EDIT",
+    ...generateCRUDPermissions("customer"),
+    ...generateCRUDPermissions("inquiry"),
+    ...generateCRUDPermissions("quotation"),
+    "SITE_VIEW",
+    "SITE_CREATE",
+    "SITE_EDIT",
   ],
   dept_manager: [
     // 部门经理权限
-    ...generateCRUDPermissions("sys_users"),
-    ...generateCRUDPermissions("products"),
-    ...generateCRUDPermissions("skus"),
+    ...generateCRUDPermissions("user"),
+    ...generateCRUDPermissions("product"),
+    ...generateCRUDPermissions("sku"),
     ...generateCRUDPermissions("media"),
-    ...generateCRUDPermissions("customers"),
-    ...generateCRUDPermissions("inquiries"),
-    ...generateCRUDPermissions("quotations"),
-    "SITES_VIEW",
-    "SITES_EDIT",
+    ...generateCRUDPermissions("customer"),
+    ...generateCRUDPermissions("inquiry"),
+    ...generateCRUDPermissions("quotation"),
+    "SITE_VIEW",
+    "SITE_EDIT",
   ],
   salesperson: [
     // 业务员权限
-    ...generateCRUDPermissions("customers"),
-    "PRODUCTS_VIEW",
-    "PRODUCTS_CREATE",
-    "PRODUCTS_EDIT",
-    "SKUS_VIEW",
+    ...generateCRUDPermissions("customer"),
+    "PRODUCT_VIEW",
+    "PRODUCT_CREATE",
+    "PRODUCT_EDIT",
+    "SKU_VIEW",
     "MEDIA_VIEW",
     "MEDIA_CREATE",
     "MEDIA_DELETE",
-    "SITES_VIEW",
-    "SITE_CATEGORIES_VIEW",
-    "SITE_PRODUCTS_VIEW",
-    "INQUIRIES_VIEW",
-    "INQUIRIES_CREATE",
-    "INQUIRIES_EDIT",
-    "QUOTATIONS_VIEW",
-    "QUOTATIONS_CREATE",
-    "QUOTATIONS_EDIT",
+    "SITE_VIEW",
+    "SITE_CATEGORY_VIEW",
+    "SITE_PRODUCT_VIEW",
+    "INQUIRY_VIEW",
+    "INQUIRY_CREATE",
+    "INQUIRY_EDIT",
+    "QUOTATION_VIEW",
+    "QUOTATION_CREATE",
+    "QUOTATION_EDIT",
   ],
 };
 
@@ -1224,7 +1231,7 @@ async function seedCompleteDatabase() {
     }
 
     const batchSize = 100;
-    for (let i = 0; i < rolePermissionRelations.length; i += batchSize) {
+    for (let i = 0;i < rolePermissionRelations.length;i += batchSize) {
       const batch = rolePermissionRelations.slice(i, i + batchSize);
       await db.insert(rolePermissionTable).values(batch);
     }
