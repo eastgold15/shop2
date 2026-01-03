@@ -35,7 +35,19 @@ export function useMediaList(
     enabled,
   });
 }
-
+export function useMediaPageList(
+  params?: typeof MediaContract.PageListQuery.static,
+  enabled = true
+) {
+  return useQuery({
+    queryKey: mediaKeys.list(params),
+    queryFn: () =>
+      api.get<any, typeof MediaContract.ListQuery.static>("/api/v1/media/page-list", {
+        params,
+      }),
+    enabled,
+  });
+}
 // --- 2. 单个详情 (GET) ---
 /**
  * @generated

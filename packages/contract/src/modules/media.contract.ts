@@ -45,13 +45,16 @@ export const MediaContract = {
       ]).properties,
     })
   ),
-
-  ListQuery: t.Object({
+  PageListQuery: t.Object({
     ...t.Partial(t.Object(MediaInsertFields)).properties,
     ...PaginationParams.properties,
     ...SortParams.properties,
     search: t.Optional(t.String()),
-    ids: t.Optional(t.Array(t.String())), // 批量查询 ID 列表
+  }),
+
+  ListQuery: t.Object({
+    ...t.Partial(t.Object(MediaInsertFields)).properties,
+    search: t.Optional(t.String()),
   }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   ListResponse: t.Object({

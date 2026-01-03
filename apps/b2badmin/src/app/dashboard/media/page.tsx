@@ -34,7 +34,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { useBatchDeleteMedia, useMediaList } from "@/hooks/api";
+import { useBatchDeleteMedia, useMediaPageList } from "@/hooks/api";
 import { cn } from "@/lib/utils";
 
 interface UseMediaList {
@@ -69,9 +69,9 @@ export default function MediaLibrary() {
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
 
   // 1. 获取数据 (使用防抖后的搜索词)
-  const { data, isLoading, error, refetch } = useMediaList({
+  const { data, isLoading, error, refetch } = useMediaPageList({
     page,
-    limit: 10,
+    limit: 30,
     category: category || undefined,
     search: debouncedSearch || undefined,
   });

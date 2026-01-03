@@ -37,6 +37,43 @@ export class MediaService {
     return res;
   }
 
+  /**
+   * 分页查询媒体列表
+   */
+  public async pageList(query: MediaContract["PageListQuery"], ctx: ServiceContext) {
+    const { search, page = 1, limit = 10, category } = query;
+
+    // 构建查询条件
+    const whereConditions: any = {
+      tenantId: ctx.user.context.tenantId!,
+    };
+
+    if (search) {
+      whereConditions.originalName = { ilike: `%${search}%` };
+    }
+
+    if (category) {
+      whereConditions.category = category;
+    }
+
+    // 查询总数
+    const totalResult = await ctx.db.$count(mediaTable)
+
+    // 查询数据（带分页）
+    const data = await ctx.db.query.mediaTable.findMany({
+      where: whereConditions,
+      limit,
+      offset: (page - 1) * limit,
+      orderBy: { createdAt: "desc" },
+    });
+    return {
+      data,
+      total: totalResult,
+      page,
+      limit,
+    };
+  }
+
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   public async update(
     id: string,

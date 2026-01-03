@@ -31,6 +31,21 @@ export const mediaController = new Elysia({ prefix: "/media" })
       },
     }
   )
+  .get(
+    "/page-list",
+    ({ query, user, db, currentDeptId }) =>
+      mediaService.pageList(query, { db, user, currentDeptId }),
+    {
+      allPermissions: ["MEDIA_VIEW"],
+      requireDept: true,
+      query: MediaContract.PageListQuery,
+      detail: {
+        summary: "分页获取Media列表",
+        description: "分页查询Media数据，返回包含data和total的对象",
+        tags: ["Media"],
+      },
+    }
+  )
   .post(
     "/",
     ({ body, user, db, currentDeptId }) =>
