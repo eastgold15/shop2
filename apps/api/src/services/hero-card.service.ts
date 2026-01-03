@@ -21,15 +21,11 @@ export class HeroCardService {
   public async create(body: HeroCardContract["Create"], ctx: ServiceContext) {
     const insertData = {
       ...body,
-      // 自动注入租户信息
-      ...(ctx.user?.context.tenantId
-        ? { tenantId: ctx.user.context.tenantId! }
-        : {}),
-      ...(ctx.user?.id ? { createdBy: ctx.user.id } : {}),
-      ...(ctx.currentDeptId ? { deptId: ctx.currentDeptId } : {}),
-      ...(ctx.user?.context.site?.id
-        ? { siteId: ctx.user.context.site.id! }
-        : {}),
+      // ✅ 自动注入租户信息（由于已强制必填，直接使用）
+      tenantId: ctx.user.context.tenantId,
+      siteId: ctx.user.context.site.id,
+      deptId: ctx.currentDeptId!,
+      createdBy: ctx.user.id,
     };
     const [res] = await ctx.db
       .insert(heroCardTable)

@@ -8,9 +8,6 @@ export class PermissionService {
   public async create(body: PermissionContract["Create"], ctx: ServiceContext) {
     const insertData = {
       ...body,
-      // 自动注入租户信息
-      ...(ctx.user?.tenantId ? { tenantId: ctx.user.tenantId } : {}),
-      ...(ctx.user?.id ? { createdBy: ctx.user.id } : {}),
     };
     const [res] = await ctx.db
       .insert(permissionTable)

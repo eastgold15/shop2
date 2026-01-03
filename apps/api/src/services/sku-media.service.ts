@@ -35,7 +35,7 @@ export class SkuMediaService {
     return res;
   }
 
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+
   public async update(
     id: string,
     body: SkuMediaContract["Update"],
@@ -45,7 +45,7 @@ export class SkuMediaService {
     const [res] = await ctx.db
       .update(skuMediaTable)
       .set(updateData)
-      .where(eq(skuMediaTable.id, id))
+      .where(eq(skuMediaTable.skuId, id))
       .returning();
     return res;
   }
@@ -54,7 +54,7 @@ export class SkuMediaService {
   public async delete(id: string, ctx: ServiceContext) {
     const [res] = await ctx.db
       .delete(skuMediaTable)
-      .where(eq(skuMediaTable.id, id))
+      .where(eq(skuMediaTable.skuId, id))
       .returning();
     return res;
   }

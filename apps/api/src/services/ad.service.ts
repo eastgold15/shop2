@@ -37,10 +37,10 @@ export class AdService {
       ...(mediaId && mediaId.trim() !== "" ? { mediaId } : {}),
       startDate,
       endDate,
-      // 自动注入租户信息和站点信息
-      tenantId: userContext.tenantId!,
-      ...(ctx.user?.id ? { createdBy: ctx.user.id } : {}),
-      ...(ctx.currentDeptId ? { deptId: ctx.currentDeptId } : {}),
+      // ✅ 自动注入租户信息和站点信息（由于已强制必填，直接使用）
+      tenantId: userContext.tenantId,
+      createdBy: ctx.user.id,
+      deptId: ctx.currentDeptId!,
       siteId: userContext.site.id,
     };
 

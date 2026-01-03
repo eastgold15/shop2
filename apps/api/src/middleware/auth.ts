@@ -125,22 +125,19 @@ async function getUserWithRoles(userID: string, db: DBtype) {
     dataScope: r.dataScope,
   }));
   // 3. 构建上下文 (Context)
+  // 注意：由于 tenantId, deptId, site.boundDeptId 都是必填的，所以这些值一定存在
   const context = {
-    tenantId: rawUser.tenantId,
-    department: rawUser.department
-      ? {
-          id: rawUser.department.id,
-          name: rawUser.department.name,
-          category: rawUser.department.category,
-        }
-      : null,
-    site: rawUser.department?.site
-      ? {
-          id: rawUser.department.site.id,
-          name: rawUser.department.site.name,
-          domain: rawUser.department.site.domain,
-        }
-      : null,
+    tenantId: rawUser.tenantId, // ✅ 必填
+    department: {
+      id: rawUser.department.id,
+      name: rawUser.department.name,
+      category: rawUser.department.category,
+    },
+    site: {
+      id: rawUser.department.site.id,
+      name: rawUser.department.site.name,
+      domain: rawUser.department.site.domain,
+    },
   };
 
   // 4. 返回清洗后的对象

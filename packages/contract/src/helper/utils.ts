@@ -3,7 +3,7 @@
  * @see https://elysiajs.com/recipe/drizzle.html#utility
  */
 
-import { Kind, Static, type TObject, TSchema } from "@sinclair/typebox";
+import { Kind, type Static, type TObject, type TSchema } from "@sinclair/typebox";
 import type { Table } from "drizzle-orm";
 import {
   type BuildSchema,

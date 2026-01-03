@@ -149,10 +149,8 @@ function AdsDialog({
           : new Date().toISOString(),
         sortOrder: formData.sortOrder,
         isActive: formData.isActive,
-        // 如果 mediaId 为空字符串，则不发送这个字段
-        ...(formData.mediaId && formData.mediaId.trim() !== ""
-          ? { mediaId: formData.mediaId }
-          : {}),
+        // 只有当 mediaId 存在且不为空时才包含该字段
+        ...(formData.mediaId?.trim() ? { mediaId: formData.mediaId.trim() } : {}),
       };
 
       if (isEdit && ad) {
@@ -542,7 +540,7 @@ export default function AdsPage() {
                       type="checkbox"
                     />
 
-                    <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-slate-100">
+                    <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-slate-100">
                       {ad.mediaUrl ? (
                         <Image
                           alt={ad.title}

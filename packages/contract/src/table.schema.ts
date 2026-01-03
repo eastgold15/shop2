@@ -147,9 +147,15 @@ export const userTable = p.pgTable("sys_user", {
   image: p.text("image"),
   password: p.text("password"), // 如果需要密码登录
 
-  // 🔥 核心归属：决定用户在组织树的哪个位置
-  tenantId: p.uuid("tenant_id").references(() => tenantTable.id),
-  deptId: p.uuid("dept_id").references(() => departmentTable.id),
+  // 🔥 核心归属：决定用户在组织树的哪个位置（强制必填）
+  tenantId: p
+    .uuid("tenant_id")
+    .notNull()
+    .references(() => tenantTable.id),
+  deptId: p
+    .uuid("dept_id")
+    .notNull()
+    .references(() => departmentTable.id),
 
   // 原 Salesperson 字段合并
   phone: p.text("phone"),
@@ -244,10 +250,13 @@ export const siteTable = p.pgTable("site", {
     .notNull()
     .references(() => tenantTable.id),
 
-  // 2. 站点绑定哪个部门？
+  // 2. 站点绑定哪个部门？（强制必填）
   // - 绑定总部：集团站，展示 tenant 下所有商品
   // - 绑定工厂：工厂站，只展示该 dept 下的商品
-  boundDeptId: p.uuid("bound_dept_id").references(() => departmentTable.id),
+  boundDeptId: p
+    .uuid("bound_dept_id")
+    .notNull()
+    .references(() => departmentTable.id),
 
   siteType: siteTypeEnum("site_type").notNull(),
 });
