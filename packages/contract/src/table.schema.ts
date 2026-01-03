@@ -379,7 +379,6 @@ export const adTable = p.pgTable("advertisement", {
   type: adTypeEnum("type").notNull(),
   mediaId: p
     .uuid("media_id")
-    .notNull()
     .references(() => mediaTable.id),
   link: p.varchar("link", { length: 500 }).notNull(),
   position: adPositionEnum("ads_position").default("home-top"),

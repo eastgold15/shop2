@@ -149,7 +149,8 @@ function AdsDialog({
           : new Date().toISOString(),
         sortOrder: formData.sortOrder,
         isActive: formData.isActive,
-        mediaId: formData.mediaId,
+        // 如果 mediaId 为空字符串，则不发送这个字段
+        ...(formData.mediaId && formData.mediaId.trim() !== "" ? { mediaId: formData.mediaId } : {}),
       };
 
       if (isEdit && ad) {

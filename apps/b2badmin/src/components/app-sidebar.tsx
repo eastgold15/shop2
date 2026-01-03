@@ -100,7 +100,7 @@ const SIDEBAR_CONFIG: NavSection[] = [
     items: [
       {
         title: "广告管理",
-        url: "/dashboard/ads",
+        url: "/dashboard/ad",
         icon: PieChart,
         permission: PERMISSIONS.AD_VIEW,
       },

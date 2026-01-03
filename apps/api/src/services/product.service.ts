@@ -5,10 +5,11 @@ import { type ServiceContext } from "../lib/type";
 export class ProductService {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   public async create(body: ProductContract["Create"], ctx: ServiceContext) {
+      const userContext = ctx.user.context;
       const insertData = {
               ...body,
               // 自动注入租户信息
-              ...(ctx.user ? { tenantId: ctx.user.tenantId, createdBy: ctx.user.id } : {})
+              ...(ctx.user ? { tenantId: userContext.tenantId!, createdBy: ctx.user.id } : {})
             };
             const [res] = await ctx.db.insert(productTable).values(insertData).returning();
             return res;
@@ -17,11 +18,12 @@ export class ProductService {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   public async findAll(query: ProductContract["ListQuery"], ctx: ServiceContext) {
       const {  sort, ...filters } = query;
+      const userContext = ctx.user.context;
 
             const res = await ctx.db.query.productTable.findMany({
               where: {
                 deptId: ctx.currentDeptId,
-                tenantId: ctx.user.tenantId!,
+                tenantId: userContext!.tenantId!,
               },
               orderBy: {
               createdAt: "desc",
