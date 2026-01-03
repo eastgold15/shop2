@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { MasterDTO } from "@repo/contract";
+import type { MasterCategoryContract } from "@repo/contract";
 import { FolderOpen, Loader2 } from "lucide-react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -30,7 +30,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   useCreateMasterCategory,
   useUpdateMasterCategory,
-} from "@/hooks/api/mastercategory";
+} from "@/hooks/api/master-category";
 
 const formSchema = z.object({
   name: z.string().min(1, "分类名称不能为空"),
@@ -46,7 +46,7 @@ const formSchema = z.object({
 });
 
 type FormData = z.infer<typeof formSchema>;
-type MasterCategory = MasterDTO["Response"];
+type MasterCategory = MasterCategoryContract["Response"];
 
 interface CreateMasterCategoryModalProps {
   open: boolean;

@@ -27,7 +27,7 @@ import {
 import {
   useDeleteSiteCategory,
   useSiteCategoryTree,
-} from "@/hooks/api/sitecategory";
+} from "@/hooks/api/site-category";
 
 // 树形节点组件
 function CategoryTreeNode({

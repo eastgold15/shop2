@@ -11,12 +11,13 @@ export const MasterCategoryContract = {
   Response: t.Object({
     ...MasterCategoryFields,
   }),
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+
   Create: t.Object({
     ...t.Omit(t.Object(MasterCategoryInsertFields), [
       "id",
       "createdAt",
       "updatedAt",
+      "tenantId",
     ]).properties,
   }),
 

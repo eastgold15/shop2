@@ -63,9 +63,9 @@ const SIDEBAR_CONFIG: NavSection[] = [
     items: [
       {
         title: "站点分类",
-        url: "/dashboard/sitecategory",
+        url: "/dashboard/site-category",
         icon: Tags,
-        permission: PERMISSIONS.SITECATEGORY_VIEW,
+        permission: PERMISSIONS.SITE_CATEGORY_VIEW,
       },
 
       {
@@ -106,15 +106,15 @@ const SIDEBAR_CONFIG: NavSection[] = [
       },
       {
         title: "爆款商品卡片",
-        url: "/dashboard/herocard",
+        url: "/dashboard/hero-card",
         icon: Frame,
-        permission: PERMISSIONS.HEROCARD_VIEW,
+        permission: PERMISSIONS.HERO_CARD_VIEW,
       },
       {
         title: "站点配置",
         url: "/dashboard/site-config",
         icon: Settings,
-        permission: PERMISSIONS.SITECONFIG_VIEW,
+        permission: PERMISSIONS.SITE_CONFIG_VIEW,
       },
     ],
   },
@@ -129,9 +129,9 @@ const SIDEBAR_CONFIG: NavSection[] = [
       },
       {
         title: "全局分类",
-        url: "/dashboard/mastercategory",
+        url: "/dashboard/master-category",
         icon: Layers,
-        permission: PERMISSIONS.MASTERCATEGORY_VIEW,
+        permission: PERMISSIONS.MASTER_CATEGORY_VIEW,
       },
     ],
   },

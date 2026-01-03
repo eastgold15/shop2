@@ -29,7 +29,7 @@ import { SiteCategoryTreeSelect } from "@/components/ui/site-category-tree-selec
 import {
   useCreateSiteCategory,
   useUpdateSiteCategory,
-} from "@/hooks/api/sitecategory";
+} from "@/hooks/api/site-category";
 
 const formSchema = z.object({
   name: z.string().min(1, "分类名称不能为空"),

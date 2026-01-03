@@ -38,7 +38,7 @@ import {
   useDeleteMasterCategory,
   useMasterCategoryBatchDelete,
   useMasterCategoryTree,
-} from "@/hooks/api/mastercategory";
+} from "@/hooks/api/master-category";
 import { useAuthStore } from "@/stores/auth-store";
 
 // 树形节点组件
