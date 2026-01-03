@@ -137,7 +137,7 @@ export const ControllerTask: Task = {
       {
         method: "get",
         path: "/",
-        code: `.get("/", ({ query, user, db, currentDeptId }) => ${serviceInstanceName}.findAll(query, { db, user, currentDeptId }), {
+        code: `.get("/", ({ query, user, db, currentDeptId }) => ${serviceInstanceName}.list(query, { db, user, currentDeptId }), {
     allPermissions: ["${readPermission}"],
     requireDept: true,
     query: ${contract}.ListQuery,
