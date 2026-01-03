@@ -24,7 +24,7 @@ export const adController = new Elysia({ prefix: "/ad" })
     ({ query, user, db, currentDeptId }) =>
       adService.list(query, { db, user, currentDeptId }),
     {
-      allPermissions: ["AD:VIEW"],
+      allPermissions: ["AD_VIEW"],
       requireDept: true,
       query: AdContract.ListQuery,
       detail: {
@@ -40,7 +40,7 @@ export const adController = new Elysia({ prefix: "/ad" })
     ({ body, user, db, currentDeptId }) =>
       adService.create(body, { db, user, currentDeptId }),
     {
-      allPermissions: ["AD:CREATE"],
+      allPermissions: ["AD_CREATE"],
       requireDept: true,
       body: AdContract.Create,
       detail: {
@@ -58,7 +58,7 @@ export const adController = new Elysia({ prefix: "/ad" })
     {
       params: t.Object({ id: t.String() }),
       body: AdContract.Update,
-      allPermissions: ["AD:EDIT"],
+      allPermissions: ["AD_EDIT"],
       requireDept: true,
       detail: {
         summary: "更新Ad",
@@ -74,7 +74,7 @@ export const adController = new Elysia({ prefix: "/ad" })
       adService.delete(params.id, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
-      allPermissions: ["AD:DELETE"],
+      allPermissions: ["AD_DELETE"],
       requireDept: true,
       detail: {
         summary: "删除Ad",
