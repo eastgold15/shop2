@@ -1948,7 +1948,7 @@ export declare const mediaTable: p.PgTableWithColumns<{
             name: string;
             tableName: "media";
             dataType: "string enum";
-            data: "image" | "video" | "document" | "audio" | "other";
+            data: "other" | "image" | "video" | "document" | "audio";
             driverParam: string;
             notNull: true;
             hasDefault: true;
@@ -2054,7 +2054,7 @@ export declare const mediaMetadataTable: p.PgTableWithColumns<{
             name: string;
             tableName: "media_metadata";
             dataType: "string enum";
-            data: "image" | "video" | "document" | "audio" | "other";
+            data: "other" | "image" | "video" | "document" | "audio";
             driverParam: string;
             notNull: true;
             hasDefault: false;
@@ -2287,7 +2287,7 @@ export declare const adTable: p.PgTableWithColumns<{
             dataType: "string uuid";
             data: string;
             driverParam: string;
-            notNull: true;
+            notNull: false;
             hasDefault: false;
             isPrimaryKey: false;
             isAutoincrement: false;
