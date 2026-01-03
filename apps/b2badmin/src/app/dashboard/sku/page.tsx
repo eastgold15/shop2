@@ -32,12 +32,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import {
-  type SkusRes,
-  useProductsForSKU,
-  useSkuDelete,
-  useSkusList,
-} from "@/hooks/api/sku";
+import { useDeleteSku, useProductsForSKU, useSkuList } from "@/hooks/api/sku";
 import { useSiteCategoryStore } from "@/stores/site-category-store";
 
 interface SKU {
@@ -66,9 +61,9 @@ interface SKU {
 }
 
 export default function SKUManagementPage() {
-  const { data: skusData, isLoading, refetch } = useSkusList();
+  const { data: skusData, isLoading, refetch } = useSkuList();
 
-  const deleteMutation = useSkuDelete();
+  const deleteMutation = useDeleteSku();
   const { data: productsData } = useProductsForSKU();
 
   const { getCategoryById } = useSiteCategoryStore();

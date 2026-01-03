@@ -38,7 +38,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { useProductsBatchDelete, useProductList } from "@/hooks/api/product";
+import { useProductList, useProductsBatchDelete } from "@/hooks/api/product";
 import { useDeleteSku } from "@/hooks/api/sku";
 
 // 使用后端返回的类型

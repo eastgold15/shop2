@@ -137,15 +137,15 @@ export class TemplateService {
       const allValues = await ctx.db
         .select()
         .from(templateValueTable)
-        .where(inArray(templateValueTable.id, allFieldIds))
+        .where(inArray(templateValueTable.templateKeyId, allFieldIds))
         .orderBy(asc(templateValueTable.sortOrder));
 
       const valuesByAttributeId = new Map<string, string[]>();
       for (const val of allValues) {
-        if (!valuesByAttributeId.has(val.id)) {
-          valuesByAttributeId.set(val.id, []);
+        if (!valuesByAttributeId.has(val.templateKeyId)) {
+          valuesByAttributeId.set(val.templateKeyId, []);
         }
-        valuesByAttributeId.get(val.id)!.push(val.value);
+        valuesByAttributeId.get(val.templateKeyId)!.push(val.value);
       }
 
       for (const template of templateMap.values()) {

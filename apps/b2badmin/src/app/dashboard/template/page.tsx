@@ -12,6 +12,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { useDeleteTemplate, useTemplateList } from "@/hooks/api/template";
+import { useMasterCategoryStore } from "@/stores/master-categories-store";
 
 export default function TemplateManager() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -23,6 +24,11 @@ export default function TemplateManager() {
     refetch,
   } = useTemplateList({ page: 1, limit: 100 }, true);
   const deleteMutation = useDeleteTemplate();
+
+  // 使用 store 获取主分类数据
+  const getCategoryById = useMasterCategoryStore(
+    (state) => state.getCategoryById
+  );
 
   const templates = templatesData || [];
 
@@ -117,7 +123,12 @@ export default function TemplateManager() {
                             {t.name}
                           </td>
                           <td className="px-6 py-4 text-slate-500">
-                            {t.categoryName || "未分配"}
+                            {(() => {
+                              const category = getCategoryById(
+                                t.masterCategoryId
+                              );
+                              return category?.name || "未分配";
+                            })()}
                           </td>
                           <td className="px-6 py-4">
                             <span className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 font-medium text-[11px] text-indigo-600">

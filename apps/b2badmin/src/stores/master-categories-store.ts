@@ -1,24 +1,24 @@
-import type { MasterDTO } from "@repo/contract";
+import type { MasterCategoryContract } from "@repo/contract";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 
 interface MasterCategoryState {
   // 树形数据
-  treeData: MasterDTO["TreeEntity"][];
+  treeData: MasterCategoryContract["TreeEntity"][];
   // 扁平化数据（用于快速查找）
-  flatData: Map<string, MasterDTO["TreeEntity"]>;
+  flatData: Map<string, MasterCategoryContract["TreeEntity"]>;
   // 加载状态
   isLoading: boolean;
   // 最后更新时间
   lastUpdated: Date | null;
 
   // Actions
-  setTreeData: (data: MasterDTO["TreeEntity"][]) => void;
+  setTreeData: (data: MasterCategoryContract["TreeEntity"][]) => void;
   setLoading: (loading: boolean) => void;
   // 获取分类的完整路径
   getCategoryPath: (categoryId: string) => string[];
   // 根据ID查找分类
-  getCategoryById: (categoryId: string) => MasterDTO["TreeEntity"] | undefined;
+  getCategoryById: (categoryId: string) => MasterCategoryContract["TreeEntity"] | undefined;
   // 获取所有子分类ID
   getAllChildIds: (categoryId: string) => string[];
   // 清空数据
@@ -27,11 +27,11 @@ interface MasterCategoryState {
 
 // 将树形数据转换为扁平化 Map
 const treeToFlatMap = (
-  tree: MasterDTO["TreeEntity"][]
-): Map<string, MasterDTO["TreeEntity"]> => {
-  const map = new Map<string, MasterDTO["TreeEntity"]>();
+  tree: MasterCategoryContract["TreeEntity"][]
+): Map<string, MasterCategoryContract["TreeEntity"]> => {
+  const map = new Map<string, MasterCategoryContract["TreeEntity"]>();
 
-  const traverse = (nodes: MasterDTO["TreeEntity"][]) => {
+  const traverse = (nodes: MasterCategoryContract["TreeEntity"][]) => {
     for (const node of nodes) {
       map.set(node.id, node);
       if (node.children && node.children.length > 0) {
@@ -54,7 +54,7 @@ export const useMasterCategoryStore = create<MasterCategoryState>()(
       lastUpdated: null,
 
       // Actions
-      setTreeData: (data: MasterDTO["TreeEntity"][]) => {
+      setTreeData: (data: MasterCategoryContract["TreeEntity"][]) => {
         set({
           treeData: data,
           flatData: treeToFlatMap(data),

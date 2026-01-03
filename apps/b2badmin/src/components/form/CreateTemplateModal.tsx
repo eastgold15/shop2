@@ -43,6 +43,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { SiteCategoryTreeSelect } from "@/components/ui/site-category-tree-select";
 import { useCreateTemplate, useUpdateTemplate } from "@/hooks/api/template";
+import { TemplateFieldRow } from "./TemplateFieldRow/TemplateFieldRow";
 
 // 辅助函数
 const slugify = (text: string) =>
@@ -54,7 +55,7 @@ const slugify = (text: string) =>
 
 // Zod 验证 schema
 const templateFieldSchema = z.object({
-  id: z.string(),
+  id: z.string().optional(),
   key: z.string().min(1, "显示名称不能为空"),
   inputType: z.enum(["text", "number", "select", "multiselect"]),
   value: z.string(),
@@ -120,7 +121,16 @@ export function CreateTemplateModal({
         name: editingTemplate.name || "",
         masterCategoryId: editingTemplate.masterCategoryId || "",
         siteCategoryId: editingTemplate.siteCategoryId || "",
-        fields: editingTemplate.fields || [],
+        fields:
+          editingTemplate.fields?.map((f: any) => ({
+            id: f.id,
+            key: f.key || "",
+            inputType: f.inputType || "text",
+            value: f.value || "",
+            options: f.options || [],
+            isRequired: f.isRequired ?? false,
+            isSkuSpec: f.isSkuSpec ?? false,
+          })) || [],
       });
     } else {
       reset({
@@ -291,7 +301,7 @@ export function CreateTemplateModal({
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {fields.map((field, index) => (
+                    {/* {fields.map((field, index) => (
                       <TemplateFieldItem
                         control={control}
                         field={{
@@ -305,6 +315,19 @@ export function CreateTemplateModal({
                         key={field.id}
                         onMove={move}
                         onRemove={remove}
+                      />
+                    ))} */}
+
+                    {fields.map((field, index) => (
+                      <TemplateFieldRow
+                        control={form.control}
+                        index={index}
+                        isFirst={index === 0}
+                        isLast={index === fields.length - 1}
+                        key={field.id}
+                        onMoveDown={() => move(index, index + 1)}
+                        onMoveUp={() => move(index, index - 1)}
+                        onRemove={() => remove(index)}
                       />
                     ))}
                   </div>
@@ -362,11 +385,7 @@ function TemplateFieldItem({
   onRemove,
   onMove,
 }: TemplateFieldItemProps) {
-  // 监听当前字段的 inputType 和 options 值
-  const inputType = useWatch({
-    control,
-    name: `fields.${index}.inputType`,
-  });
+  // 监听当前字段的 options 值用于显示预览标签
   const options = useWatch({
     control,
     name: `fields.${index}.options`,
@@ -480,7 +499,7 @@ function TemplateFieldItem({
           name={`fields.${index}.inputType`}
           render={({ field }) => (
             <FormItem className="col-span-12">
-              {inputType === "text" || inputType === "number" ? (
+              {field.value === "text" || field.value === "number" ? (
                 <>
                   <FormLabel className="font-bold text-xs uppercase">
                     占位符内容
@@ -490,7 +509,7 @@ function TemplateFieldItem({
                     name={`fields.${index}.value`}
                     render={({ field: valueField }) => (
                       <FormControl>
-                        {inputType === "number" ? (
+                        {field.value === "number" ? (
                           <Input
                             {...valueField}
                             onChange={(e) => {
@@ -525,9 +544,9 @@ function TemplateFieldItem({
                         <FormControl>
                           <textarea
                             className="min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            defaultValue={options?.join("\n") || ""}
-                            onBlur={(e) => {
-                              const newOptions = e.target.value
+                            onChange={(e) => {
+                              const text = e.target.value;
+                              const newOptions = text
                                 .split("\n")
                                 .map((s) => s.trim())
                                 .filter(Boolean);
@@ -540,6 +559,9 @@ function TemplateFieldItem({
                             }}
                             placeholder="例如：小号、中号、大号、特大号"
                             rows={4}
+                            value={
+                              Array.isArray(options) ? options.join("\n") : ""
+                            }
                           />
                         </FormControl>
                         <p className="mt-1 text-slate-400 text-xs">
