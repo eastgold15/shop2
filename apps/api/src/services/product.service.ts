@@ -532,10 +532,12 @@ export class ProductService {
           const skuValues = skus.map((s) => ({
             productId,
             skuCode: s.skuCode,
-            price: s.price?.toString(),
-            stock: s.stock || 0,
+            price: s.price?.toString() || "0",
+            stock: s.stock?.toString() || "0",
             specJson: s.specJson || {},
             status: s.status ?? 1,
+            tenantId: ctx.user.context.tenantId!,
+            deptId: ctx.currentDeptId,
           }));
           await tx.insert(skuTable).values(skuValues);
         }
@@ -618,13 +620,9 @@ export class ProductService {
     const insertData = {
       ...body,
       // 自动注入租户信息
-      ...(ctx.user
-        ? {
-          tenantId: ctx.user.context.tenantId!,
-          createdBy: ctx.user.id,
-          deptId: ctx.currentDeptId,
-        }
-        : {}),
+      tenantId: ctx.user.context.tenantId!,
+      createdBy: ctx.user.id,
+      deptId: ctx.currentDeptId,
     };
     const [res] = await ctx.db
       .insert(productTable)
@@ -634,7 +632,7 @@ export class ProductService {
   }
 
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  public async findAll(
+  public async list(
     query: ProductContract["ListQuery"],
     ctx: ServiceContext
   ) {

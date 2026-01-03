@@ -27,7 +27,7 @@ export class SiteCategoryService {
     return res;
   }
 
-  public async findAll(
+  public async list(
     query: SiteCategoryContract["ListQuery"],
     ctx: ServiceContext
   ) {
@@ -66,7 +66,7 @@ export class SiteCategoryService {
   /**
    * 获取树形结构的分类列表
    */
-  async getTree(ctx: ServiceContext) {
+  async tree(ctx: ServiceContext) {
     const categories = await ctx.db.query.siteCategoryTable.findMany({
       where: {
         deptId: ctx.currentDeptId,
@@ -105,7 +105,7 @@ export class SiteCategoryService {
   /**
    * 移动分类（更新父级关系）
    */
-  async moveCategory(
+  async move(
     id: string,
     newParentId: string | null,
     ctx: ServiceContext
@@ -180,7 +180,7 @@ export class SiteCategoryService {
   /**
    * 切换激活状态
    */
-  async toggleStatus(id: string, ctx: ServiceContext) {
+  async patchStatus(id: string, ctx: ServiceContext) {
     const category = await ctx.db.query.siteCategoryTable.findFirst({
       where: {
         id,

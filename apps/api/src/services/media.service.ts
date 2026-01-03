@@ -25,7 +25,7 @@ export class MediaService {
     return res;
   }
 
-  public async findAll(query: MediaContract["ListQuery"], ctx: ServiceContext) {
+  public async list(query: MediaContract["ListQuery"], ctx: ServiceContext) {
     const { search } = query;
 
     const res = await ctx.db.query.mediaTable.findMany({
@@ -103,7 +103,7 @@ export class MediaService {
   /**
    * 获取媒体列表（带筛选）
    */
-  async getMediaList(
+  async mediaList(
     query: { category?: string; search?: string; ids?: string[] },
     ctx: ServiceContext
   ) {

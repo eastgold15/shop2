@@ -1,7 +1,6 @@
 import {
-  type SkuContract,
   skuTable,
-  mediasTable,
+  mediaTable,
   productTable,
   skuMediaTable,
   productSiteCategoryTable,
@@ -65,6 +64,7 @@ export class SkuService {
         if (sku.mediaIds && sku.mediaIds.length > 0) {
           await tx.insert(skuMediaTable).values(
             sku.mediaIds.map((mediaId: any, index: any) => ({
+              tenantId: ctx.user.context.tenantId!,
               skuId: createdSku.id,
               mediaId,
               isMain: index === 0, // 第一张作为主图
@@ -103,6 +103,7 @@ export class SkuService {
       // 如果提供了mediaId，创建SKU和媒体的关联
       if (mediaId) {
         await tx.insert(skuMediaTable).values({
+          tenantId: ctx.user.context.tenantId!,
           skuId: sku.id,
           mediaId,
         });
@@ -133,6 +134,7 @@ export class SkuService {
         // 创建新的关联（如果mediaId不为空）
         if (body.mediaId) {
           await tx.insert(skuMediaTable).values({
+            tenantId: ctx.user.context.tenantId!,
             skuId: id,
             mediaId: body.mediaId,
           });
@@ -202,6 +204,7 @@ export class SkuService {
         if (mediaIds.length > 0) {
           const mediaRelations = mediaIds.map(
             (mediaId: string, index: number) => ({
+              tenantId: ctx.user.context.tenantId!,
               skuId: id,
               mediaId,
               // 如果传了 mainImageId 则匹配，否则默认第一张为主图
@@ -221,7 +224,7 @@ export class SkuService {
   /**
    * 获取SKU列表
    */
-  public async getSkusList(ctx: ServiceContext, query: any) {
+  public async skusList(ctx: ServiceContext, query: any) {
     const {
       page = 1,
       limit = 10,
@@ -268,7 +271,7 @@ export class SkuService {
       skuTable.createdAt;
 
     // --- 构建主查询 ---
-    let queryBuilder = ctx.db
+    const items = await ctx.db
       .select({
         // SKU 信息
         id: skuTable.id,
@@ -294,14 +297,9 @@ export class SkuService {
       .leftJoin(
         productSiteCategoryTable,
         eq(productTable.id, productSiteCategoryTable.productId)
-      );
-
-    if (baseConditions.length > 0) {
-      queryBuilder = queryBuilder.where(and(...baseConditions));
-    }
-
-    // 排序与分页
-    const items = await queryBuilder
+      )
+      .where(baseConditions.length > 0 ? and(...baseConditions) : undefined)
+      // 排序与分页
       .orderBy(sortOrder === "desc" ? desc(orderByField) : orderByField)
       .limit(limit)
       .offset((page - 1) * limit);
@@ -313,12 +311,12 @@ export class SkuService {
         ? await ctx.db
             .select({
               skuId: skuMediaTable.skuId,
-              mediaId: mediasTable.id,
-              url: mediasTable.url,
+              mediaId: mediaTable.id,
+              url: mediaTable.url,
               isMain: skuMediaTable.isMain,
             })
             .from(skuMediaTable)
-            .innerJoin(mediasTable, eq(skuMediaTable.mediaId, mediasTable.id))
+            .innerJoin(mediaTable, eq(skuMediaTable.mediaId, mediaTable.id))
             .where(inArray(skuMediaTable.skuId, skuIds))
             .orderBy(skuMediaTable.sortOrder)
         : [];
@@ -350,7 +348,7 @@ export class SkuService {
   /**
    * 获取SKU详情
    */
-  public async getSkuDetail(ctx: ServiceContext, id: string) {
+  public async detail(ctx: ServiceContext, id: string) {
     // 获取SKU基本信息
     const [sku] = await ctx.db
       .select({
@@ -389,15 +387,15 @@ export class SkuService {
     // 获取所有关联的图片
     const images = await ctx.db
       .select({
-        id: mediasTable.id,
-        url: mediasTable.url,
-        storageKey: mediasTable.storageKey,
-        category: mediasTable.category,
+        id: mediaTable.id,
+        url: mediaTable.url,
+        storageKey: mediaTable.storageKey,
+        category: mediaTable.category,
         isMain: skuMediaTable.isMain,
         sortOrder: skuMediaTable.sortOrder,
       })
       .from(skuMediaTable)
-      .leftJoin(mediasTable, eq(skuMediaTable.mediaId, mediasTable.id))
+      .leftJoin(mediaTable, eq(skuMediaTable.mediaId, mediaTable.id))
       .where(eq(skuMediaTable.skuId, sku.id))
       .orderBy(skuMediaTable.sortOrder);
 
@@ -426,7 +424,7 @@ export class SkuService {
   /**
    * 获取商品下的SKU列表
    */
-  public async getSkusByProduct(ctx: ServiceContext, productId: string) {
+  public async skusByProduct(ctx: ServiceContext, productId: string) {
     const skus = await ctx.db
       .select({
         id: skuTable.id,
@@ -449,15 +447,15 @@ export class SkuService {
         ? await ctx.db
             .select({
               skuId: skuMediaTable.skuId,
-              id: mediasTable.id,
-              url: mediasTable.url,
-              storageKey: mediasTable.storageKey,
-              category: mediasTable.category,
+              id: mediaTable.id,
+              url: mediaTable.url,
+              storageKey: mediaTable.storageKey,
+              category: mediaTable.category,
               isMain: skuMediaTable.isMain,
               sortOrder: skuMediaTable.sortOrder,
             })
             .from(skuMediaTable)
-            .leftJoin(mediasTable, eq(skuMediaTable.mediaId, mediasTable.id))
+            .leftJoin(mediaTable, eq(skuMediaTable.mediaId, mediaTable.id))
             .where(inArray(skuMediaTable.skuId, skuIds))
             .orderBy(skuMediaTable.sortOrder)
         : [];
@@ -508,10 +506,10 @@ export class SkuService {
     if (mediaIds && mediaIds.length > 0) {
       const existingMedia = await ctx.db
         .select({
-          id: mediasTable.id,
+          id: mediaTable.id,
         })
-        .from(mediasTable)
-        .where(inArray(mediasTable.id, mediaIds));
+        .from(mediaTable)
+        .where(inArray(mediaTable.id, mediaIds));
 
       if (existingMedia.length !== mediaIds.length) {
         throw new HttpError.NotFound("部分媒体文件不存在");
@@ -527,6 +525,7 @@ export class SkuService {
       if (mediaIds && mediaIds.length > 0) {
         await tx.insert(skuMediaTable).values(
           mediaIds.map((mediaId, index) => ({
+            tenantId: ctx.user.context.tenantId!,
             skuId: id,
             mediaId,
             isMain: index === mainImageIndex || index === 0, // 根据指定索引或第一张作为主图
@@ -608,66 +607,12 @@ export class SkuService {
   ): Promise<boolean> {
     const [image] = await ctx.db
       .select({
-        id: mediasTable.id,
+        id: mediaTable.id,
       })
-      .from(mediasTable)
-      .where(eq(mediasTable.id, mediaId))
+      .from(mediaTable)
+      .where(eq(mediaTable.id, mediaId))
       .limit(1);
 
     return !!image;
-  }
-
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  public async create(body: SkuContract["Create"], ctx: ServiceContext) {
-    const insertData = {
-      ...body,
-      // 自动注入租户信息
-      ...(ctx.user
-        ? {
-            tenantId: ctx.user.context.tenantId!,
-            createdBy: ctx.user.id,
-            deptId: ctx.currentDeptId,
-          }
-        : {}),
-    };
-    const [res] = await ctx.db.insert(skuTable).values(insertData).returning();
-    return res;
-  }
-
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  public async findAll(query: SkuContract["ListQuery"], ctx: ServiceContext) {
-    const { search } = query;
-
-    const res = await ctx.db.query.skuTable.findMany({
-      where: {
-        tenantId: ctx.user.context.tenantId!,
-        ...(search ? { originalName: { ilike: `%${search}%` } } : {}),
-      },
-    });
-    return res;
-  }
-
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  public async update(
-    id: string,
-    body: SkuContract["Update"],
-    ctx: ServiceContext
-  ) {
-    const updateData = { ...body, updatedAt: new Date() };
-    const [res] = await ctx.db
-      .update(skuTable)
-      .set(updateData)
-      .where(eq(skuTable.id, id))
-      .returning();
-    return res;
-  }
-
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  public async delete(id: string, ctx: ServiceContext) {
-    const [res] = await ctx.db
-      .delete(skuTable)
-      .where(eq(skuTable.id, id))
-      .returning();
-    return res;
   }
 }

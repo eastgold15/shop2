@@ -40,7 +40,6 @@ export class TemplateService {
             isRequired,
             options,
             value,
-            code,
             key,
             isSkuSpec,
           } = field;
@@ -51,7 +50,6 @@ export class TemplateService {
             .values({
               templateId,
               key, // 这里的 key 是 UI 上的 Display Name
-              code, // slugify 后的 API Code
               inputType,
               isRequired: !!isRequired,
               isSkuSpec: !!isSkuSpec,
@@ -83,11 +81,11 @@ export class TemplateService {
           // 2.3 批量插入属性选项/预设值 (templateValueTable)
           if (valuesToInsert.length > 0) {
             const valueData = valuesToInsert.map((v, index) => ({
-              attributeId: newAttribute.id,
+              templateKeyId: newAttribute.id,
               value: v,
               sortOrder: index,
             }));
-            await tx.insert(templateKeyTable).values(valueData);
+            await tx.insert(templateValueTable).values(valueData);
           }
         }
       }
@@ -97,7 +95,7 @@ export class TemplateService {
     });
   }
 
-  public async findAll(
+  public async list(
     query: TemplateContract["ListQuery"],
     ctx: ServiceContext
   ) {
@@ -258,7 +256,7 @@ export class TemplateService {
           // 2.3 批量插入属性选项/预设值 (templateValueTable)
           if (valuesToInsert.length > 0) {
             const valueData = valuesToInsert.map((v, index) => ({
-              attributeId: newAttribute.id,
+              templateKeyId: newAttribute.id,
               value: v,
               sortOrder: index,
             }));

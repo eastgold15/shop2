@@ -1,7 +1,7 @@
 import {
   type HeroCardContract,
   heroCardTable,
-  mediasTable,
+  mediaTable,
 } from "@repo/contract";
 import {
   and,
@@ -41,7 +41,7 @@ export class HeroCardService {
   /**
    * 获取所有首页展示卡片（后台管理）
    */
-  async findAllWithMedia(query: any, ctx: ServiceContext) {
+  async listWithMedia(query: any, ctx: ServiceContext) {
     const { page = 1, limit = 10, search } = query;
 
     // 1. 确保 filters 始终是一个干净的数组
@@ -59,10 +59,10 @@ export class HeroCardService {
     const baseQuery = ctx.db
       .select({
         ...getColumns(heroCardTable),
-        mediaUrl: mediasTable.url,
+        mediaUrl: mediaTable.url,
       })
       .from(heroCardTable)
-      .leftJoin(mediasTable, eq(heroCardTable.mediaId, mediasTable.id));
+      .leftJoin(mediaTable, eq(heroCardTable.mediaId, mediaTable.id));
 
     // 3. 添加查询条件
     const whereConditions: SQL[] = [];
@@ -109,7 +109,7 @@ export class HeroCardService {
     return { data, total: Number(count), page: Number(page), limit: Number(limit) };
   }
 
-  public async findAll(
+  public async list(
     query: HeroCardContract["ListQuery"],
     ctx: ServiceContext
   ) {
@@ -199,7 +199,7 @@ export class HeroCardService {
   /**
    * 切换状态
    */
-  async toggleStatus(id: string, ctx: ServiceContext) {
+  async patchStatus(id: string, ctx: ServiceContext) {
     const card = await ctx.db.query.heroCardTable.findFirst({
       where: {
         id,

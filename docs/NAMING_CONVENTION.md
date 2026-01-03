@@ -218,6 +218,7 @@ apps/api/src/server/modules/
 export class SiteCategoryService {
   // 标准方法
   async list(query, ctx) { ... }           // 列表查询
+  async pagelist(query,ctx){...}          // 分页列表查询
   async detail(id, ctx) { ... }            // 详情查询
   async create(body, ctx) { ... }          // 创建数据
   async update(id, body, ctx) { ... }      // 全量更新
