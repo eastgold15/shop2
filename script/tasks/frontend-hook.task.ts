@@ -2,13 +2,30 @@ import { type CallExpression, type Project } from "ts-morph";
 import { ensureImport } from "../core/ast-utils";
 import type { GenContext, Task } from "../core/types";
 
+const GEN_TAG = "@generated";
+const DOC_BLOCK = `// [Auto-Generated] Do not edit this tag to keep updates. ${GEN_TAG}`;
+
 const GEN_HEADER = `/**
  * 🤖 【Frontend Hooks - 自动生成】
  * --------------------------------------------------------
- * 🚀 基于后端 Controller 实际路由扫描生成
- * ⚠️ 每次运行 gen 命令都会覆盖此文件
+ * 🚀 基于后端 Controller 实际路由扫描生成（仅包含 // @generated 标记的路由）
+ * ⚠️ 带标记的 Hooks 会被自动更新，手动修改请移除 // @generated 标记
+ * 💡 如需自定义 Hooks，请移除对应函数的 // @generated 标记或在其他文件中封装
  * --------------------------------------------------------
  */`;
+
+/**
+ * 检查路由调用是否包含 @generated 标记
+ */
+function checkIsGeneratedRoute(call: CallExpression): boolean {
+  const leadingTrivia = call.getLeadingCommentRanges();
+  for (const range of leadingTrivia) {
+    if (range.getText().includes(GEN_TAG)) {
+      return true;
+    }
+  }
+  return false;
+}
 
 /**
  * 路由元数据接口
@@ -85,7 +102,7 @@ export const FrontendHookTask: Task = {
         // 例如: tree(ctx) 无参数 -> tree: () => [...]
         // 例如: move(id, newParentId, ctx) 有参数 -> move: (params) => [...]
         const hasParams = r.hasParams || r.method !== "get";
-        return `${key}: ${hasParams ? `(params?: any)` : `()`} => [...${queryKeyVar}.all, '${key}'${hasParams ? ', params' : ''}] as const`;
+        return `${key}: ${hasParams ? "(params?: any)" : "()"} => [...${queryKeyVar}.all, '${key}'${hasParams ? ", params" : ""}] as const`;
       })
       .filter(Boolean)
       .join("\n  ");
@@ -98,7 +115,7 @@ export const ${queryKeyVar} = {
   list: (params: any) => [...${queryKeyVar}.lists(), params] as const,
   pagelist: (params: any) => [...${queryKeyVar}.lists(), "pagelist", params] as const,
   details: () => [...${queryKeyVar}.all, "detail"] as const,
-  detail: (id: string) => [...${queryKeyVar}.details(), id] as const,${customKeys ? '\n  ' + customKeys : ''}
+  detail: (id: string) => [...${queryKeyVar}.details(), id] as const,${customKeys ? "\n  " + customKeys : ""}
 };`;
 
     file.addStatements(queryKeysCode);
@@ -184,6 +201,11 @@ function parseControllerRoutes(
   // 4. 反向遍历调用栈 (从里到外: .get -> .post -> ...)
   // 注意：CallStack 是从最外层(最后调用的)开始的，我们要倒序或者顺序都可以，关键是解析
   for (const call of callStack) {
+    // 🔥 只处理带 // @generated 标记的路由
+    if (!checkIsGeneratedRoute(call)) {
+      continue;
+    }
+
     // 获取方法名: get, post, put, delete, patch
     const propertyAccess = call.getExpression();
     if (propertyAccess.getKindName() !== "PropertyAccessExpression") continue;
@@ -362,7 +384,8 @@ export function ${route.hookName}(params?: any, enabled = true) {
   const isPut = route.method === "put";
   const isPatch = route.method === "patch";
   const isDelete = route.method === "delete";
-  const isIdOnlyPatch = isPatch && route.hasParams && route.path.match(/\/:id$/);
+  const isIdOnlyPatch =
+    isPatch && route.hasParams && route.path.match(/\/:id$/);
 
   // 参数类型和 API 调用
   let payloadType = "any";
