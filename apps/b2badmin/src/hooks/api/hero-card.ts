@@ -33,7 +33,7 @@ export function useHeroCardList(
     queryKey: herocardKeys.list(params),
     queryFn: () =>
       api.get<any, typeof HeroCardContract.ListQuery.static>(
-        "/api/v1/hero-cards",
+        "/api/v1/hero-card",
         { params }
       ),
     enabled,
@@ -55,7 +55,7 @@ export function useHeroCardsList(params?: {
 export function useHeroCardDetail(id: string, enabled = !!id) {
   return useQuery({
     queryKey: herocardKeys.detail(id),
-    queryFn: () => api.get<any>(`/api/v1/hero-cards/${id}`),
+    queryFn: () => api.get<any>(`/api/v1/hero-card/${id}`),
     enabled,
   });
 }
@@ -67,7 +67,7 @@ export function useCreateHeroCard() {
   return useMutation({
     mutationFn: (data: typeof HeroCardContract.Create.static) =>
       api.post<any, typeof HeroCardContract.Create.static>(
-        "/api/v1/hero-cards",
+        "/api/v1/hero-card/",
         data
       ),
     onSuccess: () => {
@@ -96,7 +96,7 @@ export function useUpdateHeroCard() {
       data: typeof HeroCardContract.Update.static;
     }) =>
       api.put<any, typeof HeroCardContract.Update.static>(
-        `/api/v1/hero-cards/${id}`,
+        `/api/v1/hero-card/${id}`,
         data
       ),
     onSuccess: (_, variables) => {
@@ -120,7 +120,7 @@ export const useHeroCardsUpdate = useUpdateHeroCard;
 export function useDeleteHeroCard() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => api.delete<any>(`/api/v1/hero-cards/${id}`),
+    mutationFn: (id: string) => api.delete<any>(`/api/v1/hero-card/${id}`),
     onSuccess: () => {
       toast.success("首页展示卡片删除成功");
       queryClient.invalidateQueries({ queryKey: herocardKeys.lists() });
@@ -141,7 +141,7 @@ export function useHeroCardUpdateSort() {
   return useMutation({
     mutationFn: (items: Array<{ id: string; sortOrder: number }>) =>
       api.patch<any, { items: Array<{ id: string; sortOrder: number }> }>(
-        "/api/v1/hero-cards/sort",
+        "/api/v1/hero-card/sort",
         { items }
       ),
     onSuccess: () => {
@@ -163,7 +163,7 @@ export function useHeroCardToggleStatus() {
 
   return useMutation({
     mutationFn: (id: string) =>
-      api.patch<any, {}>(`/api/v1/hero-cards/${id}/toggle`, {}),
+      api.patch<any, {}>(`/api/v1/hero-card/${id}/toggle`, {}),
     onSuccess: () => {
       toast.success("状态更新成功");
       queryClient.invalidateQueries({ queryKey: herocardKeys.lists() });
