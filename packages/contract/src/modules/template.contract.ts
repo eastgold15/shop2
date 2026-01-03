@@ -5,7 +5,6 @@ import { templateTable } from "../table.schema";
 import { TemplateKeyInsertFields } from "./template-key.contract";
 import { TemplateValueInsertFields } from "./template-value.contract";
 
-
 /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
 export const TemplateInsertFields = spread(templateTable, "insert");
 /** [Auto-Generated] Do not edit this tag to keep updates. @generated */

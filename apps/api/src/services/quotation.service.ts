@@ -23,7 +23,6 @@ export class QuotationService {
     return res;
   }
 
-
   public async findAll(
     query: QuotationContract["ListQuery"],
     ctx: ServiceContext

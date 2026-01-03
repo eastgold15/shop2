@@ -1,9 +1,9 @@
 import {
-  skuTable,
   mediaTable,
+  productSiteCategoryTable,
   productTable,
   skuMediaTable,
-  productSiteCategoryTable,
+  skuTable,
 } from "@repo/contract";
 import { and, desc, eq, inArray, like, sql } from "drizzle-orm";
 import { HttpError } from "elysia-http-problem-json";
@@ -118,11 +118,7 @@ export class SkuService {
   /**
    * 更新SKU及媒体关联
    */
-  public async updateSkuWithMedia(
-    ctx: ServiceContext,
-    id: string,
-    body: any
-  ) {
+  public async updateSkuWithMedia(ctx: ServiceContext, id: string, body: any) {
     let updated;
     // 如果要更新mediaId
     if (body.mediaId !== undefined) {

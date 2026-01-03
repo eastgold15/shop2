@@ -80,7 +80,7 @@ export const ServiceTask: Task = {
 
     upsertMethod(
       classDec,
-      "findAll",
+      "list",
       `const { search } = query;
 
       const res = await ctx.db.query.${ctx.schemaKey}.findMany({

@@ -1,9 +1,9 @@
 import {
-  type ProductContract,
-  productTable,
   mediaTable,
+  type ProductContract,
   productMasterCategoryTable,
   productMediaTable,
+  productTable,
   productTemplateTable,
   siteCategoryTable,
   siteProductTable,
@@ -395,7 +395,11 @@ export class ProductService {
   /**
    * 更新商品（全量关联更新）
    */
-  public async updateProduct(productId: string, body: any, ctx: ServiceContext) {
+  public async updateProduct(
+    productId: string,
+    body: any,
+    ctx: ServiceContext
+  ) {
     const {
       // 1. 基础信息
       name,
@@ -632,10 +636,7 @@ export class ProductService {
   }
 
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  public async list(
-    query: ProductContract["ListQuery"],
-    ctx: ServiceContext
-  ) {
+  public async list(query: ProductContract["ListQuery"], ctx: ServiceContext) {
     const { search } = query;
 
     const res = await ctx.db.query.productTable.findMany({
@@ -670,6 +671,4 @@ export class ProductService {
       .returning();
     return res;
   }
-
-
 }

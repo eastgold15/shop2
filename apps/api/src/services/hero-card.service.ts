@@ -11,8 +11,8 @@ import {
   getColumns,
   ilike,
   or,
-  sql,
   type SQL,
+  sql,
 } from "drizzle-orm";
 import { HttpError } from "elysia-http-problem-json";
 import { type ServiceContext } from "../lib/type";
@@ -106,13 +106,15 @@ export class HeroCardService {
       ...item,
     }));
 
-    return { data, total: Number(count), page: Number(page), limit: Number(limit) };
+    return {
+      data,
+      total: Number(count),
+      page: Number(page),
+      limit: Number(limit),
+    };
   }
 
-  public async list(
-    query: HeroCardContract["ListQuery"],
-    ctx: ServiceContext
-  ) {
+  public async list(query: HeroCardContract["ListQuery"], ctx: ServiceContext) {
     const { search } = query;
 
     const res = await ctx.db.query.heroCardTable.findMany({

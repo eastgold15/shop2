@@ -11,7 +11,6 @@ import { dbPlugin } from "~/db/connection";
 import { authGuardMid } from "~/middleware/auth";
 import { SiteCategoryService } from "~/services/site-category.service";
 
-
 const siteCategoryService = new SiteCategoryService();
 
 export const siteCategoryController = new Elysia({ prefix: "/site-category" })
@@ -79,7 +78,6 @@ export const siteCategoryController = new Elysia({ prefix: "/site-category" })
     }
   )
 
-
   // 获取树形结构的分类列表
   .get(
     "/tree",
@@ -94,4 +92,4 @@ export const siteCategoryController = new Elysia({ prefix: "/site-category" })
         tags: ["SiteCategories"],
       },
     }
-  )
+  );

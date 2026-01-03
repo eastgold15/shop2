@@ -11,7 +11,6 @@ import { dbPlugin } from "~/db/connection";
 import { authGuardMid } from "~/middleware/auth";
 import { SkuMediaService } from "~/services/sku-media.service";
 
-
 const skuMediaService = new SkuMediaService();
 /**
  * @generated

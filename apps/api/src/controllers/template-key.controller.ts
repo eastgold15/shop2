@@ -11,7 +11,6 @@ import { dbPlugin } from "~/db/connection";
 import { authGuardMid } from "~/middleware/auth";
 import { TemplateKeyService } from "~/services/template-key.service";
 
-
 const templateKeyService = new TemplateKeyService();
 /**
  * @generated

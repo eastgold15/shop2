@@ -6,10 +6,13 @@
  * --------------------------------------------------------
  */
 import { Elysia, t } from "elysia";
+import { MediaMetadataContract } from "media-metadata.contract";
 import { dbPlugin } from "~/db/connection";
 import { authGuardMid } from "~/middleware/auth";
-import { MediaMetadataContract } from "media-metadata.contract"";
-import { MediaMetadataService } from "media-metadata.service"";
+";
+
+import { MediaMetadataService } from "media-metadata.service";
+";
 
 const mediaMetadataService = new MediaMetadataService();
 /**

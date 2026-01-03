@@ -3,7 +3,6 @@ import {
   templateKeyTable,
   templateTable,
   templateValueTable,
-
 } from "@repo/contract";
 import { asc, eq, inArray, like } from "drizzle-orm";
 import { HttpError } from "elysia-http-problem-json";
@@ -35,14 +34,8 @@ export class TemplateService {
       // 2. 处理字段列表
       if (fields && fields.length > 0) {
         for (const field of fields) {
-          const {
-            inputType,
-            isRequired,
-            options,
-            value,
-            key,
-            isSkuSpec,
-          } = field;
+          const { inputType, isRequired, options, value, key, isSkuSpec } =
+            field;
 
           // 2.1 插入属性定义 (templateKeyTable)
           const [newAttribute] = await tx
@@ -95,15 +88,15 @@ export class TemplateService {
     });
   }
 
-  public async list(
-    query: TemplateContract["ListQuery"],
-    ctx: ServiceContext
-  ) {
+  public async list(query: TemplateContract["ListQuery"], ctx: ServiceContext) {
     const { search } = query;
     const rows = await ctx.db
       .select()
       .from(templateTable)
-      .leftJoin(templateKeyTable, eq(templateTable.id, templateKeyTable.templateId))
+      .leftJoin(
+        templateKeyTable,
+        eq(templateTable.id, templateKeyTable.templateId)
+      )
       .where(search ? like(templateTable.name, `%${search}%`) : undefined);
 
     const templateMap = new Map();
@@ -198,7 +191,6 @@ export class TemplateService {
           // 将 "root" 或空值转为 null
           siteCategoryId:
             siteCategoryId && siteCategoryId !== "root" ? siteCategoryId : null,
-
         })
         .where(eq(templateTable.id, id));
 

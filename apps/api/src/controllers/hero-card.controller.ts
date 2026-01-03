@@ -11,7 +11,6 @@ import { dbPlugin } from "~/db/connection";
 import { authGuardMid } from "~/middleware/auth";
 import { HeroCardService } from "~/services/hero-card.service";
 
-
 const heroCardService = new HeroCardService();
 /**
  * @generated

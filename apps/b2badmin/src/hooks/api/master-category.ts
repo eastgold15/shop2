@@ -170,7 +170,8 @@ export function useUpdateMasterCategory() {
 export function useDeleteMasterCategory() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => api.delete<any>(`/api/v1/master-category/${id}`),
+    mutationFn: (id: string) =>
+      api.delete<any>(`/api/v1/master-category/${id}`),
     onSuccess: () => {
       toast.success("主分类删除成功");
       queryClient.invalidateQueries({ queryKey: mastercategoryKeys.lists() });

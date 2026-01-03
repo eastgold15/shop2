@@ -105,11 +105,7 @@ export class SiteCategoryService {
   /**
    * 移动分类（更新父级关系）
    */
-  async move(
-    id: string,
-    newParentId: string | null,
-    ctx: ServiceContext
-  ) {
+  async move(id: string, newParentId: string | null, ctx: ServiceContext) {
     // 验证分类是否存在
     const category = await ctx.db.query.siteCategoryTable.findFirst({
       where: {

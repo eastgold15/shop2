@@ -11,7 +11,6 @@ import { dbPlugin } from "~/db/connection";
 import { authGuardMid } from "~/middleware/auth";
 import { SiteConfigService } from "~/services/site-config.service";
 
-
 const siteConfigService = new SiteConfigService();
 /**
  * @generated
