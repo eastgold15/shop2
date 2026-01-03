@@ -15,7 +15,7 @@ export const masterCategoryController = new Elysia({
     ({ query, user, db, currentDeptId }) =>
       masterCategoryService.findAll(query, { db, user, currentDeptId }),
     {
-      allPermissions: ["MASTERCATEGORY_VIEW"],
+      allPermissions: ["MASTER_CATEGORY_VIEW"],
       requireDept: true,
       query: MasterCategoryContract.ListQuery,
       detail: {
@@ -30,7 +30,7 @@ export const masterCategoryController = new Elysia({
     ({ body, user, db, currentDeptId }) =>
       masterCategoryService.create(body, { db, user, currentDeptId }),
     {
-      allPermissions: ["MASTERCATEGORY_CREATE"],
+      allPermissions: ["MASTER_CATEGORY_CREATE"],
       body: MasterCategoryContract.Create,
       requireDept: true,
       detail: {
@@ -52,7 +52,7 @@ export const masterCategoryController = new Elysia({
       params: t.Object({ id: t.String() }),
       body: MasterCategoryContract.Update,
       requireDept: true,
-      allPermissions: ["MASTERCATEGORY_EDIT"],
+      allPermissions: ["MASTER_CATEGORY_EDIT"],
       detail: {
         summary: "更新MasterCategory",
         description: "根据ID更新MasterCategory信息",
@@ -66,7 +66,7 @@ export const masterCategoryController = new Elysia({
       masterCategoryService.delete(params.id, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
-      allPermissions: ["MASTERCATEGORY_DELETE"],
+      allPermissions: ["MASTER_CATEGORY_DELETE"],
       requireDept: true,
       detail: {
         summary: "删除MasterCategory",
@@ -82,7 +82,7 @@ export const masterCategoryController = new Elysia({
     async ({ db, user, currentDeptId }) =>
       await masterCategoryService.tree({ db, user, currentDeptId }),
     {
-      allPermissions: ["MASTERCATEGORY_VIEW"],
+      allPermissions: ["MASTER_CATEGORY_VIEW"],
       requireDept: true,
       detail: {
         summary: "获取树形主分类列表",

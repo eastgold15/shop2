@@ -622,4 +622,26 @@ export class ProductService {
       .returning();
     return res;
   }
+
+
+
+
+  public async getSkuList(id: string, ctx: ServiceContext) {
+    const [res] = await ctx.db.query.skuTable.findMany({
+      where: {
+        productId: id,
+        tenantId: ctx.user.context.tenantId!,
+        deptId: ctx.currentDeptId,
+      },
+      with: {
+        media: {
+          columns: {
+            mediaId: true,
+            isMain: true,
+          }
+        }
+      }
+    })
+    return res;
+  }
 }

@@ -26,8 +26,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { MediaSelect } from "@/components/ui/media-select";
-import { useMediaByIds } from "@/hooks/api/media";
-import { useSkuUpdate } from "@/hooks/api/sku";
+import { useMediaList } from "@/hooks/api/media";
+import { useUpdateSku } from "@/hooks/api/sku";
 
 const formSchema = z.object({
   skuCode: z.string().min(1, "SKU编码不能为空"),
@@ -70,7 +70,7 @@ export function EditSKUModal({
   onSuccess,
   sku,
 }: EditSKUModalProps) {
-  const updateSku = useSkuUpdate();
+  const updateSku = useUpdateSku();
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -91,7 +91,7 @@ export function EditSKUModal({
 
   // 获取选中媒体的完整信息（通过 ids 从后端获取）
   const selectedMediaIds = form.watch("mediaIds");
-  const { data: mediaList = [] } = useMediaByIds(selectedMediaIds);
+  const { data: mediaList = [] } = useMediaList(selectedMediaIds);
 
   // 创建媒体 ID 到 URL 的映射
   const mediaMap = new Map(

@@ -24,7 +24,7 @@ export const templateController = new Elysia({ prefix: "/template" })
     ({ query, user, db, currentDeptId }) =>
       templateService.list(query, { db, user, currentDeptId }),
     {
-      allPermissions: ["TEMPLATE:VIEW"],
+      allPermissions: ["TEMPLATE_VIEW"],
       requireDept: true,
       query: TemplateContract.ListQuery,
       detail: {
@@ -40,7 +40,7 @@ export const templateController = new Elysia({ prefix: "/template" })
     ({ body, user, db, currentDeptId }) =>
       templateService.create(body, { db, user, currentDeptId }),
     {
-      allPermissions: ["TEMPLATE:CREATE"],
+      allPermissions: ["TEMPLATE_CREATE"],
       requireDept: true,
       body: TemplateContract.Create,
       detail: {
@@ -58,7 +58,7 @@ export const templateController = new Elysia({ prefix: "/template" })
     {
       params: t.Object({ id: t.String() }),
       body: TemplateContract.Update,
-      allPermissions: ["TEMPLATE:EDIT"],
+      allPermissions: ["TEMPLATE_EDIT"],
       requireDept: true,
       detail: {
         summary: "更新Template",
@@ -74,7 +74,7 @@ export const templateController = new Elysia({ prefix: "/template" })
       templateService.delete(params.id, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
-      allPermissions: ["TEMPLATE:DELETE"],
+      allPermissions: ["TEMPLATE_DELETE"],
       requireDept: true,
       detail: {
         summary: "删除Template",

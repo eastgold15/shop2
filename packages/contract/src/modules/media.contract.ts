@@ -53,6 +53,7 @@ export const MediaContract = {
   }),
 
   ListQuery: t.Object({
+    ids: t.Optional(t.Array(t.String())),
     ...t.Partial(t.Object(MediaInsertFields)).properties,
     search: t.Optional(t.String()),
   }),

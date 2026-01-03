@@ -23,7 +23,7 @@ export const productController = new Elysia({ prefix: "/product" })
     ({ query, user, db, currentDeptId }) =>
       productService.list(query, { db, user, currentDeptId }),
     {
-      allPermissions: ["PRODUCT:VIEW"],
+      allPermissions: ["PRODUCT_VIEW"],
       requireDept: true,
       query: ProductContract.ListQuery,
       detail: {
@@ -33,12 +33,29 @@ export const productController = new Elysia({ prefix: "/product" })
       },
     }
   )
+  .get(
+    "/:id",
+    ({ params, user, db, currentDeptId }) =>
+      productService.getSkuList(params.id, { db, user, currentDeptId }),
+    {
+      allPermissions: ["PRODUCT_VIEW"],
+      requireDept: true,
+      params: t.Object({
+        id: t.String(),
+      }),
+      detail: {
+        summary: "获取Product的sku",
+        description: "根据Product ID获取其所有SKU",
+        tags: ["Product"],
+      },
+    }
+  )
   .post(
     "/",
     ({ body, user, db, currentDeptId }) =>
       productService.create(body, { db, user, currentDeptId }),
     {
-      allPermissions: ["PRODUCT:CREATE"],
+      allPermissions: ["PRODUCT_CREATE"],
       requireDept: true,
       body: ProductContract.Create,
       detail: {
@@ -55,7 +72,7 @@ export const productController = new Elysia({ prefix: "/product" })
     {
       params: t.Object({ id: t.String() }),
       body: ProductContract.Update,
-      allPermissions: ["PRODUCT:EDIT"],
+      allPermissions: ["PRODUCT_EDIT"],
       requireDept: true,
       detail: {
         summary: "更新Product",
@@ -70,7 +87,7 @@ export const productController = new Elysia({ prefix: "/product" })
       productService.delete(params.id, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
-      allPermissions: ["PRODUCT:DELETE"],
+      allPermissions: ["PRODUCT_DELETE"],
       requireDept: true,
       detail: {
         summary: "删除Product",
@@ -79,17 +96,17 @@ export const productController = new Elysia({ prefix: "/product" })
       },
     }
   )
-  .post(
+  .delete(
     "/batch/delete",
-    async ({ body, user, db, currentDeptId }) => {
-      const { ids } = body as { ids: string[] };
+    ({ body, user, db, currentDeptId }) => {
+      const { ids } = body
       return productService.batchDelete(ids, { db, user, currentDeptId });
     },
     {
       body: t.Object({
         ids: t.Array(t.String()),
       }),
-      allPermissions: ["PRODUCT:DELETE"],
+      allPermissions: ["PRODUCT_DELETE"],
       requireDept: true,
       detail: {
         summary: "批量删除Product",

@@ -33,7 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useCreateSKUBatch, useProductsForSKU } from "@/hooks/api/sku";
+import { useBatchCreateSku, useProductsForSKU } from "@/hooks/api/sku";
 
 // SKU 基础信息 schema
 const skuSchema = z.object({
@@ -72,7 +72,7 @@ export function CreateSKUModal({
   onSuccess,
   productId,
 }: CreateSKUModalProps) {
-  const createSKUBatch = useCreateSKUBatch();
+  const createSKUBatch = useBatchCreateSku();
   const { data: productsData } = useProductsForSKU();
 
   // 获取当前商品名称 - 处理可能为空的情况

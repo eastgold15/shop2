@@ -6,10 +6,10 @@
  * --------------------------------------------------------
  */
 
-import { SkuContract } from "@repo/contract";
+
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "./api-client";
-
+import { SkuContract } from "@repo/contract";
 // --- Query Keys ---
 export const skuKeys = {
   all: ["sku"] as const,
@@ -58,6 +58,21 @@ export function useCreateSku() {
   });
 }
 
+
+export function useBatchCreateSku() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: typeof SkuContract.Create.static) =>
+      api.post<any, typeof SkuContract.Create.static>("/api/v1/sku", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: skuKeys.lists() });
+    },
+  });
+}
+
+
+
+
 // --- 4. 更新 (PUT) ---
 // TRes = any, TBody = typeof SkuContract.Update.static
 export function useUpdateSku() {
@@ -89,8 +104,27 @@ export function useDeleteSku() {
     },
   });
 }
+export function useBatchDeleteSku() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (ids: string[]) => api.delete<any, any>("/api/v1/sku/batch", { ids }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: skuKeys.lists() });
+    },
+  });
+}
 
-// 别名：兼容复数形式（前端组件中使用）
-export const useSkusList = useSkuList;
-export const useSkuDelete = useDeleteSku;
-export const useSkuUpdate = useUpdateSku;
+// 获取商品列表（用于SKU创建时选择）
+export function useProductsForSKU(id: string, enabled = true) {
+  return useQuery({
+    queryKey: ["products", "for-sku", id],
+    queryFn: () =>
+      api.get<any, any>(`/api/v1/sku/${id}`),
+    staleTime: 5 * 60 * 1000, // 5分钟
+    enabled,
+  });
+}
+
+
+
+

@@ -26,7 +26,7 @@ import { Input } from "@/components/ui/input";
 import { MediaSelect } from "@/components/ui/media-select";
 import { SiteCategoryTreeSelect } from "@/components/ui/site-category-tree-select";
 import { Textarea } from "@/components/ui/textarea";
-import { useProductsCreate, useProductsUpdate } from "@/hooks/api/product";
+import { useCreateProduct, useUpdateProduct } from "@/hooks/api/product";
 import { useTemplateList } from "@/hooks/api/template";
 
 const formSchema = z.object({
@@ -56,8 +56,8 @@ export function CreateProductModal({
   onSuccess,
   product,
 }: CreateProductModalProps) {
-  const createProduct = useProductsCreate();
-  const updateProduct = useProductsUpdate();
+  const createProduct = useCreateProduct();
+  const updateProduct = useUpdateProduct();
 
   const { data: templatesData = [] } = useTemplateList({
     page: 1,

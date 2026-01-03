@@ -23,7 +23,7 @@ export const skuController = new Elysia({ prefix: "/sku" })
     ({ query, user, db, currentDeptId }) =>
       skuService.list(query, { db, user, currentDeptId }),
     {
-      allPermissions: ["SKU:VIEW"],
+      allPermissions: ["SKU_VIEW"],
       query: SkuContract.ListQuery,
       requireDept: true,
       detail: {
@@ -38,7 +38,7 @@ export const skuController = new Elysia({ prefix: "/sku" })
     ({ body, user, db, currentDeptId }) =>
       skuService.create(body, { db, user, currentDeptId }),
     {
-      allPermissions: ["SKU:CREATE"],
+      allPermissions: ["SKU_CREATE"],
       body: SkuContract.Create,
       requireDept: true,
       detail: {
@@ -56,7 +56,7 @@ export const skuController = new Elysia({ prefix: "/sku" })
       params: t.Object({ id: t.String() }),
       body: SkuContract.Update,
       requireDept: true,
-      allPermissions: ["SKU:EDIT"],
+      allPermissions: ["SKU_EDIT"],
       detail: {
         summary: "更新Sku",
         description: "根据ID更新Sku信息",
@@ -70,7 +70,7 @@ export const skuController = new Elysia({ prefix: "/sku" })
       skuService.delete(params.id, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
-      allPermissions: ["SKU:DELETE"],
+      allPermissions: ["SKU_DELETE"],
       requireDept: true,
       detail: {
         summary: "删除Sku",
@@ -78,4 +78,19 @@ export const skuController = new Elysia({ prefix: "/sku" })
         tags: ["Sku"],
       },
     }
-  );
+  )
+  .delete(
+    "/batch",
+    ({ body: { ids }, user, db, currentDeptId }) =>
+      skuService.batchDelete(ids, { db, user, currentDeptId }),
+    {
+      body: t.Object({ ids: t.Array(t.String()) }),
+      allPermissions: ["SKU_DELETE"],
+      requireDept: true,
+      detail: {
+        summary: "删除Sku",
+        description: "根据ID删除Sku记录",
+        tags: ["Sku"],
+      },
+    }
+  )

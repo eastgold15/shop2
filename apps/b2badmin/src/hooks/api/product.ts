@@ -35,8 +35,7 @@ export function useProductList(
   });
 }
 
-// 别名：兼容复数形式
-export const useProductsList = useProductList;
+
 
 // --- 2. 单个详情 (GET) ---
 // TRes = any

@@ -31,3 +31,4 @@ export * from "./template-value.contract";
 export * from "./tenant.contract";
 export * from "./user.contract";
 export * from "./verification.contract";
+export * from "./sku.contract"
