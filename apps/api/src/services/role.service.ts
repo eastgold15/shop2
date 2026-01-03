@@ -16,6 +16,23 @@ export class RoleService {
     return res;
   }
 
+  async list(
+    ctx: ServiceContext,
+    query?: typeof RoleContract.ListQuery.static
+  ) {
+    const res = await db.query.roleTable.findMany({
+      where: {
+        ...(query?.search ? { name: { like: `%${query.search}%` } } : {}),
+        ...(query?.search
+          ? { description: { like: `%${query.search}%` } }
+          : {}),
+        ...(query?.search ? { type: { like: `%${query.search}%` } } : {}),
+      },
+    });
+
+    return res;
+  }
+
   public async findAll(query: RoleContract["ListQuery"], ctx: ServiceContext) {
     const { search } = query;
 
