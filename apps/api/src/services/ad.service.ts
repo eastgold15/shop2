@@ -48,7 +48,9 @@ export class AdService {
 
     // 获取关联的 media 信息
     const adWithMedia = await ctx.db.query.adTable.findFirst({
-      where: eq(adTable.id, ad.id),
+      where: {
+        id: ad.id,
+      },
       with: {
         media: true,
       },
@@ -103,14 +105,14 @@ export class AdService {
     // 只有提供了日期才更新
     if (body.startDate !== undefined) {
       const startDate = new Date(body.startDate);
-      if (!isNaN(startDate.getTime())) {
+      if (!Number.isNaN(startDate.getTime())) {
         updateData.startDate = startDate;
       }
     }
 
     if (body.endDate !== undefined) {
       const endDate = new Date(body.endDate);
-      if (!isNaN(endDate.getTime())) {
+      if (!Number.isNaN(endDate.getTime())) {
         updateData.endDate = endDate;
       }
     }
@@ -134,7 +136,9 @@ export class AdService {
 
     // 获取关联的 media 信息
     const adWithMedia = await ctx.db.query.adTable.findFirst({
-      where: eq(adTable.id, ad.id),
+      where: {
+        id: ad.id,
+      },
       with: {
         media: true,
       },

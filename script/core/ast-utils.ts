@@ -191,9 +191,9 @@ export function upsertMethod(
 }
 
 /**
- * 工具方法：提取节点前置 JSDoc 纯文本（保留用于 pipeline 中的表级 JSDoc 解析）
+ * 工具方法：提取节点前置注释纯文本（支持 JSDoc 和双斜线注释）
  * @param node 任意节点（通常是 VariableDeclaration）
- * @returns 纯净的 JSDoc 文本
+ * @returns 纯净的注释文本
  */
 export function getLeadingJSDocText(node: Node): string {
   // 对于 VariableDeclaration，注释通常在 VariableStatement 上
@@ -206,7 +206,7 @@ export function getLeadingJSDocText(node: Node): string {
   // 使用 getLeadingCommentRanges 获取紧邻节点的注释
   const ranges = targetNode.getLeadingCommentRanges();
 
-  // 从后往前找，找到最后一个 JSDoc 块（/** ... */）
+  // 从后往前找，找到最后一个注释块
   for (let i = ranges.length - 1; i >= 0; i--) {
     const range = ranges[i];
     const text = range.getText();
@@ -219,6 +219,17 @@ export function getLeadingJSDocText(node: Node): string {
         .replace(/\*+\/$/, "")
         .replace(/^\s*\*\s*/gm, "")
         .trim();
+    }
+
+    // 🔥 支持双斜线注释 (// ...)
+    if (text.startsWith("//")) {
+      // 提取所有双斜线注释行
+      const lines = text
+        .split("\n")
+        .map((line) => line.replace(/^\s*\/\/\s*/, "").trim())
+        .filter((line) => line.length > 0)
+        .join("\n");
+      return lines;
     }
   }
 

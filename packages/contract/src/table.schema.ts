@@ -160,7 +160,7 @@ export const userTable = p.pgTable("sys_user", {
   isSuperAdmin: p.boolean("is_super_admin").default(false),
 });
 
-// [用户-角色关联表]
+// @skipGen  [用户-角色关联表]
 export const userRoleTable = p.pgTable(
   "sys_user_role",
   {

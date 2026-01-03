@@ -13,10 +13,10 @@ export class SiteProductService {
       // 自动注入租户信息
       ...(ctx.user
         ? {
-          tenantId: ctx.user.context.tenantId!,
-          createdBy: ctx.user.id,
-          deptId: ctx.currentDeptId,
-        }
+            tenantId: ctx.user.context.tenantId!,
+            createdBy: ctx.user.id,
+            deptId: ctx.currentDeptId,
+          }
         : {}),
     };
     const [res] = await ctx.db
@@ -26,7 +26,6 @@ export class SiteProductService {
     return res;
   }
 
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   public async findAll(
     query: SiteProductContract["ListQuery"],
     ctx: ServiceContext

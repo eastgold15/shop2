@@ -153,3 +153,5 @@ apps/web/server/modules/_health/
 
 
 packages/contract/src/modules/**.d.ts
+
+packages/contract/src/**.d.ts

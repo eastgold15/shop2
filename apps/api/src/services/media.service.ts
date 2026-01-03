@@ -1,5 +1,5 @@
 import { type MediaContract, mediaTable } from "@repo/contract";
-import { and, eq, inArray, like, sql, desc } from "drizzle-orm";
+import { and, eq, inArray, like, sql } from "drizzle-orm";
 import { HttpError } from "elysia-http-problem-json";
 import { StorageFactory } from "~/lib/media/storage/StorageFactory";
 import { type ServiceContext } from "../lib/type";
@@ -10,15 +10,18 @@ export class MediaService {
     const insertData = {
       ...body,
       // 自动注入租户信息
-      ...(ctx.user ?
-        {
-          tenantId: ctx.user.context.tenantId!,
-          createdBy: ctx.user.id,
-          deptId: ctx.currentDeptId,
-        } : {})
-
+      ...(ctx.user
+        ? {
+            tenantId: ctx.user.context.tenantId!,
+            createdBy: ctx.user.id,
+            deptId: ctx.currentDeptId,
+          }
+        : {}),
     };
-    const [res] = await ctx.db.insert(mediaTable).values(insertData).returning();
+    const [res] = await ctx.db
+      .insert(mediaTable)
+      .values(insertData)
+      .returning();
     return res;
   }
 
@@ -35,9 +38,14 @@ export class MediaService {
   }
 
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  public async update(id: string, body: MediaContract["Update"], ctx: ServiceContext) {
+  public async update(
+    id: string,
+    body: MediaContract["Update"],
+    ctx: ServiceContext
+  ) {
     const updateData = { ...body, updatedAt: new Date() };
-    const [res] = await ctx.db.update(mediaTable)
+    const [res] = await ctx.db
+      .update(mediaTable)
       .set(updateData)
       .where(eq(mediaTable.id, id))
       .returning();
@@ -46,7 +54,10 @@ export class MediaService {
 
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   public async delete(id: string, ctx: ServiceContext) {
-    const [res] = await ctx.db.delete(mediaTable).where(eq(mediaTable.id, id)).returning();
+    const [res] = await ctx.db
+      .delete(mediaTable)
+      .where(eq(mediaTable.id, id))
+      .returning();
     return res;
   }
 

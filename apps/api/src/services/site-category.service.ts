@@ -67,7 +67,6 @@ export class SiteCategoryService {
    * 获取树形结构的分类列表
    */
   async getTree(ctx: ServiceContext) {
-
     const categories = await ctx.db.query.siteCategoryTable.findMany({
       where: {
         deptId: ctx.currentDeptId,

@@ -1,5 +1,5 @@
 import { type HeroCardContract, heroCardTable } from "@repo/contract";
-import { eq, and, desc } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { HttpError } from "elysia-http-problem-json";
 import { type ServiceContext } from "../lib/type";
 
@@ -8,10 +8,14 @@ export class HeroCardService {
     const insertData = {
       ...body,
       // 自动注入租户信息
-      ...(ctx.user?.tenantId ? { tenantId: ctx.user.tenantId } : {}),
+      ...(ctx.user?.context.tenantId
+        ? { tenantId: ctx.user.context.tenantId }
+        : {}),
       ...(ctx.user?.id ? { createdBy: ctx.user.id } : {}),
       ...(ctx.currentDeptId ? { deptId: ctx.currentDeptId } : {}),
-      ...(ctx.user ? { siteId: ctx.user.department.site.id } : {}),
+      ...(ctx.user?.context.department?.site?.id
+        ? { siteId: ctx.user.context.department.site.id }
+        : {}),
     };
     const [res] = await ctx.db
       .insert(heroCardTable)
@@ -115,7 +119,7 @@ export class HeroCardService {
       where: {
         id,
         deptId: ctx.currentDeptId,
-        tenantId: ctx.user.tenantId!,
+        tenantId: ctx.user.context.tenantId!,
       },
     });
     if (!card) throw new HttpError.NotFound("记录不存在");

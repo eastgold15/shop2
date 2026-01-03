@@ -2,9 +2,8 @@ import {
   type DailyInquiryCounterContract,
   dailyInquiryCounterTable,
 } from "@repo/contract";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { type ServiceContext } from "../lib/type";
-import { HttpError } from "elysia-http-problem-json";
 
 // import {
 //   type DailyInquiryCounterContract,
@@ -84,50 +83,63 @@ import { HttpError } from "elysia-http-problem-json";
 //   }
 // }
 export class DailyInquiryCounterService {
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  public async create(body: DailyInquiryCounterContract["Create"], ctx: ServiceContext) {
-      /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-        const insertData = {
-          ...body,
-          // 自动注入租户信息
-          ...(ctx.user ? {
-            tenantId: ctx.user.context.tenantId!,
-            createdBy: ctx.user.id,
-            deptId: ctx.currentDeptId,
-          } : {})
-        };
-        const [res] = await ctx.db.insert(dailyInquiryCounterTable).values(insertData).returning();
-        return res;
+ 
+  public async create(
+    body: DailyInquiryCounterContract["Create"],
+    ctx: ServiceContext
+  ) {
+    const insertData = {
+      ...body,
+      // 自动注入租户信息
+      ...(ctx.user
+        ? {
+          tenantId: ctx.user.context.tenantId!,
+          createdBy: ctx.user.id,
+          deptId: ctx.currentDeptId,
+        }
+        : {}),
+    };
+    const [res] = await ctx.db
+      .insert(dailyInquiryCounterTable)
+      .values(insertData)
+      .returning();
+    return res;
   }
 
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  public async findAll(query: DailyInquiryCounterContract["ListQuery"], ctx: ServiceContext) {
-      const { search } = query;
+ 
+  public async findAll(
+    query: DailyInquiryCounterContract["ListQuery"],
+    ctx: ServiceContext
+  ) {
+    const { search } = query;
 
-            const res = await ctx.db.query.dailyInquiryCounterTable.findMany({
-              where: {
-                tenantId: ctx.user.context.tenantId!,
-                ...(search ? { originalName: { ilike: `%${search}%` } } : {}),
-              },
-            });
-            return res;
+    const res = await ctx.db.query.dailyInquiryCounterTable.findMany({
+
+    });
+    return res;
   }
 
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  public async update(id: string, body: DailyInquiryCounterContract["Update"], ctx: ServiceContext) {
-      /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-        const updateData = { ...body, updatedAt: new Date() };
-        const [res] = await ctx.db.update(dailyInquiryCounterTable)
-          .set(updateData)
-          .where(eq(dailyInquiryCounterTable.id, id))
-          .returning();
-        return res;
+
+  public async update(
+    id: string,
+    body: DailyInquiryCounterContract["Update"],
+    ctx: ServiceContext
+  ) {
+    const updateData = { ...body, updatedAt: new Date() };
+    const [res] = await ctx.db
+      .update(dailyInquiryCounterTable)
+      .set(updateData)
+      .where(eq(dailyInquiryCounterTable.id, id))
+      .returning();
+    return res;
   }
 
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+
   public async delete(id: string, ctx: ServiceContext) {
-      /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-        const [res] = await ctx.db.delete(dailyInquiryCounterTable).where(eq(dailyInquiryCounterTable.id, id)).returning();
-        return res;
+    const [res] = await ctx.db
+      .delete(dailyInquiryCounterTable)
+      .where(eq(dailyInquiryCounterTable.id, id))
+      .returning();
+    return res;
   }
 }

@@ -31,5 +31,4 @@ export * from "./template-key.contract";
 export * from "./template-value.contract";
 export * from "./tenant.contract";
 export * from "./user.contract";
-export * from "./user-role.contract";
 export * from "./verification.contract";

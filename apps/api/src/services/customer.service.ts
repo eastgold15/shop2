@@ -1,55 +1,65 @@
-import {
-  type CustomerContract,
-  customerTable
-} from "@repo/contract";
+import { type CustomerContract, customerTable } from "@repo/contract";
 import { eq } from "drizzle-orm";
 import { type ServiceContext } from "../lib/type";
 
 export class CustomerService {
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+  // [Auto-Generated] Do not edit this tag to keep updates. @generated
   public async create(body: CustomerContract["Create"], ctx: ServiceContext) {
     const insertData = {
       ...body,
       // 自动注入租户信息
-      ...(ctx.user ? {
-        tenantId: ctx.user.context.tenantId!,
-        createdBy: ctx.user.id,
-        deptId: ctx.currentDeptId,
-      } : {})
+      ...(ctx.user
+        ? {
+            tenantId: ctx.user.context.tenantId!,
+            createdBy: ctx.user.id,
+            deptId: ctx.currentDeptId,
+          }
+        : {}),
     };
-    const [res] = await ctx.db.insert(customerTable).values(insertData).returning();
+    const [res] = await ctx.db
+      .insert(customerTable)
+      .values(insertData)
+      .returning();
     return res;
   }
 
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  public async findAll(query: CustomerContract["ListQuery"], ctx: ServiceContext) {
+  // [Auto-Generated] Do not edit this tag to keep updates. @generated
+  public async findAll(
+    query: CustomerContract["ListQuery"],
+    ctx: ServiceContext
+  ) {
     const { search } = query;
 
     const res = await ctx.db.query.customerTable.findMany({
       where: {
-        deptId: ctx.currentDeptId,
         tenantId: ctx.user.context.tenantId!,
         ...(search ? { originalName: { ilike: `%${search}%` } } : {}),
-      }
-    })
+      },
+    });
     return res;
   }
 
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  public async update(id: string, body: CustomerContract["Update"], ctx: ServiceContext) {
-    /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+  // [Auto-Generated] Do not edit this tag to keep updates. @generated
+  public async update(
+    id: string,
+    body: CustomerContract["Update"],
+    ctx: ServiceContext
+  ) {
     const updateData = { ...body, updatedAt: new Date() };
-    const [res] = await ctx.db.update(customerTable)
+    const [res] = await ctx.db
+      .update(customerTable)
       .set(updateData)
       .where(eq(customerTable.id, id))
       .returning();
     return res;
   }
 
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+  // [Auto-Generated] Do not edit this tag to keep updates. @generated
   public async delete(id: string, ctx: ServiceContext) {
-    /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-    const [res] = await ctx.db.delete(customerTable).where(eq(customerTable.id, id)).returning();
+    const [res] = await ctx.db
+      .delete(customerTable)
+      .where(eq(customerTable.id, id))
+      .returning();
     return res;
   }
 }
