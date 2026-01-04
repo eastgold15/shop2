@@ -26,7 +26,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { useMasterCategories } from "@/hooks/api/mastercategory";
+import { useMasterCategoryList } from "@/hooks/api/master-category";
 import {
   useUpdateSalesperson,
   useUpdateSalespersonMasterCategories,
@@ -58,10 +58,7 @@ export function EditSalespersonModal({
 }: EditSalespersonModalProps) {
   const updateSalesperson = useUpdateSalesperson();
   const updateMasterCategories = useUpdateSalespersonMasterCategories();
-  const { data: masterCategoriesResponse } = useMasterCategories({
-    page: 1,
-    limit: 100,
-  });
+  const { data: masterCategoriesResponse } = useMasterCategoryList();
   const masterCategories = masterCategoriesResponse || [];
 
   const form = useForm<FormData>({

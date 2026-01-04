@@ -78,6 +78,10 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.userTable.id,
       to: r.productTable.createdBy,
     }),
+    assignMasterCategories: r.many.masterCategoryTable({
+      from: r.userTable.id.through(r.salesResponsibilityTable.userId),
+      to: r.masterCategoryTable.id.through(r.salesResponsibilityTable.masterCategoryId),
+    }),
   },
 
   // ==========================================

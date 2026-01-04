@@ -24,7 +24,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { useMasterCategories } from "@/hooks/api/mastercategory";
+import { useMasterCategoryList } from "@/hooks/api";
 import { useCreateSalesperson } from "@/hooks/api/salesperson";
 import { useAuthStore } from "@/stores/auth-store";
 
@@ -57,12 +57,9 @@ export function CreateSalespersonModal({
   onSuccess,
 }: CreateSalespersonModalProps) {
   const createSalesperson = useCreateSalesperson();
-  const { data: masterCategoriesResponse } = useMasterCategories({
-    page: 1,
-    limit: 100,
-  });
+  const { data: masterCategoriesResponse } = useMasterCategoryList();
   const masterCategories = masterCategoriesResponse || [];
-  const currentSite = useAuthStore((state) => state.currentSite);
+  const currentSite = useAuthStore((state) => state.getCurrentSite());
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),

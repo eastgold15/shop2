@@ -56,17 +56,24 @@ export const userController = new Elysia({ prefix: "/user" })
     }
   )
 
+
+
+  /**
+   * 创建用户（新版本）
+   * 支持选择角色、部门，如果是业务员还可以选择负责的主分类
+   */
   .post(
     "/",
-    ({ body, user, db, currentDeptId }) =>
+    async ({ body, user, db, currentDeptId }) =>
       userService.create(body, { db, user, currentDeptId }),
     {
       allPermissions: ["USER:CREATE"],
       requireDept: true,
       body: UserContract.Create,
       detail: {
-        summary: "创建User",
-        description: "新增一条User记录",
+        summary: "创建用户（推荐使用）",
+        description:
+          "创建新用户并分配角色和部门。如果是业务员角色，可以分配负责的主分类。根据站点类型自动设置数据权限范围。",
         tags: ["User"],
       },
     }

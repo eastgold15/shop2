@@ -11,7 +11,7 @@
 export type * from "./ad.type";
 
 // 属性模板相关类型
-export type * from "./attributetemplate";
+export type * from "./attribute-template";
 
 // 工厂相关类型
 export type * from "./factory.type";
@@ -20,7 +20,7 @@ export type * from "./factory.type";
 export type * from "./herocard.type";
 
 // 主分类相关类型
-export type * from "./mastercategory.type";
+export type * from "./master-category.type";
 
 // 媒体相关类型
 export type * from "./media.type";
@@ -29,7 +29,7 @@ export type * from "./media.type";
 export type * from "./product.type";
 
 // 站点分类相关类型
-export type * from "./sitecategory.type";
+export type * from "./site-category.type";
 
 // SKU相关类型
 export type * from "./sku.type";

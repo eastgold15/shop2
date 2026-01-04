@@ -10,6 +10,7 @@ import { MasterCategoryContract } from "@repo/contract";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { api } from "./api-client";
+import { MasterCategoryList } from "./master-category.type";
 
 // 树形节点类型
 
@@ -48,20 +49,34 @@ export function flattenCategories(
 
 // --- 1. 列表查询 (GET) ---
 // TRes = any, TQuery = typeof MasterCategoryContract.ListQuery.static
+// 获取主分类列表（扁平化，用于下拉选择）
 export function useMasterCategoryList(
-  params?: typeof MasterCategoryContract.ListQuery.static,
-  enabled = true
+  query?: Partial<typeof MasterCategoryContract.ListQuery.static>
 ) {
   return useQuery({
-    queryKey: mastercategoryKeys.list(params),
-    queryFn: () =>
-      api.get<any, typeof MasterCategoryContract.ListQuery.static>(
-        "/api/v1/master-category/",
-        { params }
-      ),
-    enabled,
+    queryKey: mastercategoryKeys.list(query),
+    queryFn: async () => {
+      const categories = await api.get<
+        MasterCategoryList[],
+        Partial<typeof MasterCategoryContract.ListQuery.static>
+      >("/api/v1/master-category/", { params: query || {} });
+      return categories || [];
+    },
+    staleTime: 1000 * 60 * 5,
   });
 }
+
+
+// --- 2. 单个详情 (GET) ---
+// TRes = any
+export function useMasterCategoryDetail(id: string, enabled = !!id) {
+  return useQuery({
+    queryKey: mastercategoryKeys.detail(id),
+    queryFn: () => api.get<any>(`/api/v1/master-category/${id}`),
+    enabled: !!id,
+  });
+}
+
 
 // 获取主分类树
 export function useMasterCategoryTree(options?: { enabled?: boolean }) {
@@ -78,41 +93,7 @@ export function useMasterCategoryTree(options?: { enabled?: boolean }) {
   });
 }
 
-// 获取主分类列表（扁平化，用于下拉选择）
-export function useMasterCategories(
-  query?: Partial<typeof MasterCategoryContract.ListQuery.static>
-) {
-  return useQuery({
-    queryKey: ["master-categories", "flat", query],
-    queryFn: async () => {
-      const categories = await api.get<
-        any,
-        Partial<typeof MasterCategoryContract.ListQuery.static>
-      >("/api/v1/master-category/", { params: query || {} });
-      return categories || [];
-    },
-    staleTime: 1000 * 60 * 5,
-  });
-}
 
-// --- 2. 单个详情 (GET) ---
-// TRes = any
-export function useMasterCategoryDetail(id: string, enabled = !!id) {
-  return useQuery({
-    queryKey: mastercategoryKeys.detail(id),
-    queryFn: () => api.get<any>(`/api/v1/master-category/${id}`),
-    enabled,
-  });
-}
-
-// 获取主分类详情（旧名称兼容）
-export function useMasterCategory(id: string) {
-  return useQuery({
-    queryKey: ["master-category", id],
-    queryFn: async () => api.get<any>(`/api/v1/master-category/${id}`),
-    enabled: !!id,
-  });
-}
 
 // --- 3. 创建 (POST) ---
 // TRes = any, TBody = typeof MasterCategoryContract.Create.static

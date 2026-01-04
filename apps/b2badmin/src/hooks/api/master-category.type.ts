@@ -17,7 +17,19 @@ export interface MasterCategoryListQuery {
   sortBy?: "sortOrder" | "createdAt" | "updatedAt" | "name";
   sortOrder?: "asc" | "desc";
 }
-
+export interface MasterCategoryList {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  parentId?: any;
+  sortOrder: number;
+  isActive: boolean;
+  icon: string;
+  createdAt: string;
+  updatedAt: string;
+  tenantId: string;
+}
 /**
  * 主分类列表响应
  */

@@ -23,10 +23,7 @@ const Audit = {
 // --- 2. Enums (枚举定义) ---
 
 // 部门类型：总部、工厂
-export const deptCategoryEnum = p.pgEnum("dept_category", [
-  "group",
-  "factory"
-]);
+export const deptCategoryEnum = p.pgEnum("dept_category", ["group", "factory"]);
 
 // 站点类型：集团站(展示所有)、工厂站(展示特定部门)
 export const siteTypeEnum = p.pgEnum("site_type", ["group", "factory"]);
@@ -127,6 +124,7 @@ export const roleTable = p.pgTable("sys_role", {
   // 🔥 核心：数据权限范围
   dataScope: dataScopeEnum("data_scope").default("self").notNull(),
   description: p.text("description"),
+
   type: p
     .varchar("type", { enum: ["system", "custom"] })
     .default("custom")
@@ -578,7 +576,7 @@ export const skuMediaTable = p.pgTable(
       .notNull()
       .references(() => mediaTable.id, { onDelete: "restrict" }),
     isMain: p.boolean("is_main").default(false),
-    sortOrder: p.integer("sort_order").default(0)
+    sortOrder: p.integer("sort_order").default(0),
   },
   (t) => [p.primaryKey({ columns: [t.skuId, t.mediaId] })]
 );
@@ -700,3 +698,46 @@ export const dailyInquiryCounterTable = p.pgTable("daily_inquiry_counter", {
   count: p.integer("count").default(0).notNull(),
   lastResetAt: p.timestamp("last_reset_at").defaultNow(),
 });
+
+// [业务员-主分类关联表]：定义业务员负责的品类范围
+export const salesResponsibilityTable = p.pgTable(
+  "sales_responsibility",
+  {
+    ...Audit, // 包含 id, createdAt, updatedAt
+
+    // 1. 关联业务员
+    userId: p
+      .uuid("user_id")
+      .notNull()
+      .references(() => userTable.id, { onDelete: "cascade" }),
+
+    // 2. 关联具体的站点分类
+    masterCategoryId: p
+      .uuid("master_category_id")
+      .notNull()
+      .references(() => masterCategoryTable.id, { onDelete: "cascade" }),
+
+    // 3. 冗余 tenantId 以便快速过滤和鉴权
+    tenantId: p
+      .uuid("tenant_id")
+      .notNull()
+      .references(() => tenantTable.id),
+
+    // 4. (可选) 权重或优先级：如果一个分类有多个业务员，询盘优先分给谁？
+    priority: p.integer("priority").default(0),
+
+    // 5. (可选) 自动分配开关：是否参与该分类询盘的自动轮询分配
+    isAutoAssign: p.boolean("is_auto_assign").default(true),
+  },
+  (t) => [
+    // 确保同一个业务员在同一个分类下只出现一次
+    p
+      .unique("unique_user_category")
+      .on(t.userId, t.masterCategoryId),
+    // 建立索引以便快速查找某个分类下的所有业务员
+    p
+      .index("idx_sales_cat")
+      .on(t.masterCategoryId),
+    p.index("idx_sales_user").on(t.userId),
+  ]
+);

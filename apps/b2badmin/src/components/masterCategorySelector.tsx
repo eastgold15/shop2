@@ -2,7 +2,7 @@
 
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
-import { useMasterCategories } from "@/hooks/api/mastercategory";
+import { useMasterCategoryList } from "@/hooks/api";
 
 interface CategorySelectorProps {
   value?: string;
@@ -20,10 +20,7 @@ export function CategorySelector({
   error,
 }: CategorySelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const { data: categories, isLoading } = useMasterCategories({
-    page: 1,
-    limit: 100,
-  });
+  const { data: categories, isLoading } = useMasterCategoryList();
 
   const options = categories || [];
   const selectedOption = options.find((option) => option.id === value);

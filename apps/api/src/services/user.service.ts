@@ -1,6 +1,7 @@
-import { type UserContract, userTable } from "@repo/contract";
+import { salesResponsibilityTable, type UserContract, userRoleTable, userTable } from "@repo/contract";
 import { eq } from "drizzle-orm";
 import { db } from "~/db/connection";
+import { auth } from "~/lib/auth";
 import type { UserDto } from "~/middleware/auth";
 import { type ServiceContext } from "../lib/type";
 
@@ -12,7 +13,13 @@ export class UserService {
     const res = await ctx.db.query.userTable.findMany({
       where: {
         tenantId: ctx.user.context.tenantId!,
-        ...(search ? { originalName: { ilike: `%${search}%` } } : {}),
+        ...(search ? { name: { ilike: `%${search}%` } } : {}),
+      },
+      with: {
+        // 获取用户的角色
+        roles: true,
+        // 获取用户所属部门
+        department: true,
       },
     });
     return res;
@@ -55,7 +62,6 @@ export class UserService {
         name: true,
         category: true,
         parentId: true,
-
       },
       with: {
         site: {
@@ -93,25 +99,86 @@ export class UserService {
           name: dept.site.name,
           domain: dept.site.domain,
           siteType: dept.site.siteType,
-        }
+        },
       })),
     };
   }
 
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  public async create(body: UserContract["Create"], ctx: ServiceContext) {
-    const insertData = {
-      ...body,
-      // 自动注入租户信息
-      ...(ctx.user
-        ? {
-          tenantId: ctx.user.context.tenantId!,
-          createdBy: ctx.user.id,
-          deptId: ctx.currentDeptId,
-        }
-        : {}),
-    };
-    const [res] = await ctx.db.insert(userTable).values(insertData).returning();
-    return res;
+  /**
+   * 创建用户（通用方法）
+   * 支持创建任意角色的用户，包括业务员
+   */
+  public async create(
+    body: UserContract["Create"],
+    ctx: ServiceContext
+  ) {
+    const { db, user } = ctx;
+
+    // 使用事务创建用户
+    return await db.transaction(async (tx) => {
+      // 1. 创建用户（通过 better-auth）
+      const newUser = await auth.api.signUpEmail({
+        body: {
+          name: body.name,
+          email: body.email,
+          password: body.password,
+        },
+      });
+
+      // 2. 更新用户信息
+      const [updatedUser] = await tx
+        .update(userTable)
+        .set({
+          phone: body.phone,
+          whatsapp: body.whatsapp,
+          position: body.position,
+          deptId: body.deptId,
+          tenantId: user.context.tenantId!,
+        })
+        .where(eq(userTable.id, newUser.user.id))
+        .returning();
+      if (!updatedUser) {
+        throw new Error("用户创建失败");
+      }
+
+      // 3. 分配角色给用户
+      await tx.insert(userRoleTable).values({
+        userId: updatedUser.id,
+        roleId: body.roleId,
+      });
+
+      // 4. 如果是业务员角色，分配主分类
+      if (body.masterCategoryIds && body.masterCategoryIds.length > 0) {
+
+        // 第一步：构建要插入的数据数组
+        // 这里的 map 会返回一个对象数组：[{ userId: '...', masterCategoryId: '...', tenantId: '...' }, ...]
+        const insertData = body.masterCategoryIds.map((catId) => ({
+          userId: updatedUser.id,
+          masterCategoryId: catId, // 注意：这里对应你表里的单数列名
+          tenantId: user.context.tenantId, // 🌟 别忘了带上租户ID，这很重要！
+          // 如果表里有 priority 或 isAutoAssign 且有默认值，这里可以不传
+        }));
+
+        // 第二步：直接把数组传给 values()
+        // Drizzle 会自动把它转换成单条 SQL: INSERT INTO ... VALUES (...), (...), (...)
+        await tx.insert(salesResponsibilityTable).values(insertData);
+      }
+
+
+      // 返回用户详情
+      const userDetails = await tx.query.userTable.findFirst({
+        where: {
+          id: updatedUser.id
+        },
+        with: {
+          roles: true,
+          department: true,
+          assignMasterCategories: true,
+        },
+      });
+      return userDetails;
+    });
   }
+
+
 }

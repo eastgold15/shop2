@@ -12,16 +12,18 @@ export const UserContract = {
     ...UserFields,
   }),
 
-  Create: t.Composite([
-    t.Object(
-      t.Omit(t.Object(UserInsertFields), ["id", "createdAt", "updatedAt"])
-        .properties
-    ),
-    t.Object({
-      password: t.String(),
-      roleId: t.Optional(t.String()),
-    }),
-  ]),
+  Create: t.Object({
+    name: UserFields.name,
+    email: UserFields.email,
+    phone: UserFields.phone,
+    whatsapp: UserFields.whatsapp,
+    position: UserFields.position,
+    password: t.String(),
+    deptId: t.String(),
+    roleId: t.String(),
+    isActive: t.Boolean(),
+    masterCategoryIds: t.Array(t.String()),
+  }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Update: t.Partial(
     t.Object({
