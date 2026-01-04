@@ -22,7 +22,7 @@ export const UserContract = {
     deptId: t.String(),
     roleId: t.String(),
     isActive: t.Boolean(),
-    masterCategoryIds: t.Array(t.String()),
+    masterCategoryIds: t.Optional(t.Array(t.String())),
   }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Update: t.Partial(

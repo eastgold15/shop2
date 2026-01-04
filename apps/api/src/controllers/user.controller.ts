@@ -45,7 +45,7 @@ export const userController = new Elysia({ prefix: "/user" })
     ({ query, user, db, currentDeptId }) =>
       userService.list(query, { db, user, currentDeptId }),
     {
-      allPermissions: ["USER:VIEW"],
+      allPermissions: ["USER_VIEW"],
       requireDept: true,
       query: UserContract.ListQuery,
       detail: {
@@ -67,7 +67,7 @@ export const userController = new Elysia({ prefix: "/user" })
     async ({ body, user, db, currentDeptId }) =>
       userService.create(body, { db, user, currentDeptId }),
     {
-      allPermissions: ["USER:CREATE"],
+      allPermissions: ["USER_CREATE"],
       requireDept: true,
       body: UserContract.Create,
       detail: {
@@ -86,7 +86,7 @@ export const userController = new Elysia({ prefix: "/user" })
     {
       params: t.Object({ id: t.String() }),
       body: UserContract.Update,
-      allPermissions: ["USER:EDIT"],
+      allPermissions: ["USER_EDIT"],
       requireDept: true,
       detail: {
         summary: "更新User",
@@ -102,7 +102,7 @@ export const userController = new Elysia({ prefix: "/user" })
       userService.delete(params.id, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
-      allPermissions: ["USER:DELETE"],
+      allPermissions: ["USER_DELETE"],
       requireDept: true,
       detail: {
         summary: "删除User",

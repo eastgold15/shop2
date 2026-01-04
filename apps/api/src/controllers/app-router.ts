@@ -28,7 +28,7 @@ import { templateKeyController } from "./template-key.controller";
 import { templateValueController } from "./template-value.controller";
 import { tenantController } from "./tenant.controller";
 import { userController } from "./user.controller";
-import { salespersonController } from "./salesperson.controller";
+
 export const appRouter = (app: Elysia) =>
   app
     .use(adController)
@@ -53,4 +53,3 @@ export const appRouter = (app: Elysia) =>
     .use(templateValueController)
     .use(tenantController)
     .use(userController)
-    .use(salespersonController);

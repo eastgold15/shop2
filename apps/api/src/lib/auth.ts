@@ -61,6 +61,37 @@ export const auth = betterAuth({
     },
   },
 
+  user: {
+    additionalFields: {
+      tenantId: {
+        type: "string",
+        required: true, // 必填：因为数据库里是 notNull
+        input: true,    // 允许前端在 signUp 时传入
+      },
+      deptId: {
+        type: "string",
+        required: true, // 必填
+        input: true,
+      },
+      phone: {
+        type: "string",
+        required: false, // 选填
+        input: true,
+      },
+      position: {
+        type: "string",
+        required: false,
+        input: true,
+      },
+      // whatsapp 等其他字段同理...
+      whatsapp: {
+        type: "string",
+        required: false,
+        input: true,
+      },
+    },
+  },
+
   socialProviders: {
     github: {
       clientId: envConfig.GITHUB_CLIENT_ID!,

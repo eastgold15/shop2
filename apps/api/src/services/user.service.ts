@@ -122,24 +122,15 @@ export class UserService {
           name: body.name,
           email: body.email,
           password: body.password,
-        },
-      });
-
-      // 2. 更新用户信息
-      const [updatedUser] = await tx
-        .update(userTable)
-        .set({
+          tenantId: user.context.tenantId!,
+          deptId: body.deptId,
           phone: body.phone,
           whatsapp: body.whatsapp,
           position: body.position,
-          deptId: body.deptId,
-          tenantId: user.context.tenantId!,
-        })
-        .where(eq(userTable.id, newUser.user.id))
-        .returning();
-      if (!updatedUser) {
-        throw new Error("用户创建失败");
-      }
+        },
+      });
+      const updatedUser = newUser.user;
+
 
       // 3. 分配角色给用户
       await tx.insert(userRoleTable).values({

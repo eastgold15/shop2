@@ -1,5 +1,4 @@
 import { t } from "elysia";
-import { PaginationParams, SortParams } from "../helper/query-types.model";
 import { type InferDTO, spread } from "../helper/utils";
 import { departmentTable } from "../table.schema";
 
@@ -7,8 +6,6 @@ import { departmentTable } from "../table.schema";
 export const DepartmentInsertFields = spread(departmentTable, "insert");
 /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
 export const DepartmentFields = spread(departmentTable, "select");
-
-
 
 /**
  * 部门管理扩展契约
@@ -64,8 +61,6 @@ const CreateDepartmentWithSiteAndAdminResponse = t.Object({
   }),
 });
 
-
-
 export const DepartmentContract = {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Response: t.Object({
@@ -92,11 +87,8 @@ export const DepartmentContract = {
       ]).properties,
     })
   ),
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+
   ListQuery: t.Object({
-    ...t.Partial(t.Object(DepartmentInsertFields)).properties,
-    ...PaginationParams.properties,
-    ...SortParams.properties,
     search: t.Optional(t.String()),
   }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */

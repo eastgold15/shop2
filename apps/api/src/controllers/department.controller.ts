@@ -6,12 +6,11 @@
  * --------------------------------------------------------
  */
 
+import { DepartmentContract } from "@repo/contract";
 import { Elysia, t } from "elysia";
 import { dbPlugin } from "~/db/connection";
 import { authGuardMid } from "~/middleware/auth";
-import { DepartmentContract } from "../../../../packages/contract/src/modules/department.contract";
 import { DepartmentService } from "../services/department.service";
-
 
 const departmentService = new DepartmentService();
 
@@ -21,13 +20,12 @@ const departmentService = new DepartmentService();
 export const departmentController = new Elysia({ prefix: "/department" })
   .use(dbPlugin)
   .use(authGuardMid)
-  // @generated
   .get(
     "/",
     ({ query, user, db, currentDeptId }) =>
       departmentService.list(query, { db, user, currentDeptId }),
     {
-      allPermissions: ["DEPARTMENT:VIEW"],
+      allPermissions: ["DEPARTMENT_VIEW"],
       requireDept: true,
       query: DepartmentContract.ListQuery,
       detail: {
@@ -37,13 +35,13 @@ export const departmentController = new Elysia({ prefix: "/department" })
       },
     }
   )
-  // @generated
+
   .post(
     "/",
     ({ body, user, db, currentDeptId }) =>
       departmentService.create(body, { db, user, currentDeptId }),
     {
-      allPermissions: ["DEPARTMENT:CREATE"],
+      allPermissions: ["DEPARTMENT_CREATE"],
       requireDept: true,
       body: DepartmentContract.Create,
       detail: {
@@ -53,7 +51,7 @@ export const departmentController = new Elysia({ prefix: "/department" })
       },
     }
   )
-  // @generated
+
   .put(
     "/:id",
     ({ params, body, user, db, currentDeptId }) =>
@@ -61,7 +59,7 @@ export const departmentController = new Elysia({ prefix: "/department" })
     {
       params: t.Object({ id: t.String() }),
       body: DepartmentContract.Update,
-      allPermissions: ["DEPARTMENT:EDIT"],
+      allPermissions: ["DEPARTMENT_EDIT"],
       requireDept: true,
       detail: {
         summary: "更新Department",
@@ -77,7 +75,7 @@ export const departmentController = new Elysia({ prefix: "/department" })
       departmentService.delete(params.id, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
-      allPermissions: ["DEPARTMENT:DELETE"],
+      allPermissions: ["DEPARTMENT_DELETE"],
       requireDept: true,
       detail: {
         summary: "删除Department",
@@ -97,7 +95,7 @@ export const departmentController = new Elysia({ prefix: "/department" })
       }),
     {
       body: DepartmentContract.CreateDepartmentWithSiteAndAdmin,
-      allPermissions: ["DEPARTMENT:CREATE"],
+      allPermissions: ["DEPARTMENT_CREATE"],
       requireDept: true,
       detail: {
         summary: "创建部门、站点和管理员",

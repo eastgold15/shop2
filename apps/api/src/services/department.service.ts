@@ -30,7 +30,6 @@ export class DepartmentService {
     return res;
   }
 
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   public async list(
     query: DepartmentContract["ListQuery"],
     ctx: ServiceContext
@@ -40,7 +39,7 @@ export class DepartmentService {
     const res = await ctx.db.query.departmentTable.findMany({
       where: {
         tenantId: ctx.user.context.tenantId!,
-        ...(search ? { originalName: { ilike: `%${search}%` } } : {}),
+        ...(search ? { name: { ilike: `%${search}%` } } : {}),
       },
     });
     return res;
@@ -118,6 +117,8 @@ export class DepartmentService {
           name: body.admin.name,
           email: body.admin.email,
           password: body.admin.password, // ⚠️ 生产环境应该先哈希
+          tenantId: user.context.tenantId!,
+          deptId: departmentId,
         },
       });
 
