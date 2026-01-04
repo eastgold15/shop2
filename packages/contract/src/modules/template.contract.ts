@@ -35,12 +35,21 @@ export const TemplateContract = {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Update: t.Partial(
     t.Object({
-      ...t.Omit(t.Object(TemplateInsertFields), [
-        "id",
-        "createdAt",
-        "updatedAt",
-        "siteId",
-      ]).properties,
+      fields: t.Optional(
+        t.Array(
+          t.Object({
+            key: TemplateKeyInsertFields.key,
+            inputType: TemplateKeyInsertFields.inputType,
+            isRequired: TemplateKeyInsertFields.isRequired,
+            isSkuSpec: TemplateKeyInsertFields.isSkuSpec,
+            value: TemplateValueInsertFields.value, // 可选：text/number 类型使用
+            options: t.Optional(t.Array(t.String())), // 可选：select/multiselect 类型使用
+          })
+        )
+      ),
+      name: TemplateInsertFields.name,
+      siteCategoryId: TemplateInsertFields.siteCategoryId, // 可选：不强制要求站点分类
+      masterCategoryId: TemplateInsertFields.masterCategoryId,
     })
   ),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */

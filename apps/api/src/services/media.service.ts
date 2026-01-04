@@ -48,29 +48,21 @@ export class MediaService {
   public async pageList(query: MediaContract["PageListQuery"], ctx: ServiceContext) {
     const { search, page = 1, limit = 10, category } = query;
 
-    // 构建查询条件
-    const whereConditions: any = {
-      tenantId: ctx.user.context.tenantId!,
-    };
-
-    if (search) {
-      whereConditions.originalName = { ilike: `%${search}%` };
-    }
-
-    if (category) {
-      whereConditions.category = category;
-    }
-
-    // 查询总数
-    const totalResult = await ctx.db.$count(mediaTable)
-
     // 查询数据（带分页）
     const data = await ctx.db.query.mediaTable.findMany({
-      where: whereConditions,
+      where: {
+        tenantId: ctx.user.context.tenantId!,
+        deptId: ctx.currentDeptId,
+        ...(category ? { category } : {}),
+        ...(search ? { originalName: { ilike: `%${search}%` } } : {}),
+      },
       limit,
       offset: (page - 1) * limit,
       orderBy: { createdAt: "desc" },
     });
+
+    // 查询总数
+    const totalResult = await ctx.db.$count(mediaTable)
     return {
       data,
       total: totalResult,

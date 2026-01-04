@@ -38,18 +38,12 @@ interface HasRoleProps {
 
 export function HasRole({ role, children, fallback = null }: HasRoleProps) {
   const user = useAuthStore((state) => state.user);
-  const isSuperAdmin = useAuthStore((state) => state.isSuperAdmin);
-
-  // 超级管理员拥有所有角色权限
-  if (isSuperAdmin) {
-    return <>{children}</>;
-  }
 
   if (!user) {
     return <>{fallback}</>;
   }
 
-  const userRole = user.role?.name;
+  const userRole = user.roles[0].name;
   const requiredRoles = Array.isArray(role) ? role : [role];
 
   if (!(userRole && requiredRoles.includes(userRole))) {

@@ -3,6 +3,7 @@
 import { Edit2, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
+import { Has } from "@/components/auth";
 import { CreateTemplateModal } from "@/components/form/CreateTemplateModal";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -13,6 +14,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useDeleteTemplate, useTemplateList } from "@/hooks/api/template";
 import { useMasterCategoryStore } from "@/stores/master-categories-store";
+import { PERMISSIONS } from "@/types/permission";
 
 export default function TemplateManager() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -85,12 +87,14 @@ export default function TemplateManager() {
           ) : (
             <div className="space-y-4">
               <div className="flex justify-end">
-                <Button
-                  className="flex items-center gap-2"
-                  onClick={handleCreate}
-                >
-                  <Plus size={16} /> 创建新模版
-                </Button>
+                <Has permission={PERMISSIONS.TEMPLATE_CREATE}>
+                  <Button
+                    className="flex items-center gap-2"
+                    onClick={handleCreate}
+                  >
+                    <Plus size={16} /> 创建新模版
+                  </Button>
+                </Has>
               </div>
 
               <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
@@ -136,21 +140,25 @@ export default function TemplateManager() {
                             </span>
                           </td>
                           <td className="space-x-1 px-6 py-4 text-right">
-                            <Button
-                              onClick={() => handleEdit(t)}
-                              size="sm"
-                              variant="ghost"
-                            >
-                              <Edit2 size={16} />
-                            </Button>
-                            <Button
-                              className="text-red-500 hover:text-red-600"
-                              onClick={() => handleDelete(t.id)}
-                              size="sm"
-                              variant="ghost"
-                            >
-                              <Trash2 size={16} />
-                            </Button>
+                            <Has permission={PERMISSIONS.TEMPLATE_EDIT}>
+                              <Button
+                                onClick={() => handleEdit(t)}
+                                size="sm"
+                                variant="ghost"
+                              >
+                                <Edit2 size={16} />
+                              </Button>
+                            </Has>
+                            <Has permission={PERMISSIONS.TEMPLATE_DELETE}>
+                              <Button
+                                className="text-red-500 hover:text-red-600"
+                                onClick={() => handleDelete(t.id)}
+                                size="sm"
+                                variant="ghost"
+                              >
+                                <Trash2 size={16} />
+                              </Button>
+                            </Has>
                           </td>
                         </tr>
                       ))

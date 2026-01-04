@@ -179,13 +179,87 @@ export class TemplateService {
     body: TemplateContract["Update"],
     ctx: ServiceContext
   ) {
-    const updateData = { ...body, updatedAt: new Date() };
-    const [res] = await ctx.db
-      .update(templateTable)
-      .set(updateData)
-      .where(eq(templateTable.id, id))
-      .returning();
-    return res;
+    const { name, masterCategoryId, siteCategoryId, fields } = body
+
+    return await ctx.db.transaction(async (tx) => {
+      // 1. 更新模板主体
+      const updateData: any = {
+        name,
+        masterCategoryId,
+        // 将 "root" 或空值转为 null
+        siteCategoryId:
+          siteCategoryId && siteCategoryId !== "root" ? siteCategoryId : null,
+      };
+
+      const [templateRes] = await tx
+        .update(templateTable)
+        .set(updateData)
+        .where(eq(templateTable.id, id))
+        .returning();
+
+      if (!templateRes) {
+        throw new HttpError.BadRequest("更新属性模板失败");
+      }
+
+      const templateId = templateRes.id;
+
+      // 2. 清理旧的关联数据（keys 和 values）
+      await this.clearTemplateRelations(templateId, tx);
+
+      // 3. 重新创建字段列表（逻辑与 create 相同）
+      if (fields && fields.length > 0) {
+        for (const field of fields) {
+          const { inputType, isRequired, options, value, key, isSkuSpec } =
+            field;
+
+          // 3.1 插入属性定义 (templateKeyTable)
+          const [newAttribute] = await tx
+            .insert(templateKeyTable)
+            .values({
+              templateId,
+              key,
+              inputType,
+              isRequired: !!isRequired,
+              isSkuSpec: !!isSkuSpec,
+            })
+            .returning({ id: templateKeyTable.id });
+
+          // 3.2 根据类型解析 value/options
+          let valuesToInsert: string[] = [];
+
+          if (inputType === "select" || inputType === "multiselect") {
+            // 优先使用 options 数组（前端传递的格式）
+            if (options && Array.isArray(options) && options.length > 0) {
+              valuesToInsert = options.filter(Boolean);
+            } else if (value && typeof value === "string") {
+              // 兼容旧格式：逗号分隔的字符串
+              valuesToInsert = value
+                .split(",")
+                .map((v) => v.trim())
+                .filter(Boolean);
+            }
+          } else if (
+            (inputType === "text" || inputType === "number") &&
+            value
+          ) {
+            // 文本/数字类型，value 是 placeholder 或默认值
+            valuesToInsert = [String(value).trim()];
+          }
+
+          // 3.3 批量插入属性选项/预设值 (templateValueTable)
+          if (valuesToInsert.length > 0) {
+            const valueData = valuesToInsert.map((v, index) => ({
+              templateKeyId: newAttribute.id,
+              value: v,
+              sortOrder: index,
+            }));
+            await tx.insert(templateValueTable).values(valueData);
+          }
+        }
+      }
+
+      return templateRes;
+    });
   }
 
   public async delete(id: string, ctx: ServiceContext) {

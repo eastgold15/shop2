@@ -18,7 +18,7 @@ const templateService = new TemplateService();
 export const templateController = new Elysia({ prefix: "/template" })
   .use(dbPlugin)
   .use(authGuardMid)
-  // @generated
+
   .get(
     "/",
     ({ query, user, db, currentDeptId }) =>
@@ -34,7 +34,7 @@ export const templateController = new Elysia({ prefix: "/template" })
       },
     }
   )
-  // @generated
+
   .post(
     "/",
     ({ body, user, db, currentDeptId }) =>
@@ -50,7 +50,7 @@ export const templateController = new Elysia({ prefix: "/template" })
       },
     }
   )
-  // @generated
+
   .put(
     "/:id",
     ({ params, body, user, db, currentDeptId }) =>
@@ -67,7 +67,7 @@ export const templateController = new Elysia({ prefix: "/template" })
       },
     }
   )
-  // @generated
+
   .delete(
     "/:id",
     ({ params, user, db, currentDeptId }) =>
