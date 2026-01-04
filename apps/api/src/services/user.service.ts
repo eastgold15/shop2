@@ -49,12 +49,13 @@ export class UserService {
   async getSwitchableDepartments(user: UserDto) {
     // 获取租户下的所有部门
     const departments = await db.query.departmentTable.findMany({
-      where: { parentId: user.context.tenantId! },
+      where: { tenantId: user.context.tenantId },
       columns: {
         id: true,
         name: true,
         category: true,
         parentId: true,
+
       },
       with: {
         site: {
@@ -62,6 +63,7 @@ export class UserService {
             id: true,
             name: true,
             domain: true,
+            siteType: true,
           },
         },
       },
@@ -73,26 +75,25 @@ export class UserService {
         id: user.context.department?.id,
         name: user.context.department?.name,
         category: user.context.department?.category,
-        site: user.context.site
-          ? {
-              id: user.context.site.id,
-              name: user.context.site.name,
-              domain: user.context.site.domain,
-            }
-          : undefined,
+        site: {
+          id: user.context.site.id,
+          name: user.context.site.name,
+          domain: user.context.site.domain,
+          siteType: user.context.site.siteType,
+        },
+        parentId: user.context.department.parentId,
       },
-      departments: departments.map((dept) => ({
+      switchableDepartments: departments.map((dept) => ({
         id: dept.id,
         name: dept.name,
         category: dept.category,
         parentId: dept.parentId,
-        site: dept.site
-          ? {
-              id: dept.site.id,
-              name: dept.site.name,
-              domain: dept.site.domain,
-            }
-          : undefined,
+        site: {
+          id: dept.site.id,
+          name: dept.site.name,
+          domain: dept.site.domain,
+          siteType: dept.site.siteType,
+        }
       })),
     };
   }
@@ -104,10 +105,10 @@ export class UserService {
       // 自动注入租户信息
       ...(ctx.user
         ? {
-            tenantId: ctx.user.context.tenantId!,
-            createdBy: ctx.user.id,
-            deptId: ctx.currentDeptId,
-          }
+          tenantId: ctx.user.context.tenantId!,
+          createdBy: ctx.user.id,
+          deptId: ctx.currentDeptId,
+        }
         : {}),
     };
     const [res] = await ctx.db.insert(userTable).values(insertData).returning();

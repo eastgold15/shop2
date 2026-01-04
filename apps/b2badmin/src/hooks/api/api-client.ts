@@ -1,13 +1,7 @@
 // lib/api-client.ts
+import { useAuthStore } from "@/stores/auth-store";
 
-// 导入 auth store 以获取当前部门 ID
-// 注意：这里需要在客户端组件中使用，避免 SSR 问题
-let getCurrentDeptId: () => string | null = () => null;
-
-// 在运行时设置获取函数（从 auth store）
-export function setDeptIdGetter(fn: () => string | null) {
-  getCurrentDeptId = fn;
-}
+const currentDeptId = useAuthStore.getState().currentDeptId;
 
 // 1. 定义 RequestOptions，区分 Body 和 Query
 // TBody: 请求体类型 (POST/PUT 用)
@@ -52,8 +46,6 @@ async function request<
     headers.set("Content-Type", "application/json");
   }
 
-  // 🔥 添加 x-current-dept-id header（从 auth store 获取当前部门 ID）
-  const currentDeptId = getCurrentDeptId();
   if (currentDeptId) {
     headers.set("x-current-dept-id", currentDeptId);
   }

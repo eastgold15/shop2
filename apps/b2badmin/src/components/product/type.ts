@@ -1,27 +1,27 @@
-
-export interface Product {
+/**
+ * 媒体文件类型
+ */
+export interface Media {
   id: string;
-  name: string;
-  spuCode: string;
-  description: string;
-  status: number;
-  units: string;
-  createdAt: string;
-  updatedAt: string;
-  sitePrice: string;
-  siteName: string;
-  siteDescription: string;
-  siteCategoryId: string;
-  templateId: string;
-  mediaIds: any[];
-  videoIds: any[];
-  images: any[];
-  videos: any[];
-  mainImage?: any;
-  mainImageId?: any;
-  skus: Sku[];
-  skuCount: number;
+  url: string;
+  originalName: string;
+  mimeType: string;
+  mediaType: string;
+  thumbnailUrl: string | null;
+  isMain: boolean;
+  sortOrder: number;
 }
+
+/**
+ * SKU 规格信息（动态键值对）
+ */
+export interface SpecJson {
+  [key: string]: string;
+}
+
+/**
+ * SKU 实体
+ */
 export interface Sku {
   id: string;
   productId: string;
@@ -32,8 +32,50 @@ export interface Sku {
   stock: string;
   specJson: SpecJson;
   status: number;
+  /** SKU 关联的媒体文件 */
+  media: Media[];
 }
-interface SpecJson {
-  color: string;
-  size: string;
+
+/**
+ * 商品实体
+ */
+export interface Product {
+  id: string;
+  name: string;
+  spuCode: string;
+  description: string;
+  status: number;
+  units: string;
+  createdAt: string;
+  updatedAt: string;
+  /** 站点自定义价格 */
+  sitePrice: string;
+  /** 站点自定义名称 */
+  siteName: string;
+  /** 站点自定义描述 */
+  siteDescription: string;
+  /** 站点分类 ID */
+  siteCategoryId: string;
+  /** 模板 ID */
+  templateId: string | null;
+  /** 图片媒体 ID 列表 */
+  mediaIds: string[];
+  /** 视频媒体 ID 列表 */
+  videoIds: string[];
+  /** 图片列表（用于展示） */
+  images: Media[];
+  /** 视频列表（用于展示） */
+  videos: Media[];
+  /** 主图 URL */
+  mainImage: string | null;
+  /** 主图 ID */
+  mainImageId: string | null;
+  /** SKU 列表 */
+  skus: Sku[];
+  /** SKU 数量 */
+  skuCount: number;
+  /** 原始价格（查询时返回的参考价格） */
+  price: string;
+  /** 是否有自定义价格（集团站点用） */
+  hasCustomPrice: boolean;
 }

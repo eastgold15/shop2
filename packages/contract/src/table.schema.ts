@@ -22,11 +22,10 @@ const Audit = {
 
 // --- 2. Enums (枚举定义) ---
 
-// 部门类型：总部、工厂、办事处
+// 部门类型：总部、工厂
 export const deptCategoryEnum = p.pgEnum("dept_category", [
-  "headquarters",
-  "factory",
-  "office",
+  "group",
+  "factory"
 ]);
 
 // 站点类型：集团站(展示所有)、工厂站(展示特定部门)
@@ -103,7 +102,7 @@ export const departmentTable = p.pgTable("sys_dept", {
   code: p.varchar("code", { length: 50 }),
 
   // 区分是 "总部" 还是 "实体工厂"
-  category: deptCategoryEnum("category").default("office").notNull(),
+  category: deptCategoryEnum("category").default("factory").notNull(),
 
   // 原 Factory 表的特有字段，建议放在这里或用 extensions JSON
   address: p.text("address"),
@@ -256,6 +255,7 @@ export const siteTable = p.pgTable("site", {
   boundDeptId: p
     .uuid("bound_dept_id")
     .notNull()
+    .unique()
     .references(() => departmentTable.id),
 
   siteType: siteTypeEnum("site_type").notNull(),
@@ -581,12 +581,7 @@ export const skuMediaTable = p.pgTable(
       .notNull()
       .references(() => mediaTable.id, { onDelete: "restrict" }),
     isMain: p.boolean("is_main").default(false),
-    sortOrder: p.integer("sort_order").default(0),
-    // 关联表只需要租户隔离，不需要完整辅助对象
-    tenantId: p
-      .uuid("tenant_id")
-      .notNull()
-      .references(() => tenantTable.id),
+    sortOrder: p.integer("sort_order").default(0)
   },
   (t) => [p.primaryKey({ columns: [t.skuId, t.mediaId] })]
 );

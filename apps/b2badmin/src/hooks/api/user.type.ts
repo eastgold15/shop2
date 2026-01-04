@@ -4,72 +4,60 @@
  */
 
 // ==================== 列表查询 ====================
-export interface UseME {
+export interface MeRes {
+  user: UserInfo;
   switchableDept: SwitchableDept;
-  user: User;
 }
 
-export interface SwitchableDept {
-  current: Current;
-  departments: string[];
-  [property: string]: any;
-}
-
-export interface Current {
+export interface DeptInfo {
+  id: string;
+  name: string;
+  site: Site;
   category: string;
+  parentId: string;
+}
+interface Site {
   id: string;
   name: string;
-  site: CurrentSite;
-  [property: string]: any;
-}
-
-export interface CurrentSite {
   domain: string;
-  id: string;
-  name: string;
-  [property: string]: any;
+  siteType: string;
+}
+interface SwitchableDept {
+  current: DeptInfo;
+  switchableDepartments: DeptInfo[];
 }
 
-export interface User {
-  avatar: string;
-  context: Context;
-  email: string;
+
+export interface UserInfo {
   id: string;
-  isSuperAdmin: boolean;
   name: string;
-  permissions: string[];
+  email: string;
+  avatar: string;
   phone: string;
   position: string;
+  isSuperAdmin: boolean;
+  context: Context;
   roles: Role[];
-  [property: string]: any;
+  permissions: string[];
 }
-
-export interface Context {
-  department: Department;
-  site: ContextSite;
+interface Role {
+  name: string;
+  dataScope: string;
+}
+interface Context {
   tenantId: string;
-  [property: string]: any;
+  department: Department;
+  site: Site;
 }
 
-export interface Department {
+interface Department {
+  id: string;
+  name: string;
   category: string;
-  id: string;
-  name: string;
-  [property: string]: any;
+  parentId?: string;
 }
 
-export interface ContextSite {
-  domain: string;
-  id: string;
-  name: string;
-  [property: string]: any;
-}
 
-export interface Role {
-  dataScope?: string;
-  name?: string;
-  [property: string]: any;
-}
 
 /**
  * 用户列表查询参数
@@ -88,7 +76,7 @@ export interface UserListQuery {
  * 用户列表响应
  */
 export interface UserListResponse {
-  data: User[];
+  data: UserInfo[];
   total: number;
   page: number;
   limit: number;

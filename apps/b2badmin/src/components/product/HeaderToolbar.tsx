@@ -12,6 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { useAuthStore } from "@/stores/auth-store";
 
 interface HeaderToolbarProps {
   selectedCount: number;
@@ -19,6 +20,8 @@ interface HeaderToolbarProps {
   onSearchChange: (val: string) => void;
   onAdd: () => void;
   onBatchDelete: () => void;
+  /** 是否显示"添加商品"按钮（工厂站点显示，集团站点隐藏） */
+  showAddButton?: boolean;
 }
 
 export function HeaderToolbar({
@@ -27,7 +30,10 @@ export function HeaderToolbar({
   onSearchChange,
   onAdd,
   onBatchDelete,
+  showAddButton = true,
 }: HeaderToolbarProps) {
+  const siteType = useAuthStore((state) => state.getCurrentSite()?.siteType);
+
   return (
     <div className="sticky top-0 z-10 flex flex-col gap-4 border-b bg-background/95 p-4 backdrop-blur supports-backdrop-filter:bg-background/60">
       {/* 第一行：面包屑与标题区 */}
@@ -35,6 +41,7 @@ export function HeaderToolbar({
         <SidebarTrigger className="-ml-1" />
         <Separator className="mr-2 h-4" orientation="vertical" />
         <h1 className="font-semibold text-lg leading-none tracking-tight">
+          {siteType === "factory" ? "工厂" : "集团"}
           商品管理
         </h1>
         {selectedCount > 0 && (
@@ -85,13 +92,15 @@ export function HeaderToolbar({
               <Button className="hidden sm:flex" size="sm" variant="outline">
                 <Download className="mr-2 h-4 w-4" /> 导出
               </Button>
-              <Button
-                className="bg-indigo-600 hover:bg-indigo-700"
-                onClick={onAdd}
-                size="sm"
-              >
-                <Plus className="mr-2 h-4 w-4" /> 新建商品
-              </Button>
+              {showAddButton && (
+                <Button
+                  className="bg-indigo-600 hover:bg-indigo-700"
+                  onClick={onAdd}
+                  size="sm"
+                >
+                  <Plus className="mr-2 h-4 w-4" /> 新建商品
+                </Button>
+              )}
             </>
           )}
         </div>

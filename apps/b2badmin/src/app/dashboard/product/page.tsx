@@ -9,19 +9,29 @@ import { CreateSKUModal } from "@/components/form/CreateSKUModal";
 import { EditSKUModal } from "@/components/form/EditSKUModal";
 import { HeaderToolbar } from "@/components/product/HeaderToolbar";
 import { ProductList } from "@/components/product/ProductList";
-import { Product } from "@/components/product/type";
+import { Product, Sku } from "@/components/product/type";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 // Hooks & Types
-import { useProductList, useProductsBatchDelete } from "@/hooks/api/product";
+import {
+  useProductPageList,
+  useProductsBatchDelete,
+} from "@/hooks/api/product";
 import { useDeleteSku } from "@/hooks/api/sku";
+import { useAuthStore } from "@/stores/auth-store";
 
 // 引入三个核心组件
 
 export default function ProductsPage() {
   // --- 1. 数据 ---
-  const { data, isLoading, refetch } = useProductList({ page: 1, limit: 100 });
+  const { data, isLoading, refetch } = useProductPageList({
+    page: 1,
+    limit: 100,
+  });
   const deleteSkuMutation = useDeleteSku();
   const deleteProductMutation = useProductsBatchDelete();
+
+  // 获取当前站点类型（直接获取原始值避免无限循环）
+  const siteType = useAuthStore((state) => state.getCurrentSite()?.siteType);
 
   // --- 2. 状态 ---
   const [searchTerm, setSearchTerm] = useState("");
@@ -61,7 +71,7 @@ export default function ProductsPage() {
   // 各种删除逻辑 (简化示例)
   const handleDeleteSku = async (id: string, code: string) => {
     if (!confirm(`确认删除 SKU ${code}?`)) return;
-    await deleteSkuMutation.mutateAsync([id]);
+    await deleteSkuMutation.mutateAsync(id);
     toast.success("已删除");
     refetch();
   };
@@ -87,6 +97,8 @@ export default function ProductsPage() {
           onSearchChange={setSearchTerm}
           searchTerm={searchTerm}
           selectedCount={selectedIds.size}
+          // 集团站点隐藏"添加商品"按钮
+          showAddButton={siteType === "factory"}
         />
 
         {/* 模块 2: 滚动列表区域 */}
@@ -104,21 +116,26 @@ export default function ProductsPage() {
             onToggleExpand={handleToggleExpand}
             products={filteredProducts}
             selectedIds={selectedIds}
+            // 集团站点隐藏 SKU 创建功能
+            showCreateSku={siteType === "factory"}
           />
         </div>
 
         {/* 模块 3 (隐式): 弹窗挂载 */}
-        <CreateProductModal
-          onOpenChange={(open) =>
-            setProductModal({
-              open,
-              data: open ? productModal.data : undefined,
-            })
-          }
-          onSuccess={refetch}
-          open={productModal.open}
-          product={productModal.data}
-        />
+        {/* 只有工厂站点才显示创建商品弹窗 */}
+        {siteType === "factory" && (
+          <CreateProductModal
+            onOpenChange={(open) =>
+              setProductModal({
+                open,
+                data: open ? productModal.data : undefined,
+              })
+            }
+            onSuccess={refetch}
+            open={productModal.open}
+            product={productModal.data}
+          />
+        )}
         <CreateSKUModal
           onOpenChange={() => setSkuCreateId(null)}
           onSuccess={refetch}
@@ -129,7 +146,7 @@ export default function ProductsPage() {
           onOpenChange={() => setSkuEditData(null)}
           onSuccess={refetch}
           open={!!skuEditData}
-          sku={skuEditData}
+          sku={skuEditData || undefined}
         />
       </SidebarInset>
     </SidebarProvider>

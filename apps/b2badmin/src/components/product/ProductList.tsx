@@ -17,56 +17,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { SkuPanel } from "./SkuPanel";
+import { Product, Sku } from "./type";
 
-// 使用后端返回的类型
-interface Product {
-  id: string;
-  name: string;
-  spuCode: string;
-  description: string | null;
-  status: number;
-  units: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-  sitePrice: string | null;
-  siteName: string | null;
-  siteDescription: string | null;
-  siteCategoryId: string | null;
-  templateId: string | null;
-  // 媒体 ID（用于编辑）
-  mediaIds: string[];
-  videoIds: string[];
-  // 媒体数据
-  images: Array<{
-    id: string;
-    url: string;
-    originalName: string;
-    mimeType: string;
-    isMain: boolean;
-    sortOrder: number;
-  }>;
-  videos: Array<{
-    id: string;
-    url: string;
-    originalName: string;
-    mimeType: string;
-    thumbnailUrl: string | null;
-  }>;
-  mainImage: string | null;
-  mainImageId: string | null;
-  // SKU 数据
-  skus: Array<{
-    id: string;
-    skuCode: string;
-    price: string;
-    stock: string;
-    specJson: any;
-    status: number;
-    mainImage: { url: string; isMain: boolean } | null;
-    allImages: Array<{ id: string; url: string; isMain: boolean }>;
-  }>;
-  skuCount: number;
-}
 interface ProductListProps {
   products: Product[];
   selectedIds: Set<string>;
@@ -79,6 +31,7 @@ interface ProductListProps {
   onCreateSku: (id: string) => void;
   onEditSku: (sku: Sku) => void;
   onDeleteSku: (id: string, code: string) => void;
+  showCreateSku?: boolean;
 }
 
 export function ProductList({
@@ -92,6 +45,7 @@ export function ProductList({
   onCreateSku,
   onEditSku,
   onDeleteSku,
+  showCreateSku = true,
 }: ProductListProps) {
   if (products.length === 0) {
     return (
@@ -200,9 +154,11 @@ export function ProductList({
                     <DropdownMenuItem onClick={() => onEdit(product)}>
                       编辑商品
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onCreateSku(product.id)}>
-                      <Plus className="mr-2 h-4 w-4" /> 添加 SKU
-                    </DropdownMenuItem>
+                    {showCreateSku && (
+                      <DropdownMenuItem onClick={() => onCreateSku(product.id)}>
+                        <Plus className="mr-2 h-4 w-4" /> 添加 SKU
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem
                       className="text-red-600"
                       onClick={() => onDelete(product)}

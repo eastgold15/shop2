@@ -21,14 +21,14 @@ export const productKeys = {
 
 // --- 1. 列表查询 (GET) ---
 // TRes = any, TQuery = typeof ProductContract.ListQuery.static
-export function useProductList(
+export function useProductPageList(
   params?: typeof ProductContract.ListQuery.static,
   enabled = true
 ) {
   return useQuery({
     queryKey: productKeys.list(params),
     queryFn: () =>
-      api.get<any, typeof ProductContract.ListQuery.static>("/api/v1/product", {
+      api.get<any, typeof ProductContract.ListQuery.static>("/api/v1/product/page-list", {
         params,
       }),
     enabled,

@@ -1,172 +1,88 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-// 新的用户信息类型（基于后端返回）
-interface UserInfo {
-  id: string;
-  name: string;
-  email: string;
-  avatar: string;
-  phone: string;
-  position: string;
-  isSuperAdmin: boolean;
-  context: {
-    tenantId: string;
-    department: {
-      id: string;
-      name: string;
-      category: string;
-    };
-    site: {
-      id: string;
-      name: string;
-      domain: string;
-    };
-  };
-  roles: Array<{
-    name: string;
-    dataScope: string;
-  }>;
-  permissions: string[];
-}
-
-// 可切换部门类型
-interface SwitchableDepartment {
-  current: {
-    id: string;
-    name: string;
-    category: string;
-    site?: {
-      id: string;
-      name: string;
-      domain: string;
-    };
-  };
-  departments: Array<{
-    id: string;
-    name: string;
-    category: string;
-    parentId: string;
-    site?: {
-      id: string;
-      name: string;
-      domain: string;
-    };
-  }>;
-}
-
-// /me 端点返回类型
-interface MeResponse {
-  user: UserInfo;
-  switchableDept: SwitchableDepartment;
-}
+import { DeptInfo, MeRes, UserInfo } from "@/hooks/api/user.type";
 
 interface AuthState {
   // --- 原始状态 ---
   user: UserInfo | null;
-  currentDept: SwitchableDepartment["current"] | null; // 当前部门
-  currentDeptId: string | null; // 落地 localStorage 的部门 ID
-  switchableDept: SwitchableDepartment | null; // 可切换的部门列表
+  currentDeptId: string | null; // 这是唯一的“主键”，持久化全靠它
 
-  // --- 操作方法 ---
-  setAuth: (data: MeResponse) => void;
+  // Cache (这些是接口返回的派生数据，不需要持久化，刷新后重新 fetchMe 获取)
+  currentDept: DeptInfo | null;
+  switchableDepts: DeptInfo[] | null;
+
+  // Actions
+  setAuth: (data: MeRes) => void;
   clearAuth: () => void;
-
   /** 切换部门：更新部门 ID 并触发刷新 */
   switchDept: (deptId: string) => void;
 
-  /** 获取当前站点的信息（兼容旧的组件） */
-  getCurrentSite: () => {
-    id: string;
-    name: string;
-    domain: string;
-    siteType?: string;
-  } | null;
-
+  // Getters (Computed)
   /** 获取当前用户的权限列表 */
   getPermissions: () => string[];
-
   /** 检查是否有指定权限 */
   hasPermission: (permission: string) => boolean;
-
   /** 获取当前租户 ID */
   getTenantId: () => string | null;
+  getCurrentSite: () => DeptInfo["site"] | null;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
+      // --- Initial State ---
       user: null,
-      currentDept: null,
+      // 🌟 优雅点 1: 初始值直接给 null。
+      // persist 中间件会在 store 初始化的一瞬间，自动从 localStorage 读取并覆盖这里。
+      // 不需要你自己去 localStorage.getItem()。
       currentDeptId: null,
-      switchableDept: null,
+      currentDept: null,
+      switchableDepts: null,
 
+      // --- Actions ---
       setAuth: (data) => {
         set({
           user: data.user,
           currentDept: data.switchableDept.current,
+          // 确保 ID 同步
           currentDeptId: data.switchableDept.current.id,
-          switchableDept: data.switchableDept,
+          switchableDepts: data.switchableDept.switchableDepartments,
         });
+        // 🌟 优雅点 2: 不需要手动 setItem，persist 中间件监听到 state 变化会自动存。
       },
-
       clearAuth: () => {
         set({
           user: null,
           currentDept: null,
           currentDeptId: null,
-          switchableDept: null,
+          switchableDepts: null,
         });
       },
 
       switchDept: (deptId) => {
+        // 更新 State，persist 会自动同步到 LocalStorage
         set({ currentDeptId: deptId });
-        // 部门 ID 变化后，需要重新从后端获取该部门的权限和站点信息
-        // 最简单的办法是刷新页面，让根组件的 useMe 重新带着新 DeptId 发起请求
-        window.location.reload();
+
+        // 强制刷新 (确保 API Client 下次初始化能读到新的 Storage)
+        // 使用 setTimeout 确保 persist 写入动作在 EventLoop 中已完成（虽然 localStorage 是同步的，但这更稳妥）
+        setTimeout(() => {
+          window.location.reload();
+        }, 0);
       },
 
-      // 兼容旧组件，获取当前站点信息
-      getCurrentSite: () => {
-        const { currentDept } = get();
-        if (!currentDept?.site) return null;
-
-        // 将 category 映射到 siteType
-        const siteTypeMap: Record<string, string> = {
-          headquarters: "group",
-          factory: "factory",
-          office: "factory",
-        };
-
-        return {
-          id: currentDept.site.id,
-          name: currentDept.site.name,
-          domain: currentDept.site.domain,
-          siteType: siteTypeMap[currentDept.category || ""] || "factory",
-        };
-      },
-
-      // 获取当前用户的权限列表
-      getPermissions: () => {
-        const { user } = get();
-        return user?.permissions || [];
-      },
-
-      // 检查是否有指定权限
+      // --- Getters ---
+      getPermissions: () => get().user?.permissions || [],
       hasPermission: (permission) => {
-        const { user } = get();
-        if (!user) return false;
-        return (
-          user.permissions.includes("*") ||
-          user.permissions.includes(permission)
-        );
+        const perms = get().getPermissions();
+        if (!perms.length) return false;
+        return perms.includes("*") || perms.includes(permission);
       },
 
-      // 获取当前租户 ID
-      getTenantId: () => {
-        const { user } = get();
-        return user?.context?.tenantId || null;
-      },
+      getTenantId: () => get().user?.context.tenantId || null,
+
+      // 既然 currentDept 已经在 state 里了，Site 就可以动态获取
+      getCurrentSite: () => get().currentDept?.site || null,
     }),
     {
       name: "auth-storage",

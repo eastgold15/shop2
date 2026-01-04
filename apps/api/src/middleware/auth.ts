@@ -16,7 +16,44 @@ export const authGuardMid = new Elysia({ name: "authGuard" })
     const headers = request.headers;
     const session = await auth.api.getSession({ headers });
     if (!session) throw new HttpError.Unauthorized("未登录");
-    const userRolePermission = await getUserWithRoles(session.user.id, db);
+    let userRolePermission = await getUserWithRoles(session.user.id, db);
+
+    // 检查是否有 x-current-dept-id 请求头，如果有则覆盖用户 context 中的部门信息
+    const currentDeptIdFromHeader = request.headers.get(CURRENT_DEPT_HEADER);
+    if (currentDeptIdFromHeader) {
+      const targetDept = await db.query.departmentTable.findFirst({
+        where: {
+          id: currentDeptIdFromHeader,
+          tenantId: userRolePermission.context.tenantId,
+        },
+        with: {
+          site: true,
+        },
+      });
+
+      if (targetDept) {
+        // 更新用户的 context，使用请求头指定的部门和站点
+        userRolePermission = {
+          ...userRolePermission,
+          context: {
+            ...userRolePermission.context,
+            department: {
+              id: targetDept.id,
+              name: targetDept.name,
+              category: targetDept.category,
+              parentId: targetDept.parentId,
+            },
+            site: {
+              id: targetDept.site.id,
+              name: targetDept.site.name,
+              domain: targetDept.site.domain,
+              siteType: targetDept.site.siteType,
+            },
+          },
+        };
+      }
+    }
+
     return {
       user: userRolePermission,
     };
@@ -55,8 +92,7 @@ export const authGuardMid = new Elysia({ name: "authGuard" })
           throw new HttpError.BadRequest("请选择当前操作的部门");
         }
         if (!user) throw new HttpError.Forbidden("您没有任何权限");
-        // ⚠️ 注意：如果你采纳了上一步的 UserDto 改造，这里的 tenantId 路径要改
-        // const userTenantId = user.tenantId; // 旧结构
+
         const userTenantId = user.context.tenantId; // 新 DTO 结构
 
         const targetDept = await db.query.departmentTable.findFirst({
@@ -132,11 +168,13 @@ async function getUserWithRoles(userID: string, db: DBtype) {
       id: rawUser.department.id,
       name: rawUser.department.name,
       category: rawUser.department.category,
+      parentId: rawUser.department.parentId,
     },
     site: {
       id: rawUser.department.site.id,
       name: rawUser.department.site.name,
       domain: rawUser.department.site.domain,
+      siteType: rawUser.department.site.siteType,
     },
   };
 

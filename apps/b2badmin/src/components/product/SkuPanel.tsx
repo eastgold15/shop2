@@ -1,5 +1,5 @@
 // components/product/sku-panel.tsx
-import { Edit, Image as ImageIcon, Trash2 } from "lucide-react";
+import { Edit, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ImageGallery } from "@/components/ui/image-gallery";
@@ -72,17 +72,9 @@ export function SkuPanel({ skus, onEdit, onDelete }: SkuPanelProps) {
                   </span>
                 </TableCell>
                 <TableCell>
-                  {sku.allImages?.length > 0 ? (
+                  {sku.media?.length > 0 ? (
                     // 这里稍微hack一下，只显示图标，点击预览
-                    <ImageGallery
-                      images={sku.allImages}
-                      size="sm"
-                      trigger={
-                        <Button className="h-6 w-6" size="icon" variant="ghost">
-                          <ImageIcon size={14} />
-                        </Button>
-                      }
-                    />
+                    <ImageGallery images={sku.media} size="sm" />
                   ) : (
                     <span className="text-slate-300">-</span>
                   )}

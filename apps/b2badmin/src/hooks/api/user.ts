@@ -7,9 +7,15 @@
  */
 
 import { UserContract } from "@repo/contract";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  UseQueryOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { toast } from "sonner";
 import { api } from "./api-client";
+import { MeRes } from "./user.type";
 
 // --- Query Keys ---
 export const userKeys = {
@@ -22,54 +28,17 @@ export const userKeys = {
 };
 
 // --- 0. 获取当前用户信息 (GET /me) ---
-export interface MeResponse {
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    avatar: string;
-    phone: string;
-    position: string;
-    isSuperAdmin: boolean;
-    context: {
-      tenantId: string;
-      department: {
-        id: string;
-        name: string;
-        category: string;
-      };
-      site: {
-        id: string;
-        name: string;
-        domain: string;
-      };
-    };
-    roles: Array<{
-      name: string;
-      dataScope: string;
-    }>;
-    permissions: string[];
-  };
-  switchableDept: {
-    current: {
-      id: string;
-      name: string;
-      category: string;
-      site: {
-        id: string;
-        name: string;
-        domain: string;
-      };
-    };
-    departments: any[];
-  };
-}
 
-export function useMe({ enabled = true }) {
+// 2. 定义 Options 类型
+// Omit 掉 queryKey 和 queryFn，因为这是 hook 内部定死的，不应该被外部修改
+type UseMeOptions = Omit<UseQueryOptions<MeRes>, "queryKey" | "queryFn">;
+
+export function useMe(options?: UseMeOptions) {
   return useQuery({
+    // 核心配置
     queryKey: userKeys.me(),
-    queryFn: () => api.get<MeResponse>("/api/v1/user/me"),
-    enabled,
+    queryFn: () => api.get<MeRes>("/api/v1/user/me"),
+    ...options,
   });
 }
 

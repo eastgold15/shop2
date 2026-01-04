@@ -3,24 +3,24 @@
 import { usePathname, useRouter } from "next/navigation";
 import { type ReactNode, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { setDeptIdGetter } from "@/hooks/api/api-client";
+
 import { useMe } from "@/hooks/api/user";
 import { useAuthStore } from "@/stores/auth-store";
+
+// 定义不需要鉴权的白名单路径
+const PUBLIC_PATHS = ["/login", "/signup", "/forgot-password"];
 
 // 用户Provider组件
 export function UserProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const isPublicPage = pathname === "/login" || pathname === "/signup";
-
-  // 🔥 设置 api-client 的 deptId getter
-  const currentDeptId = useAuthStore((s) => s.currentDeptId);
-  useEffect(() => {
-    setDeptIdGetter(() => currentDeptId);
-  }, [currentDeptId]);
+  const isPublicPage = PUBLIC_PATHS.includes(pathname);
 
   // 1. 发起请求（仅在非公共页面时才查询用户信息）
-  const { data, error, isLoading } = useMe({ enabled: !isPublicPage });
+  const { data, error, isLoading } = useMe({
+    retry: false,
+    enabled: !isPublicPage,
+  });
 
   const setAuth = useAuthStore((s) => s.setAuth);
   const clearAuth = useAuthStore((s) => s.clearAuth);

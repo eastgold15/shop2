@@ -19,37 +19,31 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 
+// 2. 统一图标获取逻辑
+const SiteIcon = ({
+  type,
+  className,
+}: {
+  type?: string;
+  className?: string;
+}) => {
+  const Icon = type === "factory" ? Factory : Building2;
+  return <Icon className={cn("size-4", className)} />;
+};
+
 export function TeamSwitcher() {
   const { isMobile } = useSidebar();
-  const { user, currentDept, switchableDept, switchDept, getCurrentSite } =
+  const { user, currentDept, switchableDepts, getCurrentSite, switchDept } =
     useAuthStore();
-
-  // 获取当前站点信息（兼容旧组件）
-  const currentSite = getCurrentSite();
 
   // 1. 过滤出除当前部门外的其他可切换部门
   const otherDepts = useMemo(
-    () =>
-      switchableDept?.departments.filter(
-        (d) => d.id !== currentDept?.id && d.site
-      ) || [],
-    [switchableDept, currentDept?.id]
+    () => switchableDepts?.filter((d) => d.id !== currentDept?.id) || [],
+    [switchableDepts, currentDept?.id]
   );
 
-  // 2. 统一图标获取逻辑
-  const SiteIcon = ({
-    type,
-    className,
-  }: {
-    type?: string;
-    className?: string;
-  }) => {
-    const Icon = type === "factory" ? Factory : Building2;
-    return <Icon className={cn("size-4", className)} />;
-  };
-
   // 3. 加载中状态
-  if (!(currentSite && user)) {
+  if (!(getCurrentSite() && user)) {
     return (
       <SidebarMenu>
         <SidebarMenuItem>
@@ -80,13 +74,15 @@ export function TeamSwitcher() {
               size="lg"
             >
               <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                <SiteIcon type={currentSite.siteType} />
+                <SiteIcon type={getCurrentSite()?.siteType} />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{currentSite.name}</span>
+                <span className="truncate font-medium">
+                  {getCurrentSite()?.name}
+                </span>
                 <span className="truncate text-xs">
-                  {userRole?.description || userRole?.name || "用户"} ·{" "}
-                  {currentSite.domain}
+                  {userRole?.dataScope || userRole?.name || "用户"} ·{" "}
+                  {getCurrentSite()?.domain}
                 </span>
               </div>
               <ChevronDown className="ml-auto opacity-50" />
@@ -106,17 +102,22 @@ export function TeamSwitcher() {
             {/* 当前部门/站点 */}
             <DropdownMenuItem className="gap-3 p-3 focus:bg-transparent">
               <div className="flex size-8 items-center justify-center rounded-md border bg-primary text-primary-foreground">
-                <SiteIcon className="size-4" type={currentSite.siteType} />
+                <SiteIcon
+                  className="size-4"
+                  type={getCurrentSite()?.siteType}
+                />
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold">{currentSite.name}</span>
+                  <span className="font-semibold">
+                    {getCurrentSite()?.name}
+                  </span>
                   <span className="rounded-full bg-primary/10 px-1.5 py-0.5 font-bold text-[10px] text-primary">
                     ACTIVE
                   </span>
                 </div>
                 <p className="text-muted-foreground text-xs">
-                  {currentDept?.name} · {currentSite.domain}
+                  {currentDept?.name} · {getCurrentSite()?.domain}
                 </p>
               </div>
               <Check className="size-4 text-primary" />

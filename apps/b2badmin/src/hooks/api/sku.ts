@@ -6,10 +6,9 @@
  * --------------------------------------------------------
  */
 
-
+import { SkuContract } from "@repo/contract";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "./api-client";
-import { SkuContract } from "@repo/contract";
 // --- Query Keys ---
 export const skuKeys = {
   all: ["sku"] as const,
@@ -58,7 +57,6 @@ export function useCreateSku() {
   });
 }
 
-
 export function useBatchCreateSku() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -69,9 +67,6 @@ export function useBatchCreateSku() {
     },
   });
 }
-
-
-
 
 // --- 4. 更新 (PUT) ---
 // TRes = any, TBody = typeof SkuContract.Update.static
@@ -107,7 +102,8 @@ export function useDeleteSku() {
 export function useBatchDeleteSku() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (ids: string[]) => api.delete<any, any>("/api/v1/sku/batch", { ids }),
+    mutationFn: (ids: string[]) =>
+      api.delete<any, any>("/api/v1/sku/batch", { ids }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: skuKeys.lists() });
     },
@@ -131,11 +127,8 @@ export function useAllSkusForManagement(enabled = true) {
 export function useProductsForSKU(id: string, enabled = true) {
   return useQuery({
     queryKey: ["products", "for-sku", id],
-    queryFn: () =>
-      api.get<any, any>(`/api/v1/sku/${id}`),
+    queryFn: () => api.get<any, any>(`/api/v1/sku/${id}`),
     staleTime: 5 * 60 * 1000, // 5分钟
     enabled,
   });
 }
-
-
