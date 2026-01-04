@@ -7,11 +7,72 @@ import { departmentTable } from "../table.schema";
 export const DepartmentInsertFields = spread(departmentTable, "insert");
 /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
 export const DepartmentFields = spread(departmentTable, "select");
+
+
+
+/**
+ * 部门管理扩展契约
+ * 包含创建部门+站点+管理员的组合操作
+ */
+
+// 创建部门+站点+管理员的请求体
+const CreateDepartmentWithSiteAndAdmin = t.Object({
+  // 部门信息
+  department: t.Object({
+    name: t.String({ minLength: 2 }),
+    code: t.String({ minLength: 2 }),
+    category: t.Union([t.Literal("group"), t.Literal("factory")]),
+    parentId: t.Optional(t.String()),
+    address: t.Optional(t.String()),
+    contactPhone: t.Optional(t.String()),
+    logo: t.Optional(t.String()),
+    extensions: t.Optional(t.Any()), // JSON 字符串
+  }),
+
+  // 站点信息
+  site: t.Object({
+    name: t.String({ minLength: 2 }),
+    domain: t.String({ minLength: 2 }),
+    isActive: t.Optional(t.Boolean()),
+  }),
+
+  // 管理员用户信息
+  admin: t.Object({
+    name: t.String({ minLength: 2 }),
+    email: t.String({ format: "email" }),
+    password: t.String({ minLength: 6 }),
+    phone: t.Optional(t.String()),
+    position: t.Optional(t.String()),
+  }),
+});
+
+// 响应体
+const CreateDepartmentWithSiteAndAdminResponse = t.Object({
+  department: t.Object({
+    id: t.String(),
+    name: t.String(),
+  }),
+  site: t.Object({
+    id: t.String(),
+    name: t.String(),
+    domain: t.String(),
+  }),
+  admin: t.Object({
+    id: t.String(),
+    name: t.String(),
+    email: t.String(),
+  }),
+});
+
+
+
 export const DepartmentContract = {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Response: t.Object({
     ...DepartmentFields,
   }),
+  CreateDepartmentWithSiteAndAdmin,
+  CreateDepartmentWithSiteAndAdminResponse,
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Create: t.Object({
     ...t.Omit(t.Object(DepartmentInsertFields), [

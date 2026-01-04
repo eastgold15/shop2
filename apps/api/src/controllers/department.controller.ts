@@ -5,13 +5,16 @@
  * 💡 如需自定义，请删除下方的 @generated 标记，或新建一个 controller。
  * --------------------------------------------------------
  */
+
 import { Elysia, t } from "elysia";
 import { dbPlugin } from "~/db/connection";
 import { authGuardMid } from "~/middleware/auth";
 import { DepartmentContract } from "../../../../packages/contract/src/modules/department.contract";
 import { DepartmentService } from "../services/department.service";
 
+
 const departmentService = new DepartmentService();
+
 /**
  * @generated
  */
@@ -79,6 +82,27 @@ export const departmentController = new Elysia({ prefix: "/department" })
       detail: {
         summary: "删除Department",
         description: "根据ID删除Department记录",
+        tags: ["Department"],
+      },
+    }
+  )
+  // 自定义端点：创建部门+站点+管理员
+  .post(
+    "/with-site-and-admin",
+    async ({ body, user, db, currentDeptId }) =>
+      departmentService.createDepartmentWithSiteAndAdmin(body, {
+        db,
+        user,
+        currentDeptId,
+      }),
+    {
+      body: DepartmentContract.CreateDepartmentWithSiteAndAdmin,
+      allPermissions: ["DEPARTMENT:CREATE"],
+      requireDept: true,
+      detail: {
+        summary: "创建部门、站点和管理员",
+        description:
+          "一次性创建部门、关联站点和管理员用户，使用事务确保数据一致性",
         tags: ["Department"],
       },
     }

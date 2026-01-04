@@ -110,3 +110,66 @@ export function useDeleteDepartment() {
     },
   });
 }
+
+// ==================== 自定义 Hooks ====================
+
+// 创建部门+站点+管理员
+export interface CreateDepartmentWithSiteAndAdminRequest {
+  department: {
+    name: string;
+    code: string;
+    category: "group" | "factory";
+    parentId?: string;
+    address?: string;
+    contactPhone?: string;
+    logo?: string;
+    extensions?: string;
+  };
+  site: {
+    name: string;
+    domain: string;
+    isActive?: boolean;
+  };
+  admin: {
+    name: string;
+    email: string;
+    password: string;
+    phone?: string;
+    position?: string;
+  };
+}
+
+export interface CreateDepartmentWithSiteAndAdminResponse {
+  department: {
+    id: string;
+    name: string;
+  };
+  site: {
+    id: string;
+    name: string;
+    domain: string;
+  };
+  admin: {
+    id: string;
+    name: string;
+    email: string;
+  };
+}
+
+export function useCreateDepartmentWithSiteAndAdmin() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateDepartmentWithSiteAndAdminRequest) =>
+      api.post<CreateDepartmentWithSiteAndAdminResponse, CreateDepartmentWithSiteAndAdminRequest>(
+        "/api/v1/department/with-site-and-admin",
+        data
+      ),
+    onSuccess: () => {
+      toast.success("部门、站点和管理员创建成功");
+      queryClient.invalidateQueries({ queryKey: departmentKeys.lists() });
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "创建失败");
+    },
+  });
+}

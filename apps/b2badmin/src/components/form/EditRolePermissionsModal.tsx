@@ -1,7 +1,7 @@
 "use client";
 
 import { Check, Loader2, Search, Shield } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -17,6 +17,10 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { usePermissionsList } from "@/hooks/api/permission";
 import { useRoleDetail, useSetRolePermissions } from "@/hooks/api/role";
+import {
+  PERMISSION_RESOURCES,
+  type PermissionAction,
+} from "@/types/permission";
 
 interface EditRolePermissionsModalProps {
   open: boolean;
@@ -33,117 +37,83 @@ export function EditRolePermissionsModal({
   roleName,
   onSuccess,
 }: EditRolePermissionsModalProps) {
-  const [selectedPermissionIds, setSelectedPermissionIds] = useState<
-    Set<string>
-  >(new Set());
+  const [selectedPermissions, setSelectedPermissions] = useState<Set<string>>(
+    new Set()
+  );
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectAllResource, setSelectAllResource] = useState<
+    Record<string, boolean>
+  >({});
 
-  // 获取所有权限列表
-  const { data: allPermissions = [], isLoading: permissionsLoading } =
+  const { data: permissions, isLoading: permissionsLoading } =
     usePermissionsList();
-
-  // 获取角色详情（包含现有权限）
   const { data: roleDetail, isLoading: roleDetailLoading } = useRoleDetail(
     roleId,
-    {
-      enabled: open,
-    }
+    open
   );
 
   const batchUpdate = useSetRolePermissions();
 
-  // 将权限按资源分组
-  const groupedPermissions = useMemo(() => {
-    const groups: Record<string, typeof allPermissions> = {};
-
-    allPermissions.forEach((permission) => {
-      // 从权限名中提取资源部分 (如 "USER_VIEW" -> "USER")
-      const match = permission.name?.match(
-        /^([A-Z_]+)_(VIEW|CREATE|EDIT|DELETE)$/
-      );
-      if (match) {
-        const resource = match[1];
-        if (!groups[resource]) {
-          groups[resource] = [];
-        }
-        groups[resource].push(permission);
-      }
-    });
-
-    return groups;
-  }, [allPermissions]);
-
-  // 根据搜索词过滤资源
-  const filteredResources = useMemo(() => {
-    if (!searchTerm) return Object.entries(groupedPermissions);
-    return Object.entries(groupedPermissions).filter(([resource]) =>
-      resource.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [groupedPermissions, searchTerm]);
-
-  // 当角色权限加载完成后，初始化已选中的权限 ID
+  // 当角色权限加载完成后，初始化已选中的权限
   useEffect(() => {
-    if (roleDetail?.permissions && open) {
+    if (roleDetail && open) {
+      // 从 permission 对象中获取权限名称（如 USERS_VIEW）
       const selectedIds = new Set(
-        roleDetail.permissions
-          .map((rp: any) => rp.id)
-          .filter((id: string | undefined): id is string => !!id)
+        (roleDetail.permissions || [])
+          .map((rp) => rp.name)
+          .filter((name: string | undefined): name is string => !!name)
       );
-      setSelectedPermissionIds(selectedIds);
+      setSelectedPermissions(selectedIds);
     }
   }, [roleDetail, open]);
 
-  // 切换单个权限
+  // 切换权限选择
   const togglePermission = (permissionId: string) => {
-    setSelectedPermissionIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(permissionId)) {
-        next.delete(permissionId);
+    const newSelected = new Set(selectedPermissions);
+    if (newSelected.has(permissionId)) {
+      newSelected.delete(permissionId);
+    } else {
+      newSelected.add(permissionId);
+    }
+    setSelectedPermissions(newSelected);
+  };
+
+  // 全选/取消全选某个资源的所有权限
+  const toggleResourcePermissions = (resource: string, select: boolean) => {
+    const newSelected = new Set(selectedPermissions);
+    const actions: PermissionAction[] = ["VIEW", "CREATE", "EDIT", "DELETE"];
+
+    actions.forEach((action) => {
+      const permissionId = `${resource}_${action}`;
+      if (select) {
+        newSelected.add(permissionId);
       } else {
-        next.add(permissionId);
+        newSelected.delete(permissionId);
       }
-      return next;
     });
-  };
 
-  // 切换整个资源的所有权限
-  const toggleResource = (
-    permissions: typeof allPermissions,
-    shouldSelect: boolean
-  ) => {
-    setSelectedPermissionIds((prev) => {
-      const next = new Set(prev);
-      permissions.forEach((p) => {
-        if (shouldSelect) {
-          next.add(p.id);
-        } else {
-          next.delete(p.id);
-        }
-      });
-      return next;
-    });
-  };
-
-  // 检查资源的选中状态
-  const checkResourceStatus = (permissions: typeof allPermissions) => {
-    const checkedCount = permissions.filter((p) =>
-      selectedPermissionIds.has(p.id)
-    ).length;
-    return {
-      isFull: checkedCount === permissions.length,
-      isPartial: checkedCount > 0 && checkedCount < permissions.length,
-      isEmpty: checkedCount === 0,
-    };
+    setSelectedPermissions(newSelected);
+    setSelectAllResource((prev) => ({ ...prev, [resource]: select }));
   };
 
   // 保存权限
   const handleSave = async () => {
     try {
+      // 建立权限名称到 ID 的映射
+      const permissionNameToId = new Map(
+        (permissions || []).map((p: any) => [p.name, p.id])
+      );
+
+      // 将权限名称（如 USERS_VIEW）转换为 permissionId (UUID)
+      const permissionIds = Array.from(selectedPermissions)
+        .map((name) => permissionNameToId.get(name))
+        .filter((id: string | undefined): id is string => !!id);
+
       await batchUpdate.mutateAsync({
         id: roleId,
-        permissionIds: Array.from(selectedPermissionIds),
+        permissionIds,
       });
-      toast.success(`权限保存成功（共 ${selectedPermissionIds.size} 项）`);
+      toast.success("权限保存成功");
       onSuccess?.();
       onOpenChange(false);
     } catch (error) {
@@ -152,9 +122,29 @@ export function EditRolePermissionsModal({
     }
   };
 
-  const isLoading = permissionsLoading || roleDetailLoading;
+  // 检查某个资源的所有权限是否都被选中
+  const isResourceFullySelected = (resource: string) => {
+    const actions: PermissionAction[] = ["VIEW", "CREATE", "EDIT", "DELETE"];
+    return actions.every((action) =>
+      selectedPermissions.has(`${resource}_${action}`)
+    );
+  };
 
-  if (isLoading) {
+  // 检查某个资源的权限是否部分选中
+  const isResourcePartiallySelected = (resource: string) => {
+    const actions: PermissionAction[] = ["VIEW", "CREATE", "EDIT", "DELETE"];
+    const selectedCount = actions.filter((action) =>
+      selectedPermissions.has(`${resource}_${action}`)
+    ).length;
+    return selectedCount > 0 && selectedCount < actions.length;
+  };
+
+  // 过滤权限
+  const filteredResources = PERMISSION_RESOURCES.filter((resource) =>
+    resource.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (permissionsLoading || roleDetailLoading) {
     return (
       <Dialog onOpenChange={onOpenChange} open={open}>
         <DialogContent className="sm:max-w-[700px]">
@@ -185,7 +175,7 @@ export function EditRolePermissionsModal({
           <Input
             className="pl-9"
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="搜索权限资源（如：USER, PRODUCT）..."
+            placeholder="搜索权限资源..."
             value={searchTerm}
           />
         </div>
@@ -193,78 +183,71 @@ export function EditRolePermissionsModal({
         {/* 权限列表 */}
         <ScrollArea className="h-[400px] pr-4">
           <div className="space-y-4">
-            {filteredResources.length === 0 ? (
-              <div className="py-10 text-center text-slate-500">
-                未找到相关资源
-              </div>
-            ) : (
-              filteredResources.map(([resource, permissions]) => {
-                const status = checkResourceStatus(permissions);
+            {filteredResources.map((resource) => {
+              const actions: PermissionAction[] = [
+                "VIEW",
+                "CREATE",
+                "EDIT",
+                "DELETE",
+              ];
+              const isFullySelected = isResourceFullySelected(resource);
+              const isPartiallySelected = isResourcePartiallySelected(resource);
 
-                return (
-                  <div
-                    className="rounded-lg border bg-slate-50 p-4"
-                    key={resource}
-                  >
-                    {/* 资源标题 + 全选 */}
-                    <div className="mb-3 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Checkbox
-                          checked={
-                            status.isFull ||
-                            (status.isPartial ? "indeterminate" : false)
-                          }
-                          onCheckedChange={(checked) =>
-                            toggleResource(permissions, !!checked)
-                          }
-                        />
-                        <h3 className="font-semibold text-slate-900">
-                          {resource}
-                        </h3>
-                        {status.isPartial && !status.isFull && (
-                          <span className="text-slate-500 text-xs">
-                            (部分选中)
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* 权限操作列表 */}
-                    <div className="ml-6 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                      {permissions.map((permission) => {
-                        const action =
-                          permission.name?.replace(`${resource}_`, "") ||
-                          permission.name;
-                        const isSelected = selectedPermissionIds.has(
-                          permission.id
-                        );
-
-                        return (
-                          <div
-                            className="flex items-center space-x-2 rounded border border-transparent bg-white p-2 hover:border-indigo-100"
-                            key={permission.id}
-                          >
-                            <Checkbox
-                              checked={isSelected}
-                              id={permission.id}
-                              onCheckedChange={() =>
-                                togglePermission(permission.id)
-                              }
-                            />
-                            <label
-                              className="cursor-pointer select-none text-sm"
-                              htmlFor={permission.id}
-                            >
-                              {action}
-                            </label>
-                          </div>
-                        );
-                      })}
+              return (
+                <div
+                  className="rounded-lg border bg-slate-50 p-4"
+                  key={resource}
+                >
+                  {/* 资源标题 + 全选 */}
+                  <div className="mb-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        checked={isFullySelected}
+                        onCheckedChange={(checked) => {
+                          const newState = checked === true;
+                          toggleResourcePermissions(resource, newState);
+                          setSelectAllResource((prev) => ({
+                            ...prev,
+                            [resource]: newState,
+                          }));
+                        }}
+                      />
+                      <h3 className="font-semibold text-slate-900">
+                        {resource}
+                      </h3>
+                      {isPartiallySelected && !isFullySelected && (
+                        <span className="text-slate-500 text-xs">
+                          (部分选中)
+                        </span>
+                      )}
                     </div>
                   </div>
-                );
-              })
-            )}
+
+                  {/* 权限操作 */}
+                  <div className="ml-6 grid grid-cols-2 gap-2">
+                    {actions.map((action) => {
+                      const permissionId = `${resource}_${action}`;
+                      const isSelected = selectedPermissions.has(permissionId);
+
+                      return (
+                        <div
+                          className="flex items-center space-x-2 rounded bg-white p-2"
+                          key={permissionId}
+                        >
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() =>
+                              togglePermission(permissionId)
+                            }
+                          />
+                          <span className="text-sm">{action}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </ScrollArea>
 
@@ -273,7 +256,7 @@ export function EditRolePermissionsModal({
           <p className="text-slate-600 text-sm">
             已选择{" "}
             <span className="font-semibold text-indigo-600">
-              {selectedPermissionIds.size}
+              {selectedPermissions.size}
             </span>{" "}
             个权限
           </p>

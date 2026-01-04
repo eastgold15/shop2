@@ -1,5 +1,12 @@
-import { type DepartmentContract, departmentTable } from "@repo/contract";
+import {
+  type DepartmentContract,
+  departmentTable,
+  siteTable,
+  userRoleTable,
+} from "@repo/contract";
 import { eq } from "drizzle-orm";
+import { HttpError } from "elysia-http-problem-json";
+import { auth } from "~/lib/auth";
 import { type ServiceContext } from "../lib/type";
 
 export class DepartmentService {
@@ -10,10 +17,10 @@ export class DepartmentService {
       // 自动注入租户信息
       ...(ctx.user
         ? {
-            tenantId: ctx.user.context.tenantId!,
-            createdBy: ctx.user.id,
-            deptId: ctx.currentDeptId,
-          }
+          tenantId: ctx.user.context.tenantId!,
+          createdBy: ctx.user.id,
+          deptId: ctx.currentDeptId,
+        }
         : {}),
     };
     const [res] = await ctx.db
@@ -59,5 +66,91 @@ export class DepartmentService {
       .where(eq(departmentTable.id, id))
       .returning();
     return res;
+  }
+
+  /**
+   * 创建部门+站点+管理员
+   * 使用事务确保数据一致性
+   */
+  async createDepartmentWithSiteAndAdmin(
+    body: typeof DepartmentContract.CreateDepartmentWithSiteAndAdmin.static,
+    ctx: ServiceContext
+  ) {
+    const { db, user } = ctx;
+
+    // 使用事务执行
+    return await db.transaction(async (tx) => {
+      // 1. 创建部门
+
+      const [department] = await tx
+        .insert(departmentTable)
+        .values({
+          tenantId: user.context.tenantId!,
+          name: body.department.name,
+          parentId: body.department.parentId || null,
+          // name: body.department.name,
+          code: body.department.code,
+          category: body.department.category as "factory" | "group",
+          address: body.department.address,
+          contactPhone: body.department.contactPhone,
+          logo: body.department.logo,
+          extensions: body.department.extensions || null,
+          isActive: true,
+        })
+        .returning();
+
+      const departmentId = department.id;
+
+      const [site] = await tx
+        .insert(siteTable)
+        .values({
+          tenantId: user.context.tenantId!,
+          boundDeptId: departmentId,
+          siteType: "factory",
+          name: body.site.name,
+          domain: body.site.domain,
+          isActive: body.site.isActive ?? true,
+        })
+        .returning();
+
+      const newUser = await auth.api.signUpEmail({
+        body: {
+          name: body.admin.name,
+          email: body.admin.email,
+          password: body.admin.password, // ⚠️ 生产环境应该先哈希
+        },
+      });
+
+      // 5. 查找或创建 "dept_manager" 角色
+      const role = await tx.query.roleTable.findFirst({
+        where: {
+          name: "dept_manager",
+        },
+      });
+      if (!role) throw new HttpError.NotFound("角色 dept_manager 不存在");
+
+      // 6. 分配角色给用户
+      await tx.insert(userRoleTable).values({
+        userId: newUser.user.id,
+        roleId: role.id,
+      });
+
+      return {
+        department: {
+          id: department.id,
+          name: department.name,
+        },
+        site: {
+          id: site.id,
+          name: site.name,
+          domain: site.domain,
+        },
+        admin: {
+          id: newUser.user.id,
+          name: newUser.user.name,
+          email: newUser.user.email,
+        },
+      };
+    });
   }
 }

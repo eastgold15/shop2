@@ -121,8 +121,14 @@ const SIDEBAR_CONFIG: NavSection[] = [
     title: "组织管理",
     items: [
       {
+        title: "部门管理",
+        url: "/dashboard/dept",
+        icon: Users,
+        permission: PERMISSIONS.DEPARTMENT_VIEW,
+      },
+      {
         title: "用户管理",
-        url: "/dashboard/users",
+        url: "/dashboard/user",
         icon: Users,
         permission: PERMISSIONS.USER_VIEW,
       },
