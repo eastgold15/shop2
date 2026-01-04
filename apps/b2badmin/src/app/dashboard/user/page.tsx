@@ -40,7 +40,7 @@ export default function UsersPage() {
   } = useUserList({
     search: "",
   });
-  const users = response?.data || [];
+  const users = response || [];
 
   // 删除用户
   const deleteUser = useDeleteUser();

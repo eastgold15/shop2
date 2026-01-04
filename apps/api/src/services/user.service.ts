@@ -13,6 +13,7 @@ export class UserService {
     const res = await ctx.db.query.userTable.findMany({
       where: {
         tenantId: ctx.user.context.tenantId!,
+        deptId: ctx.user.context.department?.id,
         ...(search ? { name: { ilike: `%${search}%` } } : {}),
       },
       with: {
