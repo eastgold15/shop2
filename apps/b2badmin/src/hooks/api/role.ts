@@ -7,8 +7,14 @@
  */
 
 import { RoleContract } from "@repo/contract";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  UseQueryOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { api } from "./api-client";
+import { RoleDetailRes } from "./role.type";
 
 // --- Query Keys ---
 export const roleKeys = {
@@ -37,11 +43,17 @@ export function useRoleList(
 
 // --- 2. 单个详情 (GET) ---
 // TRes = any
-export function useRoleDetail(id: string, enabled = !!id) {
+type useRoleDetailOptions = Omit<UseQueryOptions<RoleDetailRes>, "queryKey" | "queryFn">;
+
+export function useRoleDetail(
+  id: string,
+  option?: useRoleDetailOptions
+) {
   return useQuery({
     queryKey: roleKeys.detail(id),
-    queryFn: () => api.get<any>(`/api/v1/role/${id}`),
-    enabled,
+    queryFn: () => api.get<RoleDetailRes>(`/api/v1/role/${id}`),
+    enabled: !!id,
+    ...option,
   });
 }
 
@@ -76,9 +88,6 @@ export function useUpdateRole() {
       ),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: roleKeys.lists() });
-      queryClient.invalidateQueries({
-        queryKey: roleKeys.detail(variables.id),
-      });
     },
   });
 }
@@ -95,5 +104,26 @@ export function useDeleteRole() {
   });
 }
 
-// 别名：兼容复数形式（前端组件中使用）
-export const useRolesList = useRoleList;
+// --- 6. 设置角色权限 (PUT) ---
+export function useSetRolePermissions() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      permissionIds,
+    }: {
+      id: string;
+      permissionIds: string[];
+    }) =>
+      api.put<any, { permissionIds: string[] }>(
+        `/api/v1/role/${id}/permissions`,
+        { permissionIds }
+      ),
+    onSuccess: (_, variables) => {
+      // 只失效该角色的详情查询，不需要失效列表（角色列表数据没有变化）
+      queryClient.invalidateQueries({
+        queryKey: roleKeys.detail(variables.id),
+      });
+    },
+  });
+}

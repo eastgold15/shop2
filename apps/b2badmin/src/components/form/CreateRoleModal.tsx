@@ -1,10 +1,11 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, Shield } from "lucide-react"; // 导入 Loader2
+import { Loader2, Shield } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
-import { Button } from "@/components/ui/button"; // 导入 Button
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -29,6 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useCreateRole } from "@/hooks/api/role";
 
 // 1. 优化 Schema
 // 使用 z.coerce.number() 可以自动将 input type="number" 的字符串转换为数字
@@ -58,7 +60,7 @@ export function CreateRoleModal({
   onOpenChange,
   onSuccess,
 }: CreateRoleModalProps) {
-  // const createRole = useRoleCreate(); // 假设这是你的 mutation hook
+  const createRole = useCreateRole();
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -70,26 +72,18 @@ export function CreateRoleModal({
     },
   });
 
-  // 获取表单提交状态
   const { isSubmitting } = form.formState;
 
   const onSubmit = async (data: FormData) => {
-    console.log("提交的数据:", data);
-
-    // 模拟异步请求
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    // 实际逻辑:
-    // try {
-    //   await createRole.mutateAsync(data);
-    //   onSuccess?.();
-    //   handleOpenChange(false);
-    // } catch (error) {
-    //   console.error(error);
-    // }
-
-    onSuccess?.();
-    handleOpenChange(false);
+    try {
+      await createRole.mutateAsync(data);
+      toast.success("角色创建成功");
+      onSuccess?.();
+      handleOpenChange(false);
+    } catch (error) {
+      console.error("创建角色失败:", error);
+      toast.error("角色创建失败");
+    }
   };
 
   const handleOpenChange = (isOpen: boolean) => {
@@ -197,15 +191,15 @@ export function CreateRoleModal({
 
             <DialogFooter>
               <Button
-                disabled={isSubmitting}
+                disabled={createRole.isPending}
                 onClick={() => handleOpenChange(false)}
                 type="button"
                 variant="outline"
               >
                 取消
               </Button>
-              <Button disabled={isSubmitting} type="submit">
-                {isSubmitting ? (
+              <Button disabled={createRole.isPending} type="submit">
+                {createRole.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     创建中...

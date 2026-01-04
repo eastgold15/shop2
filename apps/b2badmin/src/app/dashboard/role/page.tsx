@@ -2,6 +2,7 @@
 
 import { Shield } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 import { AppSidebar } from "@/components/app-sidebar";
 import { CreateRoleModal } from "@/components/form/CreateRoleModal";
 import { EditRolePermissionsModal } from "@/components/form/EditRolePermissionsModal";
@@ -26,7 +27,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { useRolesList } from "@/hooks/api/role";
+import { useDeleteRole, useRoleList } from "@/hooks/api/role";
 import { useAuthStore } from "@/stores/auth-store";
 
 // 角色类型组件
@@ -40,7 +41,8 @@ function RoleTypeBadge({ type }: { type: string }) {
 export default function RolesPage() {
   const user = useAuthStore((state) => state.user);
   const isSuperAdmin = user?.isSuperAdmin;
-  const { data: rolesData, isLoading, refetch } = useRolesList({});
+  const { data: rolesData, isLoading, refetch } = useRoleList({});
+  const deleteRole = useDeleteRole();
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditPermissionsOpen, setIsEditPermissionsOpen] = useState(false);
@@ -78,28 +80,33 @@ export default function RolesPage() {
     ) || [];
 
   const handleDelete = async (id: string) => {
-    // try {
-    //   await deleteMutation.mutateAsync(id);
-    //   toast.success("角色删除成功");
-    //   refetch();
-    // } catch (error) {
-    //   toast.error("角色删除失败");
-    // }
+    try {
+      await deleteRole.mutateAsync(id);
+      toast.success("角色删除成功");
+      refetch();
+    } catch (error) {
+      console.error("删除角色失败:", error);
+      toast.error("角色删除失败");
+    }
   };
 
   const handleBatchDelete = async () => {
-    // if (selectedIds.size === 0) {
-    //   toast.error("请选择要删除的角色");
-    //   return;
-    // }
-    // try {
-    //   await batchDeleteMutation.mutateAsync(Array.from(selectedIds));
-    //   toast.success(`成功删除 ${selectedIds.size} 个角色`);
-    //   setSelectedIds(new Set());
-    //   refetch();
-    // } catch (error) {
-    //   toast.error("批量删除失败");
-    // }
+    if (selectedIds.size === 0) {
+      toast.error("请选择要删除的角色");
+      return;
+    }
+    try {
+      // 逐个删除（因为后端只支持单个删除）
+      await Promise.all(
+        Array.from(selectedIds).map((id) => deleteRole.mutateAsync(id))
+      );
+      toast.success(`成功删除 ${selectedIds.size} 个角色`);
+      setSelectedIds(new Set());
+      refetch();
+    } catch (error) {
+      console.error("批量删除失败:", error);
+      toast.error("批量删除失败");
+    }
   };
 
   const handleSelectAll = (checked: boolean) => {

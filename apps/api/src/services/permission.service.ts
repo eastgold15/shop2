@@ -1,7 +1,6 @@
 import { type PermissionContract, permissionTable } from "@repo/contract";
 import { eq } from "drizzle-orm";
-import { db } from "~/db/connection";
-import { type ServiceContext } from "../../lib/type";
+import type { ServiceContext } from "~/lib/type";
 
 export class PermissionService {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
@@ -16,7 +15,7 @@ export class PermissionService {
     return res;
   }
 
-  public async findAll(
+  public async list(
     query: PermissionContract["ListQuery"],
     ctx: ServiceContext
   ) {
@@ -53,11 +52,4 @@ export class PermissionService {
     return res;
   }
 
-  /**
-   * 自定义列表查询
-   */
-  async list(ctx: ServiceContext, query: any) {
-    const res = await db.query.permissionTable.findMany();
-    return res;
-  }
 }

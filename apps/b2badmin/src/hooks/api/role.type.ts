@@ -5,6 +5,24 @@
 
 // ==================== 列表查询 ====================
 
+
+export interface RoleDetailRes {
+  id: string;
+  name: string;
+  dataScope: string;
+  description: string;
+  type: string;
+  priority: number;
+  permissions: Permission[];
+}
+interface Permission {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  name: string;
+  description: string;
+}
+
 /**
  * 角色列表查询参数
  */
@@ -143,17 +161,6 @@ export interface RoleSetPermissionsResponse {
  */
 export interface PermissionListResponse {
   data: Permission[];
-}
-
-/**
- * 权限实体
- */
-export interface Permission {
-  id: string;
-  name: string;
-  code: string;
-  module: string;
-  description?: string | null;
 }
 
 // ==================== 角色类型常量 ====================

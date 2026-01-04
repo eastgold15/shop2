@@ -1,4 +1,4 @@
-import { type RoleContract, roleTable } from "@repo/contract";
+import { type RoleContract, rolePermissionTable, roleTable } from "@repo/contract";
 import { eq } from "drizzle-orm";
 import { type ServiceContext } from "../lib/type";
 
@@ -23,12 +23,60 @@ export class RoleService {
         ...(query?.search
           ? { description: { like: `%${query.search}%` } }
           : {}),
-        ...(query?.search ? { type: { like: `%${query.search}%` } } : {}),
-        tenantId: ctx.user.context.tenantId!,
       },
     });
 
+
     return res;
+  }
+
+  /**
+   * 获取角色详情（包含权限列表）
+   */
+  async detail(roleId: string, ctx: ServiceContext) {
+    const role = await ctx.db.query.roleTable.findFirst({
+      where: {
+        id: roleId,
+      },
+      with: {
+        permissions: true
+      },
+    });
+    return role;
+  }
+
+  /**
+   * 设置角色权限（批量替换）
+   */
+  async setPermissions(
+    roleId: string,
+    permissionIds: string[],
+    ctx: ServiceContext
+  ) {
+    return await ctx.db.transaction(async (tx) => {
+      // 1. 删除该角色的所有现有权限
+      await tx
+        .delete(rolePermissionTable)
+        .where(eq(rolePermissionTable.roleId, roleId));
+
+      // 2. 批量插入新权限
+      if (permissionIds.length > 0) {
+        const rolePermissionData = permissionIds.map((permissionId) => ({
+          roleId,
+          permissionId,
+        }));
+        await tx.insert(rolePermissionTable).values(rolePermissionData);
+      }
+
+      // 3. 返回更新后的角色
+      const [updatedRole] = await tx
+        .select()
+        .from(roleTable)
+        .where(eq(roleTable.id, roleId))
+        .limit(1);
+
+      return updatedRole;
+    });
   }
 
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */

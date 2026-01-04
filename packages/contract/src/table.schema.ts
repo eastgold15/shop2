@@ -124,11 +124,8 @@ export const departmentTable = p.pgTable("sys_dept", {
 export const roleTable = p.pgTable("sys_role", {
   id: idUuid,
   name: p.text("name").notNull(),
-  tenantId: p.uuid("tenant_id").references(() => tenantTable.id), // 允许租户自定义角色
-
   // 🔥 核心：数据权限范围
   dataScope: dataScopeEnum("data_scope").default("self").notNull(),
-
   description: p.text("description"),
   type: p
     .varchar("type", { enum: ["system", "custom"] })

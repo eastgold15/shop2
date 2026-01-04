@@ -23,7 +23,7 @@ export const roleController = new Elysia({ prefix: "/role" })
     ({ query, user, db, currentDeptId }) =>
       roleService.list({ db, user, currentDeptId }, query),
     {
-      allPermissions: ["ROLE:VIEW"],
+      allPermissions: ["ROLE_VIEW"],
       query: RoleContract.ListQuery,
       requireDept: true,
       detail: {
@@ -33,12 +33,27 @@ export const roleController = new Elysia({ prefix: "/role" })
       },
     }
   )
+  .get(
+    "/:id",
+    ({ params, user, db, currentDeptId }) =>
+      roleService.detail(params.id, { db, user, currentDeptId }),
+    {
+      params: t.Object({ id: t.String() }),
+      allPermissions: ["ROLE_VIEW"],
+      requireDept: true,
+      detail: {
+        summary: "获取Role详情",
+        description: "根据ID获取Role详细信息，包含关联的权限列表",
+        tags: ["Role"],
+      },
+    }
+  )
   .post(
     "/",
     ({ body, user, db, currentDeptId }) =>
       roleService.create(body, { db, user, currentDeptId }),
     {
-      allPermissions: ["ROLE:CREATE"],
+      allPermissions: ["ROLE_CREATE"],
       requireDept: true,
       body: RoleContract.Create,
       detail: {
@@ -55,11 +70,33 @@ export const roleController = new Elysia({ prefix: "/role" })
     {
       params: t.Object({ id: t.String() }),
       body: RoleContract.Update,
-      allPermissions: ["ROLE:EDIT"],
+      allPermissions: ["ROLE_EDIT"],
       requireDept: true,
       detail: {
         summary: "更新Role",
         description: "根据ID更新Role信息",
+        tags: ["Role"],
+      },
+    }
+  )
+  .put(
+    "/:id/permissions",
+    async ({ params, body, db, user, currentDeptId }) =>
+      roleService.setPermissions(params.id, body.permissionIds, {
+        db,
+        user,
+        currentDeptId,
+      }),
+    {
+      params: t.Object({ id: t.String() }),
+      body: t.Object({
+        permissionIds: t.Array(t.String()),
+      }),
+      allPermissions: ["ROLE_EDIT"],
+      requireDept: true,
+      detail: {
+        summary: "设置角色权限",
+        description: "为角色批量设置权限，会替换原有的所有权限",
         tags: ["Role"],
       },
     }
@@ -70,7 +107,7 @@ export const roleController = new Elysia({ prefix: "/role" })
       roleService.delete(params.id, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
-      allPermissions: ["ROLE:DELETE"],
+      allPermissions: ["ROLE_DELETE"],
       requireDept: true,
       detail: {
         summary: "删除Role",
