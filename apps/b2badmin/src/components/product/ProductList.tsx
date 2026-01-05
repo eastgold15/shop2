@@ -15,9 +15,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Product } from "@/hooks/api/product.type";
 import { cn } from "@/lib/utils";
 import { SkuPanel } from "./SkuPanel";
-import { Product, Sku } from "./type";
 
 interface ProductListProps {
   products: Product[];
@@ -32,6 +32,8 @@ interface ProductListProps {
   onEditSku: (sku: Sku) => void;
   onDeleteSku: (id: string, code: string) => void;
   showCreateSku?: boolean;
+  /** 是否显示删除按钮（只有"我的商品"才显示） */
+  showDelete?: boolean;
 }
 
 export function ProductList({
@@ -46,6 +48,7 @@ export function ProductList({
   onEditSku,
   onDeleteSku,
   showCreateSku = true,
+  showDelete = true,
 }: ProductListProps) {
   if (products.length === 0) {
     return (
@@ -159,12 +162,14 @@ export function ProductList({
                         <Plus className="mr-2 h-4 w-4" /> 添加 SKU
                       </DropdownMenuItem>
                     )}
-                    <DropdownMenuItem
-                      className="text-red-600"
-                      onClick={() => onDelete(product)}
-                    >
-                      删除商品
-                    </DropdownMenuItem>
+                    {showDelete && (
+                      <DropdownMenuItem
+                        className="text-red-600"
+                        onClick={() => onDelete(product)}
+                      >
+                        删除商品
+                      </DropdownMenuItem>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>

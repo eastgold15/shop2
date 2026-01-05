@@ -73,6 +73,8 @@ export interface ProductListQuery {
   templateId?: string;
   sortBy?: "createdAt" | "updatedAt" | "name" | "spuCode";
   sortOrder?: "asc" | "desc";
+  /** 是否已收录到本站点 (true=我的商品, false=商品池) */
+  isListed?: boolean;
 }
 
 /**

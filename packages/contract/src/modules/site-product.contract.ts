@@ -54,6 +54,7 @@ export const SiteProductContract = {
     ...t.Partial(t.Object(SiteProductInsertFields)).properties,
     ...PaginationParams.properties,
     ...SortParams.properties,
+    isListed: t.Optional(t.Boolean()),
     search: t.Optional(t.String()),
   }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */

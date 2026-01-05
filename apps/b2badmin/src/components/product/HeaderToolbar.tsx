@@ -10,6 +10,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuthStore } from "@/stores/auth-store";
@@ -22,6 +29,10 @@ interface HeaderToolbarProps {
   onBatchDelete: () => void;
   /** 是否显示"添加商品"按钮（工厂站点显示，集团站点隐藏） */
   showAddButton?: boolean;
+  /** 当前选择的商品池类型 */
+  listedType: "listed" | "unlisted";
+  /** 商品池类型变化回调 */
+  onListedTypeChange: (type: "listed" | "unlisted") => void;
 }
 
 export function HeaderToolbar({
@@ -31,6 +42,8 @@ export function HeaderToolbar({
   onAdd,
   onBatchDelete,
   showAddButton = true,
+  listedType,
+  onListedTypeChange,
 }: HeaderToolbarProps) {
   const siteType = useAuthStore((state) => state.getCurrentSite()?.siteType);
 
@@ -64,6 +77,21 @@ export function HeaderToolbar({
               value={searchTerm}
             />
           </div>
+          {/* 商品池类型选择 */}
+          <Select
+            onValueChange={(value) =>
+              onListedTypeChange(value as "listed" | "unlisted")
+            }
+            value={listedType}
+          >
+            <SelectTrigger className="w-35">
+              <SelectValue placeholder="选择商品池" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="listed">我的商品</SelectItem>
+              <SelectItem value="unlisted">商品池</SelectItem>
+            </SelectContent>
+          </Select>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button className="shrink-0" size="icon" variant="outline">

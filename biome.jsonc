@@ -63,7 +63,8 @@
         "useConsistentTypeDefinitions": "off",
         "noParameterProperties": "off",
         "useConsistentMemberAccessibility": "off",
-        "useImportType": "off"
+        "useImportType": "off",
+        "useCollapsedElseIf": "off"
       },
       // 正确性规则
       "correctness": {

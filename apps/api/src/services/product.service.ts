@@ -24,7 +24,7 @@ import {
 } from "drizzle-orm";
 import { HttpError } from "elysia-http-problem-json";
 import { SiteSWithManageAble } from "~/db/utils";
-import { productSiteCategoryTable } from "./../../../../packages/contract/src/table.schema";
+import { productSiteCategoryTable, siteSkuTable } from "./../../../../packages/contract/src/table.schema";
 import { type ServiceContext } from "../lib/type";
 
 export class ProductService {
@@ -39,7 +39,7 @@ export class ProductService {
     query: typeof SiteProductContract.ListQuery.static,
     ctx: ServiceContext
   ) {
-    const { page = 1, limit = 10, search, siteCategoryId, isVisible } = query;
+    const { page = 1, limit = 10, search, siteCategoryId, isVisible, isListed } = query;
 
     const siteId = ctx.user.context.site.id;
     const siteType = ctx.user.context.site.siteType || "group";
@@ -110,6 +110,19 @@ export class ProductService {
     // 工厂只能看自己部门生产的商品
     if (siteType === "factory") {
       conditions.push(eq(productTable.deptId, ctx.currentDeptId));
+    } else {
+      // === 集团站核心过滤逻辑 ===
+      if (isListed === true) {
+        // 🔥 情况 A: 只查"已收录" (我的商品管理)
+        // 逻辑：site_product 表里必须有记录
+        conditions.push(isNotNull(siteProductTable.id));
+      }
+      else if (isListed === false || isListed === 'false') {
+        // 🔥 情况 B: 只查"未收录" (商品池/选品中心)
+        // 逻辑：site_product 表里必须是 NULL
+        conditions.push(isNull(siteProductTable.id));
+      }
+      // 情况 C: undefined -> 查全部 (保持原样)
     }
 
     // 搜索条件（搜索原厂名、站点名和SPU编码）
@@ -158,7 +171,9 @@ export class ProductService {
       .where(and(...conditions))
       .limit(Number(limit))
       .offset((page - 1) * limit);
-    console.log("result:", result);
+
+
+
     // 获取商品ID列表
     const productIds = result.map((p) => p.id);
 
@@ -359,29 +374,15 @@ export class ProductService {
       .select({ count: sql<number>`count(*)` })
       .from(productTable);
 
-    // 应用相同的 Join 逻辑
+    // Join 逻辑复刻
     if (siteType === "factory") {
-      countQuery = countQuery.innerJoin(
-        siteProductTable,
-        and(
-          eq(productTable.id, siteProductTable.productId),
-          eq(siteProductTable.siteId, siteId)
-        )
-      ) as any;
+      countQuery = countQuery.innerJoin(siteProductTable, and(eq(productTable.id, siteProductTable.productId), eq(siteProductTable.siteId, siteId))) as any;
     } else {
-      countQuery = countQuery.leftJoin(
-        siteProductTable,
-        and(
-          eq(productTable.id, siteProductTable.productId),
-          eq(siteProductTable.siteId, siteId)
-        )
-      ) as any;
+      countQuery = countQuery.leftJoin(siteProductTable, and(eq(productTable.id, siteProductTable.productId), eq(siteProductTable.siteId, siteId))) as any;
     }
 
-    countQuery = countQuery.leftJoin(
-      productTemplateTable,
-      eq(productTable.id, productTemplateTable.productId)
-    ) as any;
+    // 模板 Join
+    countQuery = countQuery.leftJoin(productTemplateTable, eq(productTable.id, productTemplateTable.productId)) as any;
 
     const [{ count }] = await countQuery.where(and(...conditions));
 
@@ -759,52 +760,84 @@ export class ProductService {
    */
   public async batchDelete(ids: string[], ctx: ServiceContext) {
     const siteId = ctx.user.context.site?.id;
+    const siteType = ctx.user.context.site?.siteType || "group";
+    const tenantId = ctx.user.context.tenantId;
+
     if (!siteId) {
       throw new HttpError.BadRequest("当前部门未绑定站点");
     }
+    if (!ids || ids.length === 0) return { count: 0 };
+
 
     await ctx.db.transaction(async (tx) => {
-      // 1. 验证商品是否属于当前站点
-      const siteProducts = await tx
-        .select()
-        .from(siteProductTable)
-        .where(
-          and(
-            inArray(siteProductTable.productId, ids),
-            eq(siteProductTable.siteId, siteId)
-          )
-        );
+      // =========================================================
+      // 场景 A: 工厂站 (源头删除 - 连根拔起)
+      // =========================================================
+      // 1. 根据站点类型执行不同的删除逻辑
+      if (siteType === "factory") {
+        // === 工厂站：删除源数据 ===
+        // 1.1 安全校验：只能删除自己部门生产的商品
+        // 防止 Factory A 删除了 Factory B 的商品（如果他们共用一个租户数据库）
+        const products = await tx
+          .select({ id: productTable.id })
+          .from(productTable)
+          .where(
+            and(
+              inArray(productTable.id, ids),
+              eq(productTable.deptId, ctx.currentDeptId) // 🔒 锁死部门归属
+            )
+          );
 
-      if (siteProducts.length === 0) {
-        throw new HttpError.NotFound("未找到可删除的商品");
+        const validIds = products.map((p) => p.id);
+        if (validIds.length === 0) {
+          throw new HttpError.NotFound("未找到有权删除的商品");
+        }
+
+        // 1.2 执行删除
+        // 由于 Schema 中有 onDelete: "cascade"，理论上只删 productTable 即可
+        // 但为了代码逻辑显性化，手动删从表也是好习惯，注意顺序（先子后父）
+
+        // a. 删除关联表 (site_product, template, media, category)
+        // 这些表都依赖 productId，可以直接删
+        await tx.delete(siteProductTable).where(inArray(siteProductTable.productId, validIds));
+        await tx.delete(productMediaTable).where(inArray(productMediaTable.productId, validIds));
+        await tx.delete(productTemplateTable).where(inArray(productTemplateTable.productId, validIds));
+        await tx.delete(productMasterCategoryTable).where(inArray(productMasterCategoryTable.productId, validIds));
+
+        // b. 删除 SKU (物理库存)
+        // 注意：如果 sku 表有关联 site_sku，需要依赖级联或先删 site_sku
+        await tx.delete(skuTable).where(inArray(skuTable.productId, validIds));
+
+        // c. 最后删除源商品
+        await tx.delete(productTable).where(inArray(productTable.id, validIds));
       }
-
-      // 2. 删除站点商品关联
-      await tx
-        .delete(siteProductTable)
-        .where(
-          and(
-            eq(siteProductTable.siteId, siteId),
-            inArray(siteProductTable.productId, ids)
+      // =========================================================
+      // 场景 B: 集团站/分销站 (视图删除 - 仅取消收录)
+      // =========================================================
+      else {
+        // === 集团站：只能删除站点视图 ===
+        // 2.1 验证商品是否存在且可访问
+        const result = await tx
+          .delete(siteProductTable)
+          .where(
+            and(
+              eq(siteProductTable.siteId, siteId), // 🔒 只删当前站点的引用
+              inArray(siteProductTable.productId, ids)
+            )
           )
-        );
-      await tx.delete(skuTable).where(inArray(skuTable.productId, ids));
+          .returning({ id: siteProductTable.id });
 
-      // 3. 删除其他关联数据
-      await tx
-        .delete(productMediaTable)
-        .where(inArray(productMediaTable.productId, ids));
 
-      await tx
-        .delete(productTemplateTable)
-        .where(inArray(productTemplateTable.productId, ids));
-
-      await tx
-        .delete(productMasterCategoryTable)
-        .where(inArray(productMasterCategoryTable.productId, ids));
-
-      // 4. 删除商品
-      await tx.delete(productTable).where(inArray(productTable.id, ids));
+        // 2.2 删除 site_sku 表中的记录 (站点价格覆写)
+        // 因为 site_sku 关联的是 site_product_id (根据你的Schema设计)
+        // 如果你的 schema 设置了 site_product 级联删除 site_sku，这一步由于上面删了 site_product 会自动完成
+        // 如果没有级联，或者想显式处理：
+        if (result.length > 0) {
+          const siteProductIds = result.map(r => r.id);
+          await tx.delete(siteSkuTable) // 假设你有这张表
+            .where(inArray(siteSkuTable.siteProductId, siteProductIds));
+        }
+      }
     });
 
     return { count: ids.length, message: `成功删除 ${ids.length} 个商品` };
