@@ -12,10 +12,7 @@ import { ProductList } from "@/components/product/ProductList";
 import { Product, Sku } from "@/components/product/type";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 // Hooks & Types
-import {
-  useProductPageList,
-  useProductsBatchDelete,
-} from "@/hooks/api/product";
+import { useBatchDeleteProduct, useProductPageList } from "@/hooks/api/product";
 import { useDeleteSku } from "@/hooks/api/sku";
 import { useAuthStore } from "@/stores/auth-store";
 
@@ -28,7 +25,7 @@ export default function ProductsPage() {
     limit: 100,
   });
   const deleteSkuMutation = useDeleteSku();
-  const deleteProductMutation = useProductsBatchDelete();
+  const deleteProductMutation = useBatchDeleteProduct();
 
   // 获取当前站点类型（直接获取原始值避免无限循环）
   const siteType = useAuthStore((state) => state.getCurrentSite()?.siteType);

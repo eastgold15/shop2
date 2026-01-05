@@ -28,10 +28,7 @@ export default function UsersPage() {
     data: departmentsResponse,
     isLoading: departmentsLoading,
     refetch: refetchDepartments,
-  } = useDepartmentList({
-    page: 1,
-    limit: 100,
-  });
+  } = useDepartmentList();
   const departments = departmentsResponse?.data || [];
 
   // 如果还没挂载，返回一个加载状态的占位符

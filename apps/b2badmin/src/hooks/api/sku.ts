@@ -1,14 +1,7 @@
-/**
- * 🤖 【Frontend Hooks - 自动生成】
- * --------------------------------------------------------
- * ⚠️ 请勿手动修改此文件，下次运行会被覆盖。
- * 💡 如需自定义，请在 hooks/api 目录下新建文件进行封装。
- * --------------------------------------------------------
- */
-
 import { SkuContract } from "@repo/contract";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "./api-client";
+
 // --- Query Keys ---
 export const skuKeys = {
   all: ["sku"] as const,
@@ -18,8 +11,9 @@ export const skuKeys = {
   detail: (id: string) => [...skuKeys.details(), id] as const,
 };
 
-// --- 1. 列表查询 (GET) ---
-// TRes = any, TQuery = typeof SkuContract.ListQuery.static
+/**
+ * 获取 SKU 列表
+ */
 export function useSkuList(
   params?: typeof SkuContract.ListQuery.static,
   enabled = true
@@ -27,15 +21,19 @@ export function useSkuList(
   return useQuery({
     queryKey: skuKeys.list(params),
     queryFn: () =>
-      api.get<any, typeof SkuContract.ListQuery.static>("/api/v1/sku", {
-        params,
-      }),
+      api.get<any, typeof SkuContract.ListQuery.static>(
+        "/api/v1/sku/list",
+        {
+          params,
+        }
+      ),
     enabled,
   });
 }
 
-// --- 2. 单个详情 (GET) ---
-// TRes = any
+/**
+ * 获取单个 SKU 详情（用于编辑回显）
+ */
 export function useSkuDetail(id: string, enabled = !!id) {
   return useQuery({
     queryKey: skuKeys.detail(id),
@@ -44,32 +42,32 @@ export function useSkuDetail(id: string, enabled = !!id) {
   });
 }
 
-// --- 3. 创建 (POST) ---
-// TRes = any, TBody = typeof SkuContract.Create.static
-export function useCreateSku() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (data: typeof SkuContract.Create.static) =>
-      api.post<any, typeof SkuContract.Create.static>("/api/v1/sku", data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: skuKeys.lists() });
-    },
-  });
-}
-
+/**
+ * 批量创建 SKU
+ */
 export function useBatchCreateSku() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: typeof SkuContract.Create.static) =>
-      api.post<any, typeof SkuContract.Create.static>("/api/v1/sku", data),
+    mutationFn: ({
+      productId,
+      skus,
+    }: {
+      productId: string;
+      skus: typeof SkuContract.BatchCreate.static;
+    }) =>
+      api.post<any, typeof SkuContract.BatchCreate.static>(
+        `/api/v1/sku/product/${productId}/batch`,
+        skus
+      ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: skuKeys.lists() });
     },
   });
 }
 
-// --- 4. 更新 (PUT) ---
-// TRes = any, TBody = typeof SkuContract.Update.static
+/**
+ * 更新单个 SKU
+ */
 export function useUpdateSku() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -80,16 +78,22 @@ export function useUpdateSku() {
       id: string;
       data: typeof SkuContract.Update.static;
     }) =>
-      api.put<any, typeof SkuContract.Update.static>(`/api/v1/sku/${id}`, data),
+      api.put<any, typeof SkuContract.Update.static>(
+        `/api/v1/sku/${id}`,
+        data
+      ),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: skuKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: skuKeys.detail(variables.id) });
+      queryClient.invalidateQueries({
+        queryKey: skuKeys.detail(variables.id),
+      });
     },
   });
 }
 
-// --- 5. 删除 (DELETE) ---
-// TRes = any
+/**
+ * 删除单个 SKU
+ */
 export function useDeleteSku() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -99,23 +103,15 @@ export function useDeleteSku() {
     },
   });
 }
-export function useBatchDeleteSku() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (ids: string[]) =>
-      api.delete<any, any>("/api/v1/sku/batch", { ids }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: skuKeys.lists() });
-    },
-  });
-}
 
-// 获取所有SKU（用于SKU管理页面，返回站点所有SKU及关联商品信息）
+/**
+ * 获取所有SKU（用于SKU管理页面，返回站点所有SKU及关联商品信息）
+ */
 export function useAllSkusForManagement(enabled = true) {
   return useQuery({
     queryKey: ["sku", "all", "management"],
     queryFn: () =>
-      api.get<any, any>("/api/v1/sku", {
+      api.get<any, typeof SkuContract.ListQuery.static>("/api/v1/sku/list", {
         params: { page: 1, limit: 1000 }, // 获取所有数据，前端自行过滤
       }),
     staleTime: 2 * 60 * 1000, // 2分钟
@@ -123,11 +119,13 @@ export function useAllSkusForManagement(enabled = true) {
   });
 }
 
-// 获取商品列表（用于SKU创建时选择）
-export function useProductsForSKU(id: string, enabled = true) {
+/**
+ * 获取商品的 SKU 列表
+ */
+export function useProductSkus(productId: string, enabled = !!productId) {
   return useQuery({
-    queryKey: ["products", "for-sku", id],
-    queryFn: () => api.get<any, any>(`/api/v1/sku/${id}`),
+    queryKey: ["product", productId, "skus"],
+    queryFn: () => api.get<any>(`/api/v1/product/${productId}/sku`),
     staleTime: 5 * 60 * 1000, // 5分钟
     enabled,
   });

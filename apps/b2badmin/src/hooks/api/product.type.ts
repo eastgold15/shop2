@@ -4,7 +4,63 @@
  */
 
 // ==================== 列表查询 ====================
-
+export interface ProductPageListRes {
+  data: Datum[];
+  total: number;
+  page: number;
+  limit: number;
+}
+interface Datum {
+  id: string;
+  name: string;
+  spuCode: string;
+  description: string;
+  status: number;
+  units: string;
+  createdAt: string;
+  updatedAt: string;
+  price: string;
+  sitePrice: string;
+  hasCustomPrice: boolean;
+  siteName: string;
+  siteDescription: string;
+  siteCategoryId: string;
+  templateId: string;
+  mediaIds: string[];
+  videoIds: any[];
+  images: Image[];
+  videos: any[];
+  mainImage: string;
+  mainImageId: string;
+  skus: Skus[];
+  skuCount: number;
+}
+interface Skus {
+  id: string;
+  productId: string;
+  skuCode: string;
+  price: string;
+  marketPrice: string;
+  costPrice: string;
+  stock: string;
+  specJson: SpecJson;
+  status: number;
+  media: Image[];
+}
+interface SpecJson {
+  color: string;
+  size: string;
+}
+interface Image {
+  id: string;
+  url: string;
+  originalName: string;
+  mimeType: string;
+  mediaType: string;
+  thumbnailUrl?: any;
+  isMain: boolean;
+  sortOrder: number;
+}
 /**
  * 商品列表查询参数
  */

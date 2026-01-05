@@ -33,7 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useBatchCreateSku, useProductsForSKU } from "@/hooks/api/sku";
+import { useBatchCreateSku } from "@/hooks/api/sku";
 
 // SKU 基础信息 schema
 const skuSchema = z.object({
@@ -73,12 +73,6 @@ export function CreateSKUModal({
   productId,
 }: CreateSKUModalProps) {
   const createSKUBatch = useBatchCreateSku();
-  const { data: productsData } = useProductsForSKU();
-
-  // 获取当前商品名称 - 处理可能为空的情况
-  const currentProduct = productsData?.data?.find(
-    (p: any) => p.id === productId
-  );
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -116,10 +110,17 @@ export function CreateSKUModal({
   const onSubmit = async (data: FormData) => {
     console.log("CreateSKUModal onSubmit:", data);
     try {
-      // 生成完整的SKU编码
+      // 生成完整的SKU编码，并转换数字字段为字符串
       const processedSkus = data.skus.map((sku, index) => ({
-        ...sku,
         skuCode: `${data.baseSkuCode}-${String(index + 1).padStart(3, "0")}`,
+        price: sku.price.toString(),
+        stock: sku.stock.toString(),
+        marketPrice: sku.marketPrice?.toString() || null,
+        costPrice: sku.costPrice?.toString() || null,
+        weight: sku.weight?.toString() || null,
+        volume: sku.volume?.toString() || null,
+        specJson: sku.specJson,
+        mediaIds: sku.mediaIds,
       }));
       console.log("Processed SKUs:", processedSkus);
 
@@ -184,14 +185,10 @@ export function CreateSKUModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <PackagePlus className="h-5 w-5" />
-            {currentProduct
-              ? `为 "${currentProduct.name}" 创建 SKU`
-              : "批量创建 SKU"}
+            {productId ? "批量创建 SKU" : "批量创建 SKU"}
           </DialogTitle>
           <DialogDescription>
-            {currentProduct
-              ? `为商品 "${currentProduct.name}" 批量创建SKU，支持规格组合定价`
-              : "为商品批量创建SKU，支持规格组合定价"}
+            为商品批量创建SKU，支持规格组合定价
           </DialogDescription>
         </DialogHeader>
 

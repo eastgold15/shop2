@@ -34,6 +34,8 @@ export class ProductService {
     // 构建查询条件
     const conditions = [
       eq(siteProductTable.siteId, siteId),
+      eq(productTable.tenantId, ctx.user.context.tenantId),
+      eq(productTable.deptId, ctx.currentDeptId),
       ...(isVisible ? [eq(siteProductTable.isVisible, isVisible)] : []),
     ];
 
@@ -701,10 +703,14 @@ export class ProductService {
 
   public async getSkuList(id: string, ctx: ServiceContext) {
     // 修复：移除数组解构，findMany 返回的是数组而不是单个对象
+
+    console.log('ctx.user.context.tenantId:', ctx.user.context.tenantId)
+    console.log('ctx.currentDeptId:', ctx.currentDeptId)
     const res = await ctx.db.query.skuTable.findMany({
       where: {
         productId: id,
-        tenantId: ctx.user.context.tenantId!,
+        tenantId: ctx.user.context.tenantId,
+
         deptId: ctx.currentDeptId,
       },
       with: {

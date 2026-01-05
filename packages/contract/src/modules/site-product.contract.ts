@@ -1,8 +1,8 @@
 import { t } from "elysia";
 import { PaginationParams, SortParams } from "../helper/query-types.model";
 import { type InferDTO, spread } from "../helper/utils";
-import { siteProductTable } from "../table.schema";
-import { ProductFields } from "./product.contract";
+import { productTable, siteProductTable } from "../table.schema";
+
 import { ProductTemplateFields } from "./product-template.contract";
 
 const autoFields = ["id", "createdAt", "updatedAt", "siteId"];
@@ -10,6 +10,7 @@ const autoFields = ["id", "createdAt", "updatedAt", "siteId"];
 export const SiteProductInsertFields = spread(siteProductTable, "insert");
 /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
 export const SiteProductFields = spread(siteProductTable, "select");
+const ProductFields = spread(productTable, "select");
 export const SiteProductContract = {
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Response: t.Object({

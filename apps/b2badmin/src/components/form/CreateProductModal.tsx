@@ -35,7 +35,7 @@ const formSchema = z.object({
   description: z.string().optional(),
   units: z.string().optional(),
   siteCategoryId: z.string().min(1, "请选择站点分类"),
-  templateId: z.string().optional(),
+  templateId: z.string().min(1, "请选择属性模板"),
   mediaIds: z.array(z.string()).optional(),
   mainImageId: z.string().optional(),
   videoIds: z.array(z.string()).optional(),
@@ -104,13 +104,19 @@ export function CreateProductModal({
 
   const onSubmit = async (data: FormData) => {
     try {
+      // 转换数据以匹配后端接口类型
+      const submitData = {
+        ...data,
+        description: data.description || null,
+      };
+
       if (isEdit) {
         await updateProduct.mutateAsync({
           id: product.id,
-          data,
+          data: submitData,
         });
       } else {
-        await createProduct.mutateAsync(data);
+        await createProduct.mutateAsync(submitData);
       }
       onSuccess?.();
       form.reset();
@@ -237,7 +243,7 @@ export function CreateProductModal({
                 name="templateId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>属性模板</FormLabel>
+                    <FormLabel>属性模板 *</FormLabel>
                     <FormControl>
                       <select
                         className="w-full rounded-md border p-2"
@@ -246,8 +252,8 @@ export function CreateProductModal({
                         }
                         value={field.value || ""}
                       >
-                        <option value="">选择属性模板（可选）</option>
-                        {templatesData.map((template) => (
+                        <option value="">选择属性模板</option>
+                        {templatesData.map((template: any) => (
                           <option key={template.id} value={template.id}>
                             {template.name}
                           </option>
