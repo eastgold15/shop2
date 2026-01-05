@@ -542,13 +542,13 @@ export const productTemplateTable = p.pgTable("product_template", {
 // @skipGen
 export const skuTable = p.pgTable("sku", {
   ...Audit,
-  skuCode: p.varchar("sku_code", { length: 100 }).notNull(), // 同样建议去重逻辑需带上 tenantId
+  skuCode: p.varchar("sku_code", { length: 100 }).notNull(),
   price: p
     .decimal("price", { precision: 10, scale: 2 })
     .notNull()
-    .default("0.00"),
-  marketPrice: p.decimal("market_price", { precision: 10, scale: 2 }),
-  costPrice: p.decimal("cost_price", { precision: 10, scale: 2 }),
+    .default("0.00"), // 优惠价格
+  marketPrice: p.decimal("market_price", { precision: 10, scale: 2 }), // 市场价
+  costPrice: p.decimal("cost_price", { precision: 10, scale: 2 }), // 成本价格
   weight: p.decimal("weight", { precision: 8, scale: 3 }).default("0.000"),
   volume: p.decimal("volume", { precision: 10, scale: 3 }).default("0.000"),
   stock: p.decimal("stock").default("0"),
@@ -601,6 +601,23 @@ export const siteProductTable = p.pgTable("site_product", {
   siteCategoryId: p
     .uuid("site_category_id")
     .references(() => siteCategoryTable.id, { onDelete: "set null" }),
+});
+
+// schema.ts 新增
+
+export const siteSkuTable = p.pgTable("site_sku", {
+  id: idUuid, // 自身ID
+
+  // 归属关系
+  siteId: p.uuid("site_id").notNull().references(() => siteTable.id, { onDelete: "cascade" }),
+  siteProductId: p.uuid("site_product_id").notNull().references(() => siteProductTable.id, { onDelete: "cascade" }),
+
+  // 核心关联：指向源头 SKU
+  skuId: p.uuid("sku_id").notNull().references(() => skuTable.id, { onDelete: "cascade" }),
+
+  // 站点覆写数据
+  price: p.decimal("price", { precision: 10, scale: 2 }), // 站点自定义价格，为空则继承原价
+  isActive: p.boolean("is_active").default(true), // 站点是否上架此规格
 });
 
 export const customerTable = p.pgTable("customer", {

@@ -3,6 +3,8 @@ import { PaginationParams, SortParams } from "../helper/query-types.model";
 import { type InferDTO, spread } from "../helper/utils";
 import { skuTable } from "../table.schema";
 
+
+const autoFields = ["id", "createdAt", "updatedAt", "siteId", "tenantId", "deptId", "createdBy"];
 /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
 export const SkuInsertFields = spread(skuTable, "insert");
 /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
@@ -12,11 +14,6 @@ export const SkuContract = {
   Response: t.Object({
     ...SkuFields,
   }),
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  Create: t.Object({
-    ...t.Omit(t.Object(SkuInsertFields), ["id", "createdAt", "updatedAt"])
-      .properties,
-  }),
 
   Update: t.Partial(
     t.Composite([
@@ -25,6 +22,9 @@ export const SkuContract = {
         "createdAt",
         "updatedAt",
         "siteId",
+        "tenantId",
+        "deptId",
+        "createdBy",
       ]),
       t.Object({
         mediaIds: t.Optional(t.Array(t.String())), // 该 SKU 的图片 ID 列表
@@ -48,18 +48,19 @@ export const SkuContract = {
     ])
   ),
   // BatchCreate 批量创建
-  BatchCreate: t.Object({
-    productId: t.String(),
-    skus: t.Array(
-      t.Object({
-        skuCode: t.String(),
-        price: t.Number(),
-        stock: t.Optional(t.Number()),
-        specJson: t.Any(),
-        mediaIds: t.Optional(t.Array(t.String())),
-      })
-    ),
-  }),
+  BatchCreate: t.Array(
+    t.Object({
+      skuCode: SkuFields.skuCode,
+      price: SkuFields.price,
+      stock: SkuFields.stock,
+      specJson: t.Any(),// { "Color": "Red", "Size": "M" }
+      mediaIds: t.Optional(t.Array(t.String())),// 每个SKU可以有自己的图片集
+      marketPrice: SkuFields.marketPrice,
+      costPrice: SkuInsertFields.costPrice,
+      weight: SkuInsertFields.weight,
+      volume: SkuInsertFields.volume,
+    })
+  ),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   ListQuery: t.Object({
     ...t.Partial(t.Object(SkuInsertFields)).properties,

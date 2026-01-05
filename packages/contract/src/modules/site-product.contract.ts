@@ -2,7 +2,10 @@ import { t } from "elysia";
 import { PaginationParams, SortParams } from "../helper/query-types.model";
 import { type InferDTO, spread } from "../helper/utils";
 import { siteProductTable } from "../table.schema";
+import { ProductFields } from "./product.contract";
+import { ProductTemplateFields } from "./product-template.contract";
 
+const autoFields = ["id", "createdAt", "updatedAt", "siteId"];
 /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
 export const SiteProductInsertFields = spread(siteProductTable, "insert");
 /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
@@ -12,23 +15,37 @@ export const SiteProductContract = {
   Response: t.Object({
     ...SiteProductFields,
   }),
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+
   Create: t.Object({
-    ...t.Omit(t.Object(SiteProductInsertFields), [
-      "id",
-      "createdAt",
-      "updatedAt",
-    ]).properties,
+    name: ProductFields.name,
+    description: ProductFields.description,
+    spuCode: ProductFields.spuCode,
+    status: ProductFields.status,
+    units: ProductFields.units,
+    templateId: ProductTemplateFields.templateId,
+
+    seoTitle: SiteProductInsertFields.seoTitle,
+    siteCategoryId: t.String(),
+    // 商品媒体关联
+    mediaIds: t.Optional(t.Array(t.String())), // 商品图片ID列表
+    mainImageId: t.Optional(t.String()), // 主图ID
+    videoIds: t.Optional(t.Array(t.String())), // 视频ID列表
   }),
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+
   Update: t.Partial(
     t.Object({
-      ...t.Omit(t.Object(SiteProductInsertFields), [
-        "id",
-        "createdAt",
-        "updatedAt",
-        "siteId",
-      ]).properties,
+      spuCode: ProductFields.spuCode,
+      status: ProductFields.status,
+      units: ProductFields.units,
+      templateId: ProductTemplateFields.templateId,
+      siteName: SiteProductInsertFields.siteName,
+      siteDescription: SiteProductInsertFields.siteDescription,
+      seoTitle: SiteProductInsertFields.seoTitle,
+      siteCategoryId: t.Optional(t.String()),
+      // 商品媒体关联
+      mediaIds: t.Optional(t.Array(t.String())), // 商品图片ID列表
+      mainImageId: t.Optional(t.String()), // 主图ID
+      videoIds: t.Optional(t.Array(t.String())), // 视频ID列表
     })
   ),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */

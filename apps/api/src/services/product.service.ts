@@ -1,5 +1,6 @@
 import {
   mediaTable,
+  ProductContract,
   productMasterCategoryTable,
   productMediaTable,
   productTable,
@@ -13,188 +14,14 @@ import {
 } from "@repo/contract";
 import { and, asc, eq, inArray, like, or, sql } from "drizzle-orm";
 import { HttpError } from "elysia-http-problem-json";
+import { productSiteCategoryTable } from "./../../../../packages/contract/src/table.schema";
 import { type ServiceContext } from "../lib/type";
 
 export class ProductService {
-  /**
-   * 创建商品（支持站点隔离和模板绑定）
-   */
-  public async create(body: any, ctx: ServiceContext) {
-    const {
-      name,
-      spuCode,
-      description,
-      status = 1,
-      units,
-      siteCategoryId,
-      templateId,
-      price,
-      siteName,
-      siteDescription,
-      seoTitle,
-      // 媒体字段
-      mediaIds, // 商品图片ID列表
-      mainImageId, // 主图ID
-      videoIds, // 视频ID列表
-    } = body;
-
-    const siteId = ctx.user.context.site.id;
-    if (!siteId) {
-      throw new HttpError.BadRequest("当前部门未绑定站点，无法创建商品");
-    }
-
-    return await ctx.db.transaction(async (tx) => {
-      // 1. 验证站点分类
-      const [siteCategory] = await tx
-        .select()
-        .from(siteCategoryTable)
-        .where(
-          and(
-            eq(siteCategoryTable.id, siteCategoryId),
-            eq(siteCategoryTable.siteId, siteId)
-          )
-        )
-        .limit(1);
-
-      if (!siteCategory) {
-        throw new HttpError.NotFound(
-          `站点分类不存在${siteCategoryId}，站点ID:${siteId}`
-        );
-      }
-
-      // 2. 验证模板（如果提供）
-      if (templateId) {
-        const [template] = await tx
-          .select()
-          .from(templateTable)
-          .where(eq(templateTable.id, templateId))
-          .limit(1);
-
-        if (!template) {
-          throw new HttpError.NotFound("模板不存在");
-        }
-
-        // 如果站点分类关联了主分类，验证模板是否属于该主分类  模板有主分类，商品的主分类是一致的
-        if (
-          siteCategory.masterCategoryId &&
-          template.masterCategoryId !== siteCategory.masterCategoryId
-        ) {
-          throw new HttpError.BadRequest("模板不属于该站点分类对应的主分类");
-        }
-      }
-
-      // 3. 创建商品（全局商品）
-      const [product] = await tx
-        .insert(productTable)
-        .values({
-          name,
-          spuCode,
-          description,
-          status,
-          units,
-          tenantId: ctx.user.context.tenantId!,
-          deptId: ctx.currentDeptId,
-          createdBy: ctx.user.id,
-        })
-        .returning();
-
-      // 4. 关联模板（如果提供）
-      if (templateId) {
-        await tx.insert(productTemplateTable).values({
-          productId: product.id,
-          templateId,
-        });
-      }
-
-      // 5. 关联主分类（如果站点分类关联了主分类）
-      if (siteCategory.masterCategoryId) {
-        await tx.insert(productMasterCategoryTable).values({
-          productId: product.id,
-          masterCategoryId: siteCategory.masterCategoryId,
-        });
-      }
-
-      // 6. 关联媒体（图片和视频）
-      const allMediaIds = [...(mediaIds || []), ...(videoIds || [])];
-
-      if (allMediaIds.length > 0) {
-        // 验证媒体是否存在
-        const existingMedia = await tx
-          .select()
-          .from(mediaTable)
-          .where(inArray(mediaTable.id, allMediaIds));
-
-        const foundIds = existingMedia.map((m) => m.id);
-        const notFound = allMediaIds.filter((id) => !foundIds.includes(id));
-
-        if (notFound.length > 0) {
-          throw new HttpError.NotFound(`媒体 ID ${notFound.join(", ")} 不存在`);
-        }
-
-        // 构建媒体关联数据
-        const mediaRelations: any[] = [];
-
-        // 处理图片（sortOrder 从 0 开始）
-        if (mediaIds && mediaIds.length > 0) {
-          mediaIds.forEach((mediaId: string, index: number) => {
-            mediaRelations.push({
-              productId: product.id,
-              mediaId,
-              isMain: mediaId === mainImageId,
-              sortOrder: index,
-            });
-          });
-        }
-
-        // 处理视频（sortOrder 设为 -1）
-        if (videoIds && videoIds.length > 0) {
-          videoIds.forEach((mediaId: string, index: number) => {
-            mediaRelations.push({
-              productId: product.id,
-              mediaId,
-              isMain: false,
-              sortOrder: -1 - index, // -1, -2, -3... 保持顺序
-            });
-          });
-        }
-
-        if (mediaRelations.length > 0) {
-          await tx.insert(productMediaTable).values(mediaRelations);
-        }
-      }
-
-      // 7. 创建站点商品关联（根据站点类型采用不同策略）
-      const siteType = ctx.user.context.site.siteType || "group";
-
-      const [siteProduct] = await tx
-        .insert(siteProductTable)
-        .values({
-          siteId,
-          productId: product.id,
-          // 工厂模式：强制同步基础数据
-          // 集团模式：允许自定义覆盖
-          sitePrice: price ? price.toString() : null,
-          siteName: siteType === "factory" ? name : siteName || name,
-          siteDescription:
-            siteType === "factory"
-              ? description
-              : siteDescription || description,
-          siteCategoryId,
-          seoTitle,
-          isVisible: true,
-        })
-        .returning();
-
-      return {
-        product,
-        siteProduct,
-      };
-    });
-  }
 
   /**
-   * 管理端获取站点商品列表（包含媒体和SKU）
-   */
+ * 管理端获取站点商品列表（包含媒体和SKU）
+ */
   public async pagelist(
     query: typeof SiteProductContract.ListQuery.static,
     ctx: ServiceContext
@@ -467,41 +294,212 @@ export class ProductService {
       limit: Number(limit),
     };
   }
+  /**
+   * 创建商品（支持站点隔离和模板绑定）只能是工厂创建
+   */
+  public async create(
+    body: SiteProductContract["Create"],
+    ctx: ServiceContext
+  ) {
+    const {
+      spuCode,
+      status = 0,
+      units,
+      siteCategoryId,
+      templateId,
+      name,
+      description,
+      seoTitle,
+      // 媒体字段
+      mediaIds, // 商品图片ID列表
+      mainImageId, // 主图ID
+      videoIds, // 视频ID列表
+    } = body;
+    // 1. 权限硬校验
+    if (ctx.user.context.department.category.toUpperCase() !== "FACTORY") {
+      throw new HttpError.Forbidden("只有工厂有权限创建商品库");
+    }
+    const siteId = ctx.user.context.site.id;
+
+    return await ctx.db.transaction(async (tx) => {
+      // 2. 验证站点分类 (为了挂载到货架)
+      const [siteCategory] = await tx
+        .select()
+        .from(siteCategoryTable)
+        .where(
+          and(
+            eq(siteCategoryTable.id, siteCategoryId),
+            eq(siteCategoryTable.siteId, siteId)
+          )
+        )
+        .limit(1);
+
+      if (!siteCategory) {
+        throw new HttpError.NotFound(
+          `站点分类不存在${siteCategoryId}，站点ID:${siteId}`
+        );
+      }
+
+      // 3. 验证模板 & 获取主分类归属 (🔥 核心修改)
+      let targetMasterCategoryId: string | null = null;
+
+      if (templateId) {
+        const [template] = await tx
+          .select() // Select All，包含 masterCategoryId
+          .from(templateTable)
+          .where(eq(templateTable.id, templateId))
+          .limit(1);
+
+        if (!template) {
+          throw new HttpError.NotFound("指定的模板不存在");
+        }
+
+        // 从模板中提取主分类ID
+        targetMasterCategoryId = template.masterCategoryId;
+      } else {
+        // 💡 策略决策：如果没选模板，是否允许创建无主分类商品？
+        // 如果业务要求严格，这里可以 
+        throw new HttpError.BadRequest("必须选择商品模板");
+      }
+
+      // 4. 创建商品主体 (SPU)
+      const [product] = await tx
+        .insert(productTable)
+        .values({
+          name,
+          spuCode,
+          description,
+          status,
+          units,
+          tenantId: ctx.user.context.tenantId,
+          deptId: ctx.currentDeptId,
+          createdBy: ctx.user.id,
+        })
+        .returning();
+
+      // 5. 关联模板
+      if (templateId) {
+        await tx.insert(productTemplateTable).values({
+          productId: product.id,
+          templateId,
+        });
+      }
+
+
+      // 6. 关联主分类 (🔥 以前是靠 siteCategory，现在靠 template)
+      if (targetMasterCategoryId) {
+        await tx.insert(productMasterCategoryTable).values({
+          productId: product.id,
+          masterCategoryId: targetMasterCategoryId, // 使用模板绑定的主分类
+        });
+      }
+      // 7. 关联站点分类 (货架)
+      if (siteCategoryId) {
+        await tx.insert(productSiteCategoryTable).values({
+          productId: product.id,
+          siteCategoryId: siteCategory.id,
+        });
+      }
+
+
+      // 8. 关联媒体 (逻辑不变)
+      const allMediaIds = [...(mediaIds || []), ...(videoIds || [])];
+
+      if (allMediaIds.length > 0) {
+        // 验证媒体是否存在
+        const existingMedia = await tx
+          .select()
+          .from(mediaTable)
+          .where(inArray(mediaTable.id, allMediaIds));
+
+        const foundIds = existingMedia.map((m) => m.id);
+        const notFound = allMediaIds.filter((id) => !foundIds.includes(id));
+
+        if (notFound.length > 0) {
+          throw new HttpError.NotFound(`媒体 ID ${notFound.join(", ")} 不存在`);
+        }
+
+        // 构建媒体关联数据
+        const mediaRelations: any[] = [];
+
+        // 处理图片（sortOrder 从 0 开始）
+        if (mediaIds && mediaIds.length > 0) {
+          mediaIds.forEach((mediaId: string, index: number) => {
+            mediaRelations.push({
+              productId: product.id,
+              mediaId,
+              isMain: mediaId === mainImageId,
+              sortOrder: index,
+            });
+          });
+        }
+
+        // 处理视频（sortOrder 设为 -1）
+        if (videoIds && videoIds.length > 0) {
+          videoIds.forEach((mediaId: string, index: number) => {
+            mediaRelations.push({
+              productId: product.id,
+              mediaId,
+              isMain: false,
+              sortOrder: -1 - index, // -1, -2, -3... 保持顺序
+            });
+          });
+        }
+
+        if (mediaRelations.length > 0) {
+          await tx.insert(productMediaTable).values(mediaRelations);
+        }
+      }
+
+
+      // 9. 创建站点商品视图
+      const [siteProduct] = await tx
+        .insert(siteProductTable)
+        .values({
+          siteId,
+          productId: product.id,
+          siteName: name,
+          siteDescription: description,
+          siteCategoryId,
+          seoTitle,
+          isVisible: true,
+        })
+        .returning();
+
+      return {
+        product,
+        siteProduct,
+      };
+    });
+  }
+
+
 
   /**
-   * 更新商品（全量关联更新）
+   * 更新商品（全量关联更新）分两种一种是全局商品，一种是站点商品
    */
-  public async update(productId: string, body: any, ctx: ServiceContext) {
+  public async update(
+    productId: string,
+    body: ProductContract["Update"],
+    ctx: ServiceContext
+  ) {
     const {
-      // 1. 基础信息
-      name,
-      spuCode,
-      description,
-      status,
-      units,
-      // 2. 站点特定信息
-      price,
-      siteName,
-      siteDescription,
-      seoTitle,
-      siteCategoryId,
-      // 3. 关联 ID
-      templateId,
-      // 4. 媒体数据
-      mediaIds,
-      mainImageId,
-      videoIds,
-      // 5. SKU 列表 (全量覆盖更新方案)
-      skus,
+      // 基础字段
+      name, spuCode, description, status, units,
+      // 站点视图字段
+      seoTitle, siteCategoryId,
+      // 源头控制字段 (集团站无权修改，传了也白传)
+      templateId, mediaIds, mainImageId, videoIds,
     } = body;
 
     const siteId = ctx.user.context.site?.id;
     if (!siteId) {
       throw new HttpError.BadRequest("当前部门未绑定站点");
     }
+    const siteType = ctx.user.context.site.siteType || "group";
 
     return await ctx.db.transaction(async (tx) => {
-      // --- 阶段 A: 权限与存在性验证 ---
+      // 1. 检查权限
       const [siteProduct] = await tx
         .select()
         .from(siteProductTable)
@@ -516,102 +514,93 @@ export class ProductService {
       if (!siteProduct) {
         throw new HttpError.NotFound("商品不存在或无权访问");
       }
+      // =========================================================
+      // 场景 A: 集团站/普通站点 (只更新视图，立即返回)
+      // =========================================================
 
-      // --- 阶段 B & C: 根据站点类型执行不同的更新策略 ---
-      const siteType = ctx.user.context.site.siteType || "group";
-
-      if (siteType === "factory") {
-        // 【工厂模式 - 双写同步策略】
-        // 工厂是数据源头，需要同时更新 productTable 和 siteProductTable
-        // 这样查询层可以统一从 siteProductTable 查询，逻辑更简洁
-
-        // B1. 更新源头表 (productTable) - 记录基础信息
-        // 注意：productTable 不存储 price，价格是站点级别数据，存在 siteProductTable
-        const productUpdate: any = {};
-        if (name !== undefined) productUpdate.name = name;
-        if (spuCode !== undefined) productUpdate.spuCode = spuCode;
-        if (description !== undefined) productUpdate.description = description;
-        if (status !== undefined) productUpdate.status = status;
-        if (units !== undefined) productUpdate.units = units;
-
-        if (Object.keys(productUpdate).length > 0) {
-          await tx
-            .update(productTable)
-            .set({ ...productUpdate, updatedAt: new Date() })
-            .where(eq(productTable.id, productId));
-        }
-
-        // C1. 同步更新站点商品表 (siteProductTable) - 强制保持一致
-        // 工厂模式下，siteName/sitePrice 必须与源头保持同步
-        await tx
-          .update(siteProductTable)
+      if (siteType !== "factory") {
+        // 1. 更新站点商品表 (SiteProduct)
+        await tx.update(siteProductTable)
           .set({
-            siteName: name, // 强制同步源头名称
-            siteDescription: description, // 强制同步描述
-            sitePrice: price ? price.toString() : null, // 强制同步价格
+            siteName: name, // 允许改名
+            siteDescription: description, // 允许改描述
             seoTitle,
-            siteCategoryId,
+            siteCategoryId, // 允许改自己的货架
+            // 注意：集团站不允许改 sitePrice，除非你开放这个权限
           })
-          .where(
-            and(
-              eq(siteProductTable.productId, productId),
-              eq(siteProductTable.siteId, siteId)
-            )
-          );
-      } else {
-        // 【集团/收录模式 - 覆盖策略】
-        // 只更新 siteProductTable，允许自定义名称和价格
-        // productTable 保持原厂数据不变
+          .where(eq(siteProductTable.id, siteProduct.id));
 
-        // B2. 基础字段更新（仅非覆盖字段）
-        const productUpdate: any = {};
-        if (spuCode !== undefined) productUpdate.spuCode = spuCode;
-        if (status !== undefined) productUpdate.status = status;
-        if (units !== undefined) productUpdate.units = units;
+        // [重点]：集团站改了 siteCategoryId，不需要也不应该去同步 masterCategoryId
+        // 因为集团的分类可能是"促销区"，这不代表商品本身变成了"促销品"类别
 
-        if (Object.keys(productUpdate).length > 0) {
-          await tx
-            .update(productTable)
-            .set({ ...productUpdate, updatedAt: new Date() })
-            .where(eq(productTable.id, productId));
-        }
-
-        // C2. 站点商品表更新（允许覆盖）
-        await tx
-          .update(siteProductTable)
-          .set({
-            siteName: siteName || name, // 允许自定义名称，回退到原名
-            siteDescription: siteDescription || description, // 允许自定义描述
-            sitePrice: price ? price.toString() : null, // 允许自定义价格
-            seoTitle,
-            siteCategoryId,
-          })
-          .where(
-            and(
-              eq(siteProductTable.productId, productId),
-              eq(siteProductTable.siteId, siteId)
-            )
-          );
+        return { success: true, id: productId }; // 🔥 集团站逻辑结束，直接返回
       }
 
-      // 如果更新了站点分类，同步更新主分类关联
-      if (siteCategoryId) {
-        const [category] = await tx
-          .select()
-          .from(siteCategoryTable)
-          .where(eq(siteCategoryTable.id, siteCategoryId))
-          .limit(1);
-        if (category?.masterCategoryId) {
-          await tx
-            .delete(productMasterCategoryTable)
-            .where(eq(productMasterCategoryTable.productId, productId));
-          await tx.insert(productMasterCategoryTable).values({
-            productId,
-            masterCategoryId: category.masterCategoryId,
-          });
+      // =========================================================
+      // 场景 B: 工厂站 (源头修改，逻辑继续往下走)
+      // =========================================================
+      // 1. 更新源头表 (Product)
+      await tx
+        .update(productTable)
+        .set({
+          name,
+          spuCode,
+          description,
+          status,
+          units,
+        })
+        .where(eq(productTable.id, productId));
+      // 2. 强制同步工厂的站点表 (SiteProduct)
+      await tx.update(siteProductTable)
+        .set({
+          siteName: name, // 工厂视图强制同步标准名
+          siteDescription: description,
+          seoTitle,
+          siteCategoryId,
+        })
+        .where(eq(siteProductTable.id, siteProduct.id));
+
+      // 3. [工厂特权] 处理模版 & 主分类联动
+      if (templateId !== undefined) {
+        // 先清理旧的
+        await tx.delete(productTemplateTable).where(eq(productTemplateTable.productId, productId));
+
+        // 如果传入了新的 templateId (非 null/空字符串)
+        if (templateId) {
+          // 2.1 关联新模版
+          await tx.insert(productTemplateTable).values({ productId, templateId });
+
+          // 2.2 🔥 查出新模版对应的主分类
+          const [newTemplate] = await tx
+            .select({ masterCategoryId: templateTable.masterCategoryId })
+            .from(templateTable)
+            .where(eq(templateTable.id, templateId))
+            .limit(1);
+
+          // ✨ 增加这个校验：确保模版有效
+          if (!newTemplate) {
+            throw new HttpError.NotFound("更新失败：指定的模板ID不存在");
+          }
+
+          // 2.3 级联更新商品的主分类
+          if (newTemplate.masterCategoryId) {
+            await tx.delete(productMasterCategoryTable).where(eq(productMasterCategoryTable.productId, productId));
+            await tx.insert(productMasterCategoryTable).values({
+              productId,
+              masterCategoryId: newTemplate.masterCategoryId
+            });
+          }
+        } else {
+          // 如果 templateId 是 null，表示用户想“解绑模版”
+          // 此时是否要删除 MasterCategory？
+          // 建议：保持 MasterCategory 不动，或者也删除。看业务定义。
+          // 目前你的代码是保持不动，这是安全的。
+          throw new HttpError.BadRequest("更新失败：模版ID不能为空");
         }
       }
 
+
+      // 4. [工厂特权] 媒体更新 (全量替换)
       // --- 阶段 D: 媒体全量替换 (Images & Videos) ---
       if (mediaIds !== undefined || videoIds !== undefined) {
         await tx
@@ -642,79 +631,6 @@ export class ProductService {
           await tx.insert(productMediaTable).values(mediaRelations);
         }
       }
-
-      // --- 阶段 E: SKU Diff 更新（增量更新策略）---
-      // 逻辑：对比现有 SKU 与传入 SKU，执行：删除移除的、更新存在的、插入新增的
-      // 好处：保持 SKU ID 不变，避免外键报错和历史数据丢失
-      if (skus && Array.isArray(skus)) {
-        // E1. 查询现有 SKU
-        const existingSkus = await tx
-          .select({ id: skuTable.id })
-          .from(skuTable)
-          .where(eq(skuTable.productId, productId));
-        const existingIds = new Set(existingSkus.map((s) => s.id));
-
-        // E2. 提取传入的 SKU ID（如果有）
-        const incomingIds = new Set(skus.filter((s) => s.id).map((s) => s.id));
-
-        // E3. 删除：在数据库中存在但不在传入列表中的 SKU
-        const toDeleteIds = [...existingIds].filter(
-          (id) => !incomingIds.has(id)
-        );
-        if (toDeleteIds.length > 0) {
-          try {
-            await tx.delete(skuTable).where(inArray(skuTable.id, toDeleteIds));
-          } catch (error: any) {
-            // 如果删除失败（如外键约束），给出明确错误提示
-            if (error.message?.includes("foreign key constraint")) {
-              throw new HttpError.Conflict(
-                "无法删除已有订单引用的 SKU，请先删除相关订单"
-              );
-            }
-            throw error;
-          }
-        }
-
-        // E4. 更新或插入每个 SKU
-        for (const s of skus) {
-          const skuData = {
-            skuCode: s.skuCode,
-            price: s.price?.toString() || "0",
-            stock: s.stock?.toString() || "0",
-            specJson: s.specJson || {},
-            status: s.status ?? 1,
-          };
-
-          if (s.id && existingIds.has(s.id)) {
-            // 更新现有 SKU
-            await tx
-              .update(skuTable)
-              .set({ ...skuData, updatedAt: new Date() })
-              .where(eq(skuTable.id, s.id));
-          } else {
-            // 插入新 SKU
-            await tx.insert(skuTable).values({
-              ...skuData,
-              productId,
-              tenantId: ctx.user.context.tenantId!,
-              deptId: ctx.currentDeptId,
-            });
-          }
-        }
-      }
-
-      // --- 阶段 F: 模板关联更新 ---
-      if (templateId !== undefined) {
-        await tx
-          .delete(productTemplateTable)
-          .where(eq(productTemplateTable.productId, productId));
-        if (templateId) {
-          await tx
-            .insert(productTemplateTable)
-            .values({ productId, templateId });
-        }
-      }
-
       return { success: true, id: productId };
     });
   }
