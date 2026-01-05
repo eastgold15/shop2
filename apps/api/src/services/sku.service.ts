@@ -238,7 +238,7 @@ export class SkuService {
   /**
    * 5. SKU 列表查询 (保持原样，用于管理后台列表)
    */
-  public async list(ctx: ServiceContext, query: any) {
+  public async list(ctx: ServiceContext, query: SkuContract["ListQuery"]) {
     const {
       page = 1,
       limit = 10,

@@ -20,11 +20,11 @@ export const SiteProductContract = {
     name: ProductFields.name,
     description: ProductFields.description,
     spuCode: ProductFields.spuCode,
-    status: ProductFields.status,
-    units: ProductFields.units,
+    status: t.Optional(ProductFields.status),
+    units: t.Optional(ProductFields.units),
     templateId: ProductTemplateFields.templateId,
 
-    seoTitle: SiteProductInsertFields.seoTitle,
+    seoTitle: t.Optional(SiteProductInsertFields.seoTitle),
     siteCategoryId: t.String(),
     // 商品媒体关联
     mediaIds: t.Optional(t.Array(t.String())), // 商品图片ID列表

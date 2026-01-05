@@ -1,10 +1,16 @@
 import { t } from "elysia";
-import { PaginationParams, SortParams } from "../helper/query-types.model";
 import { type InferDTO, spread } from "../helper/utils";
 import { skuTable } from "../table.schema";
 
-
-const autoFields = ["id", "createdAt", "updatedAt", "siteId", "tenantId", "deptId", "createdBy"];
+const autoFields = [
+  "id",
+  "createdAt",
+  "updatedAt",
+  "siteId",
+  "tenantId",
+  "deptId",
+  "createdBy",
+];
 /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
 export const SkuInsertFields = spread(skuTable, "insert");
 /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
@@ -53,20 +59,23 @@ export const SkuContract = {
       skuCode: SkuFields.skuCode,
       price: SkuFields.price,
       stock: SkuFields.stock,
-      specJson: t.Any(),// { "Color": "Red", "Size": "M" }
-      mediaIds: t.Optional(t.Array(t.String())),// 每个SKU可以有自己的图片集
+      specJson: t.Any(), // { "Color": "Red", "Size": "M" }
+      mediaIds: t.Optional(t.Array(t.String())), // 每个SKU可以有自己的图片集
       marketPrice: SkuFields.marketPrice,
       costPrice: SkuInsertFields.costPrice,
       weight: SkuInsertFields.weight,
       volume: SkuInsertFields.volume,
     })
   ),
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+
   ListQuery: t.Object({
-    ...t.Partial(t.Object(SkuInsertFields)).properties,
-    ...PaginationParams.properties,
-    ...SortParams.properties,
+    page: t.Optional(t.Number()),
+    limit: t.Optional(t.Number()),
+    productId: t.Optional(t.String()),
     search: t.Optional(t.String()),
+    status: t.Optional(t.Number()),
+    sort: t.Optional(t.String()),
+    sortOrder: t.Optional(t.String()),
   }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   ListResponse: t.Object({

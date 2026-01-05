@@ -1,96 +1,102 @@
-/**
- * 🤖 【B2B Controller - 自动生成基类】
- * --------------------------------------------------------
- * ⚠️ 请勿手动修改此文件，下次运行会被覆盖。
- * 💡 如需自定义，请删除下方的 @generated 标记，或新建一个 controller。
- * --------------------------------------------------------
- */
+import { SkuContract } from "@repo/contract";
 import { Elysia, t } from "elysia";
 import { dbPlugin } from "~/db/connection";
 import { authGuardMid } from "~/middleware/auth";
-import { SkuContract } from "../../../../packages/contract/src/modules/sku.contract";
 import { SkuService } from "../services/sku.service";
 
 const skuService = new SkuService();
-/**
- * @generated
- */
-export const skuController = new Elysia({ prefix: "/sku" })
+
+export const skuController = new Elysia({ prefix: "/sku", tags: ["SKU"] })
   .use(dbPlugin)
   .use(authGuardMid)
+  /**
+   * 获取 SKU 列表
+   */
   .get(
-    "/",
+    "/list",
     ({ query, user, db, currentDeptId }) =>
-      skuService.list(query, { db, user, currentDeptId }),
+      skuService.list({ db, user, currentDeptId }, query),
     {
       allPermissions: ["SKU_VIEW"],
+      requireDept: true,
       query: SkuContract.ListQuery,
-      requireDept: true,
       detail: {
-        summary: "获取Sku列表",
-        description: "分页查询Sku数据，支持搜索和排序",
-        tags: ["Sku"],
+        summary: "获取SKU列表",
+        description: "分页查询SKU数据，支持按商品ID、搜索和状态筛选",
       },
     }
   )
-  .post(
-    "/",
-    ({ body, user, db, currentDeptId }) =>
-      skuService.create(body, { db, user, currentDeptId }),
+  /**
+   * 获取单个 SKU 详情（用于编辑回显）
+   */
+  .get(
+    "/:id",
+    ({ params, user, db, currentDeptId }) =>
+      skuService.getDetail({ db, user, currentDeptId }, params.id),
     {
-      allPermissions: ["SKU_CREATE"],
-      body: SkuContract.Create,
+      params: t.Object({ id: t.String() }),
+      allPermissions: ["SKU_VIEW"],
       requireDept: true,
       detail: {
-        summary: "创建Sku",
-        description: "新增一条Sku记录",
-        tags: ["Sku"],
+        summary: "获取SKU详情",
+        description: "根据ID获取SKU的详细信息，包括图片",
       },
     }
   )
+  /**
+   * 批量创建 SKU
+   */
+  .post(
+    "/product/:productId/batch",
+    ({ params, body, user, db, currentDeptId }) =>
+      skuService.batchCreateSkus(
+        { db, user, currentDeptId },
+        params.productId,
+        body
+      ),
+    {
+      params: t.Object({ productId: t.String() }),
+      body: SkuContract.BatchCreate,
+      allPermissions: ["SKU_CREATE"],
+      requireDept: true,
+      detail: {
+        summary: "批量创建SKU",
+        description: "为指定商品批量创建SKU，包含规格和图片关联",
+      },
+    }
+  )
+  /**
+   * 更新单个 SKU
+   */
   .put(
     "/:id",
     ({ params, body, user, db, currentDeptId }) =>
-      skuService.update(params.id, body, { db, user, currentDeptId }),
+      skuService.update({ db, user, currentDeptId }, params.id, body),
     {
       params: t.Object({ id: t.String() }),
       body: SkuContract.Update,
-      requireDept: true,
       allPermissions: ["SKU_EDIT"],
+      requireDept: true,
       detail: {
-        summary: "更新Sku",
-        description: "根据ID更新Sku信息",
-        tags: ["Sku"],
+        summary: "更新SKU",
+        description: "更新SKU信息，支持图片全量替换",
       },
     }
   )
+  /**
+   * 删除单个 SKU
+   */
   .delete(
     "/:id",
     ({ params, user, db, currentDeptId }) =>
-      skuService.delete(params.id, { db, user, currentDeptId }),
+      skuService.delete({ db, user, currentDeptId }, params.id),
     {
       params: t.Object({ id: t.String() }),
       allPermissions: ["SKU_DELETE"],
       requireDept: true,
       detail: {
-        summary: "删除Sku",
-        description: "根据ID删除Sku记录",
-        tags: ["Sku"],
+        summary: "删除SKU",
+        description: "根据ID删除SKU记录",
       },
     }
-  )
-  .delete(
-    "/batch",
-    ({ body: { ids }, user, db, currentDeptId }) =>
-      skuService.batchDelete(ids, { db, user, currentDeptId }),
-    {
-      body: t.Object({ ids: t.Array(t.String()) }),
-      allPermissions: ["SKU_DELETE"],
-      requireDept: true,
-      detail: {
-        summary: "删除Sku",
-        description: "根据ID删除Sku记录",
-        tags: ["Sku"],
-      },
-    }
-  )
+  );

@@ -1,23 +1,20 @@
-/**
- * 🤖 【B2B Controller - 自动生成基类】
- * --------------------------------------------------------
- * ⚠️ 请勿手动修改此文件，下次运行会被覆盖。
- * 💡 如需自定义，请删除下方的 @generated 标记，或新建一个 controller。
- * --------------------------------------------------------
- */
+import { SiteProductContract } from "@repo/contract";
 import { Elysia, t } from "elysia";
 import { dbPlugin } from "~/db/connection";
 import { authGuardMid } from "~/middleware/auth";
-import { ProductContract } from "../../../../packages/contract/src/modules/product.contract";
 import { ProductService } from "../services/product.service";
 
 const productService = new ProductService();
-/**
- * @generated
- */
-export const productController = new Elysia({ prefix: "/product" })
+
+export const productController = new Elysia({
+  prefix: "/product",
+  tags: ["Product"],
+})
   .use(dbPlugin)
   .use(authGuardMid)
+  /**
+   * 管理端获取站点商品列表（包含媒体和SKU）
+   */
   .get(
     "/page-list",
     ({ query, user, db, currentDeptId }) =>
@@ -25,16 +22,19 @@ export const productController = new Elysia({ prefix: "/product" })
     {
       allPermissions: ["PRODUCT_VIEW"],
       requireDept: true,
-      query: ProductContract.ListQuery,
+      query: SiteProductContract.ListQuery,
       detail: {
-        summary: "获取Product列表",
-        description: "分页查询Product数据，支持搜索和排序",
-        tags: ["Product"],
+        summary: "获取商品列表",
+        description:
+          "分页查询商品数据，支持搜索、分类筛选和可见性过滤，返回包含媒体和SKU的完整信息",
       },
     }
   )
+  /**
+   * 获取商品的 SKU 列表
+   */
   .get(
-    "/:id",
+    "/:id/sku",
     ({ params, user, db, currentDeptId }) =>
       productService.getSkuList(params.id, { db, user, currentDeptId }),
     {
@@ -44,12 +44,14 @@ export const productController = new Elysia({ prefix: "/product" })
         id: t.String(),
       }),
       detail: {
-        summary: "获取Product的sku",
-        description: "根据Product ID获取其所有SKU",
-        tags: ["Product"],
+        summary: "获取商品的SKU列表",
+        description: "根据商品ID获取其所有SKU规格信息",
       },
     }
   )
+  /**
+   * 创建商品（支持站点隔离和模板绑定）- 只能是工厂创建
+   */
   .post(
     "/",
     ({ body, user, db, currentDeptId }) =>
@@ -57,49 +59,41 @@ export const productController = new Elysia({ prefix: "/product" })
     {
       allPermissions: ["PRODUCT_CREATE"],
       requireDept: true,
-      body: ProductContract.Create,
+      body: SiteProductContract.Create,
       detail: {
-        summary: "创建Product",
-        description: "新增一条Product记录",
-        tags: ["Product"],
+        summary: "创建商品",
+        description:
+          "创建新商品，包含基础信息、媒体关联和模板绑定。仅工厂部门有权限创建",
       },
     }
   )
+  /**
+   * 更新商品（全量关联更新）
+   * 支持两种模式：全局商品（工厂）和站点商品（集团）
+   */
   .put(
     "/:id",
     ({ params, body, user, db, currentDeptId }) =>
       productService.update(params.id, body, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
-      body: ProductContract.Update,
+      body: SiteProductContract.Update,
       allPermissions: ["PRODUCT_EDIT"],
       requireDept: true,
       detail: {
-        summary: "更新Product",
-        description: "根据ID更新Product信息",
-        tags: ["Product"],
+        summary: "更新商品",
+        description:
+          "更新商品信息。工厂可更新源头数据，集团站只能更新视图数据（名称、描述、SEO等）",
       },
     }
   )
-  .delete(
-    "/:id",
-    ({ params, user, db, currentDeptId }) =>
-      productService.delete(params.id, { db, user, currentDeptId }),
-    {
-      params: t.Object({ id: t.String() }),
-      allPermissions: ["PRODUCT_DELETE"],
-      requireDept: true,
-      detail: {
-        summary: "删除Product",
-        description: "根据ID删除Product记录",
-        tags: ["Product"],
-      },
-    }
-  )
+  /**
+   * 批量删除商品
+   */
   .delete(
     "/batch/delete",
     ({ body, user, db, currentDeptId }) => {
-      const { ids } = body
+      const { ids } = body;
       return productService.batchDelete(ids, { db, user, currentDeptId });
     },
     {
@@ -109,9 +103,26 @@ export const productController = new Elysia({ prefix: "/product" })
       allPermissions: ["PRODUCT_DELETE"],
       requireDept: true,
       detail: {
-        summary: "批量删除Product",
-        description: "根据ID列表批量删除Product记录",
-        tags: ["Product"],
+        summary: "批量删除商品",
+        description:
+          "根据ID列表批量删除商品记录及其关联数据（SKU、媒体、模板等）",
+      },
+    }
+  )
+  /**
+   * 删除单个商品
+   */
+  .delete(
+    "/:id",
+    ({ params, user, db, currentDeptId }) =>
+      productService.delete(params.id, { db, user, currentDeptId }),
+    {
+      params: t.Object({ id: t.String() }),
+      allPermissions: ["PRODUCT_DELETE"],
+      requireDept: true,
+      detail: {
+        summary: "删除商品",
+        description: "根据ID删除单个商品记录及其关联数据",
       },
     }
   );
