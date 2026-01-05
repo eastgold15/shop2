@@ -9,10 +9,11 @@ import { CreateSKUModal } from "@/components/form/CreateSKUModal";
 import { EditSKUModal } from "@/components/form/EditSKUModal";
 import { HeaderToolbar } from "@/components/product/HeaderToolbar";
 import { ProductList } from "@/components/product/ProductList";
-import { Product, Sku } from "@/components/product/type";
+
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 // Hooks & Types
 import { useBatchDeleteProduct, useProductPageList } from "@/hooks/api/product";
+import { Product } from "@/hooks/api/product.type";
 import { useDeleteSku } from "@/hooks/api/sku";
 import { useAuthStore } from "@/stores/auth-store";
 
@@ -119,20 +120,18 @@ export default function ProductsPage() {
         </div>
 
         {/* 模块 3 (隐式): 弹窗挂载 */}
-        {/* 只有工厂站点才显示创建商品弹窗 */}
-        {siteType === "factory" && (
-          <CreateProductModal
-            onOpenChange={(open) =>
-              setProductModal({
-                open,
-                data: open ? productModal.data : undefined,
-              })
-            }
-            onSuccess={refetch}
-            open={productModal.open}
-            product={productModal.data}
-          />
-        )}
+        {/* 弹窗始终渲染，通过控制内部显示创建/编辑字段 */}
+        <CreateProductModal
+          onOpenChange={(open) =>
+            setProductModal({
+              open,
+              data: open ? productModal.data : undefined,
+            })
+          }
+          onSuccess={refetch}
+          open={productModal.open}
+          product={productModal.data}
+        />
         <CreateSKUModal
           onOpenChange={() => setSkuCreateId(null)}
           onSuccess={refetch}

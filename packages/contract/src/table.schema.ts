@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import * as p from "drizzle-orm/pg-core";
+import { index, uniqueIndex } from "drizzle-orm/pg-core";
 
 // 表名规范单数+小写 + 下划线 + 名词
 // --- 1. Helper Fields (基础字段) ---
@@ -583,7 +584,6 @@ export const skuMediaTable = p.pgTable(
 
 export const siteProductTable = p.pgTable("site_product", {
   ...Audit,
-  sitePrice: p.decimal("site_price", { precision: 10, scale: 2 }),
   siteName: p.varchar("site_name", { length: 200 }),
   siteDescription: p.text("site_description"),
   isFeatured: p.boolean("is_featured").default(false),
@@ -601,7 +601,25 @@ export const siteProductTable = p.pgTable("site_product", {
   siteCategoryId: p
     .uuid("site_category_id")
     .references(() => siteCategoryTable.id, { onDelete: "set null" }),
-});
+}, (t) => [
+  // 1. 🔥 核心唯一索引：防止同一个站点下出现重复的同一个商品
+  // 这也是 Upsert (On Conflict) 逻辑必须依赖的物理约束
+  uniqueIndex("uk_site_product_unique").on(t.siteId, t.productId),
+
+  // 2. 🚀 列表页加速索引：按站点 + 分类筛选
+  // 场景：在某个站点内，点击了"手机分类"，列出该分类下的商品
+  index("idx_site_product_category").on(t.siteId, t.siteCategoryId),
+
+  // 3. 🚀 排序/筛选优化：按站点 + 排序/可见性
+  // 场景：获取某个站点的首页推荐商品，按 sortOrder 排序
+  index("idx_site_product_sort").on(t.siteId, t.sortOrder, t.isVisible),
+
+  // 4. 🧹 级联删除优化（可选）：
+  // 当你删除一个 Product 时，数据库需要查找所有关联的 site_product 来级联删除。
+  // 虽然 uk_site_product_unique 包含了 productId，但它在第二个位置。
+  // 如果你的商品库非常大（百万级），建议单独给 productId 加索引，加快物理删除速度。
+  index("idx_site_product_pid").on(t.productId),
+]);
 
 // schema.ts 新增
 

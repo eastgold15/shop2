@@ -5,6 +5,7 @@ import { Loader2, Package } from "lucide-react";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { HasFactory } from "@/components/auth/Has";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -29,13 +30,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { useCreateProduct, useUpdateProduct } from "@/hooks/api/product";
 import { useTemplateList } from "@/hooks/api/template";
 
+// 表单验证 schema - 创建时必填字段与契约一致
 const formSchema = z.object({
+  siteName: z.string().min(1, "商品名称不能为空"),
+  siteDescription: z.string(),
   spuCode: z.string().min(1, "SPU编码不能为空"),
-  name: z.string().min(1, "商品名称不能为空"),
-  description: z.string().optional(),
+  status: z.number().optional(),
   units: z.string().optional(),
-  siteCategoryId: z.string().min(1, "请选择站点分类"),
   templateId: z.string().min(1, "请选择属性模板"),
+  seoTitle: z.string().optional(),
+  siteCategoryId: z.string().min(1, "请选择站点分类"),
   mediaIds: z.array(z.string()).optional(),
   mainImageId: z.string().optional(),
   videoIds: z.array(z.string()).optional(),
@@ -70,14 +74,16 @@ export function CreateProductModal({
     resolver: zodResolver(formSchema),
     defaultValues: {
       spuCode: "",
-      name: "",
-      description: "",
+      siteName: "",
+      siteDescription: "",
       units: "",
       siteCategoryId: "",
       templateId: undefined,
       mediaIds: [],
       mainImageId: undefined,
       videoIds: [],
+      seoTitle: "",
+      status: 1,
     },
   });
 
@@ -87,11 +93,13 @@ export function CreateProductModal({
       // 编辑模式：填充表单数据
       form.reset({
         spuCode: product.spuCode || "",
-        name: product.name || "",
-        description: product.description || "",
+        siteName: product.siteName || product.name || "",
+        siteDescription: product.siteDescription || product.description || "",
         units: product.units || "",
         siteCategoryId: product.siteCategoryId || "",
         templateId: product.templateId || undefined,
+        seoTitle: product.seoTitle || "",
+        status: product.status ?? 1,
         mediaIds: product.mediaIds || [],
         mainImageId: product.mainImageId || undefined,
         videoIds: product.videoIds || [],
@@ -104,19 +112,13 @@ export function CreateProductModal({
 
   const onSubmit = async (data: FormData) => {
     try {
-      // 转换数据以匹配后端接口类型
-      const submitData = {
-        ...data,
-        description: data.description || null,
-      };
-
       if (isEdit) {
         await updateProduct.mutateAsync({
           id: product.id,
-          data: submitData,
+          data,
         });
       } else {
-        await createProduct.mutateAsync(submitData);
+        await createProduct.mutateAsync(data);
       }
       onSuccess?.();
       form.reset();
@@ -162,52 +164,57 @@ export function CreateProductModal({
 
         <Form {...form}>
           <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="spuCode"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>SPU编码 *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="例如：PRD001" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            {/* 工厂站专属字段：SPU编码 */}
+            <HasFactory>
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="spuCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>SPU编码 *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="例如：PRD001" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div />
+              </div>
+            </HasFactory>
 
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>商品名称 *</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="请输入商品名称"
-                        {...field}
-                        onChange={(e) => {
-                          field.onChange(e);
-                          // 如果还没有 SPU 编码，自动生成
-                          if (!form.getValues("spuCode")) {
-                            form.setValue(
-                              "spuCode",
-                              generateSpuCode(e.target.value)
-                            );
-                          }
-                        }}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            {/* 所有站点都可见的字段 */}
+            <FormField
+              control={form.control}
+              name="siteName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>商品名称 *</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="请输入商品名称"
+                      {...field}
+                      onChange={(e) => {
+                        field.onChange(e);
+                        // 如果还没有 SPU 编码，自动生成
+                        if (!form.getValues("spuCode")) {
+                          form.setValue(
+                            "spuCode",
+                            generateSpuCode(e.target.value)
+                          );
+                        }
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}
-              name="description"
+              name="siteDescription"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>商品描述</FormLabel>
@@ -224,46 +231,54 @@ export function CreateProductModal({
             />
 
             <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="units"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>计量单位</FormLabel>
-                    <FormControl>
-                      <Input placeholder="例如：个、件、套" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {/* 工厂站专属字段：计量单位和属性模板 */}
+              <HasFactory>
+                <FormField
+                  control={form.control}
+                  name="units"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>计量单位</FormLabel>
+                      <FormControl>
+                        <Input placeholder="例如：个、件、套" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </HasFactory>
 
-              <FormField
-                control={form.control}
-                name="templateId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>属性模板 *</FormLabel>
-                    <FormControl>
-                      <select
-                        className="w-full rounded-md border p-2"
-                        onChange={(e) =>
-                          field.onChange(e.target.value || undefined)
-                        }
-                        value={field.value || ""}
-                      >
-                        <option value="">选择属性模板</option>
-                        {templatesData.map((template: any) => (
-                          <option key={template.id} value={template.id}>
-                            {template.name}
-                          </option>
-                        ))}
-                      </select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <HasFactory>
+                <FormField
+                  control={form.control}
+                  name="templateId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>属性模板 *</FormLabel>
+                      <FormControl>
+                        <select
+                          className="w-full rounded-md border p-2"
+                          onChange={(e) =>
+                            field.onChange(e.target.value || undefined)
+                          }
+                          value={field.value || ""}
+                        >
+                          <option value="">选择属性模板</option>
+                          {templatesData.map((template: any) => (
+                            <option key={template.id} value={template.id}>
+                              {template.name}
+                            </option>
+                          ))}
+                        </select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </HasFactory>
+
+              {/* 空占位，保持 grid 布局 */}
+              <div className="hidden" />
             </div>
 
             <FormField
@@ -284,63 +299,66 @@ export function CreateProductModal({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="mediaIds"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>商品图片</FormLabel>
-                  <FormControl>
-                    <MediaSelect
-                      max={10}
-                      multiple
-                      onChange={(ids) => field.onChange(ids)}
-                      value={field.value || []}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* 工厂站专属字段：媒体资源 */}
+            <HasFactory>
+              <FormField
+                control={form.control}
+                name="mediaIds"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>商品图片</FormLabel>
+                    <FormControl>
+                      <MediaSelect
+                        max={10}
+                        multiple
+                        onChange={(ids) => field.onChange(ids)}
+                        value={field.value || []}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="mainImageId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>主图</FormLabel>
-                  <FormControl>
-                    <MediaSelect
-                      availableMediaIds={form.watch("mediaIds")}
-                      onChange={(ids) => field.onChange(ids[0] || undefined)}
-                      placeholder="选择商品主图（从已选图片中选择）"
-                      value={field.value ? [field.value] : []}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="mainImageId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>主图</FormLabel>
+                    <FormControl>
+                      <MediaSelect
+                        availableMediaIds={form.watch("mediaIds")}
+                        onChange={(ids) => field.onChange(ids[0] || undefined)}
+                        placeholder="选择商品主图（从已选图片中选择）"
+                        value={field.value ? [field.value] : []}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="videoIds"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>商品视频</FormLabel>
-                  <FormControl>
-                    <MediaSelect
-                      maxCount={5}
-                      multiple
-                      onChange={(ids) => field.onChange(ids)}
-                      placeholder="选择商品视频"
-                      value={field.value || []}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="videoIds"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>商品视频</FormLabel>
+                    <FormControl>
+                      <MediaSelect
+                        maxCount={5}
+                        multiple
+                        onChange={(ids) => field.onChange(ids)}
+                        placeholder="选择商品视频"
+                        value={field.value || []}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </HasFactory>
 
             <DialogFooter>
               <Button

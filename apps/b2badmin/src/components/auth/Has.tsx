@@ -52,3 +52,40 @@ export function HasRole({ role, children, fallback = null }: HasRoleProps) {
 
   return <>{children}</>;
 }
+
+// 站点类型检查组件
+interface HasSiteTypeProps {
+  siteType: "factory" | "group";
+  children: React.ReactNode;
+  fallback?: React.ReactNode;
+}
+
+/**
+ * 工厂站专属内容组件
+ * 只有当前站点是工厂站时才显示内容
+ */
+export function HasFactory({ children, fallback = null }: Omit<HasSiteTypeProps, "siteType">) {
+  const getCurrentSite = useAuthStore((state) => state.getCurrentSite);
+  const site = getCurrentSite();
+
+  if (site?.siteType !== "factory") {
+    return <>{fallback}</>;
+  }
+
+  return <>{children}</>;
+}
+
+/**
+ * 集团站专属内容组件
+ * 只有当前站点是集团站时才显示内容
+ */
+export function HasGroup({ children, fallback = null }: Omit<HasSiteTypeProps, "siteType">) {
+  const getCurrentSite = useAuthStore((state) => state.getCurrentSite);
+  const site = getCurrentSite();
+
+  if (site?.siteType !== "group") {
+    return <>{fallback}</>;
+  }
+
+  return <>{children}</>;
+}

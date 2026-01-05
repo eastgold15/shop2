@@ -18,8 +18,8 @@ export const SiteProductContract = {
   }),
 
   Create: t.Object({
-    name: ProductFields.name,
-    description: ProductFields.description,
+    siteName: ProductFields.name,
+    siteDescription: ProductFields.description,
     spuCode: ProductFields.spuCode,
     status: t.Optional(ProductFields.status),
     units: t.Optional(ProductFields.units),
@@ -35,12 +35,12 @@ export const SiteProductContract = {
 
   Update: t.Partial(
     t.Object({
+      siteName: SiteProductInsertFields.siteName,
+      siteDescription: SiteProductInsertFields.siteDescription,
       spuCode: ProductFields.spuCode,
       status: ProductFields.status,
       units: ProductFields.units,
       templateId: ProductTemplateFields.templateId,
-      siteName: SiteProductInsertFields.siteName,
-      siteDescription: SiteProductInsertFields.siteDescription,
       seoTitle: SiteProductInsertFields.seoTitle,
       siteCategoryId: t.Optional(t.String()),
       // 商品媒体关联

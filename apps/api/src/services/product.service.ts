@@ -1,6 +1,5 @@
 import {
   mediaTable,
-  ProductContract,
   productMasterCategoryTable,
   productMediaTable,
   productTable,
@@ -12,16 +11,30 @@ import {
   skuTable,
   templateTable,
 } from "@repo/contract";
-import { and, asc, eq, inArray, like, or, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  eq,
+  inArray,
+  isNotNull,
+  isNull,
+  like,
+  or,
+  sql,
+} from "drizzle-orm";
 import { HttpError } from "elysia-http-problem-json";
+import { SiteSWithManageAble } from "~/db/utils";
 import { productSiteCategoryTable } from "./../../../../packages/contract/src/table.schema";
 import { type ServiceContext } from "../lib/type";
 
 export class ProductService {
-
   /**
- * 管理端获取站点商品列表（包含媒体和SKU）
- */
+   * 管理端获取站点商品列表（包含媒体和SKU）
+   *
+   * 核心逻辑：
+   * - 工厂站点：只能看到自己创建的商品（INNER JOIN site_product）
+   * - 集团站点：可以看到所有工厂的商品，可以自定义（LEFT JOIN site_product）
+   */
   public async pagelist(
     query: typeof SiteProductContract.ListQuery.static,
     ctx: ServiceContext
@@ -30,70 +43,126 @@ export class ProductService {
 
     const siteId = ctx.user.context.site.id;
     const siteType = ctx.user.context.site.siteType || "group";
+    const tenantId = ctx.user.context.tenantId;
 
-    // 构建查询条件
-    const conditions = [
-      eq(siteProductTable.siteId, siteId),
-      eq(productTable.tenantId, ctx.user.context.tenantId),
-      eq(productTable.deptId, ctx.currentDeptId),
-      ...(isVisible ? [eq(siteProductTable.isVisible, isVisible)] : []),
-    ];
-
-    if (search) {
-      conditions.push(
-        or(
-          like(productTable.name, `%${search}%`),
-          like(productTable.description, `%${search}%`)
-        )!
-      );
-    }
-
-    if (siteCategoryId) {
-      conditions.push(eq(siteProductTable.siteCategoryId, siteCategoryId));
-    }
-
-    // 查询商品数据 - 根据站点类型使用不同的价格逻辑
-    // 注意：productTable 没有 price 字段，所有价格都在 siteProductTable
-    const result = await ctx.db
+    // --- 1. 构建查询字段 (SQL层解决优先级问题) ---
+    const baseQuery = ctx.db
       .select({
         id: productTable.id,
-        // 名称：工厂用原名，集团可以用 siteName 覆盖
-        name:
-          siteType === "factory"
-            ? productTable.name
-            : sql<string>`COALESCE(${siteProductTable.siteName}, ${productTable.name})`,
         spuCode: productTable.spuCode,
-        description: productTable.description,
         status: productTable.status,
         units: productTable.units,
         createdAt: productTable.createdAt,
         updatedAt: productTable.updatedAt,
-        // 价格逻辑：
-        // 工厂站点：直接用 sitePrice（因为工厂创建时已强制同步）
-        // 集团站点：用 sitePrice（可能是自定义的，也可能是继承工厂的）
-        // 如果 sitePrice 为 null，返回 '0'
-        price: sql<string>`COALESCE(${siteProductTable.sitePrice}, '0')`,
-        sitePrice: siteProductTable.sitePrice,
-        // 是否有自定义价格（集团站点用）
-        // 工厂站点总是 hasCustomPrice=false（因为是源头，不是"自定义"）
-        hasCustomPrice:
-          siteType === "factory"
-            ? sql<boolean>`false`
-            : sql<boolean>`CASE WHEN ${siteProductTable.sitePrice} IS NOT NULL THEN true ELSE false END`,
-        siteName: siteProductTable.siteName,
-        siteDescription: siteProductTable.siteDescription,
-        siteCategoryId: siteProductTable.siteCategoryId,
-      })
-      .from(siteProductTable)
-      .innerJoin(productTable, eq(siteProductTable.productId, productTable.id))
-      .limit(Number(limit))
-      .offset((page - 1) * limit)
-      .where(and(...conditions));
+        templateId: sql<string>`${productTemplateTable.templateId}`,
 
+        // 🔥【核心修正】智能字段：数据库直接计算最终值 (站点优先 > 原厂兜底)
+        name: sql<string>`COALESCE(${siteProductTable.siteName}, ${productTable.name})`,
+        description: sql<string>`COALESCE(${siteProductTable.siteDescription}, ${productTable.description})`,
+
+        // 辅助字段：保留原厂数据，用于对比和调试
+        originalName: productTable.name,
+        originalDescription: productTable.description,
+
+        // 站点特有数据
+        siteCategoryId: siteProductTable.siteCategoryId,
+        isVisible: siteProductTable.isVisible,
+        isCustomized: sql<boolean>`${siteProductTable.id} IS NOT NULL`,
+      })
+      .from(productTable);
+
+    // --- 2. 动态 Join 策略 ---
+    let queryBuilder = baseQuery;
+
+    if (siteType === "factory") {
+      // === 工厂模式：INNER JOIN ===
+      // 工厂只能看到明确归属于自己站点的商品
+      queryBuilder = queryBuilder.innerJoin(
+        siteProductTable,
+        and(
+          eq(productTable.id, siteProductTable.productId),
+          eq(siteProductTable.siteId, siteId)
+        )
+      ) as any;
+    } else {
+      // === 集团模式：LEFT JOIN ===
+      // 集团可以看到所有商品，关联出自己站点的自定义配置（如果有）
+      queryBuilder = queryBuilder.leftJoin(
+        siteProductTable,
+        and(
+          eq(productTable.id, siteProductTable.productId),
+          eq(siteProductTable.siteId, siteId)
+        )
+      ) as any;
+    }
+
+    // --- 3. 关联模板表（LEFT JOIN，因为不是所有商品都有模板）---
+    queryBuilder = queryBuilder.leftJoin(
+      productTemplateTable,
+      eq(productTable.id, productTemplateTable.productId)
+    ) as any;
+
+    // --- 4. 构建 Where 条件 ---
+    const conditions = [
+      eq(productTable.tenantId, tenantId), // 租户隔离
+    ];
+
+    // 工厂只能看自己部门生产的商品
+    if (siteType === "factory") {
+      conditions.push(eq(productTable.deptId, ctx.currentDeptId));
+    }
+
+    // 搜索条件（搜索原厂名、站点名和SPU编码）
+    if (search) {
+      conditions.push(
+        or(
+          like(productTable.name, `%${search}%`),
+          like(siteProductTable.siteName, `%${search}%`),
+          like(productTable.spuCode, `%${search}%`)
+        )!
+      );
+    }
+
+    // 站点分类筛选
+    if (siteCategoryId) {
+      // 集团站点：只筛选已配置该分类的商品
+      // 工厂站点：按配置的分类筛选
+      if (siteType === "factory") {
+        conditions.push(eq(siteProductTable.siteCategoryId, siteCategoryId));
+      } else {
+        // 集团站点：需要 site_product 记录存在且分类匹配
+        conditions.push(
+          and(
+            isNotNull(siteProductTable.id),
+            eq(siteProductTable.siteCategoryId, siteCategoryId)
+          )!
+        );
+      }
+    }
+
+    // 可见性筛选
+    if (isVisible !== undefined) {
+      if (siteType === "factory") {
+        conditions.push(eq(siteProductTable.isVisible, isVisible!));
+      } else if (isVisible) {
+        conditions.push(
+          or(eq(siteProductTable.isVisible, true), isNull(siteProductTable.id))!
+        );
+      } else {
+        conditions.push(eq(siteProductTable.isVisible, false));
+      }
+    }
+
+    // --- 5. 执行查询 ---
+    const result = await queryBuilder
+      .where(and(...conditions))
+      .limit(Number(limit))
+      .offset((page - 1) * limit);
+    console.log("result:", result);
     // 获取商品ID列表
     const productIds = result.map((p) => p.id);
 
-    // 批量查询商品媒体（图片和视频）
+    // --- 6. 批量查询媒体数据（图片和视频）---
     const mediaMap = new Map<
       string,
       { images: any[]; videos: any[]; mainImage: any }
@@ -105,7 +174,6 @@ export class ProductService {
           mediaId: productMediaTable.mediaId,
           isMain: productMediaTable.isMain,
           sortOrder: productMediaTable.sortOrder,
-          // 媒体信息
           mediaUrl: mediaTable.url,
           mediaOriginalName: mediaTable.originalName,
           mediaMimeType: mediaTable.mimeType,
@@ -117,11 +185,12 @@ export class ProductService {
         .where(inArray(productMediaTable.productId, productIds))
         .orderBy(asc(productMediaTable.sortOrder));
 
-      // 整理媒体数据
+      // 初始化 mediaMap
       for (const product of result) {
         mediaMap.set(product.id, { images: [], videos: [], mainImage: null });
       }
 
+      // 整理媒体数据
       for (const media of mediaRelations) {
         const productMedia = mediaMap.get(media.productId);
         if (!productMedia) continue;
@@ -161,24 +230,9 @@ export class ProductService {
       }
     }
 
-    // 批量查询 SKU 数据
+    // --- 7. 批量查询 SKU 数据 ---
     const skuMap = new Map<string, any[]>();
-    // 批量查询模板关联
-    const templateMap = new Map<string, string>();
     if (productIds.length > 0) {
-      // 查询模板
-      const templates = await ctx.db
-        .select({
-          productId: productTemplateTable.productId,
-          templateId: productTemplateTable.templateId,
-        })
-        .from(productTemplateTable)
-        .where(inArray(productTemplateTable.productId, productIds));
-
-      for (const template of templates) {
-        templateMap.set(template.productId, template.templateId);
-      }
-
       // 查询 SKU
       const skus = await ctx.db
         .select({
@@ -207,7 +261,6 @@ export class ProductService {
             mediaId: skuMediaTable.mediaId,
             isMain: skuMediaTable.isMain,
             sortOrder: skuMediaTable.sortOrder,
-            // 媒体信息
             mediaUrl: mediaTable.url,
             mediaOriginalName: mediaTable.originalName,
             mediaMimeType: mediaTable.mimeType,
@@ -241,11 +294,11 @@ export class ProductService {
         }
       }
 
+      // 为每个 SKU 附加媒体数据
       for (const sku of skus) {
         if (!skuMap.has(sku.productId)) {
           skuMap.set(sku.productId, []);
         }
-        // 为每个 SKU 附加媒体数据
         skuMap.get(sku.productId)!.push({
           ...sku,
           media: skuMediaMap.get(sku.id) || [],
@@ -253,7 +306,7 @@ export class ProductService {
       }
     }
 
-    // 组合数据
+    // --- 8. 最终组合 (SQL已处理优先级，直接映射) ---
     const enrichedResult = result.map((product) => {
       const media = mediaMap.get(product.id) || {
         images: [],
@@ -261,37 +314,80 @@ export class ProductService {
         mainImage: null,
       };
       const skus = skuMap.get(product.id) || [];
-      // 提取 mediaIds 和 videoIds
       const mediaIds = media.images.map((img: any) => img.id);
       const videoIds = media.videos.map((vid: any) => vid.id);
 
       return {
-        ...product,
-        // 模板 ID
-        templateId: templateMap.get(product.id) || null,
-        // 媒体 ID 列表（用于编辑）
+        // 身份 ID
+        id: product.id,
+        templateId: product.templateId,
+
+        // 核心展示信息 (SQL 已处理好优先级)
+        name: product.name,
+        description: product.description,
+
+        // 基础属性
+        spuCode: product.spuCode,
+        status: product.status,
+        units: product.units,
+        createdAt: product.createdAt,
+        updatedAt: product.updatedAt,
+
+        // 站点状态
+        siteCategoryId: product.siteCategoryId || null,
+        isVisible: product.isVisible ?? true,
+        isCustomized: product.isCustomized,
+
+        // 调试/对比用字段
+        originalName: product.originalName,
+        originalDescription: product.originalDescription,
+
+        // 媒体与SKU
         mediaIds,
         videoIds,
-        // 媒体数据（用于展示）
         images: media.images,
         videos: media.videos,
         mainImage: media.mainImage?.url || null,
         mainImageId: media.mainImage?.id || null,
-        // SKU 数据
         skus,
         skuCount: skus.length,
       };
     });
 
-    // 替换 getSiteProducts 最后的总数计算部分
-    const [{ count }] = await ctx.db
+    // --- 9. 计算总数（使用相同的 Join 和 Where 逻辑）---
+    let countQuery = ctx.db
       .select({ count: sql<number>`count(*)` })
-      .from(siteProductTable)
-      .innerJoin(productTable, eq(siteProductTable.productId, productTable.id))
-      .where(and(...conditions));
+      .from(productTable);
+
+    // 应用相同的 Join 逻辑
+    if (siteType === "factory") {
+      countQuery = countQuery.innerJoin(
+        siteProductTable,
+        and(
+          eq(productTable.id, siteProductTable.productId),
+          eq(siteProductTable.siteId, siteId)
+        )
+      ) as any;
+    } else {
+      countQuery = countQuery.leftJoin(
+        siteProductTable,
+        and(
+          eq(productTable.id, siteProductTable.productId),
+          eq(siteProductTable.siteId, siteId)
+        )
+      ) as any;
+    }
+
+    countQuery = countQuery.leftJoin(
+      productTemplateTable,
+      eq(productTable.id, productTemplateTable.productId)
+    ) as any;
+
+    const [{ count }] = await countQuery.where(and(...conditions));
+
     return {
       data: enrichedResult,
-      total: Number(count), // 这里的 count 是真实的数据库总数
+      total: Number(count),
       page: Number(page),
       limit: Number(limit),
     };
@@ -309,8 +405,8 @@ export class ProductService {
       units,
       siteCategoryId,
       templateId,
-      name,
-      description,
+      siteName,
+      siteDescription,
       seoTitle,
       // 媒体字段
       mediaIds, // 商品图片ID列表
@@ -360,7 +456,7 @@ export class ProductService {
         targetMasterCategoryId = template.masterCategoryId;
       } else {
         // 💡 策略决策：如果没选模板，是否允许创建无主分类商品？
-        // 如果业务要求严格，这里可以 
+        // 如果业务要求严格，这里可以
         throw new HttpError.BadRequest("必须选择商品模板");
       }
 
@@ -368,9 +464,9 @@ export class ProductService {
       const [product] = await tx
         .insert(productTable)
         .values({
-          name,
+          name: siteName,
           spuCode,
-          description,
+          description: siteDescription,
           status,
           units,
           tenantId: ctx.user.context.tenantId,
@@ -387,7 +483,6 @@ export class ProductService {
         });
       }
 
-
       // 6. 关联主分类 (🔥 以前是靠 siteCategory，现在靠 template)
       if (targetMasterCategoryId) {
         await tx.insert(productMasterCategoryTable).values({
@@ -402,7 +497,6 @@ export class ProductService {
           siteCategoryId: siteCategory.id,
         });
       }
-
 
       // 8. 关联媒体 (逻辑不变)
       const allMediaIds = [...(mediaIds || []), ...(videoIds || [])];
@@ -453,15 +547,14 @@ export class ProductService {
         }
       }
 
-
       // 9. 创建站点商品视图
       const [siteProduct] = await tx
         .insert(siteProductTable)
         .values({
           siteId,
           productId: product.id,
-          siteName: name,
-          siteDescription: description,
+          siteName,
+          siteDescription,
           siteCategoryId,
           seoTitle,
           isVisible: true,
@@ -475,30 +568,40 @@ export class ProductService {
     });
   }
 
-
-
   /**
    * 更新商品（全量关联更新）分两种一种是全局商品，一种是站点商品
    */
   public async update(
     productId: string,
-    body: ProductContract["Update"],
+    body: SiteProductContract["Update"],
     ctx: ServiceContext
   ) {
     const {
-      // 基础字段
-      name, spuCode, description, status, units,
-      // 站点视图字段
-      seoTitle, siteCategoryId,
+      // 站点视图字段（集团站可编辑）
+      siteName,
+      siteDescription,
+      seoTitle,
+      siteCategoryId,
+
+      spuCode,
+
+      status,
+      units,
       // 源头控制字段 (集团站无权修改，传了也白传)
-      templateId, mediaIds, mainImageId, videoIds,
+      templateId,
+      mediaIds,
+      mainImageId,
+      videoIds,
     } = body;
 
-    const siteId = ctx.user.context.site?.id;
-    if (!siteId) {
+    const siteType = ctx.user.context.site.siteType || "group";
+    let managedSiteIds: string[] = [ctx.user.context.site.id];
+    if (siteType === "group") {
+      managedSiteIds = await SiteSWithManageAble(ctx.user.context.tenantId);
+    }
+    if (managedSiteIds.length === 0) {
       throw new HttpError.BadRequest("当前部门未绑定站点");
     }
-    const siteType = ctx.user.context.site.siteType || "group";
 
     return await ctx.db.transaction(async (tx) => {
       // 1. 检查权限
@@ -508,7 +611,7 @@ export class ProductService {
         .where(
           and(
             eq(siteProductTable.productId, productId),
-            eq(siteProductTable.siteId, siteId)
+            inArray(siteProductTable.siteId, managedSiteIds)
           )
         )
         .limit(1);
@@ -519,22 +622,30 @@ export class ProductService {
       // =========================================================
       // 场景 A: 集团站/普通站点 (只更新视图，立即返回)
       // =========================================================
-
       if (siteType !== "factory") {
-        // 1. 更新站点商品表 (SiteProduct)
-        await tx.update(siteProductTable)
-          .set({
-            siteName: name, // 允许改名
-            siteDescription: description, // 允许改描述
+        // 集团站id
+        const currentSiteId = ctx.user.context.site.id;
+
+        await tx.insert(siteProductTable).values({
+          siteId: currentSiteId,
+          productId,
+          siteName,
+          siteDescription,
+          seoTitle,
+          siteCategoryId,
+          isVisible: true,
+        }).onConflictDoUpdate({
+          // 定义冲突条件：同一个站点 + 同一个商品
+          // 需要在数据库建唯一索引: UNIQUE(site_id, product_id)
+          target: [siteProductTable.siteId, siteProductTable.productId],
+          set: {
+            siteName,
+            siteDescription,
             seoTitle,
-            siteCategoryId, // 允许改自己的货架
-            // 注意：集团站不允许改 sitePrice，除非你开放这个权限
-          })
-          .where(eq(siteProductTable.id, siteProduct.id));
-
-        // [重点]：集团站改了 siteCategoryId，不需要也不应该去同步 masterCategoryId
-        // 因为集团的分类可能是"促销区"，这不代表商品本身变成了"促销品"类别
-
+            siteCategoryId,
+            isVisible: true,
+          },
+        })
         return { success: true, id: productId }; // 🔥 集团站逻辑结束，直接返回
       }
 
@@ -545,18 +656,19 @@ export class ProductService {
       await tx
         .update(productTable)
         .set({
-          name,
+          name: siteName!, // 工厂视图强制同步标准名
           spuCode,
-          description,
+          description: siteDescription, // 工厂视图强制同步标准描述
           status,
           units,
         })
         .where(eq(productTable.id, productId));
       // 2. 强制同步工厂的站点表 (SiteProduct)
-      await tx.update(siteProductTable)
+      await tx
+        .update(siteProductTable)
         .set({
-          siteName: name, // 工厂视图强制同步标准名
-          siteDescription: description,
+          siteName, // 工厂视图强制同步标准名
+          siteDescription, // 工厂视图强制同步标准描述
           seoTitle,
           siteCategoryId,
         })
@@ -565,12 +677,16 @@ export class ProductService {
       // 3. [工厂特权] 处理模版 & 主分类联动
       if (templateId !== undefined) {
         // 先清理旧的
-        await tx.delete(productTemplateTable).where(eq(productTemplateTable.productId, productId));
+        await tx
+          .delete(productTemplateTable)
+          .where(eq(productTemplateTable.productId, productId));
 
         // 如果传入了新的 templateId (非 null/空字符串)
         if (templateId) {
           // 2.1 关联新模版
-          await tx.insert(productTemplateTable).values({ productId, templateId });
+          await tx
+            .insert(productTemplateTable)
+            .values({ productId, templateId });
 
           // 2.2 🔥 查出新模版对应的主分类
           const [newTemplate] = await tx
@@ -586,10 +702,12 @@ export class ProductService {
 
           // 2.3 级联更新商品的主分类
           if (newTemplate.masterCategoryId) {
-            await tx.delete(productMasterCategoryTable).where(eq(productMasterCategoryTable.productId, productId));
+            await tx
+              .delete(productMasterCategoryTable)
+              .where(eq(productMasterCategoryTable.productId, productId));
             await tx.insert(productMasterCategoryTable).values({
               productId,
-              masterCategoryId: newTemplate.masterCategoryId
+              masterCategoryId: newTemplate.masterCategoryId,
             });
           }
         } else {
@@ -600,7 +718,6 @@ export class ProductService {
           throw new HttpError.BadRequest("更新失败：模版ID不能为空");
         }
       }
-
 
       // 4. [工厂特权] 媒体更新 (全量替换)
       // --- 阶段 D: 媒体全量替换 (Images & Videos) ---
@@ -704,8 +821,8 @@ export class ProductService {
   public async getSkuList(id: string, ctx: ServiceContext) {
     // 修复：移除数组解构，findMany 返回的是数组而不是单个对象
 
-    console.log('ctx.user.context.tenantId:', ctx.user.context.tenantId)
-    console.log('ctx.currentDeptId:', ctx.currentDeptId)
+    console.log("ctx.user.context.tenantId:", ctx.user.context.tenantId);
+    console.log("ctx.currentDeptId:", ctx.currentDeptId);
     const res = await ctx.db.query.skuTable.findMany({
       where: {
         productId: id,
