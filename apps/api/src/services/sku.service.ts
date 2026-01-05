@@ -1,8 +1,8 @@
 import {
   mediaTable,
-  productSiteCategoryTable,
-  productTable,
   SkuContract,
+  siteProductTable,
+  siteSkuTable,
   skuMediaTable,
   skuTable,
 } from "@repo/contract";
@@ -15,56 +15,73 @@ export class SkuService {
    * 1. 批量创建 SKU (通常用于商品发布初始阶段)
    * 逻辑：检查重复 -> 批量写入SKU -> 批量写入图片关联
    */
-  public async batchCreateSkus(
+  /**
+   * 1. 批量创建 SKU (仅限工厂)
+   * 逻辑：创建物理 SKU -> 建立图片关联 -> 自动为工厂站点创建 site_sku 记录
+   */
+  public async batchCreate(
     ctx: ServiceContext,
     productId: string,
-    skus: SkuContract["BatchCreate"]
+    skus: SkuContract["BatchCreate"] // 假设你的 Contract 类型
   ) {
-    if (!skus || skus.length === 0) return [];
+    const siteId = ctx.user.context.site?.id;
+    const siteType = ctx.user.context.site?.siteType || "group";
 
-    // 1. 验证商品是否存在
-    const [product] = await ctx.db
-      .select()
-      .from(productTable)
-      .where(eq(productTable.id, productId))
-      .limit(1);
-    if (!product) throw new HttpError.NotFound("关联商品不存在");
-
-    // 2. 检查 SKU 编码在当前商品下是否重复
-    const skuCodes = skus.map((s) => s.skuCode);
-    const existingSkus = await ctx.db
-      .select({ skuCode: skuTable.skuCode })
-      .from(skuTable)
-      .where(
-        and(
-          eq(skuTable.productId, productId),
-          inArray(skuTable.skuCode, skuCodes)
-        )
-      );
-
-    if (existingSkus.length > 0) {
-      throw new HttpError.Conflict(
-        `SKU编码已存在: ${existingSkus.map((s) => s.skuCode).join(", ")}`
-      );
+    // 1. 权限硬校验：只有工厂能创建物理 SKU
+    if (siteType !== "factory") {
+      throw new HttpError.Forbidden("只有工厂有权限创建 SKU");
     }
 
-    // 创建SKU
-    const result = await ctx.db.transaction(async (tx) => {
-      // 3. 批量插入 SKU
+    if (!skus || skus.length === 0) return [];
+
+    return await ctx.db.transaction(async (tx) => {
+      // 2. 获取 SiteProduct ID (为了关联 site_sku)
+      const [siteProduct] = await tx
+        .select({ id: siteProductTable.id })
+        .from(siteProductTable)
+        .where(
+          and(
+            eq(siteProductTable.productId, productId),
+            eq(siteProductTable.siteId, siteId!)
+          )
+        )
+        .limit(1);
+
+      if (!siteProduct) throw new HttpError.NotFound("请先在当前站点创建商品");
+
+      // 3. 检查 SKU 编码重复 (在当前商品下)
+      const skuCodes = skus.map((s) => s.skuCode);
+      const existingSkus = await tx
+        .select({ skuCode: skuTable.skuCode })
+        .from(skuTable)
+        .where(
+          and(
+            eq(skuTable.productId, productId),
+            inArray(skuTable.skuCode, skuCodes)
+          )
+        );
+
+      if (existingSkus.length > 0) {
+        throw new HttpError.Conflict(
+          `SKU编码已存在: ${existingSkus.map((s) => s.skuCode).join(", ")}`
+        );
+      }
+
+      // 4. 批量插入物理 SKU (skuTable)
       const createdSkus = await tx
         .insert(skuTable)
         .values(
           skus.map((sku) => ({
             productId,
             skuCode: sku.skuCode,
-            price: sku.price,
+            price: sku.price, // 这是"出厂指导价"
             stock: sku.stock || "0",
             marketPrice: sku.marketPrice,
             costPrice: sku.costPrice,
-            weight: sku.weight,
-            volume: sku.volume,
-            specJson: sku.specJson, // Drizzle 会自动处理 JSON
-            status: 1, // 默认上架
+            weight: sku.weight ? String(sku.weight) : "0.000",
+            volume: sku.volume ? String(sku.volume) : "0.000",
+            specJson: sku.specJson,
+            status: 1,
             tenantId: ctx.user.context.tenantId!,
             deptId: ctx.currentDeptId,
             createdBy: ctx.user.id,
@@ -72,52 +89,61 @@ export class SkuService {
         )
         .returning();
 
-      // 4. 处理图片关联
-      const mediaRelations: any[] = [];
+      // 5. 自动为工厂创建 site_sku 记录 (让工厂能卖自己刚创建的 SKU)
+      if (createdSkus.length > 0) {
+        await tx.insert(siteSkuTable).values(
+          createdSkus.map((sku) => ({
+            siteId: siteId!,
+            siteProductId: siteProduct.id,
+            skuId: sku.id,
+            price: sku.price, // 默认站点价格 = 指导价
+            isActive: true,
+          }))
+        );
+      }
 
-      // 遍历刚创建的SKU，找到对应的入参数据，建立关联
+      // 6. 处理图片关联
+      const mediaRelations: any[] = [];
       for (let i = 0;i < createdSkus.length;i++) {
         const createdSku = createdSkus[i];
-        // 假设入参 skus 数组和 returning 的 createdSkus 顺序是一致的 (Postgres 通常保证这一点)
-        // 更稳妥的做法是用 skuCode 匹配，但在同一个事务insert中，索引通常是对齐的
-        const inputSku = skus[i];
-
+        const inputSku = skus[i]; // 假设顺序一致
         if (inputSku.mediaIds && inputSku.mediaIds.length > 0) {
           inputSku.mediaIds.forEach((mediaId, idx) => {
             mediaRelations.push({
               tenantId: ctx.user.context.tenantId!,
               skuId: createdSku.id,
               mediaId,
-              isMain: idx === 0, // 第一张默认主图
+              isMain: idx === 0,
               sortOrder: idx,
             });
           });
         }
       }
-
       if (mediaRelations.length > 0) {
         await tx.insert(skuMediaTable).values(mediaRelations);
       }
 
       return createdSkus;
     });
-
-    return result;
   }
 
   /**
    * 2. 单个 SKU 更新 (包含图片全量替换)
-   * 场景：在列表点击“编辑”某个特定规格
+   * 核心逻辑：区分 Factory(改源头+视图) 和 Group(只改视图)
    */
   public async update(
     ctx: ServiceContext,
-    id: string,
+    id: string, // SKU ID (物理ID)
     body: SkuContract["Update"]
   ) {
-    const { mediaIds, mainImageId, ...baseFields } = body;
+    const { mediaIds, mainImageId, ...updateFields } = body;
+    const siteId = ctx.user.context.site?.id;
+    const siteType = ctx.user.context.site?.siteType || "group";
+
+    if (!siteId) throw new HttpError.BadRequest("无站点上下文");
 
     return await ctx.db.transaction(async (tx) => {
-      // 1. 检查是否存在
+      // 1. 检查物理 SKU 是否存在
       const [existingSku] = await tx
         .select({ id: skuTable.id, productId: skuTable.productId })
         .from(skuTable)
@@ -126,48 +152,111 @@ export class SkuService {
 
       if (!existingSku) throw new HttpError.NotFound("SKU 不存在");
 
-      // 2. 如果修改了 skuCode，检查查重 (排除自己)
-      if (baseFields.skuCode) {
-        const [duplicate] = await tx
-          .select({ id: skuTable.id })
-          .from(skuTable)
-          .where(
-            and(
-              eq(skuTable.productId, existingSku.productId),
-              eq(skuTable.skuCode, baseFields.skuCode),
-              sql`${skuTable.id} != ${id}`
-            )
+      // 2. 检查 SiteProduct 是否存在 (为了拿到 siteProductId)
+      // 注意：如果是集团，这里必须用 Upsert 逻辑或者确保 Group 已经有了 site_product
+      // 这里简化：假设如果要在集团改 SKU，必须先收录 Product
+      const [siteProduct] = await tx
+        .select({ id: siteProductTable.id })
+        .from(siteProductTable)
+        .where(
+          and(
+            eq(siteProductTable.productId, existingSku.productId),
+            eq(siteProductTable.siteId, siteId)
           )
-          .limit(1);
-        if (duplicate) throw new HttpError.Conflict("SKU 编码已存在");
+        )
+        .limit(1);
+
+      if (!siteProduct) {
+        // 如果集团想改 SKU 价格，但还没把 Product 收录进来，这是一个业务死锁。
+        // 建议：前端先调用 Product Update 接口收录商品，再来改 SKU。
+        throw new HttpError.BadRequest(
+          "请先将商品加入当前站点，再修改 SKU 信息"
+        );
       }
 
-      // 3. 更新基础字段
-      if (Object.keys(baseFields).length > 0) {
+      // =========================================================
+      // 场景 A: 工厂模式 (上帝权限)
+      // =========================================================
+      if (siteType === "factory") {
+        // A1. 更新物理 SKU 表 (skuTable)
+        const physicalUpdate: any = { updatedAt: new Date() };
+        // 只有工厂能改库存、编码、物理属性
+        if (updateFields.skuCode) physicalUpdate.skuCode = updateFields.skuCode;
+        if (updateFields.stock) physicalUpdate.stock = updateFields.stock;
+        if (updateFields.weight) physicalUpdate.weight = updateFields.weight;
+        if (updateFields.volume) physicalUpdate.volume = updateFields.volume;
+        if (updateFields.price) physicalUpdate.price = updateFields.price; // 更新指导价
+        if (updateFields.specJson)
+          physicalUpdate.specJson = updateFields.specJson;
+
         await tx
           .update(skuTable)
-          .set({
-            ...baseFields,
-            updatedAt: new Date(),
-          })
+          .set(physicalUpdate)
           .where(eq(skuTable.id, id));
+
+        // A2. 强制同步自己的 site_sku 表
+        await tx
+          .insert(siteSkuTable)
+          .values({
+            siteId,
+            siteProductId: siteProduct.id,
+            skuId: id,
+            price: updateFields.price, // 同步价格
+            isActive: true,
+          })
+          .onConflictDoUpdate({
+            target: [siteSkuTable.siteId, siteSkuTable.skuId],
+            set: {
+              price: updateFields.price,
+              // 如果工厂想通过 status 字段控制上下架，也可以在这里更新 isActive
+            },
+          });
+
+        // A3. 图片更新 (只有工厂能改图片)
+        if (mediaIds !== undefined) {
+          await tx.delete(skuMediaTable).where(eq(skuMediaTable.skuId, id));
+          if (mediaIds.length > 0) {
+            // ... 插入图片关联 (同 create 逻辑) ...
+            const relations = mediaIds.map((mediaId, idx) => ({
+              tenantId: ctx.user.context.tenantId!,
+              skuId: id,
+              mediaId,
+              isMain: mainImageId ? mediaId === mainImageId : idx === 0,
+              sortOrder: idx,
+            }));
+            await tx.insert(skuMediaTable).values(relations);
+          }
+        }
       }
 
-      // 4. 更新媒体关联 (仅当 mediaIds 显式传入时)
-      if (mediaIds !== undefined) {
-        // 先清空旧关联
-        await tx.delete(skuMediaTable).where(eq(skuMediaTable.skuId, id));
+      // =========================================================
+      // 场景 B: 集团模式 (仅视图权限)
+      // =========================================================
+      else {
+        // B1. 只能更新 site_sku 表 (价格 & 上下架)
+        // 绝对不能动 skuTable 和 skuMediaTable
 
-        // 插入新关联
-        if (mediaIds.length > 0) {
-          const relations = mediaIds.map((mediaId, idx) => ({
-            tenantId: ctx.user.context.tenantId!,
-            skuId: id,
-            mediaId,
-            isMain: mainImageId ? mediaId === mainImageId : idx === 0,
-            sortOrder: idx,
-          }));
-          await tx.insert(skuMediaTable).values(relations);
+        // 准备更新数据
+        const siteUpdateData: any = {};
+        if (updateFields.price) siteUpdateData.price = updateFields.price;
+        // 如果 body 里有 status 字段，可以映射为 isActive
+        // if (updateFields.status !== undefined) siteUpdateData.isActive = updateFields.status === 1;
+
+        // B2. 执行 Upsert
+        if (Object.keys(siteUpdateData).length > 0) {
+          await tx
+            .insert(siteSkuTable)
+            .values({
+              siteId,
+              siteProductId: siteProduct.id,
+              skuId: id,
+              price: updateFields.price || "0", // 初始插入必须有值
+              isActive: true,
+            })
+            .onConflictDoUpdate({
+              target: [siteSkuTable.siteId, siteSkuTable.skuId],
+              set: siteUpdateData, // 只更新变动的字段
+            });
         }
       }
 
@@ -230,13 +319,16 @@ export class SkuService {
       stock: Number(sku.stock),
       marketPrice: sku.marketPrice ? Number(sku.marketPrice) : null,
       costPrice: sku.costPrice ? Number(sku.costPrice) : null,
+      // 🔥 添加 weight 和 volume 字段
+      weight: sku.weight ? Number(sku.weight) : null,
+      volume: sku.volume ? Number(sku.volume) : null,
       mediaIds: media.map((m) => m.id), // 方便前端回显 Select 组件
       images: media, // 方便前端展示图片预览
     };
   }
 
   /**
-   * 5. SKU 列表查询 (保持原样，用于管理后台列表)
+   * 3. SKU 列表查询 (支持 Site 价格透视)
    */
   public async list(ctx: ServiceContext, query: SkuContract["ListQuery"]) {
     const {
@@ -248,7 +340,7 @@ export class SkuService {
       sort = "createdAt",
       sortOrder = "desc",
     } = query;
-
+    const siteId = ctx.user.context.site?.id;
     const baseConditions: any[] = [];
 
     // 1. 租户筛选 (必须)
@@ -285,38 +377,39 @@ export class SkuService {
       skuTable.createdAt;
 
     // --- 构建主查询 ---
+    // --- 核心查询：SKU + SiteSKU 透视 ---
     const items = await ctx.db
       .select({
-        // SKU 信息
         id: skuTable.id,
         skuCode: skuTable.skuCode,
-        price: skuTable.price,
-        stock: skuTable.stock,
-        status: skuTable.status,
+        stock: skuTable.stock, // 物理库存 (所有站点共享)
         specJson: skuTable.specJson,
-        createdAt: skuTable.createdAt,
-        // 补充商品信息
-        product: {
-          id: productTable.id,
-          name: productTable.name,
-          spuCode: productTable.spuCode,
-        },
-        // 补充站点分类信息 (由于是多对多，这里通常取关联表的 categoryId)
-        siteCategoryId: productSiteCategoryTable.siteCategoryId,
+
+        // 🔥 价格透视逻辑：
+        // 优先显示 site_sku.price (站点自定义价)，没有则显示 sku.price (出厂价)
+        price: sql<string>`COALESCE(${siteSkuTable.price}, ${skuTable.price})`,
+
+        // 原始价格 (用于前端对比)
+        originalPrice: skuTable.price,
+
+        // 上下架状态 (site_sku 控制)
+        // 如果 site_sku 没记录，默认为"上架" (或者根据业务定为下架)
+        isActive: sql<boolean>`COALESCE(${siteSkuTable.isActive}, true)`,
+
+        // 标记：是否自定义过
+        isCustomized: sql<boolean>`${siteSkuTable.id} IS NOT NULL`,
       })
       .from(skuTable)
-      // 连商品表
-      .innerJoin(productTable, eq(skuTable.productId, productTable.id))
-      // 连商品站点分类关联表 (Left Join 以防万一没设分类也能查出来)
+      // 关联 SiteSKU (Left Join 以实现透视)
       .leftJoin(
-        productSiteCategoryTable,
-        eq(productTable.id, productSiteCategoryTable.productId)
+        siteSkuTable,
+        and(
+          eq(skuTable.id, siteSkuTable.skuId),
+          eq(siteSkuTable.siteId, siteId!) // 🔒 锁死当前站点
+        )
       )
-      .where(baseConditions.length > 0 ? and(...baseConditions) : undefined)
-      // 排序与分页
-      .orderBy(sortOrder === "desc" ? desc(orderByField) : orderByField)
-      .limit(limit)
-      .offset((page - 1) * limit);
+      .where(eq(skuTable.productId, productId)) // 必须传 productId
+      .orderBy(desc(skuTable.createdAt));
 
     // --- 批量获取图片信息 (优化 N+1) ---
     const skuIds = items.map((item) => item.id);
@@ -352,6 +445,12 @@ export class SkuService {
         ...item,
         price: Number(item.price),
         stock: Number(item.stock),
+        // 🔥 转换三种价格字段
+        marketPrice: item.marketPrice ? Number(item.marketPrice) : null,
+        costPrice: item.costPrice ? Number(item.costPrice) : null,
+        // 🔥 转换 weight 和 volume 字段
+        weight: item.weight ? Number(item.weight) : null,
+        volume: item.volume ? Number(item.volume) : null,
         // 提取该 SKU 的主图
         mainImage: skuImages.find((i) => i.isMain) || skuImages[0] || null,
         allImages: skuImages,

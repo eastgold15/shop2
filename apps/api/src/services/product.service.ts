@@ -335,6 +335,8 @@ export class ProductService {
           stock: skuTable.stock,
           specJson: skuTable.specJson,
           status: skuTable.status,
+          weight: skuTable.weight,
+          volume: skuTable.volume,
         })
         .from(skuTable)
         .where(inArray(skuTable.productId, productIds));

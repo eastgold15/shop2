@@ -49,7 +49,7 @@ export const skuController = new Elysia({ prefix: "/sku", tags: ["SKU"] })
   .post(
     "/product/:productId/batch",
     ({ params, body, user, db, currentDeptId }) =>
-      skuService.batchCreateSkus(
+      skuService.batchCreate(
         { db, user, currentDeptId },
         params.productId,
         body
@@ -61,7 +61,7 @@ export const skuController = new Elysia({ prefix: "/sku", tags: ["SKU"] })
       requireDept: true,
       detail: {
         summary: "批量创建SKU",
-        description: "为指定商品批量创建SKU，包含规格和图片关联",
+        description: "为指定商品批量创建SKU，包含规格、价格、库存、重量、体积和图片关联（仅限工厂站点）",
       },
     }
   )

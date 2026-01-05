@@ -69,9 +69,10 @@ export const SkuContract = {
   ),
 
   ListQuery: t.Object({
+
     page: t.Optional(t.Number()),
     limit: t.Optional(t.Number()),
-    productId: t.Optional(t.String()),
+    productId: t.String(),
     search: t.Optional(t.String()),
     status: t.Optional(t.Number()),
     sort: t.Optional(t.String()),
