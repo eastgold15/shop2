@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Product } from "@/hooks/api/product.type";
+import { SkuListRes } from "@/hooks/api/sku.type";
 import { cn } from "@/lib/utils";
 import { SkuPanel } from "./SkuPanel";
 
@@ -29,7 +30,7 @@ interface ProductListProps {
   onEdit: (p: Product) => void;
   onDelete: (p: Product) => void;
   onCreateSku: (id: string) => void;
-  onEditSku: (sku: Sku) => void;
+  onEditSku: (sku: SkuListRes) => void;
   onDeleteSku: (id: string, code: string) => void;
   showCreateSku?: boolean;
   /** 是否显示删除按钮（只有"我的商品"才显示） */

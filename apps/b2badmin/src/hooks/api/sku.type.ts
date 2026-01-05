@@ -4,7 +4,35 @@
  */
 
 // ==================== 列表查询 ====================
-
+export interface SkuListRes {
+  id: string;
+  skuCode: string;
+  price: number;
+  stock: number;
+  status: number;
+  specJson: SpecJson;
+  createdAt: string;
+  product: Product;
+  siteCategoryId?: string;
+  mainImage?: MainImage;
+  allImages: MainImage[];
+}
+interface MainImage {
+  skuId: string;
+  mediaId: string;
+  url: string;
+  isMain: boolean;
+}
+interface Product {
+  id: string;
+  name: string;
+  spuCode: string;
+}
+interface SpecJson {
+  规格1?: string;
+  color?: string;
+  size?: string;
+}
 /**
  * SKU列表查询参数
  */

@@ -19,6 +19,7 @@ import {
 } from "@/hooks/api/product";
 import { Product } from "@/hooks/api/product.type";
 import { useDeleteSku } from "@/hooks/api/sku";
+import { SkuListRes } from "@/hooks/api/sku.type";
 import { useAuthStore } from "@/stores/auth-store";
 
 // 引入三个核心组件
@@ -49,7 +50,7 @@ export default function ProductsPage() {
     data?: Product;
   }>({ open: false });
   const [skuCreateId, setSkuCreateId] = useState<string | null>(null);
-  const [skuEditData, setSkuEditData] = useState<Sku | null>(null);
+  const [skuEditData, setSkuEditData] = useState<SkuListRes | null>(null);
 
   // --- 3. 逻辑处理 ---
   const filteredProducts =

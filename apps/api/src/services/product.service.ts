@@ -9,7 +9,9 @@ import {
   siteProductTable,
   skuMediaTable,
   skuTable,
+  templateKeyTable,
   templateTable,
+  templateValueTable,
 } from "@repo/contract";
 import {
   and,
@@ -177,6 +179,79 @@ export class ProductService {
     // 获取商品ID列表
     const productIds = result.map((p) => p.id);
 
+    // 提取所有涉及的 templateId (去重 & 去空)
+    const templateIds = [
+      ...new Set(result.map((p) => p.templateId).filter((id) => !!id)),
+    ] as string[];
+
+    // =========================================================
+    // 🔥 修改：查询模板属性定义 (Key) + 属性可选值 (Value)
+    // =========================================================
+    const templateKeyMap = new Map<string, any[]>();
+
+    if (templateIds.length > 0) {
+      // 1. 先查属性名 (Keys)
+      const keys = await ctx.db
+        .select({
+          id: templateKeyTable.id, // 🔥 必须查 ID，用来关联 Value
+          templateId: templateKeyTable.templateId,
+          key: templateKeyTable.key,
+          inputType: templateKeyTable.inputType,
+          isSkuSpec: templateKeyTable.isSkuSpec,
+          sortOrder: templateKeyTable.sortOrder,
+        })
+        .from(templateKeyTable)
+        .where(
+          and(
+            inArray(templateKeyTable.templateId, templateIds),
+            eq(templateKeyTable.isSkuSpec, true)
+          )
+        )
+        .orderBy(asc(templateKeyTable.sortOrder));
+
+      // 2. 提取所有的 Key ID
+      const keyIds = keys.map((k) => k.id);
+
+      // 3. 🔥 再查属性值 (Values) - 只有 select 类型才需要，但为了简单可以全查
+      let values: any[] = [];
+      if (keyIds.length > 0) {
+        values = await ctx.db
+          .select({
+            templateKeyId: templateValueTable.templateKeyId,
+            value: templateValueTable.value,
+            sortOrder: templateValueTable.sortOrder,
+          })
+          .from(templateValueTable)
+          .where(inArray(templateValueTable.templateKeyId, keyIds))
+          .orderBy(asc(templateValueTable.sortOrder));
+      }
+
+      // 4. 将 Values 按 KeyId 分组
+      // Map<KeyId, ["S", "M", "L"]>
+      const valueMap = new Map<string, string[]>();
+      for (const v of values) {
+        if (!valueMap.has(v.templateKeyId)) {
+          valueMap.set(v.templateKeyId, []);
+        }
+        valueMap.get(v.templateKeyId)!.push(v.value);
+      }
+
+      // 5. 组装 Key + Options，并按 TemplateId 分组
+      for (const k of keys) {
+        if (!templateKeyMap.has(k.templateId)) {
+          templateKeyMap.set(k.templateId, []);
+        }
+
+        templateKeyMap.get(k.templateId)!.push({
+          key: k.key,
+          label: k.key,
+          inputType: k.inputType,
+          // 🔥 注入选项值
+          options: valueMap.get(k.id) || [],
+        });
+      }
+    }
+
     // --- 6. 批量查询媒体数据（图片和视频）---
     const mediaMap = new Map<
       string,
@@ -332,6 +407,11 @@ export class ProductService {
       const mediaIds = media.images.map((img: any) => img.id);
       const videoIds = media.videos.map((vid: any) => vid.id);
 
+      // 🔥 获取该商品的规格定义
+      const specs = product.templateId
+        ? (templateKeyMap.get(product.templateId) || [])
+        : [];
+
       return {
         // 身份 ID
         id: product.id,
@@ -357,6 +437,15 @@ export class ProductService {
         originalName: product.originalName,
         originalDescription: product.originalDescription,
 
+        // 🔥 返回给前端的核心字段：告诉前端这个商品有哪些规格项
+        // 前端根据这个数组来渲染 SKU 列表的"表头"
+        specs: specs.map((s) => ({
+          key: s.key,
+          label: s.key, // 如果你有专门的 label 字段就用 label，没有就用 key
+          inputType: s.inputType,
+          options: s.options, // 🔥 加上选项值
+        })),
+
         // 媒体与SKU
         mediaIds,
         videoIds,
@@ -364,7 +453,15 @@ export class ProductService {
         videos: media.videos,
         mainImage: media.mainImage?.url || null,
         mainImageId: media.mainImage?.id || null,
-        skus,
+        // SKU 数据 (specJson 里的 key 应该与上面 specs 里的 key 对应)
+        skus: skus.map((sku) => ({
+          ...sku,
+          // 确保 specJson 是对象
+          specJson:
+            typeof sku.specJson === "string"
+              ? JSON.parse(sku.specJson)
+              : sku.specJson,
+        })),
         skuCount: skus.length,
       };
     });

@@ -34,6 +34,17 @@ interface Datum {
   mainImageId: string;
   skus: Skus[];
   skuCount: number;
+  /** 商品规格定义 (从模板中提取的 SKU 规格属性) */
+  specs?: SpecDefinition[];
+}
+
+/** 商品规格定义 */
+interface SpecDefinition {
+  key: string;
+  label: string;
+  inputType: string;
+  /** 可选值列表 (例如: ["S", "M", "L"]) */
+  options?: string[];
 }
 interface Skus {
   id: string;
@@ -164,6 +175,9 @@ export interface Product {
   // SKU 数据
   skus: ProductSkuSummary[];
   skuCount: number;
+
+  /** 商品规格定义 (从模板中提取的 SKU 规格属性) */
+  specs?: SpecDefinition[];
 }
 
 // ==================== 创建商品 ====================

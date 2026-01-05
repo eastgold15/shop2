@@ -20,6 +20,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuthStore } from "@/stores/auth-store";
+import { HasGroup } from "../auth/Has";
 
 interface HeaderToolbarProps {
   selectedCount: number;
@@ -78,20 +79,22 @@ export function HeaderToolbar({
             />
           </div>
           {/* 商品池类型选择 */}
-          <Select
-            onValueChange={(value) =>
-              onListedTypeChange(value as "listed" | "unlisted")
-            }
-            value={listedType}
-          >
-            <SelectTrigger className="w-35">
-              <SelectValue placeholder="选择商品池" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="listed">我的商品</SelectItem>
-              <SelectItem value="unlisted">商品池</SelectItem>
-            </SelectContent>
-          </Select>
+          <HasGroup>
+            <Select
+              onValueChange={(value) =>
+                onListedTypeChange(value as "listed" | "unlisted")
+              }
+              value={listedType}
+            >
+              <SelectTrigger className="w-35">
+                <SelectValue placeholder="选择商品池" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="listed">我的商品</SelectItem>
+                <SelectItem value="unlisted">商品池</SelectItem>
+              </SelectContent>
+            </Select>
+          </HasGroup>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button className="shrink-0" size="icon" variant="outline">
