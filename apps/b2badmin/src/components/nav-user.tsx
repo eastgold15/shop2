@@ -86,7 +86,7 @@ export function NavUser() {
               size="lg"
             >
               <Avatar className="h-8 w-8 rounded-lg border">
-                <AvatarImage alt={user.name} src={user.image ?? ""} />
+                <AvatarImage alt={user.name} src={user.email ?? ""} />
                 <AvatarFallback className="rounded-lg bg-sidebar-primary font-semibold text-sidebar-primary-foreground">
                   {initials}
                 </AvatarFallback>

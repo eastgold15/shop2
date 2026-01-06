@@ -183,7 +183,7 @@ async function getUserWithRoles(userID: string, db: DBtype) {
     id: rawUser.id,
     name: rawUser.name,
     email: rawUser.email,
-    avatar: rawUser.image, // 映射 image -> avatar
+    image: rawUser.image,
     phone: rawUser.phone,
     position: rawUser.position,
     isSuperAdmin: !!rawUser.isSuperAdmin,

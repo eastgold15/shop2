@@ -11,6 +11,7 @@ export interface SkuListRes {
   specJson: Record<string, string> | null;
   price: number;
   originalPrice: string;
+  status: number;
   isActive: boolean;
   isCustomized: boolean;
   marketPrice?: any;
@@ -20,7 +21,8 @@ export interface SkuListRes {
   mainImage?: MainImage;
   allImages: MainImage[];
 }
-interface MainImage {
+export interface MainImage {
+  id: string;
   skuId: string;
   mediaId: string;
   url: string;

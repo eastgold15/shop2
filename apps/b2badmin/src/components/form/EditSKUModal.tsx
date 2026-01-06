@@ -80,7 +80,7 @@ export function EditSKUModal({
 
   // 获取选中媒体的完整信息（通过 ids 从后端获取）
   const selectedMediaIds = form.watch("mediaIds");
-  const { data: mediaList = [] } = useMediaList(selectedMediaIds);
+  const { data: mediaList = [] } = useMediaList({ ids: selectedMediaIds });
 
   // 创建媒体 ID 到 URL 的映射
   const mediaMap = new Map(
@@ -504,7 +504,7 @@ export function EditSKUModal({
                               key={mediaId}
                               onClick={() => field.onChange(mediaId)}
                             >
-                              {imageUrl ? (
+                              {imageUrl && imageUrl !== "" ? (
                                 <Image
                                   alt="SKU 图片"
                                   className="object-cover"

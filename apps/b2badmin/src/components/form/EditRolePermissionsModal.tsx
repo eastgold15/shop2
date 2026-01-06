@@ -49,7 +49,7 @@ export function EditRolePermissionsModal({
     usePermissionsList();
   const { data: roleDetail, isLoading: roleDetailLoading } = useRoleDetail(
     roleId,
-    open
+    { enabled: open }
   );
 
   const batchUpdate = useSetRolePermissions();

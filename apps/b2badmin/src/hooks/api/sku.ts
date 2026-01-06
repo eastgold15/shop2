@@ -101,26 +101,15 @@ export function useDeleteSku() {
 /**
  * 获取所有SKU（用于SKU管理页面，返回站点所有SKU及关联商品信息）
  */
-export function useAllSkusForManagement(enabled = true) {
+export function useAllSkusForManagement(productId: string, enabled = true) {
   return useQuery({
     queryKey: ["sku", "all", "management"],
     queryFn: () =>
       api.get<any, typeof SkuContract.ListQuery.static>("/api/v1/sku/list", {
-        params: { page: 1, limit: 1000 }, // 获取所有数据，前端自行过滤
+        params: { page: 1, limit: 1000, productId }, // 获取所有数据，前端自行过滤
       }),
     staleTime: 2 * 60 * 1000, // 2分钟
     enabled,
   });
 }
 
-/**
- * 获取商品的 SKU 列表
- */
-export function useProductSkus(productId: string, enabled = !!productId) {
-  return useQuery({
-    queryKey: ["product", productId, "skus"],
-    queryFn: () => api.get<any>(`/api/v1/product/${productId}/sku`),
-    staleTime: 5 * 60 * 1000, // 5分钟
-    enabled,
-  });
-}

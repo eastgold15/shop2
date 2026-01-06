@@ -16,14 +16,11 @@ export const Can = ({
   fallback = null,
 }: CanProps) => {
   const hasPermission = useAuthStore((state) => state.hasPermission);
-  const hasAnyPermission = useAuthStore((state) => state.hasAnyPermission);
 
   let allowed = false;
 
   if (permission) {
     allowed = hasPermission(permission);
-  } else if (anyPermission) {
-    allowed = hasAnyPermission(anyPermission);
   }
 
   return allowed ? children : fallback;

@@ -22,24 +22,22 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useCreateUser } from "@/hooks/api";
-import { useAuthStore } from "@/stores/auth-store";
+import { HasFactory, HasGroup } from "../auth/Has";
 
 const formSchema = z
   .object({
     name: z.string().min(1, "请输入姓名"),
-    email: z.string().email("请输入有效的邮箱地址"),
+    email: z.email("请输入有效的邮箱地址"),
     password: z.string().min(6, "密码至少需要6个字符"),
     confirmPassword: z.string(),
-    phone: z.string().optional(),
-    isSuperAdmin: z.boolean().default(false),
+    phone: z.string(),
+    whatsapp: z.string().optional(),
+    position: z.string().optional(),
+    deptId: z.string(),
+    roleId: z.string(),
+    isActive: z.boolean().default(true),
+    masterCategoryIds: z.array(z.string()).optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "两次输入的密码不一致",
@@ -59,7 +57,6 @@ export function CreateUserModal({
   onOpenChange,
   onSuccess,
 }: CreateUserModalProps) {
-  const isSuperAdmin = useAuthStore((state) => state.isSuperAdmin);
   const createUser = useCreateUser();
 
   const form = useForm<FormData>({
@@ -69,22 +66,22 @@ export function CreateUserModal({
       password: "",
       confirmPassword: "",
       phone: "",
-      isSuperAdmin: false,
     },
   });
 
   const handleSubmit = async (data: FormData) => {
-    if (!isSuperAdmin) {
-      toast.error("只有超级管理员可以创建用户");
-      return;
-    }
-
     try {
       await createUser.mutateAsync({
         name: data.name,
         email: data.email,
         password: data.password,
-        isSuperAdmin: data.isSuperAdmin,
+        isActive: true,
+        phone: data.phone,
+        deptId: data.deptId,
+        roleId: data.roleId,
+        whatsapp: data.whatsapp,
+        position: data.position,
+        masterCategoryIds: data.masterCategoryIds || [],
       });
 
       toast.success("用户创建成功");
@@ -105,7 +102,7 @@ export function CreateUserModal({
 
   return (
     <Dialog onOpenChange={handleOpenChange} open={open}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-125">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <UserPlus className="h-5 w-5" />
@@ -116,7 +113,7 @@ export function CreateUserModal({
           </DialogDescription>
         </DialogHeader>
 
-        {isSuperAdmin ? (
+        <HasGroup>
           <Form {...form}>
             <form
               className="space-y-4"
@@ -206,33 +203,6 @@ export function CreateUserModal({
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="isSuperAdmin"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>用户类型 *</FormLabel>
-                    <Select
-                      defaultValue={field.value ? "true" : "false"}
-                      onValueChange={(value) =>
-                        field.onChange(value === "true")
-                      }
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="请选择用户类型" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="false">普通用户</SelectItem>
-                        <SelectItem value="true">超级管理员</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
               <DialogFooter>
                 <Button
                   disabled={createUser.isPending}
@@ -248,14 +218,16 @@ export function CreateUserModal({
               </DialogFooter>
             </form>
           </Form>
-        ) : (
+        </HasGroup>
+
+        <HasFactory>
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <ShieldAlert className="mb-4 h-12 w-12 text-amber-500" />
             <p className="text-slate-600 text-sm">
-              您没有权限创建用户。此功能仅限超级管理员使用。
+              您没有权限创建用户。此功能超级管理员使用。
             </p>
           </div>
-        )}
+        </HasFactory>
       </DialogContent>
     </Dialog>
   );

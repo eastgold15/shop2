@@ -31,7 +31,7 @@ export interface UserInfo {
   id: string;
   name: string;
   email: string;
-  avatar: string;
+  image: string;
   phone: string;
   position: string;
   isSuperAdmin: boolean;

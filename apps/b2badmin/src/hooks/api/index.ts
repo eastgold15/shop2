@@ -27,5 +27,5 @@ export * from "./template-key"; // 模板键
 export * from "./template-value"; // 模板值
 export * from "./tenant"; // 租户
 export * from "./user"; // 用户
-export * from "./user-role"; // 用户角色
+
 export * from "./utils"; // 工具函数
