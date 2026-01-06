@@ -39,18 +39,19 @@ import {
 } from "@/components/ui/sidebar";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import type { HeroCardResponse } from "@/hooks/api/hero-card";
+
 import {
-  useHeroCardsCreate,
-  useHeroCardsDelete,
-  useHeroCardsList,
-  useHeroCardsToggleStatus,
-  useHeroCardsUpdate,
+  useCreateHeroCard,
+  useDeleteHeroCard,
+  useHeroCardList,
+  useHeroCardToggleStatus,
+  useUpdateHeroCard,
 } from "@/hooks/api/hero-card";
+import { HeroCardRes } from "@/hooks/api/hero-card.type";
 
 export default function HeroCardsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [editingCard, setEditingCard] = useState<HeroCardResponse | null>(null);
+  const [editingCard, setEditingCard] = useState<HeroCardRes | null>(null);
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     title: "",
@@ -64,19 +65,19 @@ export default function HeroCardsPage() {
   });
 
   // 获取首页展示卡片列表
-  const { data: cardsData, isLoading, refetch } = useHeroCardsList();
+  const { data: cardsData, isLoading, refetch } = useHeroCardList();
 
   // 创建首页展示卡片
-  const createMutation = useHeroCardsCreate();
+  const createMutation = useCreateHeroCard();
 
   // 更新首页展示卡片
-  const updateMutation = useHeroCardsUpdate();
+  const updateMutation = useUpdateHeroCard();
 
   // 删除首页展示卡片
-  const deleteMutation = useHeroCardsDelete();
+  const deleteMutation = useDeleteHeroCard();
 
   // 切换激活状态
-  const toggleStatusMutation = useHeroCardsToggleStatus();
+  const toggleStatusMutation = useHeroCardToggleStatus();
 
   // 重置表单
   const resetForm = () => {
@@ -94,7 +95,7 @@ export default function HeroCardsPage() {
   };
 
   // 打开编辑对话框
-  const handleEdit = (card: HeroCardResponse) => {
+  const handleEdit = (card: HeroCardRes) => {
     setEditingCard(card);
     setFormData({
       title: card.title,
@@ -194,9 +195,7 @@ export default function HeroCardsPage() {
     if (selectedCards.length === cardsData?.length) {
       setSelectedCards([]);
     } else {
-      setSelectedCards(
-        cardsData?.map((card: HeroCardResponse) => card.id) || []
-      );
+      setSelectedCards(cardsData?.map((card: HeroCardRes) => card.id) || []);
     }
   };
 
@@ -467,12 +466,12 @@ export default function HeroCardsPage() {
                               type="checkbox"
                             />
                             <GripVertical className="mt-1 h-5 w-5 text-muted-foreground" />
-                            {card.mediaUrl && (
+                            {card.media.url && (
                               <Image
                                 alt={card.title}
                                 className="h-16 w-16 rounded object-cover"
                                 height={40}
-                                src={card.mediaUrl}
+                                src={card.media.url}
                                 width={40}
                               />
                             )}

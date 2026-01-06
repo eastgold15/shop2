@@ -18,7 +18,9 @@ interface MasterCategoryState {
   // 获取分类的完整路径
   getCategoryPath: (categoryId: string) => string[];
   // 根据ID查找分类
-  getCategoryById: (categoryId: string) => MasterCategoryContract["TreeEntity"] | undefined;
+  getCategoryById: (
+    categoryId: string
+  ) => MasterCategoryContract["TreeEntity"] | undefined;
   // 获取所有子分类ID
   getAllChildIds: (categoryId: string) => string[];
   // 清空数据

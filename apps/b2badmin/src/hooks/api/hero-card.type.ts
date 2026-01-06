@@ -4,7 +4,42 @@
  */
 
 // ==================== 列表查询 ====================
-
+export interface HeroCardRes {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  title: string;
+  description: string;
+  buttonText: string;
+  buttonUrl: string;
+  backgroundClass: string;
+  sortOrder: number;
+  isActive: boolean;
+  mediaId: string;
+  tenantId: string;
+  deptId: string;
+  createdBy: string;
+  isPublic: boolean;
+  siteId: string;
+  media: Media;
+}
+interface Media {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  storageKey: string;
+  category: string;
+  url: string;
+  originalName: string;
+  mimeType: string;
+  status: boolean;
+  thumbnailUrl: string;
+  mediaType: string;
+  tenantId: string;
+  deptId: string;
+  createdBy: string;
+  isPublic: boolean;
+}
 /**
  * 首页展示卡片列表查询参数
  */
@@ -13,9 +48,6 @@ export interface HeroCardListQuery {
   limit?: number;
   search?: string;
   isActive?: boolean;
-  backgroundClass?: string;
-  sortBy?: "sortOrder" | "createdAt" | "updatedAt";
-  sortOrder?: "asc" | "desc";
 }
 
 /**

@@ -1,7 +1,12 @@
 // types.ts
 import { z } from "zod";
 
-export const FieldTypeSchema = z.enum(["text", "number", "select", "multiselect"]);
+export const FieldTypeSchema = z.enum([
+  "text",
+  "number",
+  "select",
+  "multiselect",
+]);
 
 export const TemplateFieldSchema = z.object({
   id: z.string(),

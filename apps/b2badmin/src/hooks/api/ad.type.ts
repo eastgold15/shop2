@@ -23,7 +23,6 @@ export interface AdListQuery {
  * 广告列表响应
  */
 
-
 export interface AdListRes {
   id: string;
   createdAt: string;

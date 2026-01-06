@@ -43,12 +43,12 @@ export function useRoleList(
 
 // --- 2. 单个详情 (GET) ---
 // TRes = any
-type useRoleDetailOptions = Omit<UseQueryOptions<RoleDetailRes>, "queryKey" | "queryFn">;
+type useRoleDetailOptions = Omit<
+  UseQueryOptions<RoleDetailRes>,
+  "queryKey" | "queryFn"
+>;
 
-export function useRoleDetail(
-  id: string,
-  option?: useRoleDetailOptions
-) {
+export function useRoleDetail(id: string, option?: useRoleDetailOptions) {
   return useQuery({
     queryKey: roleKeys.detail(id),
     queryFn: () => api.get<RoleDetailRes>(`/api/v1/role/${id}`),

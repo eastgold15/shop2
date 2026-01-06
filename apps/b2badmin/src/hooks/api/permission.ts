@@ -21,16 +21,20 @@ interface PermissionListRes {
   description: string;
 }
 // --- 1. 列表查询 (GET) ---
-type usePermissionsListOptions = Omit<UseQueryOptions<PermissionListRes[], Error>, "queryKey" | "queryFn">;
+type usePermissionsListOptions = Omit<
+  UseQueryOptions<PermissionListRes[], Error>,
+  "queryKey" | "queryFn"
+>;
 export function usePermissionsList(
   query?: typeof PermissionContract.ListQuery.static,
   options?: usePermissionsListOptions
 ) {
   return useQuery({
     queryKey: permissionKeys.list(query),
-    queryFn: () => api.get<PermissionListRes[]>("/api/v1/permission", {
-      params: query,
-    }),
+    queryFn: () =>
+      api.get<PermissionListRes[]>("/api/v1/permission", {
+        params: query,
+      }),
     ...options,
   });
 }

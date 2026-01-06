@@ -64,7 +64,10 @@ interface HasSiteTypeProps {
  * 工厂站专属内容组件
  * 只有当前站点是工厂站时才显示内容
  */
-export function HasFactory({ children, fallback = null }: Omit<HasSiteTypeProps, "siteType">) {
+export function HasFactory({
+  children,
+  fallback = null,
+}: Omit<HasSiteTypeProps, "siteType">) {
   const getCurrentSite = useAuthStore((state) => state.getCurrentSite);
   const site = getCurrentSite();
 
@@ -79,7 +82,10 @@ export function HasFactory({ children, fallback = null }: Omit<HasSiteTypeProps,
  * 集团站专属内容组件
  * 只有当前站点是集团站时才显示内容
  */
-export function HasGroup({ children, fallback = null }: Omit<HasSiteTypeProps, "siteType">) {
+export function HasGroup({
+  children,
+  fallback = null,
+}: Omit<HasSiteTypeProps, "siteType">) {
   const getCurrentSite = useAuthStore((state) => state.getCurrentSite);
   const site = getCurrentSite();
 

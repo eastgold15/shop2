@@ -1,13 +1,9 @@
-
 export type FieldType =
   | "text"
   | "number"
   | "select"
   | "multiselect"
   | "richtext";
-
-
-
 
 export interface MediaAsset {
   id: string;
@@ -39,8 +35,6 @@ export interface Factory {
   location: string;
   contactPerson: string;
 }
-
-
 
 export interface User {
   id: string;

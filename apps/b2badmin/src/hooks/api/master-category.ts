@@ -66,7 +66,6 @@ export function useMasterCategoryList(
   });
 }
 
-
 // --- 2. 单个详情 (GET) ---
 // TRes = any
 export function useMasterCategoryDetail(id: string, enabled = !!id) {
@@ -76,7 +75,6 @@ export function useMasterCategoryDetail(id: string, enabled = !!id) {
     enabled: !!id,
   });
 }
-
 
 // 获取主分类树
 export function useMasterCategoryTree(options?: { enabled?: boolean }) {
@@ -92,8 +90,6 @@ export function useMasterCategoryTree(options?: { enabled?: boolean }) {
     enabled: options?.enabled ?? true,
   });
 }
-
-
 
 // --- 3. 创建 (POST) ---
 // TRes = any, TBody = typeof MasterCategoryContract.Create.static

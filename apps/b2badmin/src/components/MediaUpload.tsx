@@ -1,15 +1,6 @@
 // components/MediaUpload.tsx
 "use client";
 
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useBatchUploadMedia } from "@/hooks/api";
 import * as React from "react";
 import { toast } from "sonner";
 import {
@@ -20,7 +11,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Upload } from "@/components/ui/upload";
+import { useBatchUploadMedia } from "@/hooks/api";
 
 const CATEGORY_OPTIONS = [
   { value: "product", label: "商品图片" },
@@ -109,7 +109,9 @@ export function MediaUpload({
             autoUpload={false}
             batchMode={true}
             multiple
-            onUpload={handleBatchUpload}
+            onError={(error) => {
+              toast.error(error);
+            }}
             onSuccess={() => {
               // 上传成功后关闭弹窗
               setTimeout(() => {
@@ -118,9 +120,7 @@ export function MediaUpload({
                 onUploadComplete?.();
               }, 500);
             }}
-            onError={(error) => {
-              toast.error(error);
-            }}
+            onUpload={handleBatchUpload}
           />
         </div>
       </DialogContent>

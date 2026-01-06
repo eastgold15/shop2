@@ -27,7 +27,6 @@ interface SwitchableDept {
   switchableDepartments: DeptInfo[];
 }
 
-
 export interface UserInfo {
   id: string;
   name: string;
@@ -56,8 +55,6 @@ interface Department {
   category: string;
   parentId?: string;
 }
-
-
 
 /**
  * 用户列表查询参数

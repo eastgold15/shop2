@@ -42,9 +42,12 @@ export function useMediaPageList(
   return useQuery({
     queryKey: mediaKeys.list(params),
     queryFn: () =>
-      api.get<any, typeof MediaContract.ListQuery.static>("/api/v1/media/page-list", {
-        params,
-      }),
+      api.get<any, typeof MediaContract.ListQuery.static>(
+        "/api/v1/media/page-list",
+        {
+          params,
+        }
+      ),
     enabled,
   });
 }

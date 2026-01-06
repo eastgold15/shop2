@@ -4,7 +4,26 @@
  */
 
 // ==================== 列表查询 ====================
+// {
+//   id,
+//     key: "",
+//       code: `field_${id.slice(-4)}`,
+//         inputType: "text",
+//           isRequired: false,
+//             isSkuSpec: false,
+//               templateId: id,
+//                 sortOrder: prev.fields.length,
+//                   value: "", // 确保初始化 value
+//         },
 
+/**
+ * 模板字段输入类型
+ */
+export type TemplateFieldInputType =
+  | "text"
+  | "number"
+  | "select"
+  | "multiselect";
 /**
  * 模板列表查询参数
  */
@@ -30,15 +49,6 @@ export interface TemplateListResponse {
 }
 
 // ==================== 模板字段类型 ====================
-
-/**
- * 模板字段输入类型
- */
-export type TemplateFieldInputType =
-  | "text"
-  | "number"
-  | "select"
-  | "multiselect";
 
 /**
  * 模板字段定义

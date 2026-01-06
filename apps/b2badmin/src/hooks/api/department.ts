@@ -160,10 +160,10 @@ export function useCreateDepartmentWithSiteAndAdmin() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: CreateDepartmentWithSiteAndAdminRequest) =>
-      api.post<CreateDepartmentWithSiteAndAdminResponse, CreateDepartmentWithSiteAndAdminRequest>(
-        "/api/v1/department/with-site-and-admin",
-        data
-      ),
+      api.post<
+        CreateDepartmentWithSiteAndAdminResponse,
+        CreateDepartmentWithSiteAndAdminRequest
+      >("/api/v1/department/with-site-and-admin", data),
     onSuccess: () => {
       toast.success("部门、站点和管理员创建成功");
       queryClient.invalidateQueries({ queryKey: departmentKeys.lists() });

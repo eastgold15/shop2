@@ -5,7 +5,6 @@
 
 // ==================== 列表查询 ====================
 
-
 export interface RoleDetailRes {
   id: string;
   name: string;

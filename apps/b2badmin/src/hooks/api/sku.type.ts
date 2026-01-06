@@ -27,8 +27,6 @@ interface MainImage {
   isMain: boolean;
 }
 
-
-
 /**
  * SKU列表查询参数
  */

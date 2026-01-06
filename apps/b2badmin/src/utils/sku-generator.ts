@@ -64,7 +64,9 @@ export function calculateEstimatedCount(
  * @param specJson 规格JSON对象,例如: { "颜色": "红", "尺码": "40" }
  * @returns 可读的描述,例如: "颜色:红 尺码:40"
  */
-export function formatSpecDescription(specJson: Record<string, string>): string {
+export function formatSpecDescription(
+  specJson: Record<string, string>
+): string {
   return Object.entries(specJson)
     .map(([key, value]) => `${key}:${value}`)
     .join(" ");

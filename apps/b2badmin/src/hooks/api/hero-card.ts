@@ -10,9 +10,7 @@ import { HeroCardContract } from "@repo/contract";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { api } from "./api-client";
-
-// 导出类型供页面使用
-export type HeroCardResponse = typeof HeroCardContract.Response.static;
+import { HeroCardRes } from "./hero-card.type";
 
 // --- Query Keys ---
 export const herocardKeys = {
@@ -32,22 +30,12 @@ export function useHeroCardList(
   return useQuery({
     queryKey: herocardKeys.list(params),
     queryFn: () =>
-      api.get<any, typeof HeroCardContract.ListQuery.static>(
+      api.get<HeroCardRes[], typeof HeroCardContract.ListQuery.static>(
         "/api/v1/hero-card",
         { params }
       ),
     enabled,
   });
-}
-
-// 导出旧名称以兼容
-export function useHeroCardsList(params?: {
-  page?: number;
-  limit?: number;
-  search?: string;
-  isActive?: boolean;
-}) {
-  return useHeroCardList(params as any);
 }
 
 // --- 2. 单个详情 (GET) ---
@@ -80,9 +68,6 @@ export function useCreateHeroCard() {
   });
 }
 
-// 导出旧名称以兼容
-export const useHeroCardsCreate = useCreateHeroCard;
-
 // --- 4. 更新 (PUT) ---
 // TRes = any, TBody = typeof HeroCardContract.Update.static
 export function useUpdateHeroCard() {
@@ -112,9 +97,6 @@ export function useUpdateHeroCard() {
   });
 }
 
-// 导出旧名称以兼容
-export const useHeroCardsUpdate = useUpdateHeroCard;
-
 // --- 5. 删除 (DELETE) ---
 // TRes = any
 export function useDeleteHeroCard() {
@@ -130,9 +112,6 @@ export function useDeleteHeroCard() {
     },
   });
 }
-
-// 导出旧名称以兼容
-export const useHeroCardsDelete = useDeleteHeroCard;
 
 // --- 批量更新排序 ---
 export function useHeroCardUpdateSort() {
@@ -154,9 +133,6 @@ export function useHeroCardUpdateSort() {
   });
 }
 
-// 导出旧名称以兼容
-export const useHeroCardsUpdateSort = useHeroCardUpdateSort;
-
 // --- 切换激活状态 ---
 export function useHeroCardToggleStatus() {
   const queryClient = useQueryClient();
@@ -173,6 +149,3 @@ export function useHeroCardToggleStatus() {
     },
   });
 }
-
-// 导出旧名称以兼容
-export const useHeroCardsToggleStatus = useHeroCardToggleStatus;

@@ -21,12 +21,9 @@ export function useSkuList(
   return useQuery({
     queryKey: skuKeys.list(params),
     queryFn: () =>
-      api.get<any, typeof SkuContract.ListQuery.static>(
-        "/api/v1/sku/list",
-        {
-          params,
-        }
-      ),
+      api.get<any, typeof SkuContract.ListQuery.static>("/api/v1/sku/list", {
+        params,
+      }),
     enabled,
   });
 }
@@ -78,10 +75,7 @@ export function useUpdateSku() {
       id: string;
       data: typeof SkuContract.Update.static;
     }) =>
-      api.put<any, typeof SkuContract.Update.static>(
-        `/api/v1/sku/${id}`,
-        data
-      ),
+      api.put<any, typeof SkuContract.Update.static>(`/api/v1/sku/${id}`, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: skuKeys.lists() });
       queryClient.invalidateQueries({

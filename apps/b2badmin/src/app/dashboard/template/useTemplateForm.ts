@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import type { TemplateField } from "@/types";
+import { TemplateField } from "@/hooks/api/template.type";
 
 // hooks/use-template-form.ts
 export function useTemplateForm(initialData?: {

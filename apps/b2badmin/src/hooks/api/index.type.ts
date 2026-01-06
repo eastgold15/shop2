@@ -17,7 +17,7 @@ export type * from "./attribute-template";
 export type * from "./factory.type";
 
 // 首页卡片相关类型
-export type * from "./herocard.type";
+export type * from "./hero-card.type";
 
 // 主分类相关类型
 export type * from "./master-category.type";
