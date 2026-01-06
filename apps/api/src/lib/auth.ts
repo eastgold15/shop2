@@ -99,7 +99,7 @@ export const auth = betterAuth({
       enabled: !!(envConfig.GITHUB_CLIENT_ID && envConfig.GITHUB_CLIENT_SECRET),
     },
   },
-  trustedOrigins: [...envConfig.ORIGIN.split(",")],
+  trustedOrigins: [...envConfig.TRUSTED_ORIGINS.split(",")],
 
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 days

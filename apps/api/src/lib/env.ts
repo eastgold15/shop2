@@ -8,7 +8,7 @@ export const envConfig = {
   // 必填项：必须存在且非空字符串
   DATABASE_URL: env.get("DATABASE_URL").default("").asString(),
   BETTER_AUTH_SECRET: env.get("BETTER_AUTH_SECRET").asString(),
-  ORIGIN: env.get("ORIGIN").default("").asString(),
+  TRUSTED_ORIGINS: env.get("TRUSTED_ORIGINS").default("").asString(),
 
   // 合法URL校验
   BETTER_AUTH_BASE_URL: env.get("BETTER_AUTH_BASE_URL").asUrlString(),

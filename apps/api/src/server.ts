@@ -22,8 +22,7 @@ export const server = new Elysia({ name: "server", prefix: "/api" })
           version: "1.0.71",
           description: "基于 Elysia + Drizzle + TypeScript 的电商后端 API",
         },
-        tags: [
-        ],
+        tags: [],
       },
       references: fromTypes(
         process.env.NODE_ENV === "production"
@@ -48,9 +47,7 @@ export const server = new Elysia({ name: "server", prefix: "/api" })
   })
   .use(
     cors({
-      origin: [
-        ...envConfig.ORIGIN.split(","),
-      ],
+      origin: [...envConfig.TRUSTED_ORIGINS.split(",")],
       credentials: true,
     })
   )

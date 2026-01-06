@@ -1,10 +1,59 @@
 import { type MediaContract, mediaTable } from "@repo/contract";
 import { and, eq, inArray, like, sql } from "drizzle-orm";
 import { HttpError } from "elysia-http-problem-json";
-import { StorageFactory } from "~/lib/media/storage/StorageFactory";
+import { BunS3StorageImpl } from "~/lib/media/storage/impl/BunS3StorageImpl";
 import { type ServiceContext } from "../lib/type";
 
+// 1. 初始化 OSS 客户端
+// 建议将密钥放在 .env 文件中，通过 Bun.env 读取
+
+const client = new BunS3StorageImpl({
+  accessKeyId: Bun.env.ACCESS_KEY_ID!,
+  secretAccessKey: Bun.env.SECRET_ACCESS_KEY!,
+  bucket: Bun.env.BUCKET!,
+  region: Bun.env.REGION!,
+  endpoint: Bun.env.ENDPOINT!,
+  domain: Bun.env.DOMAIN!,
+});
 export class MediaService {
+  /**
+   * 处理文件上传逻辑（支持单个或多个文件）
+   */
+  async upload(body: MediaContract["Uploads"], ctx: ServiceContext) {
+    const { files, category = "general" } = body;
+    // 支持单个或多个文件上传
+    const results = await Promise.all(
+      files.map(async (file) => {
+        // 2. 物理上传
+        const uploadResult = await client.upload(file, category);
+        console.log('uploadResult:', uploadResult)
+        // 3. 直接插入数据库
+        const insertData = {
+          url: uploadResult.url || "",
+          storageKey: uploadResult.key,
+          originalName: file.name,
+          mimeType: file.type,
+          category,
+          isPublic: true,
+          status: true,
+          // 自动注入租户信息
+          tenantId: ctx.user.context.tenantId,
+          siteId: ctx.user.context.site.id,
+          deptId: ctx.currentDeptId!,
+          createdBy: ctx.user.id,
+        };
+
+        const [res] = await ctx.db
+          .insert(mediaTable)
+          .values(insertData)
+          .returning();
+        return res;
+      })
+    );
+
+    return results;
+  }
+
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   public async create(body: MediaContract["Create"], ctx: ServiceContext) {
     const insertData = {
@@ -31,11 +80,13 @@ export class MediaService {
       where: {
         tenantId: ctx.user.context.tenantId!,
         deptId: ctx.currentDeptId,
-        ...(ids ? {
-          id: {
-            in: ids
+        ...(ids
+          ? {
+            id: {
+              in: ids,
+            },
           }
-        } : {}),
+          : {}),
         ...(search ? { originalName: { ilike: `%${search}%` } } : {}),
       },
     });
@@ -45,7 +96,10 @@ export class MediaService {
   /**
    * 分页查询媒体列表
    */
-  public async pageList(query: MediaContract["PageListQuery"], ctx: ServiceContext) {
+  public async pageList(
+    query: MediaContract["PageListQuery"],
+    ctx: ServiceContext
+  ) {
     const { search, page = 1, limit = 10, category } = query;
 
     // 查询数据（带分页）
@@ -62,7 +116,7 @@ export class MediaService {
     });
 
     // 查询总数
-    const totalResult = await ctx.db.$count(mediaTable)
+    const totalResult = await ctx.db.$count(mediaTable);
     return {
       data,
       total: totalResult,
@@ -96,55 +150,6 @@ export class MediaService {
   }
 
   /**
-   * 处理文件上传逻辑（支持单个或多个文件）
-   */
-  async upload(body: MediaContract["Uploads"], ctx: ServiceContext) {
-    const { files, category = "general" } = body;
-    const storage = StorageFactory.createStorageFromEnv();
-
-    // 支持单个或多个文件上传
-    const results = await Promise.all(
-      files.map(async (file) => {
-        // 1. 生成唯一文件名
-        const fileName = file.name || "unknown";
-        const uniqueName = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}_${fileName}`;
-
-        // 2. 物理上传
-        const uploadResult = await storage.uploadFile(
-          file,
-          uniqueName,
-          category,
-          file.type
-        );
-
-        // 3. 直接插入数据库
-        const insertData = {
-          url: uploadResult.url || "",
-          storageKey: uploadResult.key || uniqueName,
-          originalName: fileName,
-          mimeType: file.type,
-          category,
-          isPublic: true,
-          status: true,
-          // 自动注入租户信息
-          tenantId: ctx.user.context.tenantId,
-          siteId: ctx.user.context.site.id,
-          deptId: ctx.currentDeptId!,
-          createdBy: ctx.user.id,
-        };
-
-        const [res] = await ctx.db
-          .insert(mediaTable)
-          .values(insertData)
-          .returning();
-        return res;
-      })
-    );
-
-    return results;
-  }
-
-  /**
    * 获取媒体列表（带筛选）
    */
   async mediaList(
@@ -169,10 +174,9 @@ export class MediaService {
       .where(and(...filters))
       .orderBy(sql`${mediaTable.createdAt} desc`);
 
-    const storage = StorageFactory.createStorageFromEnv();
     return files.map((file: any) => ({
       ...file,
-      url: storage.getPublicUrl(file.storageKey),
+      url: client.getPublicUrl(file.storageKey),
     }));
   }
 
@@ -194,8 +198,8 @@ export class MediaService {
     if (!file) throw new HttpError.NotFound("文件不存在或无权访问");
 
     // 2. 删除物理文件
-    const storage = StorageFactory.createStorageFromEnv();
-    await storage.deleteFile(file.storageKey);
+
+    await client.delete(file.storageKey);
 
     // 3. 调用 delete 方法
     return await this.delete(id, ctx);
@@ -218,8 +222,7 @@ export class MediaService {
     if (files.length === 0) throw new HttpError.NotFound("未找到可删除的文件");
 
     // 2. 物理删除
-    const storage = StorageFactory.createStorageFromEnv();
-    await Promise.all(files.map((f: any) => storage.deleteFile(f.storageKey)));
+    await Promise.all(files.map((f: any) => client.delete(f.storageKey)));
 
     // 3. 数据库批量删除
     await ctx.db.delete(mediaTable).where(and(...whereConditions));
