@@ -4,6 +4,7 @@
  *
  * 使用方式：
  * - 启动所有应用: pm2 start ecosystem.config.js
+ * - 只启动 api: pm2 start ecosystem.config.js --only api
  * - 只启动 b2badmin: pm2 start ecosystem.config.js --only b2badmin
  * - 只启动 web: pm2 start ecosystem.config.js --only web
  * - 重启所有: pm2 restart ecosystem.config.js
@@ -20,6 +21,28 @@
 module.exports = {
   apps: [
     {
+      name: "api",
+      script: "./dist/index.js",
+      cwd: "./apps/api",
+      instances: 1,
+      exec_mode: "fork", // 更安全
+      autorestart: true,
+      watch: false,
+      max_memory_restart: "500M",
+      env: {
+        NODE_ENV: "production",
+        SERVERPORT: 9000,
+      },
+      error_file: "./logs/api-error.log",
+      out_file: "./logs/api-out.log",
+      log_date_format: "YYYY-MM-DD HH:mm:ss Z",
+      merge_logs: true,
+      interpreter: "bun", // Bun 运行时
+      wait_ready: true,
+      listen_timeout: 10_000,
+      ready_pattern: /server running/i,
+    },
+    {
       name: "b2badmin",
       script: "node_modules/.bin/next",
       cwd: "./apps/b2badmin",
@@ -28,7 +51,7 @@ module.exports = {
       exec_mode: "fork", // 更安全
       autorestart: true,
       watch: false,
-      max_memory_restart: "1G",
+      max_memory_restart: "500M",
       env: {
         NODE_ENV: "production",
         PORT: 9001, // 统一使用生产端口
@@ -38,6 +61,7 @@ module.exports = {
       log_date_format: "YYYY-MM-DD HH:mm:ss Z",
       merge_logs: true,
       interpreter: "bun", // Bun 运行时
+      depends_on: ["api"], // 依赖 api 服务
     },
     {
       name: "web",
@@ -58,6 +82,7 @@ module.exports = {
       log_date_format: "YYYY-MM-DD HH:mm:ss Z",
       merge_logs: true,
       interpreter: "bun",
+      depends_on: ["api"], // 依赖 api 服务
     },
   ],
 };
