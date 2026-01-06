@@ -19,16 +19,15 @@ export interface MediaListQuery {
 }
 
 /**
- * 媒体文件列表响应
+ * 媒体文件分页列表响应
  */
-export interface MediaListResponse {
+
+export interface MediaPageListRes {
   data: Media[];
   total: number;
   page: number;
   limit: number;
-  totalPages: number;
 }
-
 // ==================== 媒体文件实体 ====================
 
 /**
@@ -51,8 +50,6 @@ export interface Media {
   ownerId?: string | null;
   isPublic: boolean; // 是否公开
 
-  // 站点关联
-  siteId: string;
 }
 
 // ==================== 上传媒体 ====================

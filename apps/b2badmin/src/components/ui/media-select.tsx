@@ -1,4 +1,3 @@
-import { MediaContract } from "@repo/contract";
 import { Plus, Video } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
@@ -53,8 +52,7 @@ export function MediaSelect({
   };
 
   // 获取媒体信息
-  const getMedia = (mediaId: string) =>
-    mediaList.find((m: MediaContract["Entity"]) => m.id === mediaId);
+  const getMedia = (mediaId: string) => mediaList.find((m) => m.id === mediaId);
 
   // 判断是否是视频
   const isVideo = (mimeType?: string) => mimeType?.startsWith("video/");

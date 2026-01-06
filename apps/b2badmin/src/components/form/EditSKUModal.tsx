@@ -28,7 +28,7 @@ import { Input } from "@/components/ui/input";
 import { MediaSelect } from "@/components/ui/media-select";
 import { useMediaList } from "@/hooks/api/media";
 import { useUpdateSku } from "@/hooks/api/sku";
-import { SkuListRes } from "@/hooks/api/sku.type";
+import type { BaseSku } from "@/hooks/api/sku.type";
 
 const formSchema = z.object({
   skuCode: z.string().min(1, "SKU编码不能为空"),
@@ -50,7 +50,7 @@ interface EditSKUModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
-  sku?: SkuListRes;
+  sku?: BaseSku;
 }
 
 export function EditSKUModal({
@@ -90,7 +90,9 @@ export function EditSKUModal({
   // 当 sku 变化时，填充表单数据
   useEffect(() => {
     if (sku) {
-      const mainImage = sku.allImages?.find((img) => img.isMain);
+      // 获取图片数据，支持 allImages 和 media 两种格式
+      const images = sku.allImages || sku.media || [];
+      const mainImage = images.find((img) => img.isMain);
       form.reset({
         skuCode: sku.skuCode || "",
         price:
@@ -110,8 +112,8 @@ export function EditSKUModal({
             ? Number.parseInt(sku.stock, 10)
             : sku.stock || 0,
         specJson: sku.specJson || {},
-        mediaIds: sku.allImages?.map((img) => img.id) || [],
-        mainImageId: mainImage?.id || sku.allImages?.[0]?.id || undefined,
+        mediaIds: images.map((img) => img.id) || [],
+        mainImageId: mainImage?.id || images[0]?.id || undefined,
         status: sku.status ?? 1,
       });
     } else {
@@ -486,10 +488,11 @@ export function EditSKUModal({
                     <FormControl>
                       <div className="flex flex-wrap gap-2">
                         {form.watch("mediaIds")?.map((mediaId) => {
-                          // 优先从 mediaMap 获取，如果不存在则从原始数据获取
-                          const imageUrl =
-                            mediaMap.get(mediaId) ||
-                            sku?.allImages?.find((img) => img.id === mediaId)
+                          // 优先从 mediaMap 获取，如果不存在则从原始数据获取（支持 allImages 和 media 两种格式）
+                          const originalImages = sku?.allImages || sku?.media || [];
+                          const imageUrl: string =
+                            (mediaMap.get(mediaId) as string | undefined) ||
+                            originalImages.find((img) => img.id === mediaId)
                               ?.url ||
                             "";
                           const isSelected = field.value === mediaId;

@@ -11,11 +11,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Sku } from "./type";
+import { SkuListRes } from "@/hooks/api/sku.type";
 
 interface SkuPanelProps {
-  skus: Sku[];
-  onEdit: (sku: Sku) => void;
+  skus: SkuListRes[];
+  onEdit: (sku: SkuListRes) => void;
   onDelete: (id: string, code: string) => void;
 }
 
@@ -72,7 +72,7 @@ export function SkuPanel({ skus, onEdit, onDelete }: SkuPanelProps) {
                   </span>
                 </TableCell>
                 <TableCell>
-                  {sku.media?.length > 0 ? (
+                  {sku?.media && sku.media.length > 0 ? (
                     // 这里稍微hack一下，只显示图标，点击预览
                     <ImageGallery images={sku.media} size="sm" />
                   ) : (

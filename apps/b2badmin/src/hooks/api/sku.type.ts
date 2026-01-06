@@ -3,30 +3,43 @@
  * 用于后端接口开发参考
  */
 
-// ==================== 列表查询 ====================
-export interface SkuListRes {
-  id: string;
-  skuCode: string;
-  stock: number;
-  specJson: Record<string, string> | null;
-  price: number;
-  originalPrice: string;
-  status: number;
-  isActive: boolean;
-  isCustomized: boolean;
-  marketPrice?: any;
-  costPrice?: any;
-  weight?: any;
-  volume?: any;
-  mainImage?: MainImage;
-  allImages: MainImage[];
-}
+// ==================== 基础 SKU 类型 ====================
+/**
+ * SKU 图片类型
+ */
 export interface MainImage {
   id: string;
   skuId: string;
   mediaId: string;
   url: string;
   isMain: boolean;
+}
+
+/**
+ * SKU 基础类型（用于编辑和显示）
+ * 统一的商品列表返回的 SKU 和 SKU 列表查询返回的类型
+ */
+export interface BaseSku {
+  id: string;
+  skuCode: string;
+  price: number | string;
+  stock: number | string;
+  specJson: Record<string, string> | null;
+  status: number;
+  marketPrice?: number | string | null;
+  costPrice?: number | string | null;
+  weight?: number | string | null;
+  volume?: number | string | null;
+  mainImage?: MainImage | { url: string; isMain: boolean } | null;
+  allImages?: MainImage[] | Array<{ id: string; url: string; isMain: boolean }>;
+  media?: Array<{ id: string; url: string; isMain: boolean }>;
+}
+
+// ==================== 列表查询 ====================
+export interface SkuListRes extends BaseSku {
+  originalPrice: string;
+  isActive: boolean;
+  isCustomized: boolean;
 }
 
 /**

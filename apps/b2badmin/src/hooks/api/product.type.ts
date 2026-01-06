@@ -1,16 +1,18 @@
+import { SkuListRes } from '@/hooks/api/sku.type';
 /**
  * 商品 - 前端接口类型定义
  * 用于后端接口开发参考
  */
+import type { BaseSku } from "./sku.type";
 
 // ==================== 列表查询 ====================
 export interface ProductPageListRes {
-  data: Datum[];
+  data: Product[];
   total: number;
   page: number;
   limit: number;
 }
-interface Datum {
+export interface Product {
   id: string;
   name: string;
   spuCode: string;
@@ -32,7 +34,7 @@ interface Datum {
   videos: any[];
   mainImage: string;
   mainImageId: string;
-  skus: Skus[];
+  skus: SkuListRes[];
   skuCount: number;
   /** 商品规格定义 (从模板中提取的 SKU 规格属性) */
   specs?: SpecDefinition[];
@@ -46,17 +48,8 @@ interface SpecDefinition {
   /** 可选值列表 (例如: ["S", "M", "L"]) */
   options?: string[];
 }
-interface Skus {
-  id: string;
+export interface Skus extends BaseSku {
   productId: string;
-  skuCode: string;
-  price: string;
-  marketPrice: string;
-  costPrice: string;
-  stock: string;
-  specJson: SpecJson;
-  status: number;
-  media: Image[];
 }
 interface SpecJson {
   color: string;
@@ -140,45 +133,6 @@ export interface ProductSkuSummary {
 
 // ==================== 商品实体 ====================
 
-/**
- * 商品实体（完整响应）
- */
-export interface Product {
-  id: string;
-  name: string;
-  spuCode: string;
-  description?: string | null;
-  status: number;
-  units?: string | null;
-  createdAt: string; // ISO 8601 datetime string
-  updatedAt: string; // ISO 8601 datetime string
-
-  // 站点相关字段
-  sitePrice?: string | null;
-  siteName?: string | null;
-  siteDescription?: string | null;
-  siteCategoryId?: string | null;
-
-  // 模板关联
-  templateId?: string | null;
-
-  // 媒体ID（用于编辑）
-  mediaIds: string[];
-  videoIds: string[];
-
-  // 媒体数据
-  images: ProductImage[];
-  videos: ProductVideo[];
-  mainImage?: string | null;
-  mainImageId?: string | null;
-
-  // SKU 数据
-  skus: ProductSkuSummary[];
-  skuCount: number;
-
-  /** 商品规格定义 (从模板中提取的 SKU 规格属性) */
-  specs?: SpecDefinition[];
-}
 
 // ==================== 创建商品 ====================
 

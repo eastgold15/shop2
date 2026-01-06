@@ -10,6 +10,7 @@ import { MediaContract } from "@repo/contract";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { api } from "./api-client";
+import { Media, MediaPageListRes } from "./media.type";
 
 // --- Query Keys ---
 export const mediaKeys = {
@@ -29,7 +30,7 @@ export function useMediaList(
   return useQuery({
     queryKey: mediaKeys.list(params),
     queryFn: () =>
-      api.get<any, typeof MediaContract.ListQuery.static>("/api/v1/media", {
+      api.get<Media[], typeof MediaContract.ListQuery.static>("/api/v1/media", {
         params,
       }),
     enabled,
@@ -42,7 +43,7 @@ export function useMediaPageList(
   return useQuery({
     queryKey: mediaKeys.list(params),
     queryFn: () =>
-      api.get<any, typeof MediaContract.ListQuery.static>(
+      api.get<MediaPageListRes, typeof MediaContract.ListQuery.static>(
         "/api/v1/media/page-list",
         {
           params,
