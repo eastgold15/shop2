@@ -22,12 +22,46 @@ export interface AdListQuery {
 /**
  * 广告列表响应
  */
-export interface AdListResponse {
-  data: Ad[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
+
+
+export interface AdListRes {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  title: string;
+  description: string;
+  type: string;
+  mediaId: string;
+  link: string;
+  position?: string;
+  sortOrder: number;
+  isActive: boolean;
+  startDate: string;
+  endDate: string;
+  tenantId: string;
+  deptId: string;
+  createdBy: string;
+  isPublic: boolean;
+  siteId: string;
+  media: Media;
+  mediaUrl: string;
+}
+interface Media {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  storageKey: string;
+  category: string;
+  url: string;
+  originalName: string;
+  mimeType: string;
+  status: boolean;
+  thumbnailUrl: string;
+  mediaType: string;
+  tenantId: string;
+  deptId: string;
+  createdBy: string;
+  isPublic: boolean;
 }
 
 // ==================== 广告实体 ====================

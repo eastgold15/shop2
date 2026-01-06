@@ -53,11 +53,11 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  useAdsBatchDelete,
-  useAdsCreate,
-  useAdsDelete,
-  useAdsList,
-  useAdsUpdate,
+  useAdBatchDelete,
+  useAdCreate,
+  useAdDelete,
+  useAdList,
+  useAdUpdate,
 } from "@/hooks/api/ad";
 
 // 广告类型
@@ -119,8 +119,8 @@ function AdsDialog({
     mediaId: ad?.mediaId || "",
   });
 
-  const createMutation = useAdsCreate();
-  const updateMutation = useAdsUpdate();
+  const createMutation = useAdCreate();
+  const updateMutation = useAdUpdate();
 
   const isEdit = !!ad;
 
@@ -150,7 +150,9 @@ function AdsDialog({
         sortOrder: formData.sortOrder,
         isActive: formData.isActive,
         // 只有当 mediaId 存在且不为空时才包含该字段
-        ...(formData.mediaId?.trim() ? { mediaId: formData.mediaId.trim() } : {}),
+        ...(formData.mediaId?.trim()
+          ? { mediaId: formData.mediaId.trim() }
+          : {}),
       };
 
       if (isEdit && ad) {
@@ -363,9 +365,9 @@ function AdsDialog({
 }
 
 export default function AdsPage() {
-  const { data: adsData, isLoading, refetch } = useAdsList();
-  const deleteMutation = useAdsDelete();
-  const batchDeleteMutation = useAdsBatchDelete();
+  const { data: adsData, isLoading, refetch } = useAdList();
+  const deleteMutation = useAdDelete();
+  const batchDeleteMutation = useAdBatchDelete();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingAd, setEditingAd] = useState<Ad | undefined>();
@@ -565,7 +567,11 @@ export default function AdsPage() {
                           {ad.isActive ? "启用" : "禁用"}
                         </Badge>
                         <Badge variant="outline">
-                          {AD_TYPE_LABELS[ad.type] || ad.type}
+                          {Object.hasOwn(AD_TYPE_LABELS, ad.type)
+                            ? AD_TYPE_LABELS[
+                                ad.type as keyof typeof AD_TYPE_LABELS
+                              ]
+                            : ad.type}
                         </Badge>
                       </div>
                       {ad.description && (
@@ -575,7 +581,15 @@ export default function AdsPage() {
                       )}
                       <div className="mt-1 flex items-center gap-4 text-slate-400 text-xs">
                         <span>
-                          位置: {AD_POSITION_LABELS[ad.position || "home-top"]}
+                          位置:
+                          {Object.hasOwn(
+                            AD_POSITION_LABELS,
+                            ad.position || "home-top"
+                          )
+                            ? AD_POSITION_LABELS[
+                                ad.position as keyof typeof AD_POSITION_LABELS
+                              ]
+                            : ad.position || "home-top"}
                         </span>
                         <span>排序: {ad.sortOrder}</span>
                         <span>

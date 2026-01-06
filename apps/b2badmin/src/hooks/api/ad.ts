@@ -9,6 +9,7 @@
 import { AdContract } from "@repo/contract";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { AdListRes } from "./ad.type";
 import { api } from "./api-client";
 
 // --- Query Keys ---
@@ -29,7 +30,7 @@ export function useAdList(
   return useQuery({
     queryKey: adKeys.list(params),
     queryFn: () =>
-      api.get<any, typeof AdContract.ListQuery.static>("/api/v1/ad", {
+      api.get<AdListRes[], typeof AdContract.ListQuery.static>("/api/v1/ad", {
         params,
       }),
     enabled,
@@ -118,10 +119,3 @@ export function useAdBatchDelete() {
     },
   });
 }
-
-// 向后兼容的别名导出（前端使用复数形式）
-export const useAdsList = useAdList;
-export const useAdsCreate = useAdCreate;
-export const useAdsUpdate = useAdUpdate;
-export const useAdsDelete = useAdDelete;
-export const useAdsBatchDelete = useAdBatchDelete;

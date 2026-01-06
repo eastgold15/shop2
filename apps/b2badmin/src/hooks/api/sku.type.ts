@@ -7,13 +7,16 @@
 export interface SkuListRes {
   id: string;
   skuCode: string;
-  price: number;
   stock: number;
-  status: number;
-  specJson: SpecJson;
-  createdAt: string;
-  product: Product;
-  siteCategoryId?: string;
+  specJson: Record<string, string> | null;
+  price: number;
+  originalPrice: string;
+  isActive: boolean;
+  isCustomized: boolean;
+  marketPrice?: any;
+  costPrice?: any;
+  weight?: any;
+  volume?: any;
   mainImage?: MainImage;
   allImages: MainImage[];
 }
@@ -23,16 +26,9 @@ interface MainImage {
   url: string;
   isMain: boolean;
 }
-interface Product {
-  id: string;
-  name: string;
-  spuCode: string;
-}
-interface SpecJson {
-  规格1?: string;
-  color?: string;
-  size?: string;
-}
+
+
+
 /**
  * SKU列表查询参数
  */

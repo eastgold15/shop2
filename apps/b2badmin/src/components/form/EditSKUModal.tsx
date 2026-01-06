@@ -28,6 +28,7 @@ import { Input } from "@/components/ui/input";
 import { MediaSelect } from "@/components/ui/media-select";
 import { useMediaList } from "@/hooks/api/media";
 import { useUpdateSku } from "@/hooks/api/sku";
+import { SkuListRes } from "@/hooks/api/sku.type";
 
 const formSchema = z.object({
   skuCode: z.string().min(1, "SKU编码不能为空"),
@@ -49,19 +50,7 @@ interface EditSKUModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
-  sku?: {
-    id: string;
-    skuCode: string;
-    price: string | number;
-    marketPrice?: string | number | null;
-    costPrice?: string | number | null;
-    weight?: string | number | null;
-    volume?: string | number | null;
-    stock: string | number;
-    specJson?: Record<string, string> | null;
-    status?: number;
-    allImages?: Array<{ id: string; url: string; isMain: boolean }>;
-  };
+  sku?: SkuListRes;
 }
 
 export function EditSKUModal({

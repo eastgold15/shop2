@@ -159,3 +159,4 @@ packages/contract/src/helper/constant.d.ts
 packages/contract/src/helper/query-types.model.d.ts
 packages/contract/src/helper/utils.d.ts
 packages/contract/src/helper/utils.types.d.ts
+**.exe
