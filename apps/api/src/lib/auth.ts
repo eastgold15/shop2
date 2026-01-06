@@ -99,13 +99,7 @@ export const auth = betterAuth({
       enabled: !!(envConfig.GITHUB_CLIENT_ID && envConfig.GITHUB_CLIENT_SECRET),
     },
   },
-  trustedOrigins: [
-    "http://localhost:3501", // B2B Admin 前端开发服务器
-    "http://localhost:9012", // 前端开发服务器
-    "http://localhost:9001", // Vite 默认端口
-    "http://localhost:9000", // Vite 默认端口
-    "http://localhost:4000",
-  ],
+  trustedOrigins: [...envConfig.ORIGIN.split(",")],
 
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 days
