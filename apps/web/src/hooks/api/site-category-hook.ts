@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { queryKeys } from "@/lib/query/query-keys";
 import { rpc } from "@/lib/rpc";
-import { handleEden } from "@/lib/utils/base";
 
 export interface SiteCategoryTreeRes {
   id: string;
@@ -29,10 +29,11 @@ export function useSiteCategoryQuery(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: queryKeys.categories.list(),
     queryFn: async () => {
-      const result = handleEden(
-        await rpc.api.v1.sitecategories.get()
-      ) as unknown as SiteCategoryTreeRes[];
-      return result;
+      const { data, error } = await rpc.sitecategories.get();
+      if (error) {
+        toast.error((error.value as any)?.message || "获取分类目录失败");
+      }
+      return data!
     },
     staleTime: 5 * 60 * 1000, // 5分钟
     retry: 2,
@@ -60,10 +61,11 @@ export function useCategoryDetailQuery(
   return useQuery({
     queryKey: queryKeys.categories.desc(id),
     queryFn: async () => {
-      const result = handleEden(
-        await rpc.api.v1.sitecategories[id].get()
-      ) as unknown as SiteCategoryDetailRes;
-      return result;
+      const { data, error } = await rpc.sitecategories({ id }).get();
+      if (error) {
+        toast.error(error.value?.message || "获取分类目录详情失败");
+      }
+      return data! as SiteCategoryDetailRes
     },
     enabled: options?.enabled ?? true,
     staleTime: 5 * 60 * 1000, // 5分钟

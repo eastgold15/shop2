@@ -19,15 +19,14 @@ export const AdContract = {
       "updatedAt",
       "startDate",
       "endDate",
-      "tenantId", // 后端从 ctx.user.context.tenantId 注入
-      "siteId", // 后端从 ctx.user.context.site.id 注入
-      "deptId", // 后端从 ctx.currentDeptId 注入
-      "createdBy", // 后端从 ctx.user.id 注入
+      "tenantId",
+      "siteId",
+      "deptId",
+      "createdBy",
     ]).properties,
     startDate: t.String(),
     endDate: t.String(),
   }),
-
   Update: t.Partial(
     t.Object({
       ...t.Omit(t.Object(AdInsertFields), [

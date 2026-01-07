@@ -1,7 +1,7 @@
 "use client";
 import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { rpc } from "@/lib/rpc";
-import { handleEden } from "@/lib/utils/base";
 
 export interface ProductListRes {
   items: Item[];
@@ -49,11 +49,14 @@ export function useProductListQuery(
         }).filter(([_, v]) => v !== undefined)
       );
 
-      const response = await rpc.api.v1.products.get({
-        $query: cleanParams as any,
+      const { data, error } = await rpc.products.get({
+        query: cleanParams as any,
       });
 
-      return handleEden(response) as ProductListRes;
+      if (error) {
+        toast.error(error.value?.message || "获取商品列表失败");
+      }
+      return data!;
     },
     enabled: options?.enabled ?? true,
     staleTime: 5 * 60 * 1000,
@@ -135,8 +138,11 @@ export function useProductQuery(id: string) {
     queryKey: ["product", id],
     queryFn: async () => {
       if (!id) throw new Error("Product ID is required");
-      const result = handleEden(await rpc.api.v1.products[id].get());
-      return result as unknown as ProductDetailRes;
+      const { data, error } = await rpc.products({ id }).get();
+      if (error) {
+        toast.error(error.value?.message || "获取商品详情失败");
+      }
+      return data!;
     },
     enabled: !!id,
     staleTime: 5 * 60 * 1000, // 5分钟缓存

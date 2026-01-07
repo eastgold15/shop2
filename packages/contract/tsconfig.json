@@ -5,14 +5,18 @@
     "declarationMap": true,
     "sourceMap": true,
     "paths": {
-      "~/*": ["./src/*"],
-      "*": ["./*"]
+      "~/*": [
+        "./src/*"
+      ],
+      "*": [
+        "./*"
+      ]
     },
     "strictNullChecks": true,
     "incremental": true,
     "tsBuildInfoFile": "./.cache/tsbuildinfo",
     "skipLibCheck": true,
-    "noEmit": false,
+    "noEmit": true,
     // 1. 启用复合项目模式（核心配置）
     "composite": true,
     // 2. 必须显式配置 outDir（composite 隐含约束）
@@ -21,6 +25,11 @@
     // 确保生成文件
     "noEmitOnError": false
   },
-  "include": ["src/**/*"],
-  "exclude": ["dist", "node_modules"]
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "dist",
+    "node_modules"
+  ]
 }

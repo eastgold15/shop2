@@ -1,7 +1,8 @@
+import { Treaty } from "@elysiajs/eden";
 import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { queryKeys } from "@/lib/query/query-keys";
 import { rpc } from "@/lib/rpc";
-import { handleEden } from "@/lib/utils/base";
 export interface AdsRes {
   id: string;
   createdAt: string;
@@ -22,13 +23,22 @@ export interface AdsRes {
  * 获取当前有效广告的 Hook
  * 最多返回 4 条广告数据
  */
-
+export type AdsListRes = NonNullable<Treaty.Data<typeof rpc.ads.current.get>>;
+/**
+ * 获取当前有效广告的 Hook
+ * 最多返回 4 条广告数据
+ */
 export function useCurrentAdsQuery() {
   return useQuery({
     queryKey: queryKeys.ads.current(),
     queryFn: async () => {
-      const res = await rpc.api.v1.ads.current.get();
-      return handleEden(res);
+      const { data, error } = await rpc.ads.current.get();
+      if (error) {
+        toast.error(error.value as string);
+        throw error;
+      }
+
+      return data;
     },
     // select: 数据清洗核心逻辑
     select: (data: any): AdsRes[] => {
