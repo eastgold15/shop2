@@ -17,7 +17,7 @@ export const siteMiddleware = new Elysia({ name: "site-middleware" })
     console.log("domain:", domain);
 
     // 查找对应的站点
-    const site = await getSite(domain);
+    const site = await getSite(domain, db);
 
     console.log("site:", site);
 
@@ -37,7 +37,7 @@ export const siteMiddleware = new Elysia({ name: "site-middleware" })
 
 
 
-async function getSite(domain: string) {
+async function getSite(domain: string, db: DBtype) {
   const res = await db.query.siteTable.findFirst({
     where: {
       domain,
@@ -52,9 +52,6 @@ async function getSite(domain: string) {
 
 
 export type Site = Awaited<ReturnType<typeof getSite>>;
-
-
-
 export type DBtype = typeof db;
 /**
  * 极简上下文：只需 siteId

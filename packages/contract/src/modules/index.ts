@@ -14,7 +14,6 @@ export * from "./permission.contract";
 export * from "./product.contract";
 export * from "./product-master-category.contract";
 export * from "./product-media.contract";
-export * from "./product-site-category.contract";
 export * from "./product-template.contract";
 export * from "./quotation.contract";
 export * from "./role.contract";

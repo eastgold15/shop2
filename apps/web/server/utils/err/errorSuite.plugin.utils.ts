@@ -1,15 +1,6 @@
 import chalk from "chalk";
-import { createLogger } from "logixlysia";
 
-// 1. 初始化结构化日志 (Pino)
-export const log = createLogger({
-  config: {
-    logFilePath: "./logs/errors.log",
-    // 可以在这里配置自定义的 pino 选项
-    // 💡 只有在非开发环境下才启用内部打印，或者干脆禁用它，只依赖你的 errorLoggerPlugin
-    disableInternalLogger: false,
-  },
-});
+
 
 /**
  * 格式化堆栈信息，突出显示函数名、文件路径和行列号

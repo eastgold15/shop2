@@ -8,7 +8,7 @@ import { siteMiddleware } from "./middleware/site";
 import { checkDatabase } from "./modules/_health/checkers/db";
 import { errorSuite } from "./utils/err/errorSuite.plugin";
 
-validateEmailConfig();
+// validateEmailConfig();
 /**
  * Main API router
  * Combines all routes under the '/api' prefix
