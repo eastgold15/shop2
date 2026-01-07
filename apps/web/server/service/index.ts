@@ -1,0 +1,18 @@
+import { SiteProductService } from "./site-product.service";
+
+export const siteProductService = new SiteProductService();
+
+
+import { AdService } from "./ad.service";
+export const adService = new AdService();
+
+
+import { MediaService } from "./media.service";
+export const mediaService = new MediaService();
+
+
+import { HeroCardService } from "./hero-card.service";
+export const heroCardService = new HeroCardService();
+
+import { SiteCategoryService } from "./site-category.service";
+export const siteCategoryService = new SiteCategoryService();

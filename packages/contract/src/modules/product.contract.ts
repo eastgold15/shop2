@@ -73,6 +73,7 @@ export const ProductContract = {
     ...PaginationParams.properties,
     ...SortParams.properties,
     search: t.Optional(t.String()),
+    categoryId: t.Optional(t.String()),
   }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   ListResponse: t.Object({

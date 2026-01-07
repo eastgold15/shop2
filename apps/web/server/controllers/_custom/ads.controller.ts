@@ -2,7 +2,7 @@ import { Elysia } from "elysia";
 import { dbPlugin } from "~/db/connection";
 import { localeMiddleware } from "~/middleware/locale";
 import { siteMiddleware } from "~/middleware/site";
-import { adsService } from "~/modules";
+import { adService } from "~/service/index";
 
 export const adsController = new Elysia({ prefix: "/ads" })
   .use(localeMiddleware)
@@ -11,7 +11,7 @@ export const adsController = new Elysia({ prefix: "/ads" })
   // 自定义路由：获取当前有效广告
   .get(
     "/current",
-    async ({ db, siteId }) => adsService.findCurrent({ db, siteId }),
+    async ({ db, site }) => adService.findCurrent({ db, site }),
     {
       detail: {
         tags: ["Advertisements"],

@@ -80,7 +80,9 @@ export const relations = defineRelations(schema, (r) => ({
     }),
     assignMasterCategories: r.many.masterCategoryTable({
       from: r.userTable.id.through(r.salesResponsibilityTable.userId),
-      to: r.masterCategoryTable.id.through(r.salesResponsibilityTable.masterCategoryId),
+      to: r.masterCategoryTable.id.through(
+        r.salesResponsibilityTable.masterCategoryId
+      ),
     }),
   },
 
@@ -99,7 +101,22 @@ export const relations = defineRelations(schema, (r) => ({
   // ==========================================
   // 3. 站点体系 (Sites & Config)
   // ==========================================
-
+  // [站点规格]
+  siteSkuTable: {
+    site: r.one.siteTable({
+      from: r.siteSkuTable.siteId,
+      to: r.siteTable.id,
+    }),
+    siteProduct: r.one.siteProductTable({
+      from: r.siteSkuTable.siteProductId,
+      to: r.siteProductTable.id,
+    }),
+    // 🔗 关联到物理资产层
+    sku: r.one.skuTable({
+      from: r.siteSkuTable.skuId,
+      to: r.skuTable.id,
+    }),
+  },
   siteTable: {
     tenant: r.one.tenantTable({
       from: r.siteTable.tenantId,
@@ -173,7 +190,52 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.tenantTable.id,
     }),
   },
+  // [站点分类]
+  siteCategoryTable: {
+    site: r.one.siteTable({
+      from: r.siteCategoryTable.siteId,
+      to: r.siteTable.id,
+    }),
 
+    parent: r.one.siteCategoryTable({
+      from: r.siteCategoryTable.parentId,
+      to: r.siteCategoryTable.id,
+      alias: "parent_site",
+
+    }),
+    children: r.many.siteCategoryTable({
+      from: r.siteCategoryTable.id,
+      to: r.siteCategoryTable.parentId,
+      alias: "child_site",
+    }),
+    siteProducts: r.many.siteProductTable({
+
+      from: r.siteCategoryTable.id.through(
+        r.siteProductCategoryTable.siteCategoryId
+      ),
+      to: r.siteProductTable.productId.through(
+        r.siteProductCategoryTable.siteProductId
+      ),
+    }),
+  },
+
+  siteProductTable: {
+    site: r.one.siteTable({
+      from: r.siteProductTable.siteId,
+      to: r.siteTable.id,
+    }),
+    product: r.one.productTable({
+      from: r.siteProductTable.productId,
+      to: r.productTable.id,
+      optional: true,
+    }),
+
+    siteSkus: r.many.siteSkuTable(),
+    siteCategories: r.many.siteCategoryTable({
+      from: r.siteProductTable.id.through(r.siteProductCategoryTable.siteProductId),
+      to: r.siteCategoryTable.id.through(r.siteProductCategoryTable.siteCategoryId)
+    })
+  },
   // ==========================================
   // 4. 商品资源中心 (Products, SKU, Media)
   // ==========================================
@@ -202,28 +264,6 @@ export const relations = defineRelations(schema, (r) => ({
     }),
   },
 
-  // [站点分类]
-  siteCategoryTable: {
-    site: r.one.siteTable({
-      from: r.siteCategoryTable.siteId,
-      to: r.siteTable.id,
-    }),
-
-    parent: r.one.siteCategoryTable({
-      from: r.siteCategoryTable.parentId,
-      to: r.siteCategoryTable.id,
-      alias: "parent_site",
-    }),
-    children: r.many.siteCategoryTable({
-      from: r.siteCategoryTable.id,
-      to: r.siteCategoryTable.parentId,
-      alias: "child_site",
-    }),
-    productLinks: r.many.productSiteCategoryTable({
-      from: r.siteCategoryTable.id,
-      to: r.productSiteCategoryTable.siteCategoryId,
-    }),
-  },
 
   // [商品主表]
   productTable: {
@@ -245,17 +285,19 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.productTable.id,
       to: r.skuTable.productId,
     }),
-    media: r.many.productMediaTable({
+    // 关联到媒体 (多对多)
+    media: r.many.mediaTable({
+      from: r.productTable.id.through(r.productMediaTable.productId),
+      to: r.mediaTable.id.through(r.productMediaTable.mediaId),
+    }),
+    // 关联到主分类 (多对多)
+    productMedia: r.many.productMediaTable({
       from: r.productTable.id,
       to: r.productMediaTable.productId,
     }),
     masterCategories: r.many.productMasterCategoryTable({
       from: r.productTable.id,
       to: r.productMasterCategoryTable.productId,
-    }),
-    siteCategories: r.many.productSiteCategoryTable({
-      from: r.productTable.id,
-      to: r.productSiteCategoryTable.productId,
     }),
     // 站点覆写
     siteOverrides: r.many.siteProductTable({
@@ -270,9 +312,13 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.skuTable.productId,
       to: r.productTable.id,
     }),
-    media: r.many.skuMediaTable({
+    media: r.many.mediaTable({
+      from: r.skuTable.id.through(r.skuMediaTable.skuId),
+      to: r.mediaTable.id.through(r.skuMediaTable.mediaId),
+    }),
+    skuMedia: r.many.skuMediaTable({
       from: r.skuTable.id,
-      to: r.skuMediaTable.skuId,
+      to: r.skuMediaTable.mediaId,
     }),
     // SKU 关联到业务单据
     inquiries: r.many.inquiryTable({
@@ -286,6 +332,7 @@ export const relations = defineRelations(schema, (r) => ({
   },
 
   // [多对多中间表 - 显式定义以便进行嵌套查询]
+  // [商品主分类]
   productMasterCategoryTable: {
     product: r.one.productTable({
       from: r.productMasterCategoryTable.productId,
@@ -297,27 +344,6 @@ export const relations = defineRelations(schema, (r) => ({
     }),
   },
 
-  productSiteCategoryTable: {
-    product: r.one.productTable({
-      from: r.productSiteCategoryTable.productId,
-      to: r.productTable.id,
-    }),
-    category: r.one.siteCategoryTable({
-      from: r.productSiteCategoryTable.siteCategoryId,
-      to: r.siteCategoryTable.id,
-    }),
-  },
-
-  siteProductTable: {
-    site: r.one.siteTable({
-      from: r.siteProductTable.siteId,
-      to: r.siteTable.id,
-    }),
-    product: r.one.productTable({
-      from: r.siteProductTable.productId,
-      to: r.productTable.id,
-    }),
-  },
 
   // ==========================================
   // 5. 属性系统 (Attributes)
@@ -418,12 +444,29 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.skuMediaTable.mediaId,
       to: r.mediaTable.id,
     }),
+    siteSkus: r.many.siteSkuTable({
+      from: r.skuMediaTable.skuId,
+      to: r.siteSkuTable.skuId,
+    }),
   },
 
   // ==========================================
   // 7. 客户与交易 (CRM & Orders)
   // ==========================================
-
+  salesResponsibilityTable: {
+    user: r.one.userTable({
+      from: r.salesResponsibilityTable.userId,
+      to: r.userTable.id,
+    }),
+    masterCategory: r.one.masterCategoryTable({
+      from: r.salesResponsibilityTable.masterCategoryId,
+      to: r.masterCategoryTable.id,
+    }),
+    site: r.one.siteTable({
+      from: r.salesResponsibilityTable.siteId,
+      to: r.siteTable.id,
+    }),
+  },
   customerTable: {
     tenant: r.one.tenantTable({
       from: r.customerTable.tenantId,
@@ -444,6 +487,10 @@ export const relations = defineRelations(schema, (r) => ({
   },
 
   inquiryTable: {
+    siteProduct: r.one.siteProductTable({
+      from: r.inquiryTable.siteProductId,
+      to: r.siteProductTable.id,
+    }),
     tenant: r.one.tenantTable({
       from: r.inquiryTable.tenantId,
       to: r.tenantTable.id,
@@ -460,9 +507,9 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.inquiryTable.siteId,
       to: r.siteTable.id,
     }),
-    sku: r.one.skuTable({
-      from: r.inquiryTable.skuId,
-      to: r.skuTable.id,
+    siteSku: r.one.siteSkuTable({
+      from: r.inquiryTable.siteSkuId,
+      to: r.siteSkuTable.id,
     }),
   },
 

@@ -1,9 +1,9 @@
-import { ProductsContract } from "@repo/contract";
+import { ProductContract } from "@repo/contract";
 import { Elysia, t } from "elysia";
 import { dbPlugin } from "~/db/connection";
 import { localeMiddleware } from "~/middleware/locale";
 import { siteMiddleware } from "~/middleware/site";
-import { productsService } from "~/modules";
+import { siteProductService } from "~/service/index";
 import { buildPageMeta } from "~/utils/services/pagination";
 
 export const productsController = new Elysia({ prefix: "/products" })
@@ -12,10 +12,10 @@ export const productsController = new Elysia({ prefix: "/products" })
   .use(siteMiddleware)
   .get(
     "/",
-    async ({ db, siteId, query }) => {
+    async ({ db, site, query }) => {
       const { page = 1, limit = 10 } = query;
 
-      const { data, total } = await productsService.list(query, { db, siteId });
+      const { data, total } = await siteProductService.list(query, { db, site });
 
       return {
         items: data,
@@ -23,7 +23,7 @@ export const productsController = new Elysia({ prefix: "/products" })
       };
     },
     {
-      query: ProductsContract.ListQuery,
+      query: ProductContract.ListQuery,
       detail: {
         tags: ["Products"],
         summary: "获取商品列表",
@@ -33,8 +33,8 @@ export const productsController = new Elysia({ prefix: "/products" })
   )
   .get(
     "/:id",
-    async ({ params: { id }, db, siteId }) =>
-      await productsService.getDetail(id, { db, siteId }),
+    async ({ params: { id }, db, site }) =>
+      await siteProductService.getDetail(id, { db, site }),
     {
       params: t.Object({ id: t.String() }),
       detail: {

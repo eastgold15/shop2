@@ -1,10 +1,8 @@
-import { productSiteCategoryTable, productTable } from "@repo/contract";
-import { eq } from "drizzle-orm";
 import Elysia, { t } from "elysia";
 import { dbPlugin } from "~/db/connection";
 import { localeMiddleware } from "~/middleware/locale";
 import { siteMiddleware } from "~/middleware/site";
-import { siteCategoriesService } from "~/modules";
+import { siteCategoryService } from "~/service/index";
 
 export const sitecategoriesController = new Elysia({
   prefix: "/sitecategories",
@@ -14,10 +12,10 @@ export const sitecategoriesController = new Elysia({
   .use(siteMiddleware)
   .get(
     "/",
-    ({ locale, db, siteId }) => {
-      console.log("获取分类树形列表，当前语言:", locale, "站点ID:", siteId);
+    ({ locale, db, site }) => {
+      console.log("获取分类树形列表，当前语言:", locale, "站点ID:", site.id);
       // 调用 service 层的方法
-      return siteCategoriesService.getTree({ db, siteId });
+      return siteCategoryService.tree({ db, site });
     },
     {
       detail: {
@@ -28,10 +26,33 @@ export const sitecategoriesController = new Elysia({
     }
   )
   .get(
+    "/category/:id",
+    async ({ params: { id }, db, query, site }) => {
+      return await siteCategoryService.getProductsByCategoryId({
+        db,
+        site,
+      }, id, query);
+    },
+    {
+      params: t.Object({
+        id: t.String(),
+      }),
+      query: t.Object({
+        page: t.Number(),
+        limit: t.Number(),
+      }),
+      detail: {
+        tags: ["Products"],
+        summary: "获取分类下的商品",
+        description: "根据分类ID获取该分类下的所有商品",
+      },
+    }
+  )
+  .get(
     "/:id",
-    ({ params: { id }, db, siteId }) => {
+    ({ params: { id }, db, site }) => {
       // 获取单个分类 - 前端用户使用
-      return siteCategoriesService.getById(id, { db, siteId });
+      return siteCategoryService.getById(id, { db, site });
     },
     {
       params: t.Object({
@@ -41,43 +62,6 @@ export const sitecategoriesController = new Elysia({
         tags: ["Categories"],
         summary: "获取分类详情",
         description: "根据分类ID获取详细信息，包括名称、描述、父子关系等",
-      },
-    }
-  )
-  .get(
-    "/category/:categoryId",
-    async ({ params: { categoryId }, db, query }) => {
-      const { page = 1, limit = 10 } = query;
-
-      const products = await db
-        .select({
-          product: productTable,
-        })
-        .from(productTable)
-        .innerJoin(
-          productSiteCategoryTable,
-          eq(productTable.id, productSiteCategoryTable.productId)
-        )
-        .where(eq(productSiteCategoryTable.siteCategoryId, categoryId))
-        .limit(limit)
-        .offset((page - 1) * limit);
-
-      return {
-        data: products.map((p) => p.product),
-      };
-    },
-    {
-      params: t.Object({
-        categoryId: t.String(),
-      }),
-      query: t.Object({
-        page: t.Optional(t.Number()),
-        limit: t.Optional(t.Number()),
-      }),
-      detail: {
-        tags: ["Products"],
-        summary: "获取分类下的商品",
-        description: "根据分类ID获取该分类下的所有商品",
       },
     }
   );

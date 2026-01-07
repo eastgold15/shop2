@@ -1,3 +1,4 @@
+
 import { and, eq, ilike, type SQL, sql } from "drizzle-orm";
 import type {
   PgDelete,
@@ -5,14 +6,7 @@ import type {
   PgTableWithColumns,
   PgUpdate,
 } from "drizzle-orm/pg-core";
-
-/**
- * 极简上下文：只需 siteId
- */
-export interface ServiceContext {
-  db: any;
-  siteId: string;
-}
+import { ServiceContext } from "~/middleware/site";
 
 export class BaseService<
   T extends PgTableWithColumns<any>,
@@ -21,7 +15,7 @@ export class BaseService<
   constructor(
     protected table: T,
     protected contract: C
-  ) {}
+  ) { }
 
   /**
    * 🛡️ 唯一隔离因子：siteId
@@ -31,8 +25,8 @@ export class BaseService<
     const tableAny = this.table as any;
 
     // 只要表里有 siteId 字段，且 context 里有值，就应用过滤
-    if (tableAny.siteId && ctx.siteId) {
-      filters.push(eq(tableAny.siteId, ctx.siteId));
+    if (tableAny.siteId && ctx.site) {
+      filters.push(eq(tableAny.siteId, ctx.site.id));
     }
 
     return filters;

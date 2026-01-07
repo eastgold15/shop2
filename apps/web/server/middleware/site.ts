@@ -1,6 +1,6 @@
 import Elysia from "elysia";
 import { HttpError } from "elysia-http-problem-json";
-import { dbPlugin } from "../db/connection";
+import { db, dbPlugin } from "../db/connection";
 
 /**
  * 站点中间件 - 根据域名查找站点ID并注入上下文
@@ -17,19 +17,7 @@ export const siteMiddleware = new Elysia({ name: "site-middleware" })
     console.log("domain:", domain);
 
     // 查找对应的站点
-    const site = await db.query.sitesTable.findFirst({
-      where: {
-        domain,
-      },
-      columns: {
-        id: true,
-        name: true,
-        siteType: true,
-        factoryId: true,
-        exporterId: true,
-        isActive: true,
-      },
-    });
+    const site = await getSite(domain);
 
     console.log("site:", site);
 
@@ -40,20 +28,38 @@ export const siteMiddleware = new Elysia({ name: "site-middleware" })
     if (!site.isActive) {
       throw new HttpError.Forbidden(`Site is not active: ${domain}`);
     }
-    const {
-      id: siteId,
-      name: siteName,
-      siteType,
-      factoryId,
-      exporterId,
-    } = site;
 
     return {
-      siteId,
-      siteName,
-      siteType,
-      /** 工厂和出口商id*/
-      tenantId: factoryId ?? (exporterId as string),
-    };
+      site
+    }
   })
   .as("global");
+
+
+
+async function getSite(domain: string) {
+  const res = await db.query.siteTable.findFirst({
+    where: {
+      domain,
+    }
+  });
+  if (!res) {
+    throw new HttpError.NotFound(`Site not found for domain: ${domain}`);
+  }
+
+  return res;
+}
+
+
+export type Site = Awaited<ReturnType<typeof getSite>>;
+
+
+
+export type DBtype = typeof db;
+/**
+ * 极简上下文：只需 siteId
+ */
+export interface ServiceContext {
+  db: DBtype;
+  site: Site;
+}

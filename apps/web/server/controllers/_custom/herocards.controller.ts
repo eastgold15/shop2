@@ -2,15 +2,15 @@ import { Elysia } from "elysia";
 import { dbPlugin } from "~/db/connection";
 import { localeMiddleware } from "~/middleware/locale";
 import { siteMiddleware } from "~/middleware/site";
-import { heroCardsService } from "~/modules";
+import { heroCardService } from "~/service/index";
 export const herocardsController = new Elysia({ prefix: "/herocards" })
   .use(localeMiddleware)
   .use(dbPlugin)
   .use(siteMiddleware)
   .get(
     "/current",
-    async ({ db, siteId }) =>
-      await heroCardsService.findCurrent({ db, siteId }),
+    async ({ db, site }) =>
+      await heroCardService.findCurrent({ db, site }),
     {
       detail: {
         tags: ["Hero Cards"],

@@ -13,10 +13,7 @@ export const loggerPlugin = new Elysia({ name: "loggerPlugin" }).use(
       customLogFormat:
         "🦊 {now} {level} {duration} {method} {pathname} {status} {ip}",
       ip: true,
-      logFilePath: "./logs/app.log",
-      logFilter: {
-        level: ["ERROR", "WARNING", "INFO"],
-      },
+      logFilePath: "./logs/app.log"
     },
   })
 );

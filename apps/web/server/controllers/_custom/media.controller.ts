@@ -2,7 +2,7 @@ import Elysia, { t } from "elysia";
 import { dbPlugin } from "~/db/connection";
 import { localeMiddleware } from "~/middleware/locale";
 import { siteMiddleware } from "~/middleware/site";
-import { mediaService } from "~/modules";
+import { mediaService } from "~/service/index";
 export const mediaController = new Elysia({ prefix: "/media" }) // 获取图片 - 前端用户使用
   .use(localeMiddleware)
   .use(dbPlugin)
@@ -12,8 +12,8 @@ export const mediaController = new Elysia({ prefix: "/media" }) // 获取图片 
    */
   .get(
     "/url/:id",
-    async ({ db, siteId, params: { id } }) =>
-      await mediaService.getUrlById(id, { db, siteId }),
+    async ({ db, site, params: { id } }) =>
+      await mediaService.getUrlById(id, { db, site }),
     {
       params: t.Object({
         id: t.String(),
@@ -30,8 +30,8 @@ export const mediaController = new Elysia({ prefix: "/media" }) // 获取图片 
    */
   .get(
     "/urls",
-    async ({ db, siteId, query: { ids } }) =>
-      await mediaService.getUrlsByIds(ids, { db, siteId }),
+    async ({ db, site, query: { ids } }) =>
+      await mediaService.getUrlsByIds(ids, { db, site }),
     {
       query: t.Object({
         ids: t.Array(t.String()),

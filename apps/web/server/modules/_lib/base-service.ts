@@ -7,11 +7,7 @@ import type {
   PgUpdate,
 } from "drizzle-orm/pg-core";
 
-export interface ServiceContext {
-  db: any;
-  siteId: string;
-  tenantId?: string;
-}
+
 
 export abstract class WEBBaseService<
   T extends PgTableWithColumns<any>,

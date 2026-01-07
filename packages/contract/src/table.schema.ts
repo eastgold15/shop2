@@ -88,7 +88,6 @@ export const tenantTable = p.pgTable("sys_tenant", {
 // [部门表]：原 Factories + 总部，支持树形结构
 export const departmentTable = p.pgTable("sys_dept", {
   ...Audit,
-
   // 核心归属
   tenantId: p
     .uuid("tenant_id")
@@ -176,6 +175,49 @@ export const userRoleTable = p.pgTable(
   },
   (t) => [p.primaryKey({ columns: [t.userId, t.roleId] })]
 );
+// [业务员-主分类关联表]：定义业务员负责的品类范围
+export const salesResponsibilityTable = p.pgTable(
+  "sales_responsibility",
+  {
+    ...Audit, // 包含 id, createdAt, updatedAt
+
+    // 1. 关联业务员
+    userId: p
+      .uuid("user_id")
+      .notNull()
+      .references(() => userTable.id, { onDelete: "cascade" }),
+
+    // 2. 关联具体的站点分类
+    masterCategoryId: p
+      .uuid("master_category_id")
+      .notNull()
+      .references(() => masterCategoryTable.id, { onDelete: "cascade" }),
+    siteId: p.uuid("site_id").references(() => siteTable.id),
+    // 3. 冗余 tenantId 以便快速过滤和鉴权
+    tenantId: p
+      .uuid("tenant_id")
+      .notNull()
+      .references(() => tenantTable.id),
+    // 🔥 核心字段：最后一次分到单子的时间
+    lastAssignedAt: p.timestamp("last_assigned_at", { withTimezone: true }),
+    // 4. (可选) 权重或优先级：如果一个分类有多个业务员，询盘优先分给谁？
+    priority: p.integer("priority").default(0),
+
+    // 5. (可选) 自动分配开关：是否参与该分类询盘的自动轮询分配
+    isAutoAssign: p.boolean("is_auto_assign").default(true),
+  },
+  (t) => [
+    // 确保同一个业务员在同一个分类下只出现一次
+    p
+      .unique("unique_user_category")
+      .on(t.userId, t.masterCategoryId),
+    // 建立索引以便快速查找某个分类下的所有业务员
+    p
+      .index("idx_sales_cat")
+      .on(t.masterCategoryId),
+    p.index("idx_sales_user").on(t.userId),
+  ]
+);
 
 // --- 4. Tenant Helper (租户字段助手 - 重构版) ---
 // 将原 tenantCols 拆分为三个独立对象，按需取用
@@ -232,30 +274,6 @@ export const trackingCols = {
 
 // --- 5. Business Tables (业务表 - 已应用 tenantCols) ---
 
-// [站点表]：核心中的核心
-export const siteTable = p.pgTable("site", {
-  ...Audit,
-  name: p.varchar("name", { length: 100 }).notNull(),
-  domain: p.varchar("domain", { length: 255 }).unique().notNull(),
-  isActive: p.boolean("is_active").default(true),
-
-  // 1. 站点属于哪个租户
-  tenantId: p
-    .uuid("tenant_id")
-    .notNull()
-    .references(() => tenantTable.id),
-
-  // 2. 站点绑定哪个部门？（强制必填）
-  // - 绑定总部：集团站，展示 tenant 下所有商品
-  // - 绑定工厂：工厂站，只展示该 dept 下的商品
-  boundDeptId: p
-    .uuid("bound_dept_id")
-    .notNull()
-    .unique()
-    .references(() => departmentTable.id),
-
-  siteType: siteTypeEnum("site_type").notNull(),
-});
 
 /**
  * @onlyGen contract
@@ -377,43 +395,7 @@ export const mediaMetadataTable = p.pgTable("media_metadata", {
   thumbnailKey: p.varchar("thumbnail_key", { length: 255 }),
 });
 
-export const adTable = p.pgTable("advertisement", {
-  ...Audit,
-  title: p.varchar("title", { length: 255 }).notNull(),
-  description: p.varchar("description", { length: 255 }).notNull(),
-  type: adTypeEnum("type").notNull(),
-  mediaId: p.uuid("media_id").references(() => mediaTable.id),
-  link: p.varchar("link", { length: 500 }).notNull(),
-  position: adPositionEnum("ads_position").default("home-top"),
-  sortOrder: p.integer("sort_order").default(0),
-  isActive: p.boolean("is_active").default(true),
-  startDate: p.timestamp("start_date").notNull(),
-  endDate: p.timestamp("end_date").notNull(),
-
-  // 广告是网站内容，使用 siteScopedCols，必须属于某个站点
-  ...siteScopedCols,
-});
-
-export const heroCardTable = p.pgTable("hero_card", {
-  ...Audit,
-  title: p.varchar("title", { length: 255 }).notNull(),
-  description: p.text("description").notNull(),
-  buttonText: p.varchar("button_text", { length: 100 }).notNull(),
-  buttonUrl: p.varchar("button_url", { length: 500 }).notNull(),
-  backgroundClass: p
-    .varchar("background_class", { length: 100 })
-    .default("bg-blue-50"),
-  sortOrder: p.integer("sort_order").default(0),
-  isActive: p.boolean("is_active").default(true),
-  mediaId: p
-    .uuid("media_id")
-    .references(() => mediaTable.id)
-    .notNull(),
-
-  // 轮播图是网站内容，使用 siteScopedCols，必须属于某个站点
-  ...siteScopedCols,
-});
-
+// 资产
 export const productTable = p.pgTable("product", {
   ...Audit,
   spuCode: p.varchar("spu_code", { length: 64 }).notNull(), // 注意：如果不唯一，去掉 unique，或者组合 unique(tenantId, spuCode)
@@ -443,37 +425,10 @@ export const productMasterCategoryTable = p.pgTable(
   (t) => [p.primaryKey({ columns: [t.productId, t.masterCategoryId] })]
 );
 
-export const siteCategoryTable = p.pgTable("site_category", {
-  ...Audit,
-  ...siteScopedCols,
-  name: p.varchar("name", { length: 100 }).notNull(),
-  description: p.text("description"),
-  parentId: p.uuid("parent_id"),
-  sortOrder: p.integer("sort_order").default(0),
-  isActive: p.boolean("is_active").default(true),
-  masterCategoryId: p
-    .uuid("master_category_id")
-    .references(() => masterCategoryTable.id, { onDelete: "set null" }),
-});
+
+
 /**
- * @onlyGen contract
- */
-export const productSiteCategoryTable = p.pgTable(
-  "product_site_category",
-  {
-    productId: p
-      .uuid("product_id")
-      .notNull()
-      .references(() => productTable.id),
-    siteCategoryId: p
-      .uuid("category_id")
-      .notNull()
-      .references(() => siteCategoryTable.id),
-  },
-  (t) => [p.primaryKey({ columns: [t.productId, t.siteCategoryId] })]
-);
-/**
- * @onlyGen contract
+ * @onlyGen contract  资产
  */
 export const productMediaTable = p.pgTable(
   "product_media",
@@ -491,17 +446,14 @@ export const productMediaTable = p.pgTable(
   },
   (t) => [p.primaryKey({ columns: [t.productId, t.mediaId] })]
 );
-
+// 原子资产层(Core Assets)。
 export const templateTable = p.pgTable("template", {
   id: idUuid,
   name: p.varchar("name", { length: 100 }).notNull(),
   masterCategoryId: p
     .uuid("master_category_id")
     .notNull()
-    .references(() => masterCategoryTable.id),
-  siteCategoryId: p
-    .uuid("site_category_id")
-    .references(() => siteCategoryTable.id),
+    .references(() => masterCategoryTable.id)
 });
 
 export const templateKeyTable = p.pgTable("template_key", {
@@ -540,7 +492,11 @@ export const productTemplateTable = p.pgTable("product_template", {
     .references(() => templateTable.id),
 });
 
-// @skipGen
+
+
+
+
+// @skipGen  资产
 export const skuTable = p.pgTable("sku", {
   ...Audit,
   skuCode: p.varchar("sku_code", { length: 100 }).notNull(),
@@ -582,6 +538,80 @@ export const skuMediaTable = p.pgTable(
   (t) => [p.primaryKey({ columns: [t.skuId, t.mediaId] })]
 );
 
+export const customerTable = p.pgTable("customer", {
+  ...Audit,
+  companyName: p.varchar("company_name", { length: 200 }).notNull(),
+  name: p.varchar("contact_name", { length: 100 }),
+  email: p.varchar("email", { length: 255 }),
+  whatsapp: p.varchar("whatsapp", { length: 50 }),
+  phone: p.varchar("phone", { length: 20 }),
+  address: p.text("address"),
+
+  // 客户是核心资产，使用 standardCols，可在多个站点复用
+  ...standardCols,
+});
+
+
+// [站点表]：核心中的核心
+export const siteTable = p.pgTable("site", {
+  ...Audit,
+  name: p.varchar("name", { length: 100 }).notNull(),
+  domain: p.varchar("domain", { length: 255 }).unique().notNull(),
+  isActive: p.boolean("is_active").default(true),
+
+  // 1. 站点属于哪个租户
+  tenantId: p
+    .uuid("tenant_id")
+    .notNull()
+    .references(() => tenantTable.id),
+
+  // 2. 站点绑定哪个部门？（强制必填）
+  // - 绑定总部：集团站，展示 tenant 下所有商品
+  // - 绑定工厂：工厂站，只展示该 dept 下的商品
+  boundDeptId: p
+    .uuid("bound_dept_id")
+    .notNull()
+    .unique()
+    .references(() => departmentTable.id),
+
+  siteType: siteTypeEnum("site_type").notNull(),
+});
+// 站点
+export const siteCategoryTable = p.pgTable("site_category", {
+  ...Audit,
+  ...siteScopedCols,
+  name: p.varchar("name", { length: 100 }).notNull(),
+  description: p.text("description"),
+  parentId: p.uuid("parent_id"),
+  sortOrder: p.integer("sort_order").default(0),
+  isActive: p.boolean("is_active").default(true),
+  masterCategoryId: p
+    .uuid("master_category_id")
+    .references(() => masterCategoryTable.id, { onDelete: "set null" }),
+});
+// 站点商品分裂
+export const siteProductCategoryTable = p.pgTable(
+  "site_product_category_rel", // 明确是站点商品与站点分类的关系
+  {
+    // 🔗 改为关联 siteProductTable 的 ID
+    siteProductId: p
+      .uuid("site_product_id")
+      .notNull()
+      .references(() => siteProductTable.id, { onDelete: "cascade" }),
+
+    // 🔗 关联站点分类
+    siteCategoryId: p
+      .uuid("site_category_id")
+      .notNull()
+      .references(() => siteCategoryTable.id, { onDelete: "cascade" }),
+  },
+  (t) => [
+    p.primaryKey({ columns: [t.siteProductId, t.siteCategoryId] }),
+    // 索引加速：通过分类找商品（前台展示最常用）
+    p.index("idx_rel_category").on(t.siteCategoryId)
+  ]
+);
+
 export const siteProductTable = p.pgTable("site_product", {
   ...Audit,
   siteName: p.varchar("site_name", { length: 200 }),
@@ -598,17 +628,10 @@ export const siteProductTable = p.pgTable("site_product", {
     .uuid("product_id")
     .references(() => productTable.id, { onDelete: "cascade" })
     .notNull(),
-  siteCategoryId: p
-    .uuid("site_category_id")
-    .references(() => siteCategoryTable.id, { onDelete: "set null" }),
 }, (t) => [
   // 1. 🔥 核心唯一索引：防止同一个站点下出现重复的同一个商品
   // 这也是 Upsert (On Conflict) 逻辑必须依赖的物理约束
   uniqueIndex("uk_site_product_unique").on(t.siteId, t.productId),
-
-  // 2. 🚀 列表页加速索引：按站点 + 分类筛选
-  // 场景：在某个站点内，点击了"手机分类"，列出该分类下的商品
-  index("idx_site_product_category").on(t.siteId, t.siteCategoryId),
 
   // 3. 🚀 排序/筛选优化：按站点 + 排序/可见性
   // 场景：获取某个站点的首页推荐商品，按 sortOrder 排序
@@ -620,8 +643,6 @@ export const siteProductTable = p.pgTable("site_product", {
   // 如果你的商品库非常大（百万级），建议单独给 productId 加索引，加快物理删除速度。
   index("idx_site_product_pid").on(t.productId),
 ]);
-
-// schema.ts 新增
 
 export const siteSkuTable = p.pgTable("site_sku", {
   id: idUuid, // 自身ID
@@ -640,79 +661,44 @@ export const siteSkuTable = p.pgTable("site_sku", {
   uniqueIndex("uk_site_sku_unique").on(t.siteId, t.skuId)
 ]);
 
-export const customerTable = p.pgTable("customer", {
+// 站点
+export const adTable = p.pgTable("advertisement", {
   ...Audit,
-  companyName: p.varchar("company_name", { length: 200 }).notNull(),
-  name: p.varchar("contact_name", { length: 100 }),
-  email: p.varchar("email", { length: 255 }),
-  whatsapp: p.varchar("whatsapp", { length: 50 }),
-  phone: p.varchar("phone", { length: 20 }),
-  address: p.text("address"),
+  title: p.varchar("title", { length: 255 }).notNull(),
+  description: p.varchar("description", { length: 255 }).notNull(),
+  type: adTypeEnum("type").notNull(),
+  mediaId: p.uuid("media_id").references(() => mediaTable.id),
+  link: p.varchar("link", { length: 500 }).notNull(),
+  position: adPositionEnum("ads_position").default("home-top"),
+  sortOrder: p.integer("sort_order").default(0),
+  isActive: p.boolean("is_active").default(true),
+  startDate: p.timestamp("start_date").notNull(),
+  endDate: p.timestamp("end_date").notNull(),
 
-  // 客户是核心资产，使用 standardCols，可在多个站点复用
-  ...standardCols,
+  // 广告是网站内容，使用 siteScopedCols，必须属于某个站点
+  ...siteScopedCols,
 });
-
-export const inquiryTable = p.pgTable("inquiry", {
+// 站点
+export const heroCardTable = p.pgTable("hero_card", {
   ...Audit,
-  inquiryNum: p.varchar("inquiry_number", { length: 50 }).notNull(),
-  customerName: p.varchar("customer_name", { length: 100 }),
-  customerCompany: p.varchar("company_name", { length: 200 }).notNull(),
-  customerEmail: p.varchar("email", { length: 255 }).notNull(),
-  customerPhone: p.varchar("phone", { length: 50 }),
-  customerWhatsapp: p.varchar("whatsapp", { length: 50 }),
-  status: inquiryStatusEnum("status").default("pending").notNull(),
-
-  // 询盘关联的 SKU
-  skuId: p
-    .uuid("sku_id")
-    .notNull()
-    .references(() => skuTable.id),
-  productName: p.varchar("product_name", { length: 255 }).notNull(),
-  productDescription: p.text("product_description"),
-  quantity: p.integer("quantity").notNull(),
-  price: p.decimal("price", { precision: 10, scale: 2 }),
-  paymentMethod: p.varchar("payment_method", { length: 255 }).notNull(),
-  customerRequirements: p.text("customer_requirements"),
-
-  // 询盘是交易数据，使用 trackingCols，sourceSiteId 记录来源站点（可为空）
-  ...trackingCols,
-});
-
-export const quotationTable = p.pgTable("quotation", {
-  ...Audit,
-  refNo: p.varchar("ref_no", { length: 50 }).notNull(),
-  date: p.date("date").notNull(),
-  clientId: p
-    .uuid("client_id")
-    .notNull()
-    .references(() => customerTable.id, { onDelete: "restrict" }),
-  deliveryTimeDays: p.varchar("delivery_time_days", { length: 50 }),
-  sampleLeadtimeDays: p.varchar("sample_leadtime_days", { length: 50 }),
-  paymentTerms: p.text("payment_terms"),
-  qualityRemark: p.text("quality_remark"),
-  safetyCompliance: p.text("safety_compliance"),
-  status: p.varchar("status", { length: 20 }).default("draft").notNull(),
-
-  // 🔥 合并自 quotationItemsTable - 每次报价只针对单个商品
-  skuId: p
-    .uuid("sku_id")
-    .notNull()
-    .references(() => skuTable.id, { onDelete: "restrict" }),
-  productionDeptId: p
-    .uuid("production_dept_id")
-    .notNull()
-    .references(() => departmentTable.id),
-  unitPriceUsd: p
-    .decimal("unit_price_usd", { precision: 10, scale: 2 })
+  title: p.varchar("title", { length: 255 }).notNull(),
+  description: p.text("description").notNull(),
+  buttonText: p.varchar("button_text", { length: 100 }).notNull(),
+  buttonUrl: p.varchar("button_url", { length: 500 }).notNull(),
+  backgroundClass: p
+    .varchar("background_class", { length: 100 })
+    .default("bg-blue-50"),
+  sortOrder: p.integer("sort_order").default(0),
+  isActive: p.boolean("is_active").default(true),
+  mediaId: p
+    .uuid("media_id")
+    .references(() => mediaTable.id)
     .notNull(),
-  quantity: p.integer("quantity").notNull(),
-  totalUsd: p.decimal("total_usd", { precision: 12, scale: 2 }).notNull(),
-  remark: p.text("remark"),
 
-  // 报价是交易数据，使用 trackingCols，sourceSiteId 记录来源站点（可为空）
-  ...trackingCols,
+  // 轮播图是网站内容，使用 siteScopedCols，必须属于某个站点
+  ...siteScopedCols,
 });
+
 
 export const siteConfigTable = p.pgTable("site_config", {
   ...Audit,
@@ -727,7 +713,94 @@ export const siteConfigTable = p.pgTable("site_config", {
     .uuid("site_id")
     .notNull()
     .references(() => siteTable.id, { onDelete: "cascade" }),
+}, (t) => [
+  uniqueIndex("uk_site_key").on(t.siteId, t.key)
+]);
+
+
+// 询价
+export const inquiryTable = p.pgTable("inquiry", {
+  ...Audit,
+  inquiryNum: p.varchar("inquiry_number", { length: 50 }).notNull(),
+  customerName: p.varchar("customer_name", { length: 100 }),
+  customerCompany: p.varchar("company_name", { length: 200 }).notNull(),
+  customerEmail: p.varchar("email", { length: 255 }).notNull(),
+  customerPhone: p.varchar("phone", { length: 50 }),
+  customerWhatsapp: p.varchar("whatsapp", { length: 50 }),
+
+  status: inquiryStatusEnum("status").default("pending").notNull(),
+
+
+  // 询价关联的站点商品
+  siteProductId: p
+    .uuid("site_product_id")
+    .notNull()
+    .references(() => siteProductTable.id),
+  // 询盘关联的 SKU
+
+  siteSkuId: p
+    .uuid("site_sku_id")
+    .notNull()
+    .references(() => siteSkuTable.id),
+
+  productName: p.varchar("product_name", { length: 255 }).notNull(),
+  productDescription: p.text("product_description"),
+  quantity: p.integer("quantity").notNull(),
+  price: p.decimal("price", { precision: 10, scale: 2 }),
+  paymentMethod: p.varchar("payment_method", { length: 255 }).notNull(),
+  customerRequirements: p.text("customer_requirements"),
+
+  // 增加负责人字段
+  ownerId: p.uuid("owner_id").references(() => userTable.id),
+  // 增加主分类字段（用于匹配分配逻辑）
+  masterCategoryId: p.uuid("master_category_id").references(() => masterCategoryTable.id),
+
+  rawSnapshot: p.json("raw_snapshot").$type<{
+    product: any;
+    sku: any;
+    siteConfig: any;
+  }>(),
+  // 询盘是交易数据，使用 trackingCols，sourceSiteId 记录来源站点（可为空）
+  ...trackingCols,
 });
+
+export const quotationTable = p.pgTable("quotation", {
+  ...Audit,
+  refNo: p.varchar("ref_no", { length: 50 }).notNull(),
+  date: p.date("date").notNull(),
+  clientId: p
+    .uuid("client_id")
+    .notNull()
+    .references(() => customerTable.id, { onDelete: "set null" }),
+  deliveryTimeDays: p.varchar("delivery_time_days", { length: 50 }),
+  sampleLeadtimeDays: p.varchar("sample_leadtime_days", { length: 50 }),
+  paymentTerms: p.text("payment_terms"),
+  qualityRemark: p.text("quality_remark"),
+  safetyCompliance: p.text("safety_compliance"),
+  status: p.varchar("status", { length: 20 }).default("draft").notNull(),
+
+  // 🔥 合并自 quotationItemsTable - 每次报价只针对单个商品
+  skuId: p
+    .uuid("sku_id")
+    .notNull()
+    .references(() => skuTable.id, { onDelete: "set null" }),
+  productionDeptId: p
+    .uuid("production_dept_id")
+    .notNull()
+    .references(() => departmentTable.id),
+  unitPriceUsd: p
+    .decimal("unit_price_usd", { precision: 10, scale: 2 })
+    .notNull(),
+  quantity: p.integer("quantity").notNull(),
+  totalUsd: p.decimal("total_usd", { precision: 12, scale: 2 }).notNull(),
+  remark: p.text("remark"),
+
+
+  snapShortClientId: p.uuid("snap_client_id").references(() => customerTable.id, { onDelete: "set null" }),
+  // 报价是交易数据，使用 trackingCols，sourceSiteId 记录来源站点（可为空）
+  ...trackingCols,
+});
+
 
 export const dailyInquiryCounterTable = p.pgTable("daily_inquiry_counter", {
   ...Audit,
@@ -736,45 +809,3 @@ export const dailyInquiryCounterTable = p.pgTable("daily_inquiry_counter", {
   lastResetAt: p.timestamp("last_reset_at").defaultNow(),
 });
 
-// [业务员-主分类关联表]：定义业务员负责的品类范围
-export const salesResponsibilityTable = p.pgTable(
-  "sales_responsibility",
-  {
-    ...Audit, // 包含 id, createdAt, updatedAt
-
-    // 1. 关联业务员
-    userId: p
-      .uuid("user_id")
-      .notNull()
-      .references(() => userTable.id, { onDelete: "cascade" }),
-
-    // 2. 关联具体的站点分类
-    masterCategoryId: p
-      .uuid("master_category_id")
-      .notNull()
-      .references(() => masterCategoryTable.id, { onDelete: "cascade" }),
-
-    // 3. 冗余 tenantId 以便快速过滤和鉴权
-    tenantId: p
-      .uuid("tenant_id")
-      .notNull()
-      .references(() => tenantTable.id),
-
-    // 4. (可选) 权重或优先级：如果一个分类有多个业务员，询盘优先分给谁？
-    priority: p.integer("priority").default(0),
-
-    // 5. (可选) 自动分配开关：是否参与该分类询盘的自动轮询分配
-    isAutoAssign: p.boolean("is_auto_assign").default(true),
-  },
-  (t) => [
-    // 确保同一个业务员在同一个分类下只出现一次
-    p
-      .unique("unique_user_category")
-      .on(t.userId, t.masterCategoryId),
-    // 建立索引以便快速查找某个分类下的所有业务员
-    p
-      .index("idx_sales_cat")
-      .on(t.masterCategoryId),
-    p.index("idx_sales_user").on(t.userId),
-  ]
-);
