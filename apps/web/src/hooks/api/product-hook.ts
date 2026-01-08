@@ -4,8 +4,29 @@ import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { rpc } from "@/lib/rpc";
 
-// 类型定义
-export type ProductListRes = NonNullable<Treaty.Data<typeof rpc.products.get>>;
+// 类型定义 - Product List 返回的是 SiteProduct 列表
+export type ProductListItem = {
+  siteProductId: string;
+  displayName: string;
+  displayDesc: string;
+  isFeatured: boolean | null;
+  sortOrder: number | null;
+  productId: string;
+  spuCode: string;
+  units: string | null;
+  minPrice: string;
+  mainMedia: string;
+};
+
+export type ProductListRes = {
+  items: ProductListItem[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+};
 
 /**
  * 获取商品列表
@@ -44,73 +65,10 @@ export function useProductList(
     staleTime: 5 * 60 * 1000,
   });
 }
-
-export interface ProductDetailRes {
-  id: string;
-  createdAt: string;
-  updatedAt: string;
-  spuCode: string;
-  name: string;
-  description: string;
-  status: number;
-  units: string;
-  exporterId?: any;
-  factoryId?: any;
-  ownerId?: any;
-  isPublic: boolean;
-  siteId: string;
-  productMedia: ProductMedia[];
-  siteCategory: any[];
-  skus: Skus[];
-}
-interface Skus {
-  id: string;
-  createdAt: string;
-  updatedAt: string;
-  skuCode: string;
-  price: string;
-  marketPrice?: any;
-  costPrice?: any;
-  weight: string;
-  volume: string;
-  stock: string;
-  specJson: Record<string, string>;
-  extraAttributes?: any;
-  status: number;
-  productId: string;
-  exporterId?: any;
-  factoryId?: any;
-  ownerId?: any;
-  isPublic: boolean;
-  siteId?: any;
-  media: Media[];
-}
-
-interface ProductMedia {
-  productId: string;
-  mediaId: string;
-  isMain: boolean;
-  sortOrder: number;
-  media: Media;
-}
-interface Media {
-  id: string;
-  createdAt: string;
-  updatedAt: string;
-  storageKey: string;
-  category: string;
-  url: string;
-  originalName: string;
-  mimeType: string;
-  status: boolean;
-  thumbnailUrl?: any;
-  mediaType: string;
-  exporterId: string;
-  factoryId?: any;
-  ownerId?: any;
-  isPublic: boolean;
-  siteId: string;
-}
+const res = await rpc.products({ id: "ss" }).get();
+export type ProductDetailRes = NonNullable<
+  Treaty.Data<typeof res>
+>;
 
 /**
  * 获取单个商品详情
@@ -124,10 +82,11 @@ export function useProductDetail(id: string) {
       if (error) {
         toast.error(error.value?.message || "获取商品详情失败");
       }
-      return data! as ProductDetailRes;
+      return data! as unknown as ProductDetailRes
     },
     enabled: !!id,
     staleTime: 5 * 60 * 1000, // 5分钟缓存
     retry: 2,
   });
 }
+

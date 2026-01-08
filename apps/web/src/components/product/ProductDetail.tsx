@@ -13,7 +13,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type React from "react";
 import { useEffect, useMemo, useState } from "react";
-import { useInquiryMutation } from "@/hooks/api/inquiry-hook";
+import { useCreateInquiry } from "@/hooks/api/inquiry-hook";
 import {
   type ProductDetailRes,
   useProductList,
@@ -24,14 +24,14 @@ import { SimpleProductImage } from "./SimpleProductImage";
 import { SuccessView } from "./SuccessView";
 
 interface ProductDetailProps {
-  product: ProductDetailRes;
+  siteProduct: ProductDetailRes;
 }
 
 type MediaList = {
-  id: string;
   url: string;
-  mimeType: string;
-  skuId: string | null;
+  mediaType: "image" | "video" | "document" | "audio" | "other";
+  sortOrder: number;
+  id: string;
 };
 
 const PAYMENT_METHODS = [
@@ -40,7 +40,7 @@ const PAYMENT_METHODS = [
   "L/C at 30 days sight",
 ];
 
-const ProductDetail: React.FC<ProductDetailProps> = ({ product }) => {
+const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
   const [activeMedia, setActiveMedia] = useState(0);
   const [activeTab, setActiveTab] = useState<"description" | "details">(
     "description"
@@ -48,12 +48,14 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product }) => {
 
   // 1. 数据获取：猜你喜欢 (Related Products)
   // 逻辑：获取当前产品的第一个分类ID
-  const categoryId = product.siteCategory?.[0]?.categoryId;
+  const categoryId = siteProduct.siteCategories?.[0]?.id;
 
-  const { data: relatedData } = useProductList(
+  // 2. 数据获取：猜你喜欢 (Related Products)
+  // 逻辑：获取当前产品的第一个分类ID
+  const { data: productList } = useProductList(
     {
       categoryId,
-      limit: 4, // 取4个，如果是自己就排除
+      limit: 4,
     },
     { enabled: !!categoryId }
   );
@@ -61,10 +63,10 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product }) => {
   // 过滤掉当前产品本身，取前3个
   const relatedProducts = useMemo(
     () =>
-      relatedData?.items
-        ?.filter((item) => item.id !== product.id)
+      productList?.items
+        ?.filter((item) => item.siteProductId !== siteProduct.siteProductId)
         .slice(0, 3) || [],
-    [relatedData, product.id]
+    [productList, siteProduct.siteProductId]
   );
 
   // 2. 逻辑优化：Media 处理
@@ -72,30 +74,34 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product }) => {
     const list: MediaList[] = [];
 
     // 通用图
-    product.productMedia?.forEach((item) => {
-      list.push({ ...item.media, skuId: null });
+    siteProduct.media?.forEach((m) => {
+      // 视频的 sortOrder 设为 -1，确保排在最前面
+      const sortOrder = m.mediaType?.startsWith("video")
+        ? -1
+        : (m.sortOrder ?? 999);
+      list.push({ ...m, id: m.id || "", sortOrder });
     });
 
     // SKU图
-    product.skus?.forEach((sku) => {
+    siteProduct.skus.forEach((sku) => {
       if (sku.media) {
-        // 有些后端可能返回数组，有些返回单个对象，做个兼容
         const medias = Array.isArray(sku.media) ? sku.media : [sku.media];
-        medias.forEach((m) => list.push({ ...m, skuId: sku.id }));
+        medias.forEach((m) => {
+          // SKU 媒体也要处理视频排序
+          const sortOrder = m.mediaType?.startsWith("video")
+            ? -1
+            : (m.sortOrder ?? 999);
+          list.push({ ...m, id: sku.siteSkuId, sortOrder });
+        });
       }
     });
 
-    // 排序：图片在前，视频在后 (或者你可以根据 sortOrder 排序)
-    return list.sort((a, b) => {
-      const aIsVideo = a.mimeType.startsWith("video");
-      const bIsVideo = b.mimeType.startsWith("video");
-      if (aIsVideo === bIsVideo) return 0;
-      return aIsVideo ? 1 : -1;
-    });
-  }, [product]);
+    // 按 sortOrder 排序：视频(-1) 会排在最前面，然后按数字升序
+    return list.sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999));
+  }, [siteProduct]);
 
   // SKU & Specs Logic
-  const skus = product.skus || [];
+  const skus = siteProduct.skus || [];
   const specOptions = useMemo(() => {
     const options: Record<string, Set<string>> = {};
     skus.forEach((sku) => {
@@ -136,7 +142,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product }) => {
   useEffect(() => {
     if (selectedSku) {
       // 查找属于该 SKU 的第一张图
-      const index = allMedia.findIndex((m) => m.skuId === selectedSku.id);
+      const index = allMedia.findIndex((m) => m.id === selectedSku.siteSkuId);
       if (index !== -1) setActiveMedia(index);
     }
   }, [selectedSku, allMedia]);
@@ -147,20 +153,34 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product }) => {
 
   const [showInquiryForm, setShowInquiryForm] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
-  const inquiryMutation = useInquiryMutation();
+  const inquiryMutation = useCreateInquiry();
 
   // 真正的提交逻辑
   const handleInquirySubmit = async (values: InquiryFormValues) => {
     try {
+      // 二次验证：确保 SKU 已选择（虽然 handleOpenInquiry 已经检查过）
+      if (!selectedSku) {
+        alert("Please select a product variant first");
+        setShowInquiryForm(false);
+        return;
+      }
+
+      if (!selectedSku.media || selectedSku.media.length === 0) {
+        alert("Product variant has no media");
+        setShowInquiryForm(false);
+        return;
+      }
+
       // 保存用户信息到本地 (不含备注)
       const { remarks, ...contactInfo } = values;
       localStorage.setItem("gina_user_info", JSON.stringify(contactInfo));
 
       await inquiryMutation.mutateAsync({
-        productId: product.id,
-        skuId: selectedSku!.id!,
-        productName: product.name,
-        productDesc: product.description || "",
+        siteProductId: siteProduct.siteProductId,
+        siteSkuId: selectedSku.siteSkuId,
+        skuMediaId: selectedSku.media[0].url,
+        productName: siteProduct.displayName,
+        productDesc: siteProduct.displayDesc || "",
         paymentMethod,
         customerRemarks: remarks || "",
         quantity,
@@ -190,9 +210,12 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product }) => {
   };
 
   const handleOpenInquiry = () => {
-    const missing = Object.keys(specOptions).filter((k) => !selectedSpecs[k]);
-    if (missing.length > 0)
-      return alert(`Please select: ${missing.join(", ")}`);
+    // 如果商品有规格选项，检查是否都已选择
+    if (Object.keys(specOptions).length > 0) {
+      const missing = Object.keys(specOptions).filter((k) => !selectedSpecs[k]);
+      if (missing.length > 0)
+        return alert(`Please select: ${missing.join(", ")}`);
+    }
     // 如果产品有SKU但没有选到匹配的，提示
     if (skus.length > 0 && !selectedSku)
       return alert("Invalid combination selected");
@@ -203,7 +226,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product }) => {
 
   return (
     <div className="min-h-screen bg-white pt-32 pb-16">
-      <div className="mx-auto max-w-[1300px] px-6">
+      <div className="mx-auto max-w-325 px-6">
         <div className="mb-24 grid grid-cols-1 gap-12 lg:grid-cols-12">
           {/* --- LEFT: GALLERY --- */}
           <div className="flex flex-col items-center lg:col-span-7">
@@ -234,7 +257,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product }) => {
               )}
 
               {mediaItem ? (
-                mediaItem.mimeType.startsWith("video") ? (
+                mediaItem.mediaType.startsWith("video") ? (
                   <video
                     autoPlay
                     className="h-full w-full object-contain mix-blend-multiply"
@@ -248,7 +271,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product }) => {
                   </video>
                 ) : (
                   <Image
-                    alt={product.name || "Product Image"}
+                    alt={siteProduct.displayName || "Product Image"}
                     className="object-contain mix-blend-multiply"
                     fill
                     priority
@@ -268,7 +291,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product }) => {
               {allMedia.map((m, idx) => (
                 <button
                   className={cn(
-                    "relative h-20 w-20 flex-shrink-0 border transition-all",
+                    "relative h-20 w-20 shrink-0 border transition-all",
                     activeMedia === idx
                       ? "border-black ring-1 ring-black"
                       : "border-gray-100 hover:border-gray-300"
@@ -277,13 +300,13 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product }) => {
                   onClick={() => {
                     setActiveMedia(idx);
                     // 点击 SKU 图片自动选中对应规格 (优化体验)
-                    if (m.skuId) {
-                      const sku = skus.find((s) => s.id === m.skuId);
+                    if (m.id) {
+                      const sku = skus.find((s) => s.siteSkuId === m.id);
                       if (sku?.specJson) setSelectedSpecs(sku.specJson as any);
                     }
                   }}
                 >
-                  {m.mimeType.startsWith("video") ? (
+                  {m.mediaType.startsWith("video") ? (
                     <div className="flex h-full w-full items-center justify-center bg-gray-100">
                       <Play className="h-6 w-6 text-gray-400" />
                     </div>
@@ -298,10 +321,10 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product }) => {
           {/* --- RIGHT: INFO --- */}
           <div className="pt-8 pl-4 lg:col-span-5">
             <h1 className="mb-2 font-serif text-5xl text-black italic leading-tight">
-              {product.name}
+              {siteProduct.displayName}
             </h1>
             <p className="mb-6 font-serif text-gray-500 text-xl italic">
-              {product.spuCode}
+              {siteProduct.spuCode}
             </p>
 
             <div className="mb-8 font-light text-lg">
@@ -423,11 +446,11 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product }) => {
                   </button>
                 ))}
               </div>
-              <div className="min-h-[100px] font-serif text-gray-600 text-sm leading-relaxed">
+              <div className="min-h-25 font-serif text-gray-600 text-sm leading-relaxed">
                 {activeTab === "description" ? (
                   <div style={{ whiteSpace: "pre-line" }}>
-                    {product.description ||
-                      `Discover ${product.name}, a premium product.`}
+                    {siteProduct.displayDesc ||
+                      `Discover ${siteProduct.displayName}, a premium product.`}
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -435,19 +458,17 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product }) => {
                       <strong className="mb-1 block font-sans text-xs uppercase">
                         Code
                       </strong>{" "}
-                      {product.spuCode}
+                      {siteProduct.spuCode}
                     </div>
                     {/* 兼容 productCategories 和 siteCategory 两种结构 */}
                     <div>
                       <strong className="mb-1 block font-sans text-xs uppercase">
                         Categories
                       </strong>{" "}
-                      {product.siteCategory
-                        ?.map((c) => c.category.name)
+                      {siteProduct.siteCategories
+                        ?.map((c) => c.name)
                         .join(", ") ||
-                        product.siteCategory
-                          ?.map((c) => c.categoryId)
-                          .join(", ")}
+                        siteProduct.siteCategories?.map((c) => c.id).join(", ")}
                     </div>
                   </div>
                 )}
@@ -466,20 +487,20 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product }) => {
               {relatedProducts.map((p) => (
                 <Link
                   className="group cursor-pointer"
-                  href={`/product/${p.id}`}
-                  key={p.id}
+                  href={`/product/${p.siteProductId}`}
+                  key={p.siteProductId}
                 >
                   <div className="relative mb-4 aspect-4/3 w-full overflow-hidden bg-gray-50">
                     {/* 使用复用组件处理图片加载 */}
-                    <SimpleProductImage alt={p.name} src={p.mainImageUrl} />
+                    <SimpleProductImage alt={p.displayName} src={p.mainMedia} />
                   </div>
                   <div className="text-center">
                     <h4 className="font-serif text-lg italic transition-colors group-hover:text-gray-600">
-                      {p.name}
+                      {p.displayName}
                     </h4>
                     <p className="mt-1 text-gray-400 text-xs uppercase tracking-wider">
-                      {p.price && Number(p.price) > 0
-                        ? `$${Number(p.price).toFixed(2)}`
+                      {p.minPrice && Number(p.minPrice) > 0
+                        ? `From $${Number(p.minPrice).toFixed(2)}`
                         : "Inquire"}
                     </p>
                   </div>
@@ -504,7 +525,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product }) => {
             <div className="mb-6 text-center">
               <h3 className="mb-2 font-serif text-3xl italic">Request Quote</h3>
               <p className="text-gray-500 text-xs">
-                {product.name} ({product.spuCode})
+                {siteProduct.displayName} ({siteProduct.spuCode})
               </p>
               <div className="mt-3 flex flex-wrap justify-center gap-2">
                 {Object.entries(selectedSpecs).map(([k, v]) => (

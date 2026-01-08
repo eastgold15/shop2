@@ -12,7 +12,7 @@ export default function ProductPage() {
   const { id } = useParams();
   const productId = Array.isArray(id) ? id[0] : id;
 
-  const { data, isLoading, error } = useProductDetail(productId || "");
+  const { data, isLoading, error } = useProductDetail(productId!);
 
   if (isLoading) {
     return (
@@ -20,7 +20,7 @@ export default function ProductPage() {
         <Navbar />
         {/* 使用骨架屏模拟详情页布局，防止布局抖动 (CLS) */}
         [Image of skeleton screen layout for product detail page]
-        <div className="mx-auto max-w-[1300px] px-6 py-32">
+        <div className="mx-auto max-w-325 px-6 py-32">
           <div className="grid grid-cols-1 gap-12 lg:grid-cols-12">
             {/* 左侧：图片骨架 */}
             <div className="flex flex-col items-center lg:col-span-7">
@@ -31,7 +31,7 @@ export default function ProductPage() {
               <div className="mt-4 flex w-full gap-4 overflow-hidden">
                 {[1, 2, 3, 4].map((i) => (
                   <Skeleton
-                    className="h-20 w-20 flex-shrink-0 bg-gray-100"
+                    className="h-20 w-20 shrink-0 bg-gray-100"
                     key={i}
                   />
                 ))}
@@ -79,7 +79,7 @@ export default function ProductPage() {
   return (
     <main className="min-h-screen bg-white">
       <Navbar />
-      <ProductDetail product={data} />
+      <ProductDetail siteProduct={data} />
       <Footer />
     </main>
   );

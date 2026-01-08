@@ -28,7 +28,7 @@ export type AdsListRes = NonNullable<Treaty.Data<typeof rpc.ads.current.get>>;
  * 获取当前有效广告的 Hook
  * 最多返回 4 条广告数据
  */
-export function useCurrentAdsQuery() {
+export function useCurrentAdsList() {
   return useQuery({
     queryKey: queryKeys.ads.current(),
     queryFn: async () => {

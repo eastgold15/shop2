@@ -6,6 +6,7 @@ import type {
   PgTableWithColumns,
   PgUpdate,
 } from "drizzle-orm/pg-core";
+import { ServiceContext } from "~/middleware/site";
 
 
 
@@ -44,7 +45,7 @@ export abstract class WEBBaseService<
     if (search && tableAny.name)
       extra.push(ilike(tableAny.name, `%${search}%`));
 
-    const select = ctx.db.select().from(this.table).$dynamic();
+    const select = ctx.db.select().from(this.table as any).$dynamic();
     const data = await this.withScope(select, ctx, extra)
       .limit(limit)
       .offset((page - 1) * limit)

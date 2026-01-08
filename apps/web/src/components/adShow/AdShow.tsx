@@ -1,8 +1,8 @@
 "use client";
 import Link from "next/link";
 import type React from "react";
-import { useCurrentAdsQuery } from "@/hooks/api/ads-hook";
 import { ImageComponent } from "@/components/common/Image";
+import { useCurrentAdsList } from "@/hooks/api/ads-hook";
 import { Skeleton } from "../ui/skeleton";
 
 interface AdShowProps {
@@ -21,30 +21,29 @@ interface AdShowProps {
  * 从后端获取最多 4 条有效广告并展示
  * 基于 BrewingModes 组件样式
  */
-const AdShowComponent: React.FC<AdShowProps> = ({
+export const AdShowComponent: React.FC<AdShowProps> = ({
   className = "",
   showSkeleton = true,
 }) => {
-  const { data: response, isLoading, error } = useCurrentAdsQuery();
+  const { data: response, isLoading, error } = useCurrentAdsList();
 
   // 加载状态 - 显示骨架屏
   if (isLoading && showSkeleton) {
     return (
       <section className={`w-full bg-white ${className}`}>
         {/* 这里的网格结构要和 displayAds.length === 2 的情况完全一致 */}
-        <div className="grid h-auto grid-cols-1 md:h-[800px] md:grid-cols-2">
+        <div className="grid h-auto grid-cols-1 md:h-200 md:grid-cols-2">
           <Skeleton
-            className="h-[400px] border-white/10 border-r md:h-full"
+            className="h-100der-white/10 border-r md:h-full"
             variant="rectangle"
           />
-          <Skeleton className="h-[400px] md:h-full" variant="rectangle" />
+          <Skeleton className="h-100h-full" variant="rectangle" />
         </div>
       </section>
     );
   }
   // 提取实际的广告数据
   const ads = response;
-  console.log("ads:", ads);
   // 错误或无数据
   // 2. 错误处理：不再返回 null，可以考虑返回空容器保持占位
   if (error || !ads || ads.length === 0) {
@@ -104,7 +103,7 @@ const AdShowComponent: React.FC<AdShowProps> = ({
         </div>
 
         {/* Image */}
-        <div className="relative h-[400px] md:h-full">
+        <div className="relative h-100 md:h-full">
           <ImageComponent
             alt={ad.title || "Advertisement"}
             className="mt-20 h-full w-full transform object-cover transition-transform duration-1000 group-hover:scale-105 md:mt-0"
@@ -138,7 +137,7 @@ const AdShowComponent: React.FC<AdShowProps> = ({
   if (displayAds.length === 1) {
     return (
       <section className={`w-full bg-white ${className}`}>
-        <div className="grid h-auto md:h-[800px]">
+        <div className="grid h-auto md:h-200">
           {renderAdCard(displayAds[0], 0)}
         </div>
       </section>
@@ -148,7 +147,7 @@ const AdShowComponent: React.FC<AdShowProps> = ({
   if (displayAds.length === 2) {
     return (
       <section className={`w-full bg-white ${className}`}>
-        <div className="grid h-auto grid-cols-1 md:h-[800px] md:grid-cols-2">
+        <div className="grid h-auto grid-cols-1 md:h-200 md:grid-cols-2">
           {displayAds.map((ad, index) => renderAdCard(ad, index))}
         </div>
       </section>
@@ -158,10 +157,10 @@ const AdShowComponent: React.FC<AdShowProps> = ({
   if (displayAds.length === 3) {
     return (
       <section className={`w-full bg-white ${className}`}>
-        <div className="grid h-auto grid-cols-1 md:h-[1200px] md:grid-cols-2">
+        <div className="grid h-auto grid-cols-1 md:h-300 md:grid-cols-2">
           {displayAds.slice(0, 2).map((ad, index) => renderAdCard(ad, index))}
         </div>
-        <div className="grid h-auto md:h-[600px]">
+        <div className="grid h-auto md:h-150">
           {renderAdCard(displayAds[2], 2)}
         </div>
       </section>
@@ -171,14 +170,12 @@ const AdShowComponent: React.FC<AdShowProps> = ({
   // 4 条广告：2x2 网格布局
   return (
     <section className={`w-full bg-white ${className}`}>
-      <div className="grid h-auto grid-cols-1 md:h-[800px] md:grid-cols-2">
+      <div className="grid h-auto grid-cols-1 md:h-200 md:grid-cols-2">
         {displayAds.slice(0, 2).map((ad, index) => renderAdCard(ad, index))}
       </div>
-      <div className="grid h-auto grid-cols-1 md:h-[800px] md:grid-cols-2">
+      <div className="grid h-auto grid-cols-1 md:h-200grid-cols-2">
         {displayAds.slice(2, 4).map((ad, index) => renderAdCard(ad, index + 2))}
       </div>
     </section>
   );
 };
-
-export const AdShow = AdShowComponent;

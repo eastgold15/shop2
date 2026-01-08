@@ -17,7 +17,7 @@ const ShopSkeleton = () => (
     {Array.from({ length: 4 }).map((_, i) => (
       <div className="flex flex-col items-center" key={i}>
         {/* 匹配图片的 aspect-[4/3] */}
-        <Skeleton className="mb-6 aspect-[4/3] w-full" />
+        <Skeleton className="mb-6 aspect-4/3 w-full" />
         {/* 匹配标题文字 */}
         <Skeleton className="h-6 w-24" />
       </div>
@@ -77,18 +77,18 @@ const Shop: React.FC<ShopProps> = ({ onProductSelect }) => {
         {products.slice(0, 4).map((product) => (
           <div
             className="group flex cursor-pointer flex-col items-center"
-            key={product.id}
-            onClick={() => router.push(`/product/${product.id}`)}
+            key={product.siteProductId}
+            onClick={() => router.push(`/product/${product.siteProductId}`)}
           >
-            <div className="relative mb-6 aspect-[4/3] w-full overflow-hidden">
+            <div className="relative mb-6 aspect-4/3 w-full overflow-hidden">
               <ProductImage
-                alt={product.name}
-                imageUrl={product.mainImageUrl} // 修正：接口定义里是 mainImageUrl
+                alt={product.displayName}
+                imageUrl={product.mainMedia}
               />
             </div>
             <div className="text-center">
               <h3 className="mb-1 font-serif text-black text-lg italic transition-colors group-hover:text-gray-600 md:text-xl">
-                {product.name}
+                {product.displayName}
               </h3>
             </div>
           </div>

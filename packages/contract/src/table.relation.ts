@@ -106,6 +106,7 @@ export const relations = defineRelations(schema, (r) => ({
     site: r.one.siteTable({
       from: r.siteSkuTable.siteId,
       to: r.siteTable.id,
+      optional: false,
     }),
     siteProduct: r.one.siteProductTable({
       from: r.siteSkuTable.siteProductId,
@@ -115,6 +116,7 @@ export const relations = defineRelations(schema, (r) => ({
     sku: r.one.skuTable({
       from: r.siteSkuTable.skuId,
       to: r.skuTable.id,
+      optional: false,
     }),
   },
   siteTable: {
@@ -232,10 +234,12 @@ export const relations = defineRelations(schema, (r) => ({
     product: r.one.productTable({
       from: r.siteProductTable.productId,
       to: r.productTable.id,
-      optional: true,
+      optional: false,
     }),
 
-    siteSkus: r.many.siteSkuTable(),
+    siteSkus: r.many.siteSkuTable(
+
+    ),
     siteCategories: r.many.siteCategoryTable({
       from: r.siteProductTable.id.through(r.siteProductCategoryTable.siteProductId),
       to: r.siteCategoryTable.id.through(r.siteProductCategoryTable.siteCategoryId)

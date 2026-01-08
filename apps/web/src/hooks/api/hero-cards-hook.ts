@@ -11,7 +11,7 @@ export type HeroCardListRes = NonNullable<Treaty.Data<typeof rpc.herocards.curre
  * 获取当前有效 Hero Cards 的 Hook
  * 最多返回 4 条卡片数据
  */
-export function useCurrentHeroCardsQuery() {
+export function useCurrentHeroCardsList() {
   return useQuery({
     queryKey: queryKeys.heroCards.current(),
     queryFn: async () => {

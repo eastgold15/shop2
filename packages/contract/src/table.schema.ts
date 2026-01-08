@@ -721,6 +721,7 @@ export const siteConfigTable = p.pgTable("site_config", {
 // 询价
 export const inquiryTable = p.pgTable("inquiry", {
   ...Audit,
+
   inquiryNum: p.varchar("inquiry_number", { length: 50 }).notNull(),
   customerName: p.varchar("customer_name", { length: 100 }),
   customerCompany: p.varchar("company_name", { length: 200 }).notNull(),

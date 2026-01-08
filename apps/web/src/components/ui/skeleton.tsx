@@ -31,7 +31,7 @@ function Skeleton({ className, variant = "rounded", ...props }: SkeletonProps) {
  */
 const ImageSkeleton = ({ className }: { className?: string }) => (
   <Skeleton
-    className={cn("h-full min-h-[200px] w-full", className)}
+    className={cn("h-full min-h-50 w-full", className)}
     variant="rectangle"
   />
 );

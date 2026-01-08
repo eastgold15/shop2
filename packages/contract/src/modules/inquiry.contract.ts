@@ -14,18 +14,17 @@ export const InquiryContract = {
   }),
 
   Create: t.Composite([
-    t.Object(
-      t.Omit(t.Object(InquiryInsertFields), [
-        "id",
-        "createdAt",
-        "updatedAt",
-        "inquiryNum",
-      ]).properties
-    ),
     t.Object({
+      customerName: t.Optional(t.String()),
+      customerCompany: t.String(),
+      customerEmail: t.String(),
+      customerPhone: t.Optional(t.String()),
+      customerWhatsapp: t.Optional(t.String()),
+
       siteProductId: t.String(),
       siteSkuId: t.String(),
       skuMediaId: t.String(),
+
       quantity: t.Number(),
       productName: t.String(),
       productDesc: t.String(),

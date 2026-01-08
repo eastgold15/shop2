@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { queryKeys } from "@/lib/query/query-keys";
 import { rpc } from "@/lib/rpc";
 
-export function useCurrentMediaQuery(
+export function useCurrentMediaDetail(
   id: string,
   options?: Partial<UseQueryOptions<string, Error>>
 ) {
@@ -28,7 +28,7 @@ export function useCurrentMediaQuery(
   });
 }
 export type MediaListRes = NonNullable<Treaty.Data<typeof rpc.media.urls.get>>;
-export function useCurrentMediasQuery(ids: string[]) {
+export function useCurrentMediasList(ids: string[]) {
   return useQuery({
     queryKey: queryKeys.media.urls(ids),
     queryFn: async () => {

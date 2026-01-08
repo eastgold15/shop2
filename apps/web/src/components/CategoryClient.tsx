@@ -4,7 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import CategoryGrid from "@/components/layout/CategoryGrid";
 import { useProductList } from "@/hooks/api/product-hook";
-import { useCategoryDetail } from "@/hooks/api/site-category-hook";
+import { useSiteCategoryDetail } from "@/hooks/api/site-category-hook";
 
 export default function CategoryClient() {
   const searchParams = useSearchParams();
@@ -21,7 +21,7 @@ export default function CategoryClient() {
     data: categoryData,
     isLoading: isCategoryLoading,
     error: categoryError,
-  } = useCategoryDetail(id || "", { enabled: isMounted && !!id });
+  } = useSiteCategoryDetail(id || "", { enabled: isMounted && !!id });
 
   // 查询分类下的产品列表
   const {

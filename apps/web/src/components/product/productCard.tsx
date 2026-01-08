@@ -13,22 +13,22 @@ const ProductCard: React.FC<ProductCardProps> = ({
   aspectRatio = "aspect-[4/3]",
 }) => {
   // 确保有主图，否则显示占位图（可选）
-  const mainImage = product.mainImageUrl || "/placeholder.jpg";
+  const mainImage = product.mainMedia || "/placeholder.jpg";
 
   // 悬停图：优先用 additionalImages[0]，否则回退到主图
-  const hoverImage = product.mainImageUrl || mainImage;
+  const hoverImage = product.mainMedia || mainImage;
 
   return (
     <Link
       className="group flex cursor-pointer flex-col items-center"
-      href={`/product/${product.id}`}
+      href={`/product/${product.siteProductId}`}
     >
       <div
         className={`relative w-full ${aspectRatio} mb-6 overflow-hidden bg-gray-50/50`}
       >
         {/* Main Image */}
         <Image
-          alt={product.name}
+          alt={product.displayName}
           className="absolute inset-0 h-full w-full transform object-contain opacity-100 mix-blend-multiply transition-opacity duration-700 group-hover:opacity-0"
           fill
           loading="lazy"
@@ -37,7 +37,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
         {/* Hover Image */}
         <Image
-          alt={`${product.name} alternate`}
+          alt={`${product.displayName} alternate`}
           className="absolute inset-0 h-full w-full scale-105 transform object-contain opacity-0 mix-blend-multiply transition-all duration-700 group-hover:opacity-100"
           fill
           loading="lazy"
@@ -53,17 +53,17 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
       <div className="text-center">
         <h3 className="mb-1 font-serif text-black text-lg italic decoration-1 underline-offset-4 group-hover:underline md:text-xl">
-          {product.name}
+          {product.displayName}
         </h3>
 
-        {product.name && (
+        {product.displayName && (
           <p className="mb-2 font-serif text-gray-500 text-sm italic">
-            {product.name}
+            {product.displayName}
           </p>
         )}
 
         <p className="font-bold text-xs tracking-widest">
-          USD {product.price.toLocaleString()}
+          USD {product.minPrice.toLocaleString()}
         </p>
       </div>
     </Link>

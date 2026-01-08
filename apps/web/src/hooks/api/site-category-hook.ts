@@ -38,7 +38,7 @@ export interface SiteCategoryDetailRes {
   description?: string;
   masterCategoryId?: string;
 }
-export function useCategoryDetail(
+export function useSiteCategoryDetail(
   id: string,
   options?: { enabled?: boolean }
 ) {

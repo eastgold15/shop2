@@ -1,11 +1,14 @@
 "use client";
 import { useRef, useState } from "react";
-import type { SiteCategoryTreeRes } from "@/hooks/api/site-category-hook";
+import type { SiteCategoryListRes } from "@/hooks/api/site-category-hook";
 import { useNavAction } from "./hook/useNavAction";
 import { DropdownIndicator, NAV_STYLES, NavLink } from "./NavParts";
 
+// 扩展类型定义，包含 children 字段（children 为可选）
+type CategoryWithChildren = SiteCategoryListRes[number];
+
 // 单个菜单项组件（递归核心）
-const MenuItem = ({ category }: { category: SiteCategoryTreeRes }) => {
+const MenuItem = ({ category }: { category: CategoryWithChildren }) => {
   const [isOpen, setIsOpen] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { getCategoryHref, handleNavigate } = useNavAction();
@@ -53,7 +56,7 @@ const MenuItem = ({ category }: { category: SiteCategoryTreeRes }) => {
 
       {/* 递归下拉面板 */}
       {isOpen && (
-        <div className="fade-in zoom-in-95 absolute top-full left-0 z-50 min-w-[200px] animate-in border border-gray-100 bg-white py-2 shadow-lg duration-100">
+        <div className="fade-in zoom-in-95 absolute top-full left-0 z-50 min-w-50 animate-in border border-gray-100 bg-white py-2 shadow-lg duration-100">
           {(category?.children || []).map((child) => (
             <DropdownItem category={child} key={child.id} />
           ))}
@@ -64,7 +67,7 @@ const MenuItem = ({ category }: { category: SiteCategoryTreeRes }) => {
 };
 
 // 下拉菜单项（支持多级嵌套，向右展开）
-const DropdownItem = ({ category }: { category: SiteCategoryTreeRes }) => {
+const DropdownItem = ({ category }: { category: CategoryWithChildren }) => {
   const { getCategoryHref, handleNavigate } = useNavAction();
   const href = getCategoryHref(category.id);
   const hasChildren = category.children && category.children.length > 0;
@@ -86,11 +89,11 @@ const DropdownItem = ({ category }: { category: SiteCategoryTreeRes }) => {
 export const DesktopMenu = ({
   categories,
 }: {
-  categories: SiteCategoryTreeRes[];
+  categories: SiteCategoryListRes;
 }) => (
   <div className="hidden items-center justify-center space-x-8 md:flex lg:space-x-12">
     {categories.map((cat) => (
-      <MenuItem category={cat} key={cat.id} />
+      <MenuItem category={cat as CategoryWithChildren} key={cat.id} />
     ))}
   </div>
 );

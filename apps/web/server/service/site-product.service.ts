@@ -136,11 +136,7 @@ export class SiteProductService {
         // 拉取物理商品表（如果你还想看原始字段）
         product: {
           with: {
-            productMedia: {
-              with: {
-                media: true,
-              },
-            },
+            media: true,
           },
         },
         // 拉取站点分类
@@ -149,11 +145,7 @@ export class SiteProductService {
           with: {
             sku: {
               with: {
-                skuMedia: {
-                  with: {
-                    media: true,
-                  },
-                },
+                media: true,
               },
             },
           }
@@ -167,8 +159,7 @@ export class SiteProductService {
     // --- 开始清洗数据 ---
     return {
       // 1. 站点层基础属性 (直接展开)
-      id: result.id,
-      productId: result.productId,
+      siteProductId: result.productId,
       siteId: result.siteId,
       sortOrder: result.sortOrder,
       isFeatured: result.isFeatured,
@@ -177,22 +168,21 @@ export class SiteProductService {
       createdAt: result.createdAt,
 
       // 2. 应用覆盖逻辑 (使用 SQL extras 算出的结果)
-      name: result.displayName,
-      description: result.displayDesc,
+      displayName: result.displayName,
+      displayDesc: result.displayDesc,
 
       // 3. 资产层物理属性 (spuCode 等)
       spuCode: result.product?.spuCode,
       units: result.product?.units,
 
-      // 4. 清洗图片列表 (Gallery)
-      // 路径: result.product -> productMedia -> media
-      images: result.product?.productMedia.map(pm => ({
-        url: pm.media?.url,
-        mediaType: pm.media?.mediaType,
-        isMain: pm.isMain,
+      // 4. 清洗视频列表 (Gallery) 
+      //  第一张是视频
+      media: result.product.media.map(pm => ({
+        url: pm.url,
+        mediaType: pm.mediaType,
         sortOrder: pm.sortOrder,
-        id: pm.mediaId
-      })).sort((a, b) => (b.isMain ? 1 : 0) - (a.isMain ? 1 : 0) || a.sortOrder - b.sortOrder) || [],
+        id: pm.id
+      })).sort((a, b) => a.sortOrder - b.sortOrder),
 
       // 5. 清洗规格列表 (SKUs)
       // 逻辑：siteSku 覆盖价格和状态，物理 Sku 提供 code 和规格 JSON
@@ -200,24 +190,28 @@ export class SiteProductService {
         const pSku = ss.sku; // 物理 SKU
         return {
           siteSkuId: ss.id,
-          skuId: ss.skuId,
-          skuCode: pSku?.skuCode,
+          skuCode: pSku.skuCode,
           // 价格逻辑：站点价格不存在(null)则回退到物理价格
-          price: ss.price ?? pSku?.price,
-          stock: pSku?.stock,
-          specJson: pSku?.specJson, // 存储颜色、尺寸等
+          price: pSku.price,
+          costPrice: pSku.costPrice,
+          marketPrice: pSku.marketPrice,
+          weight: pSku.weight,
+          volume: pSku.volume,
+          stock: pSku.stock,
+          specJson: pSku.specJson, // 存储颜色、尺寸等
+          extraAttributes: pSku.extraAttributes,
           isActive: ss.isActive,
           // 规格图片展平
-          images: pSku?.skuMedia.map(sm => ({
-            url: sm.media?.url,
-            isMain: sm.isMain,
-            sortOrder: sm.sortOrder
-          })) || []
+          media: pSku.media.map(sm => ({
+            url: sm.url,
+            mediaType: sm.mediaType,
+            sortOrder: sm.sortOrder,
+            id: sm.id
+          })).sort((a, b) => a.sortOrder - b.sortOrder)
         };
       }),
-
       // 6. 清洗分类 (简单的 ID 数组或对象数组)
-      categories: result.siteCategories.map(sc => ({
+      siteCategories: result.siteCategories.map(sc => ({
         id: sc.id,
         name: sc.name
       }))

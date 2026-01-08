@@ -72,6 +72,10 @@ export class InquiryService {
     const { siteProduct, siteSku, skuMediaMainID } =
       await this.validateAndGetSkuData(body, ctx);
 
+    if (!siteSku) {
+      throw new HttpError.BadRequest("SKU not found");
+    }
+
     // 2. 获取商品的主分类（用于匹配业务员）
     const masterCategoryIds = await this.getProductMasterCategories(
       siteProduct.productId,
@@ -84,7 +88,7 @@ export class InquiryService {
       await this.upsertCustomer(body, ctx, tx);
 
       // 5. 生成业务单号
-      const inquiryNum = await generateInquiryNumber();
+      const inquiryNum = await generateInquiryNumber()
 
       // 6. 匹配业务员（轮询逻辑）
       const targetRep = await this.findBestSalesperson(
@@ -92,6 +96,7 @@ export class InquiryService {
         ctx,
         tx
       );
+
 
       // 7. 创建询价主表
       const [newInquiry] = await tx
@@ -104,20 +109,25 @@ export class InquiryService {
           customerPhone: body.customerPhone,
           customerWhatsapp: body.customerWhatsapp,
           status: "pending",
+
           siteProductId: siteProduct.id,
-          siteSkuId: siteSku.id,
-          productName: body.productName,
-          productDescription: body.productDesc,
+          siteSkuId: siteSku!.id,
+
+
+          productName: siteProduct.siteName,
+          productDescription: siteProduct.siteDescription,
+
           quantity: body.quantity,
           price: siteSku.price,
           paymentMethod: body.paymentMethod,
           customerRequirements: body.customerRemarks,
-          masterCategoryId: masterCategoryIds[0] || null, // 用于后续匹配
-          ownerId: targetRep?.userId || null, // 分配给业务员
-          isPublic: !targetRep, // 没匹配到业务员则进公海
+          masterCategoryId: masterCategoryIds[0], // 用于后续匹配
+
+          ownerId: targetRep?.userId, // 分配给业务员
+          isPublic: !!targetRep,
           siteId,
           tenantId,
-          createdBy: targetRep?.userId || null,
+          createdBy: targetRep?.userId,
         })
         .returning();
 
@@ -166,10 +176,6 @@ export class InquiryService {
     body: typeof InquiryContract.Create.static,
     ctx: ServiceContext
   ) {
-    const { site } = ctx;
-
-    const siteId = site.id;
-
     // 获取站点商品
     const siteProduct = await db.query.siteProductTable.findFirst({
       where: {
@@ -182,6 +188,11 @@ export class InquiryService {
 
     if (!siteProduct) {
       throw new HttpError.BadRequest("Product not found in this site");
+    }
+
+    // 如果没有提供 siteSkuId，返回空值（支持没有 SKU 的商品）
+    if (!body.siteSkuId) {
+      return { siteProduct, siteSku: null, skuMediaMainID: undefined };
     }
 
     // 获取站点SKU
@@ -206,6 +217,16 @@ export class InquiryService {
     const skuMediaMainID =
       body.skuMediaId ||
       siteSku.sku?.media.sort((a, b) => a.sortOrder - b.sortOrder)?.[0].id;
+
+    if (!skuMediaMainID) {
+      throw new HttpError.BadRequest("SKU has no media");
+    }
+    if (!siteSku.sku?.media.find((m) => m.id === skuMediaMainID)) {
+      throw new HttpError.BadRequest("SKU media not found");
+    }
+    if (!siteSku.sku?.media.find((m) => m.id === skuMediaMainID)) {
+      throw new HttpError.BadRequest("SKU media not found");
+    }
 
     return { siteProduct, siteSku, skuMediaMainID };
   }
@@ -293,6 +314,9 @@ export class InquiryService {
       const timeB = b.lastAssignedAt ? b.lastAssignedAt.getTime() : 0;
       return timeA - timeB;
     });
+    if (sorted.length === 0 || !sorted) {
+      throw new HttpError.BadRequest("No active salesperson found");
+    }
 
     return sorted[0]; // 返回最闲的业务员
   }
@@ -517,7 +541,7 @@ export class InquiryService {
         : null,
 
       // Terms (报价项) - 使用第一个 SKU 信息填充第一行
-      termsCode1: siteSku.id || null,
+      termsCode1: siteSku!.id || null,
       termsDesc1: inquiry.productDescription || siteProduct.product?.name || "",
       termsUnits1: "pcs",
       termsUsd1: inquiry.price ? String(inquiry.price) : "",

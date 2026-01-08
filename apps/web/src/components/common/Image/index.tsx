@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCurrentMediaQuery } from "@/hooks/api/meida-hook";
+import { useCurrentMediaDetail } from "@/hooks/api/meida-hook";
 import { cn } from "@/lib/utils";
 
 interface ImageProps {
@@ -59,7 +59,7 @@ export const ImageComponent: React.FC<ImageProps> = ({
   const [isImgLoading, setIsImgLoading] = useState(true);
 
   // 确保传入字符串，避免 hook 报错
-  const { data: imageUrl, isLoading: isQueryLoading } = useCurrentMediaQuery(
+  const { data: imageUrl, isLoading: isQueryLoading } = useCurrentMediaDetail(
     String(imageId || "")
   );
 

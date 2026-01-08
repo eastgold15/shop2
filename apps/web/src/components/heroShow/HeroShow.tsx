@@ -4,7 +4,7 @@ import type React from "react";
 import { ImageComponent } from "@/components/common/Image";
 import {
   type HeroCardListRes,
-  useCurrentHeroCardsQuery,
+  useCurrentHeroCardsList,
 } from "@/hooks/api/hero-cards-hook";
 import { Skeleton } from "../ui/skeleton";
 import Shop from "./Shop";
@@ -38,13 +38,13 @@ const ContentBlock: React.FC<ContentBlockProps> = ({
 }) => (
   <div className={`group flex flex-col overflow-hidden ${bgColor}`}>
     {/* 上部：根据传入的children渲染 */}
-    <div className="relative aspect-[4/5] w-full overflow-hidden md:aspect-square">
+    <div className="relative aspect-4/5 w-full overflow-hidden md:aspect-square">
       {children}
     </div>
 
     {/* 下部：文字内容 - 固定高度 */}
     {title || description || buttonUrl ? (
-      <div className="flex h-[200px] flex-col justify-center p-8 md:h-[250px] md:p-12">
+      <div className="flex h-50 flex-col justify-center p-8 md:h-62.5 md:p-12">
         <div className="mb-6">
           {title && (
             <h3
@@ -79,7 +79,7 @@ const ContentBlock: React.FC<ContentBlockProps> = ({
  * 使用 ContentBlock 来简化结构
  */
 const HeroShowComponent: React.FC = () => {
-  const { data: heroCards, isLoading, error } = useCurrentHeroCardsQuery();
+  const { data: heroCards, isLoading, error } = useCurrentHeroCardsList();
   // 使用封装的 Skeleton
   if (isLoading) {
     return (
@@ -88,11 +88,8 @@ const HeroShowComponent: React.FC = () => {
           {/* 这里高度应该与 ContentBlock 的 [500+200]px 对应 */}
           {Array.from({ length: 4 }).map((_, i) => (
             <div className="flex flex-col" key={i}>
-              <Skeleton
-                className="h-[500px] md:h-[600px]"
-                variant="rectangle"
-              />
-              <div className="flex h-[200px] flex-col justify-center space-y-4 p-8 md:h-[250px]">
+              <Skeleton className="h-125 md:h-150" variant="rectangle" />
+              <div className="flex h-50 flex-col justify-center space-y-4 p-8 md:h-62.5">
                 <Skeleton className="h-8 w-3/4" />
                 <Skeleton className="h-4 w-1/2" />
                 <Skeleton className="h-10 w-32" />

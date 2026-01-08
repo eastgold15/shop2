@@ -2,15 +2,15 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useCurrentAdsQuery } from "@/hooks/api/ads-hook";
-import { cn } from "@/lib/utils";
 import { ImageComponent } from "@/components/common/Image";
+import { useCurrentAdsList } from "@/hooks/api/ads-hook";
+import { cn } from "@/lib/utils";
 import { Skeleton } from "../ui/skeleton";
 
 const Ad: React.FC = () => {
   const router = useRouter();
   // 拿到的是处理好的纯数组，不需要再判断 .data
-  const { data: ads, isLoading } = useCurrentAdsQuery();
+  const { data: ads, isLoading } = useCurrentAdsList();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false); // 新增：鼠标悬停暂停
 
@@ -28,7 +28,7 @@ const Ad: React.FC = () => {
   // 加载中显示大骨架屏
   if (isLoading) {
     return (
-      <section className="relative mt-[104px] w-full overflow-hidden md:mt-[136px]">
+      <section className="relative mt-26 w-full overflow-hidden md:mt-34">
         <Skeleton className="h-[60vh] w-full md:h-[85vh]" variant="rectangle" />
       </section>
     );
@@ -42,7 +42,7 @@ const Ad: React.FC = () => {
 
   return (
     <section
-      className="relative mt-[104px] w-full overflow-hidden md:mt-[136px]"
+      className="relative mt-26 w-full overflow-hidden md:mt-34"
       onMouseEnter={() => setIsPaused(true)} // 悬停暂停
       onMouseLeave={() => setIsPaused(false)} // 移开恢复
     >
