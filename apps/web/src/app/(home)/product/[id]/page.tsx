@@ -6,13 +6,13 @@ import Footer from "@/components/layout/Footer";
 import Navbar from "@/components/Navbar/Navbar";
 import ProductDetail from "@/components/product/ProductDetail";
 import { Skeleton } from "@/components/ui/skeleton"; // 假设你已经有这个组件
-import { useProductQuery } from "@/hooks/api/product-hook";
+import { useProductDetail } from "@/hooks/api/product-hook";
 
 export default function ProductPage() {
   const { id } = useParams();
   const productId = Array.isArray(id) ? id[0] : id;
 
-  const { data, isLoading, error } = useProductQuery(productId || "");
+  const { data, isLoading, error } = useProductDetail(productId || "");
 
   if (isLoading) {
     return (

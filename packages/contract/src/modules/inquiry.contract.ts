@@ -23,8 +23,9 @@ export const InquiryContract = {
       ]).properties
     ),
     t.Object({
-      productId: t.String(),
-      skuId: t.String(),
+      siteProductId: t.String(),
+      siteSkuId: t.String(),
+      skuMediaId: t.String(),
       quantity: t.Number(),
       productName: t.String(),
       productDesc: t.String(),

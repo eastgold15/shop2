@@ -3,8 +3,8 @@
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import CategoryGrid from "@/components/layout/CategoryGrid";
-import { useProductListQuery } from "@/hooks/api/product-hook";
-import { useCategoryDetailQuery } from "@/hooks/api/site-category-hook";
+import { useProductList } from "@/hooks/api/product-hook";
+import { useCategoryDetail } from "@/hooks/api/site-category-hook";
 
 export default function CategoryClient() {
   const searchParams = useSearchParams();
@@ -21,17 +21,14 @@ export default function CategoryClient() {
     data: categoryData,
     isLoading: isCategoryLoading,
     error: categoryError,
-  } = useCategoryDetailQuery(id || "", { enabled: isMounted && !!id });
+  } = useCategoryDetail(id || "", { enabled: isMounted && !!id });
 
   // 查询分类下的产品列表
   const {
     data: productListRes,
     isLoading: isProductLoading,
     error: productError,
-  } = useProductListQuery(
-    { categoryId: id || "" },
-    { enabled: isMounted && !!id }
-  );
+  } = useProductList({ categoryId: id || "" }, { enabled: isMounted && !!id });
 
   // loading 状态聚合
   const isLoading = !isMounted || isCategoryLoading || isProductLoading;

@@ -16,3 +16,7 @@ export const heroCardService = new HeroCardService();
 
 import { SiteCategoryService } from "./site-category.service";
 export const siteCategoryService = new SiteCategoryService();
+
+
+import { InquiryService } from "./inquiry.service";
+export const inquiryService = new InquiryService();

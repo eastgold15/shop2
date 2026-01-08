@@ -374,7 +374,7 @@ export const mediaTable = p.pgTable("media", {
   status: p.boolean("status").notNull().default(true),
   thumbnailUrl: p.text("thumbnail_url"),
   mediaType: mediaTypeEnum("media_type").default("image").notNull(),
-
+  sortOrder: p.integer("sort_order").notNull().default(0),
   // 媒体文件是核心资产，使用 standardCols，可在多个站点复用
   ...standardCols,
 });

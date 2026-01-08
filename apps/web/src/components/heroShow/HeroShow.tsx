@@ -1,11 +1,11 @@
 "use client";
 import Link from "next/link";
 import type React from "react";
+import { ImageComponent } from "@/components/common/Image";
 import {
-  type HeroCardRes,
+  type HeroCardListRes,
   useCurrentHeroCardsQuery,
 } from "@/hooks/api/hero-cards-hook";
-import { ImageComponent } from "@/components/common/Image";
 import { Skeleton } from "../ui/skeleton";
 import Shop from "./Shop";
 
@@ -147,7 +147,7 @@ const HeroShowComponent: React.FC = () => {
             );
           }
 
-          const card = item as HeroCardRes;
+          const card = item as HeroCardListRes[0];
           return (
             <ContentBlock
               key={card.id}

@@ -16,7 +16,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useInquiryMutation } from "@/hooks/api/inquiry-hook";
 import {
   type ProductDetailRes,
-  useProductListQuery,
+  useProductList,
 } from "@/hooks/api/product-hook";
 import { cn } from "@/lib/utils";
 import { InquiryForm, type InquiryFormValues } from "./InquiryForm"; // 导入上面的组件
@@ -50,7 +50,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ product }) => {
   // 逻辑：获取当前产品的第一个分类ID
   const categoryId = product.siteCategory?.[0]?.categoryId;
 
-  const { data: relatedData } = useProductListQuery(
+  const { data: relatedData } = useProductList(
     {
       categoryId,
       limit: 4, // 取4个，如果是自己就排除

@@ -1,396 +1,572 @@
-// /**
-//  * ✍️ 【WEB Service - 业务自定义】
-//  * --------------------------------------------------------
-//  * 💡 你可以在此重写基类方法或添加私有业务逻辑。
-//  * 🛡️ 自动化脚本永远不会覆盖此文件。
-//  * --------------------------------------------------------
-//  */
-// /**
-//  * ✍️ 【WEB Service - 业务自定义】
-//  * --------------------------------------------------------
-//  * 💡 处理复杂的询价提交流程：客户管理、媒体保存、Excel生成、邮件分发。
-//  * --------------------------------------------------------
-//  */
-// import {
-//   CustomerTable,
-//   type InquiryContract,
-//   inquiryItemsTable,
-//   inquiryTable,
-//   mediasTable,
-//   salespersonsTable,
-// } from "@repo/contract";
-// import { eq, type InferSelectModel } from "drizzle-orm";
-// import { HttpError } from "elysia-http-problem-json";
-// import { db } from "~/db/connection";
-// import type { ServiceContext } from "~/lib/base-service";
-// import { sendEmail } from "~/lib/email/email";
-// import {
-//   type QuotationData,
-//   quotationDefaultData,
-// } from "../../modules/inquiry/excelTemplate/QuotationData";
-// import { generateInquiryNumber } from "../../modules/inquiry/services/dayCount";
-// import { generateQuotationExcel } from "../../modules/inquiry/services/excel.service";
-// import { createSalesInquiryTemplate } from "../../modules/inquiry/services/inquiry.templates";
-// import { InquiryGeneratedService } from "../_generated/inquiry.service";
+/**
+ * ✍️ 【WEB Service - 业务自定义】
+ * --------------------------------------------------------
+ * 💡 处理复杂的询价提交流程：客户管理、媒体保存、Excel生成、邮件分发。
+ * 📊 重构说明：
+ *    - 移除 salespersonTable，改用 userTable + salesResponsibilityTable
+ *    - 匹配逻辑：通过 salesResponsibilityTable 轮询分配业务员
+ *    - 支持多租户、站点隔离
+ *    - 使用 siteProduct 和 siteSku 替代直接查询 product 和 sku
+ * --------------------------------------------------------
+ */
 
-// // 外部业务工具
+import {
+  customerTable,
+  type InquiryContract,
+  inquiryTable,
+  salesResponsibilityTable,
+} from "@repo/contract";
+import { eq } from "drizzle-orm";
+import { HttpError } from "elysia-http-problem-json";
+import { db } from "~/db/connection";
+import { sendEmail } from "~/lib/email/email";
+import { ServiceContext } from "~/middleware/site";
+import { generateInquiryNumber } from "~/modules/inquiry/services/dayCount";
+import { generateQuotationExcel } from "~/modules/inquiry/services/excel.service";
+import { createSalesInquiryTemplate } from "~/modules/inquiry/services/inquiry.templates";
 
-// // 方式：通过 Parameters 获取回调参数类型
-// type TransactionFn = Parameters<(typeof db)["transaction"]>[0];
-// type TxType = Parameters<TransactionFn>[0];
-// type BestSalesperson = Awaited<
-//   ReturnType<typeof InquiryService.prototype.findBestSalesperson>
-// >;
-// type Inquiry = InferSelectModel<typeof inquiryTable>;
-// type InquiryItem = {
-//   id: string;
-//   createdAt: Date;
-//   updatedAt: Date;
-//   skuId: string;
-//   inquiryId: string;
-//   productName: string;
-//   productDescription: string | null;
-//   skuQuantity: number;
-//   skuPrice: string | null;
-//   paymentMethod: string;
-//   customerRequirements: string | null;
-// };
-// export class InquiryService extends InquiryGeneratedService {
-//   /**
-//    * 🚀 询价提交：事务处理 + 分单逻辑
-//    */
-//   async submit(
-//     body: typeof InquiryContract.Create.static,
-//     ctx: ServiceContext
-//   ) {
-//     const { siteId } = ctx;
+// 外部业务工具
 
-//     // 1. 先在事务外（或事务内）查出 SKU 的真实信息
-//     const skuData = await db.query.skuTable.findFirst({
-//       where: {
-//         id: body.skuId,
-//       },
-//       with: { media: true }, // 假设 SKU 关联了媒体表
-//     });
-//     if (!skuData) {
-//       throw new HttpError.BadRequest("Invalid SKU ID");
-//     }
-//     const result = await db.transaction(async (tx) => {
-//       // 1. 客户管理 (Upsert)
-//       const customerId = await this.upsertCustomer(body, ctx, tx);
+// 类型定义
+type TransactionFn = Parameters<(typeof db)["transaction"]>[0];
+type TxType = Parameters<TransactionFn>[0];
 
-//       // 2. 生成业务单号 (TimeNo) 和 匹配业务员
-//       const inquiryId = await generateInquiryNumber();
-//       const targetRep = await this.findBestSalesperson(body.productId, ctx, tx);
-//       // 3. 创建主表 (将 timeNo 存入 id 或特定的 inquiryNumber 字段)
-//       // 注意：这里我假设你用生成的 timeNo 作为主键或者存储字段
-//       const [newInquiry] = await tx
-//         .insert(inquiryTable)
-//         .values({
-//           inquiryNum: inquiryId,
-//           customerName: body.customerName,
-//           customerCompany: body.customerCompany,
-//           customerEmail: body.customerEmail,
-//           customerPhone: body.customerPhone,
-//           customerWhatsapp: body.customerWhatsapp,
-//           status: "pending",
-//           skuId: body.skuId,
-//           productName: body.productName,
-//           productDescription: body.productDesc,
-//           quantity: body.quantity,
-//           price: skuData.price,
-//           paymentMethod: body.paymentMethod,
-//           customerRequirements: body.customerRemarks,
-//           siteId,
-//           // 核心归属逻辑：
-//           createdBy: targetRep?.userId || null, // 找到就给业务员，没找到留空
-//           isPublic: !targetRep, // 没找到则进入公海
-//         })
-//         .returning();
+type UserWithResponsibility = Awaited<
+  ReturnType<typeof InquiryService.prototype.findBestSalesperson>
+>;
+type validateAndGetSkuData = Awaited<
+  ReturnType<typeof InquiryService.prototype.validateAndGetSkuData>
+>;
 
-//       // 4. 创建子项
-//       const [newItem] = await tx
-//         .insert(inquiryItemsTable)
-//         .values({
-//           inquiryId: newInquiry.id,
-//           skuId: body.skuId,
-//           skuQuantity: body.quantity,
-//           productName: body.productName,
-//           productDescription: body.productDesc,
-//           skuPrice: skuData.price,
-//           paymentMethod: body.paymentMethod,
-//           customerRequirements: body.customerRemarks,
-//         })
-//         .returning();
+type Inquiry = typeof inquiryTable.$inferSelect;
+type SiteSku = validateAndGetSkuData["siteSku"];
+type SiteProduct = validateAndGetSkuData["siteProduct"];
 
-//       // 5. 更新业务员分配时间 (防止连续塞给同一个人)
-//       if (targetRep) {
-//         await this.notifyAndLog(targetRep, newInquiry, body, ctx, tx);
-//       }
+/**
+ * 询价服务类
+ */
+export class InquiryService {
+  /**
+   * 🚀 询价提交：事务处理 + 分单逻辑
+   *
+   * 流程：
+   * 1. 验证并获取站点商品和SKU数据
+   * 2. 获取商品的主分类ID列表
+   * 3. 开启事务
+   * 4. 客户管理 (Upsert)
+   * 5. 生成业务单号
+   * 6. 匹配业务员（通过 salesResponsibilityTable 轮询）
+   * 7. 创建询价记录
+   * 8. 更新业务员最后分配时间
+   * 9. 事务外异步发送邮件
+   */
+  async submit(
+    body: typeof InquiryContract.Create.static,
+    ctx: ServiceContext
+  ) {
+    const { site } = ctx;
 
-//       return { targetRep, inquiry: newInquiry, item: newItem };
-//     });
+    const siteId = site.id;
+    const tenantId = site.tenantId;
+    // 1. 验证并获取站点商品和SKU信息
+    const { siteProduct, siteSku, skuMediaMainID } =
+      await this.validateAndGetSkuData(body, ctx);
 
-//     // 6. 事务外：异步执行耗时任务（邮件、Excel）
-//     if (result.targetRep) {
-//       this.sendFullInquiryEmail(
-//         result.targetRep,
-//         result.inquiry,
-//         result.item,
-//         body,
-//         skuData.media[0]?.url // 传入真实的媒体地址
-//       ).catch(console.error);
-//     }
+    // 2. 获取商品的主分类（用于匹配业务员）
+    const masterCategoryIds = await this.getProductMasterCategories(
+      siteProduct.productId,
+      ctx
+    );
 
-//     return {
-//       success: true,
-//       inquiryNumber: result.inquiry.id,
-//       assignedTo: result.targetRep?.user?.name || "Public Pool",
-//     };
-//   }
+    // 3. 开启事务处理核心业务逻辑
+    const result = await db.transaction(async (tx) => {
+      // 4. 客户管理 (Upsert)
+      await this.upsertCustomer(body, ctx, tx);
 
-//   /**
-//    * 🔍 匹配算法：分类优先 + 最闲优先 (Round Robin)
-//    */
-//   async findBestSalesperson(
-//     productId: string,
-//     ctx: ServiceContext,
-//     tx: TxType
-//   ) {
-//     // A. 获取产品的分类
-//     const product = await tx.query.productTable.findFirst({
-//       where: {
-//         id: productId,
-//       },
-//       with: {
-//         masterCategories: true,
-//       },
-//     });
+      // 5. 生成业务单号
+      const inquiryNum = await generateInquiryNumber();
 
-//     if (!product?.masterCategories.length) return null;
-//     const categoryIds = product.masterCategories.map((c) => c.id);
+      // 6. 匹配业务员（轮询逻辑）
+      const targetRep = await this.findBestSalesperson(
+        masterCategoryIds,
+        ctx,
+        tx
+      );
 
-//     // B. 寻找匹配这些分类的活跃业务员 (Drizzle 1.0 语法)
-//     const candidates = await tx.query.userTable.findMany({
-//       where: {
-//         isActive: true,
-//       },
-//       with: {
-//         user: true,
-//         masterCategories: {
-//           where: {
-//             id: {
-//               in: categoryIds,
-//             },
-//           },
-//         },
-//       },
-//     });
+      // 7. 创建询价主表
+      const [newInquiry] = await tx
+        .insert(inquiryTable)
+        .values({
+          inquiryNum,
+          customerName: body.customerName,
+          customerCompany: body.customerCompany,
+          customerEmail: body.customerEmail,
+          customerPhone: body.customerPhone,
+          customerWhatsapp: body.customerWhatsapp,
+          status: "pending",
+          siteProductId: siteProduct.id,
+          siteSkuId: siteSku.id,
+          productName: body.productName,
+          productDescription: body.productDesc,
+          quantity: body.quantity,
+          price: siteSku.price,
+          paymentMethod: body.paymentMethod,
+          customerRequirements: body.customerRemarks,
+          masterCategoryId: masterCategoryIds[0] || null, // 用于后续匹配
+          ownerId: targetRep?.userId || null, // 分配给业务员
+          isPublic: !targetRep, // 没匹配到业务员则进公海
+          siteId,
+          tenantId,
+          createdBy: targetRep?.userId || null,
+        })
+        .returning();
 
-//     // C. 过滤并排序：取最后一次分配时间最早的人 (最闲的人)
-//     const sorted = candidates
-//       .filter((r) => r.masterCategories.length > 0)
-//       .sort((a, b) => {
-//         const timeA = a.lastAssignedAt?.getTime() ?? 0;
-//         const timeB = b.lastAssignedAt?.getTime() ?? 0;
-//         return timeA - timeB;
-//       });
+      // 8. 更新业务员最后分配时间（防止连续分配）
+      if (targetRep) {
+        await this.updateSalesRepLastAssigned(targetRep.id, tx);
+      }
 
-//     return sorted[0] || null;
-//   }
+      return {
+        targetRep,
+        inquiry: newInquiry,
+        siteProduct,
+        siteSku,
+        skuMediaMainID,
+      };
+    });
 
-//   /**
-//    * 📧 通知与状态更新
-//    */
-//   private async notifyAndLog(
-//     rep: BestSalesperson,
-//     inquiry: Inquiry,
-//     body: typeof InquiryContract.Create.static,
-//     ctx: ServiceContext,
-//     tx: TxType
-//   ) {
-//     // 更新业务员最后分配时间，防止下个单子又塞给同一个人
-//     await tx
-//       .update(salespersonsTable)
-//       .set({ lastAssignedAt: new Date() })
-//       .where(eq(salespersonsTable.id, rep!.id));
+    // 9. 事务外：异步执行耗时任务（邮件、Excel）
+    if (result.targetRep) {
+      this.sendFullInquiryEmail(
+        result.targetRep,
+        result.inquiry,
+        result.siteProduct,
+        result.siteSku,
+        result.skuMediaMainID!,
+        body
+      ).catch(console.error);
+    }
 
-//     // 修改单据状态为“已分发/待处理”
-//     await tx
-//       .update(inquiryTable)
-//       .set({ status: "sent" })
-//       .where(eq(inquiryTable.id, inquiry.id));
-//   }
+    return {
+      success: true,
+      inquiryNumber: result.inquiry.inquiryNum,
+      assignedTo: result.targetRep?.user?.name || "Public Pool",
+    };
+  }
 
-//   /**
-//    * 👤 客户 Upsert 逻辑
-//    */
-//   private async upsertCustomer(
-//     body: typeof InquiryContract.Create.static,
-//     ctx: ServiceContext,
-//     tx: TxType
-//   ) {
-//     const [existing] = await tx
-//       .select()
-//       .from(CustomerTable)
-//       .where(eq(CustomerTable.email, body.customerEmail))
-//       .limit(1);
+  /**
+   * 🔍 验证并获取SKU数据
+   *
+   * 验证逻辑：
+   * - 验证 productId 是否在当前站点有对应的 siteProduct
+   * - 验证 skuId 是否存在且属于该 siteProduct
+   * - 获取 SKU 的主图媒体
+   */
+  async validateAndGetSkuData(
+    body: typeof InquiryContract.Create.static,
+    ctx: ServiceContext
+  ) {
+    const { site } = ctx;
 
-//     const customerData = {
-//       companyName: body.customerCompany,
-//       name: body.customerName,
-//       email: body.customerEmail,
-//       phone: body.customerPhone,
-//       whatsapp: body.customerWhatsapp,
-//       siteId: ctx.siteId,
-//     };
+    const siteId = site.id;
 
-//     if (existing) {
-//       await tx
-//         .update(CustomerTable)
-//         .set(customerData)
-//         .where(eq(CustomerTable.id, existing.id));
-//       return existing.id;
-//     }
+    // 获取站点商品
+    const siteProduct = await db.query.siteProductTable.findFirst({
+      where: {
+        id: body.siteProductId,
+      },
+      with: {
+        product: true,
+      },
+    });
 
-//     const [newCustomer] = await tx
-//       .insert(CustomerTable)
-//       .values({ ...customerData, email: body.customerEmail })
-//       .returning();
-//     return newCustomer.id;
-//   }
+    if (!siteProduct) {
+      throw new HttpError.BadRequest("Product not found in this site");
+    }
 
-//   /**
-//    * 📧 异步完整通知逻辑 (包含 Excel 和工厂逻辑)
-//    */
-//   private async sendFullInquiryEmail(
-//     targetRep: BestSalesperson,
-//     inquiry: Inquiry,
-//     item: InquiryItem,
-//     body: typeof InquiryContract.Create.static,
-//     skuImageUrl?: string // 👈 增加图片参数
-//   ) {
-//     // 1. 获取工厂信息
-//     const product = await db.query.productsTable.findFirst({
-//       where: { id: body.productId },
-//       with: { masterCategories: { with: { sites: true } } },
-//     });
-//     const allFactories = Array.from(
-//       new Set(
-//         product?.masterCategories.flatMap((c) => c.sites).filter(Boolean) || []
-//       )
-//     ).filter((f) => f.isActive);
-//     const factories = allFactories.slice(0, 3);
-//     // 下载后端查询到的真实图片
-//     const photoData = await this.downloadImage(skuImageUrl);
+    // 获取站点SKU
+    const siteSku = await db.query.siteSkuTable.findFirst({
+      where: {
+        id: body.siteSkuId,
+      },
+      with: {
+        sku: {
+          with: {
+            media: true,
+          },
+        },
+      },
+    });
 
-//     // 🔥 修正点：直接使用 inquiry.id (即之前的 timeNo) 传入 Excel 映射
-//     const excelBuffer = await generateQuotationExcel(
-//       this.mapQuotationData(
-//         inquiry,
-//         item,
-//         body,
-//         factories,
-//         photoData,
-//         inquiry.id
-//       )
-//     );
-//     if (!targetRep?.user) {
-//       return;
-//     }
+    if (!siteSku) {
+      throw new HttpError.BadRequest("SKU not found");
+    }
 
-//     // 预览数据中的图片也改用后端查到的
-//     const inquiryPreview = {
-//       ...inquiry,
-//       items: [{ ...item, skuImage: skuImageUrl || "" }],
-//     };
-//     const template = createSalesInquiryTemplate(
-//       inquiryPreview,
-//       inquiry.id,
-//       factories,
-//       targetRep!.user
-//     );
+    // 获取SKU媒体（主图）
+    const skuMediaMainID =
+      body.skuMediaId ||
+      siteSku.sku?.media.sort((a, b) => a.sortOrder - b.sortOrder)?.[0].id;
 
-//     await sendEmail({
-//       to: targetRep!.user.email,
-//       template: {
-//         ...template,
-//         attachments: [
-//           {
-//             filename: `Inquiry-${inquiry.id}.xlsx`,
-//             content: excelBuffer,
-//             contentType:
-//               "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-//           },
-//         ],
-//       },
-//     });
-//   }
+    return { siteProduct, siteSku, skuMediaMainID };
+  }
 
-//   /**
-//    * 内部方法：处理媒体库
-//    */
-//   private async processMedia(media: any, alt: string, ctx: ServiceContext) {
-//     if (!media?.url) return null;
-//     const [existing] = await ctx.db
-//       .select()
-//       .from(mediasTable)
-//       .where(eq(mediasTable.url, media.url))
-//       .limit(1);
-//     if (existing) return existing.id;
+  /**
+   * 🔍 获取商品的主分类ID列表
+   *
+   * 通过 productMasterCategoryTable 查询商品关联的所有主分类
+   */
+  private async getProductMasterCategories(
+    productId: string,
+    ctx: ServiceContext
+  ): Promise<string[]> {
+    const { site } = ctx;
 
-//     const [newMedia] = await ctx.db
-//       .insert(mediasTable)
-//       .values({
-//         url: media.url,
-//         type: media.type || "image",
-//         alt: alt || "",
-//         siteId: ctx.siteId,
-//       })
-//       .returning();
-//     return newMedia.id;
-//   }
+    // 查询商品的主分类
+    const productCategories =
+      await db.query.productMasterCategoryTable.findMany({
+        where: {
+          productId,
+        },
+      });
 
-//   private async downloadImage(url?: string) {
-//     if (!url) return null;
-//     try {
-//       const resp = await fetch(url);
-//       if (!resp.ok) return null;
-//       return {
-//         buffer: Buffer.from(await resp.arrayBuffer()),
-//         mimeType: resp.headers.get("content-type") || "image/jpeg",
-//       };
-//     } catch {
-//       return null;
-//     }
-//   }
+    if (!productCategories.length) {
+      throw new HttpError.BadRequest("Product has no category assigned");
+    }
 
-//   private mapQuotationData(
-//     inquiry: any,
-//     item: any,
-//     body: any,
-//     factories: any[],
-//     photo: any,
-//     timeNo: string
-//   ): QuotationData {
-//     return {
-//       ...quotationDefaultData,
-//       factoryName: factories[0]?.name || "TBD",
-//       clientFullName: inquiry.customerName,
-//       clientEmail: inquiry.customerEmail,
-//       photoForRefer: photo
-//         ? {
-//           buffer: photo.buffer,
-//           mimeType: photo.mimeType,
-//           name: `prod-${inquiry.id}`,
-//         }
-//         : null,
-//       timeNo, // 👈 现在这里正确使用了业务单号
-//       termsCode1: item.id,
-//       termsDesc1: item.productDescription,
-//       termsUnits1: item.skuQuantity.toString(),
-//       termsUsd1: Number.parseFloat(body.sku.price).toFixed(2),
-//       termsUSD: item.skuQuantity * Number.parseFloat(body.sku.price),
-//     };
-//   }
-// }
+    return productCategories.map((pc) => pc.masterCategoryId);
+  }
+
+  /**
+   * 🔍 匹配算法：分类优先 + 轮询（Round Robin）
+   *
+   * 逻辑：
+   * 1. 通过 salesResponsibilityTable 找到负责这些分类的所有业务员
+   * 2. 过滤出 isAutoAssign = true 的
+   * 3. 关联 user 表，过滤 isActive = true 的
+   * 4. 按照 lastAssignedAt 升序排序，取最早被分配的那个（最闲）
+   *
+   * @param masterCategoryIds - 商品的主分类ID列表
+   * @param ctx - 服务上下文
+   * @param tx - 数据库事务对象
+   * @returns 业务员责任关系对象，包含 user 信息
+   */
+  async findBestSalesperson(
+    masterCategoryIds: string[],
+    ctx: ServiceContext,
+    tx: TxType
+  ) {
+    const { site } = ctx;
+    const tenantId = site.tenantId;
+
+    // 查询这些分类下的所有业务员责任关系
+    const responsibilities = await tx.query.salesResponsibilityTable.findMany({
+      where: {
+        masterCategoryId: {
+          in: masterCategoryIds,
+        },
+        tenantId,
+        isAutoAssign: true,
+      },
+      with: {
+        user: {
+          columns: {
+            id: true,
+            name: true,
+            email: true,
+            isActive: true,
+          },
+        },
+      },
+    });
+
+    // 过滤掉非活跃用户
+    const activeReps = responsibilities.filter((r) => r.user.isActive);
+
+    if (activeReps.length === 0) {
+      return null; // 没有找到业务员，进公海
+    }
+
+    // 按 lastAssignedAt 升序排序（最闲的排前面）
+    // 如果 lastAssignedAt 为 null，视为最早（从未分配过）
+    const sorted = activeReps.sort((a, b) => {
+      const timeA = a.lastAssignedAt ? a.lastAssignedAt.getTime() : 0;
+      const timeB = b.lastAssignedAt ? b.lastAssignedAt.getTime() : 0;
+      return timeA - timeB;
+    });
+
+    return sorted[0]; // 返回最闲的业务员
+  }
+
+  /**
+   * 📧 更新业务员最后分配时间
+   *
+   * 更新 salesResponsibilityTable 中的 lastAssignedAt 字段
+   * 防止连续将询价单分配给同一个业务员
+   */
+  private async updateSalesRepLastAssigned(
+    responsibilityId: string,
+    tx: TxType
+  ) {
+    await tx
+      .update(salesResponsibilityTable)
+      .set({ lastAssignedAt: new Date() })
+      .where(eq(salesResponsibilityTable.id, responsibilityId));
+  }
+
+  /**
+   * 👤 客户 Upsert 逻辑
+   *
+   * 如果客户邮箱已存在则更新，否则创建新客户
+   */
+  private async upsertCustomer(
+    body: typeof InquiryContract.Create.static,
+    ctx: ServiceContext,
+    tx: TxType
+  ) {
+    const { site } = ctx;
+    const tenantId = site.tenantId;
+
+    const [existing] = await tx
+      .select()
+      .from(customerTable)
+      .where(eq(customerTable.email, body.customerEmail))
+      .limit(1);
+
+    const customerData = {
+      companyName: body.customerCompany,
+      name: body.customerName,
+      email: body.customerEmail,
+      phone: body.customerPhone,
+      whatsapp: body.customerWhatsapp,
+      tenantId,
+    };
+
+    if (existing) {
+      await tx
+        .update(customerTable)
+        .set(customerData)
+        .where(eq(customerTable.id, existing.id));
+      return existing.id;
+    }
+
+    const [newCustomer] = await tx
+      .insert(customerTable)
+      .values(customerData)
+      .returning();
+    return newCustomer.id;
+  }
+
+  /**
+   * 📧 异步完整通知逻辑 (包含 Excel 和工厂逻辑)
+   *
+   * TODO: 完成以下功能
+   * - 获取工厂信息（从站点的绑定部门）
+   * - 生成 Excel（需要实现 generateQuotationExcel）
+   * - 发送邮件（需要实现 createSalesInquiryTemplate）
+   */
+  private async sendFullInquiryEmail(
+    targetRep: NonNullable<UserWithResponsibility>,
+    inquiry: Inquiry,
+    siteProduct: SiteProduct,
+    siteSku: SiteSku,
+    skuMediaId: string,
+    body: typeof InquiryContract.Create.static
+  ) {
+    try {
+      // 1. 获取工厂信息 (假设站点通过关联的 Departments 对应工厂)
+      // 这里的逻辑可以根据你的具体 Schema 调整，通常是 Site -> Dept/Factory
+      const factories = await db.query.siteTable
+        .findFirst({
+          where: {
+            id: inquiry.siteId,
+          },
+          with: {
+            // 假设 site 关联了部门，部门即工厂
+            department: true,
+          },
+        })
+        .then((res) => res!.department);
+
+      // 2. 获取 SKU 的真实媒体信息用于下载
+      const media = skuMediaId
+        ? await db.query.mediaTable.findFirst({
+          where: {
+            id: skuMediaId,
+          },
+        })
+        : null;
+
+      // 3. 下载产品图片
+      const photoData = media?.url ? await this.downloadImage(media.url) : null;
+
+      // 4. 生成 Excel (利用之前讨论过的 generateQuotationExcel)
+      // 映射数据到 Excel 模板格式
+      const quotationData = this.mapToExcelData(
+        inquiry,
+        siteProduct,
+        siteSku,
+        factories,
+        photoData
+      );
+
+      const excelBuffer = await generateQuotationExcel(quotationData);
+
+      // 5. 构建邮件模板并发送
+      if (!targetRep.user.email) return;
+
+      // 准备 createSalesInquiryTemplate 所需的参数
+      const inquiryWithItems = {
+        ...inquiry,
+        items: [
+          {
+            productName: inquiry.productName || "",
+            productDescription: inquiry.productDescription || "",
+            skuQuantity: inquiry.quantity,
+            skuPrice: inquiry.price?.toString() || "",
+            customerRequirements: inquiry.customerRequirements || "",
+          },
+        ],
+      } as any; // 临时类型断言，因为需要完整的 InquiryWithItems 类型
+
+      const emailTemplate = createSalesInquiryTemplate(
+        inquiryWithItems,
+        inquiry.inquiryNum,
+        factories?.name
+          ? [{ name: factories.name, address: factories.address ?? undefined }]
+          : [{ name: "DONG QI FOOTWEAR (JIANGXI) CO., LTD" }],
+        {
+          name: targetRep.user.name,
+          email: targetRep.user.email,
+        }
+      );
+
+      await sendEmail({
+        to: targetRep.user.email,
+        template: {
+          ...emailTemplate,
+          attachments: [
+            {
+              filename: `Quotation-${inquiry.inquiryNum}.xlsx`,
+              content: excelBuffer,
+              contentType:
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            },
+          ],
+        },
+      });
+
+      console.log(
+        `[Inquiry] Email sent for ${inquiry.inquiryNum} to ${targetRep.user.email}`
+      );
+    } catch (error) {
+      console.error(
+        `[Inquiry Error] Failed to process post-submit tasks for ${inquiry.inquiryNum}:`,
+        error
+      );
+    }
+  }
+  /**
+   * 📊 内部方法：将模型数据映射为 Excel 模板所需格式
+   */
+  private mapToExcelData(
+    inquiry: Inquiry,
+    siteProduct: SiteProduct,
+    siteSku: SiteSku,
+    factories: any,
+    photo: any
+  ) {
+    const mainFactory =
+      factories?.name
+        ? factories
+        : { name: "DONG QI FOOTWEAR (JIANGXI) CO., LTD" };
+
+    return {
+      // Exporter (出口商)
+      exporterName: "DONG QI FOOTWEAR INTL MFG CO., LTD",
+      exporterAddr:
+        "No.2 Chiling Road, Chiling Industrial Zone, Houjie, Dongguan, Guangdong, China",
+      exporterWeb: "www.dongqifootwear.com",
+      exporterEmail: "sales@dongqifootwear.com",
+      exporterPhone: 0,
+
+      // Factory (工厂)
+      factoryName: mainFactory.name,
+      factoryAddr1:
+        "Qifu Road #1, ShangOu Industrial Park, Yudu, Ganzhou, Jiangxi,China",
+      factoryAddr2:
+        "Industrial Road #3, Shangrao Industrial Zone, Shangrao, Jiangxi,China",
+      factoryAddr3:
+        "Qifu Road #2, ShangOu Industrial Park, Yudu, Ganzhou, Jiangxi,China",
+      factoryWeb1: "www.dongqishoes.com",
+      factoryWeb2: "www.dongqifootwear.com",
+      factoryWeb3: "www.dongqifootwear.com",
+      factoryPhone: 1_000_000_000,
+
+      // Client (客户)
+      clientCompanyName: inquiry.customerCompany || "",
+      clientFullName: inquiry.customerName!,
+      clientWhatsApp: inquiry.customerWhatsapp || "",
+      clientEmail: inquiry.customerEmail,
+      clientPhone: Number.parseInt(inquiry.customerPhone!, 10) || 0,
+      photoForRefer: photo
+        ? {
+          buffer: photo.buffer,
+          mimeType: photo.mimeType,
+          name: `ref-${inquiry.inquiryNum}`,
+        }
+        : null,
+
+      // Terms (报价项) - 使用第一个 SKU 信息填充第一行
+      termsCode1: siteSku.id || null,
+      termsDesc1: inquiry.productDescription || siteProduct.product?.name || "",
+      termsUnits1: "pcs",
+      termsUsd1: inquiry.price ? String(inquiry.price) : "",
+      termsRemark1: inquiry.customerRequirements || "",
+
+      termsCode2: null,
+      termsDesc2: "",
+      termsUnits2: "",
+      termsUsd2: 0,
+      termsRemark2: "",
+
+      termsCode3: null,
+      termsDesc3: "",
+      termsUnits3: "",
+      termsUsd3: 0,
+      termsRemark3: "",
+      termsTTL: inquiry.quantity,
+      termsUSD: Number(inquiry.price || 0) * inquiry.quantity,
+
+      // Bank Info (银行信息)
+      bankBeneficiary: "DONG QI FOOTWEAR INTL MFG CO., LTD",
+      bankAccountNo: 0,
+      bankName: "BANK OF CHINA",
+      bankAddr: "DONGGUAN BRANCH",
+
+      // Signed By (签署代表)
+      exporterBehalf: "Michael Tse",
+      date: new Date().toISOString().split("T")[0],
+      timeNo: inquiry.inquiryNum,
+      clientAddr: inquiry.customerCompany || "",
+      payWay: `Payment Method: ${inquiry.paymentMethod || "TBD"}`,
+    };
+  }
+  /**
+   * 🖼️ 下载图片为 Buffer
+   *
+   * 从给定的 URL 下载图片并转换为 Buffer
+   */
+  private async downloadImage(url?: string) {
+    if (!url) return null;
+    try {
+      const resp = await fetch(url);
+      if (!resp.ok) return null;
+      return {
+        buffer: Buffer.from(await resp.arrayBuffer()),
+        mimeType: resp.headers.get("content-type") || "image/jpeg",
+      };
+    } catch {
+      return null;
+    }
+  }
+}

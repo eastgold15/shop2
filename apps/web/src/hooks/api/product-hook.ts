@@ -1,40 +1,22 @@
 "use client";
+import { Treaty } from "@elysiajs/eden";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { rpc } from "@/lib/rpc";
 
-export interface ProductListRes {
-  items: Item[];
-  meta: Meta;
-}
-interface Meta {
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
-interface Item {
-  id: string;
-  name: string;
-  price: string;
-  status: number;
-  createdAt: string;
-  mainImageUrl: string;
-  hasVideo: boolean;
-}
+// 类型定义
+export type ProductListRes = NonNullable<Treaty.Data<typeof rpc.products.get>>;
+
 /**
  * 获取商品列表
  */
-/**
- * 获取商品列表
- */
-export function useProductListQuery(
+export function useProductList(
   params: {
     page?: number;
     limit?: number;
     categoryId?: string;
     name?: string;
-  } = {}, // 给个默认空对象
+  } = {},
   options?: { enabled?: boolean }
 ) {
   return useQuery({
@@ -133,7 +115,7 @@ interface Media {
 /**
  * 获取单个商品详情
  */
-export function useProductQuery(id: string) {
+export function useProductDetail(id: string) {
   return useQuery({
     queryKey: ["product", id],
     queryFn: async () => {
@@ -142,13 +124,10 @@ export function useProductQuery(id: string) {
       if (error) {
         toast.error(error.value?.message || "获取商品详情失败");
       }
-      return data!;
+      return data! as ProductDetailRes;
     },
     enabled: !!id,
     staleTime: 5 * 60 * 1000, // 5分钟缓存
     retry: 2,
   });
 }
-// // 👇 新增：导出 product 数据的类型（自动推导！）
-// type ComProduct = Awaited<ReturnType<typeof useProductQuery>>["data"];
-// export type BackendProduct = ComProduct;

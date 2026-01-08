@@ -126,6 +126,11 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.siteTable.boundDeptId,
       to: r.departmentTable.id,
     }),
+    department: r.one.departmentTable({
+      from: r.siteTable.boundDeptId,
+      to: r.departmentTable.id,
+      optional: false,
+    }),
     // 站点内容
     siteConfig: r.many.siteConfigTable({
       from: r.siteTable.id,
@@ -457,6 +462,7 @@ export const relations = defineRelations(schema, (r) => ({
     user: r.one.userTable({
       from: r.salesResponsibilityTable.userId,
       to: r.userTable.id,
+      optional: false,
     }),
     masterCategory: r.one.masterCategoryTable({
       from: r.salesResponsibilityTable.masterCategoryId,

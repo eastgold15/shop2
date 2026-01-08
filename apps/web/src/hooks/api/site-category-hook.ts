@@ -1,31 +1,15 @@
+import { Treaty } from "@elysiajs/eden";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { queryKeys } from "@/lib/query/query-keys";
 import { rpc } from "@/lib/rpc";
 
-export interface SiteCategoryTreeRes {
-  id: string;
-  createdAt: string;
-  updatedAt: string;
-  name: string;
-  parentId?: any;
-  sortOrder: number;
-  siteId: string;
-  masterCategoryId?: any;
-  children?: Child[];
-}
-interface Child {
-  id: string;
-  createdAt: string;
-  updatedAt: string;
-  name: string;
-  parentId: string;
-  sortOrder: number;
-  siteId: string;
-  masterCategoryId?: any;
-}
+// 类型定义
+export type SiteCategoryListRes = NonNullable<
+  Treaty.Data<typeof rpc.sitecategories.get>
+>;
 
-export function useSiteCategoryQuery(options?: { enabled?: boolean }) {
+export function useSiteCategoryList(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: queryKeys.categories.list(),
     queryFn: async () => {
@@ -33,7 +17,7 @@ export function useSiteCategoryQuery(options?: { enabled?: boolean }) {
       if (error) {
         toast.error((error.value as any)?.message || "获取分类目录失败");
       }
-      return data!
+      return data! as SiteCategoryListRes;
     },
     staleTime: 5 * 60 * 1000, // 5分钟
     retry: 2,
@@ -41,6 +25,7 @@ export function useSiteCategoryQuery(options?: { enabled?: boolean }) {
     enabled: options?.enabled ?? true,
   });
 }
+
 
 export interface SiteCategoryDetailRes {
   id: string;
@@ -53,8 +38,7 @@ export interface SiteCategoryDetailRes {
   description?: string;
   masterCategoryId?: string;
 }
-
-export function useCategoryDetailQuery(
+export function useCategoryDetail(
   id: string,
   options?: { enabled?: boolean }
 ) {
@@ -67,7 +51,7 @@ export function useCategoryDetailQuery(
       }
       return data! as SiteCategoryDetailRes
     },
-    enabled: options?.enabled ?? true,
+    enabled: options?.enabled ?? !!id,
     staleTime: 5 * 60 * 1000, // 5分钟
     retry: 2,
     refetchOnWindowFocus: false,
