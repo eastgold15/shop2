@@ -1,9 +1,6 @@
 {
   "extends": "@repo/tsconfig/base.json",
   "compilerOptions": {
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
     "paths": {
       "~/*": [
         "./src/*"
@@ -12,18 +9,16 @@
         "./*"
       ]
     },
-    "strictNullChecks": true,
-    "incremental": true,
-    "tsBuildInfoFile": "./.cache/tsbuildinfo",
-    "skipLibCheck": true,
-    "noEmit": true,
-    // 1. 启用复合项目模式（核心配置）
-    "composite": true,
     // 2. 必须显式配置 outDir（composite 隐含约束）
     "outDir": "./dist",
+    "declarationMap": true,
+    "declaration": true,
+    "sourceMap": true,
+    // 1. 启用复合项目模式（核心配置）
+    "composite": true,
+    "incremental": true,
+    "skipLibCheck": true,
     "strict": true,
-    // 确保生成文件
-    "noEmitOnError": false
   },
   "include": [
     "src/**/*"

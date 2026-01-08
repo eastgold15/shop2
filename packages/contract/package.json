@@ -11,15 +11,15 @@
     }
   },
   "scripts": {
+    "build": "tsc -b",
     "type-check": "tsc --noEmit",
     "clean": "rm -rf dist .turbo",
-    "db:push": "bun x drizzle-kit push",
     "db:generate": "bun x drizzle-kit generate",
     "db:migrate": "bun x drizzle-kit migrate",
+    "db:push": "bun x drizzle-kit push",
     "db:studio": "bun x drizzle-kit studio",
     "seed": "bun run seed-complete.ts",
-    "seed:reset": "bun run reset-database.ts",
-    "build": "tsc -b --force"
+    "seed:reset": "bun run reset-database.ts"
   },
   "dependencies": {
     "drizzle-orm": "catalog:",
@@ -28,6 +28,7 @@
   },
   "devDependencies": {
     "@repo/tsconfig": "*",
+    "@types/bun": "catalog:",
     "@types/pg": "catalog:",
     "drizzle-kit": "catalog:",
     "tsx": "catalog:",

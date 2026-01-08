@@ -29,7 +29,6 @@ export const TemplateContract = {
       )
     ),
     name: TemplateInsertFields.name,
-    siteCategoryId: TemplateInsertFields.siteCategoryId, // 可选：不强制要求站点分类
     masterCategoryId: TemplateInsertFields.masterCategoryId,
   }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
@@ -48,7 +47,6 @@ export const TemplateContract = {
         )
       ),
       name: TemplateInsertFields.name,
-      siteCategoryId: TemplateInsertFields.siteCategoryId, // 可选：不强制要求站点分类
       masterCategoryId: TemplateInsertFields.masterCategoryId,
     })
   ),
