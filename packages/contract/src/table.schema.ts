@@ -590,7 +590,7 @@ export const siteCategoryTable = p.pgTable("site_category", {
     .references(() => masterCategoryTable.id, { onDelete: "set null" }),
 });
 // 站点商品分裂
-export const siteProductCategoryTable = p.pgTable(
+export const siteProductSiteCategoryTable = p.pgTable(
   "site_product_category_rel", // 明确是站点商品与站点分类的关系
   {
     // 🔗 改为关联 siteProductTable 的 ID

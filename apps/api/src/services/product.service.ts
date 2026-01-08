@@ -6,7 +6,9 @@ import {
   productTemplateTable,
   SiteProductContract,
   siteCategoryTable,
+  siteProductSiteCategoryTable,
   siteProductTable,
+  siteSkuTable,
   skuMediaTable,
   skuTable,
   templateKeyTable,
@@ -17,6 +19,7 @@ import {
   and,
   asc,
   eq,
+  exists,
   inArray,
   isNotNull,
   isNull,
@@ -26,7 +29,6 @@ import {
 } from "drizzle-orm";
 import { HttpError } from "elysia-http-problem-json";
 import { SiteSWithManageAble } from "~/db/utils";
-import { productSiteCategoryTable, siteSkuTable } from "./../../../../packages/contract/src/table.schema";
 import { type ServiceContext } from "../lib/type";
 
 export class ProductService {
@@ -41,7 +43,14 @@ export class ProductService {
     query: typeof SiteProductContract.ListQuery.static,
     ctx: ServiceContext
   ) {
-    const { page = 1, limit = 10, search, siteCategoryId, isVisible, isListed } = query;
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      siteCategoryId,
+      isVisible,
+      isListed,
+    } = query;
 
     const siteId = ctx.user.context.site.id;
     const siteType = ctx.user.context.site.siteType || "group";
@@ -65,9 +74,6 @@ export class ProductService {
         // 辅助字段：保留原厂数据，用于对比和调试
         originalName: productTable.name,
         originalDescription: productTable.description,
-
-        // 站点特有数据
-        siteCategoryId: siteProductTable.siteCategoryId,
         isVisible: siteProductTable.isVisible,
         isCustomized: sql<boolean>`${siteProductTable.id} IS NOT NULL`,
       })
@@ -118,8 +124,7 @@ export class ProductService {
         // 🔥 情况 A: 只查"已收录" (我的商品管理)
         // 逻辑：site_product 表里必须有记录
         conditions.push(isNotNull(siteProductTable.id));
-      }
-      else if (isListed === false || isListed === 'false') {
+      } else if (isListed === false || isListed === "false") {
         // 🔥 情况 B: 只查"未收录" (商品池/选品中心)
         // 逻辑：site_product 表里必须是 NULL
         conditions.push(isNull(siteProductTable.id));
@@ -140,21 +145,32 @@ export class ProductService {
 
     // 站点分类筛选
     if (siteCategoryId) {
-      // 集团站点：只筛选已配置该分类的商品
-      // 工厂站点：按配置的分类筛选
+      // 定义一个子查询：检查中间表是否存在对应的关联记录
+      const categoryCondition = exists(
+        ctx.db
+          .select()
+          .from(siteProductSiteCategoryTable)
+          .where(
+            and(
+              // 这里的 id 对应 siteProductTable.id
+              eq(
+                siteProductSiteCategoryTable.siteProductId,
+                siteProductTable.id
+              ),
+              eq(siteProductSiteCategoryTable.siteCategoryId, siteCategoryId)
+            )
+          )
+      );
+
       if (siteType === "factory") {
-        conditions.push(eq(siteProductTable.siteCategoryId, siteCategoryId));
+        conditions.push(categoryCondition);
       } else {
-        // 集团站点：需要 site_product 记录存在且分类匹配
+        // 集团站点：不仅要分类匹配，还要确保 siteProduct 记录本身存在（如果是 Left Join 的话）
         conditions.push(
-          and(
-            isNotNull(siteProductTable.id),
-            eq(siteProductTable.siteCategoryId, siteCategoryId)
-          )!
+          and(isNotNull(siteProductTable.id), categoryCondition)!
         );
       }
     }
-
     // 可见性筛选
     if (isVisible !== undefined) {
       if (siteType === "factory") {
@@ -173,8 +189,6 @@ export class ProductService {
       .where(and(...conditions))
       .limit(Number(limit))
       .offset((page - 1) * limit);
-
-
 
     // 获取商品ID列表
     const productIds = result.map((p) => p.id);
@@ -411,7 +425,7 @@ export class ProductService {
 
       // 🔥 获取该商品的规格定义
       const specs = product.templateId
-        ? (templateKeyMap.get(product.templateId) || [])
+        ? templateKeyMap.get(product.templateId) || []
         : [];
 
       return {
@@ -430,8 +444,6 @@ export class ProductService {
         createdAt: product.createdAt,
         updatedAt: product.updatedAt,
 
-        // 站点状态
-        siteCategoryId: product.siteCategoryId || null,
         isVisible: product.isVisible ?? true,
         isCustomized: product.isCustomized,
 
@@ -475,13 +487,28 @@ export class ProductService {
 
     // Join 逻辑复刻
     if (siteType === "factory") {
-      countQuery = countQuery.innerJoin(siteProductTable, and(eq(productTable.id, siteProductTable.productId), eq(siteProductTable.siteId, siteId))) as any;
+      countQuery = countQuery.innerJoin(
+        siteProductTable,
+        and(
+          eq(productTable.id, siteProductTable.productId),
+          eq(siteProductTable.siteId, siteId)
+        )
+      ) as any;
     } else {
-      countQuery = countQuery.leftJoin(siteProductTable, and(eq(productTable.id, siteProductTable.productId), eq(siteProductTable.siteId, siteId))) as any;
+      countQuery = countQuery.leftJoin(
+        siteProductTable,
+        and(
+          eq(productTable.id, siteProductTable.productId),
+          eq(siteProductTable.siteId, siteId)
+        )
+      ) as any;
     }
 
     // 模板 Join
-    countQuery = countQuery.leftJoin(productTemplateTable, eq(productTable.id, productTemplateTable.productId)) as any;
+    countQuery = countQuery.leftJoin(
+      productTemplateTable,
+      eq(productTable.id, productTemplateTable.productId)
+    ) as any;
 
     const [{ count }] = await countQuery.where(and(...conditions));
 
@@ -495,6 +522,7 @@ export class ProductService {
   /**
    * 创建商品（支持站点隔离和模板绑定）只能是工厂创建
    */
+
   public async create(
     body: SiteProductContract["Create"],
     ctx: ServiceContext
@@ -508,19 +536,21 @@ export class ProductService {
       siteName,
       siteDescription,
       seoTitle,
-      // 媒体字段
-      mediaIds, // 商品图片ID列表
-      mainImageId, // 主图ID
-      videoIds, // 视频ID列表
+      mediaIds,
+      mainImageId,
+      videoIds,
     } = body;
+
     // 1. 权限硬校验
     if (ctx.user.context.department.category.toUpperCase() !== "FACTORY") {
       throw new HttpError.Forbidden("只有工厂有权限创建商品库");
     }
+
     const siteId = ctx.user.context.site.id;
+    const tenantId = ctx.user.context.tenantId;
 
     return await ctx.db.transaction(async (tx) => {
-      // 2. 验证站点分类 (为了挂载到货架)
+      // 2. 验证站点分类
       const [siteCategory] = await tx
         .select()
         .from(siteCategoryTable)
@@ -533,121 +563,54 @@ export class ProductService {
         .limit(1);
 
       if (!siteCategory) {
-        throw new HttpError.NotFound(
-          `站点分类不存在${siteCategoryId}，站点ID:${siteId}`
-        );
+        throw new HttpError.NotFound("站点分类不存在或不属于当前站点");
       }
 
-      // 3. 验证模板 & 获取主分类归属 (🔥 核心修改)
+      // 3. 验证模板并获取 MasterCategory 归属
       let targetMasterCategoryId: string | null = null;
-
       if (templateId) {
         const [template] = await tx
-          .select() // Select All，包含 masterCategoryId
+          .select()
           .from(templateTable)
           .where(eq(templateTable.id, templateId))
           .limit(1);
 
-        if (!template) {
-          throw new HttpError.NotFound("指定的模板不存在");
-        }
-
-        // 从模板中提取主分类ID
+        if (!template) throw new HttpError.NotFound("指定的模板不存在");
         targetMasterCategoryId = template.masterCategoryId;
       } else {
-        // 💡 策略决策：如果没选模板，是否允许创建无主分类商品？
-        // 如果业务要求严格，这里可以
         throw new HttpError.BadRequest("必须选择商品模板");
       }
 
-      // 4. 创建商品主体 (SPU)
+      // 4. 创建商品主体 (SPU 资产层)
       const [product] = await tx
         .insert(productTable)
         .values({
-          name: siteName,
+          name: siteName, // 初始使用站点名作为标准名
           spuCode,
           description: siteDescription,
           status,
           units,
-          tenantId: ctx.user.context.tenantId,
+          tenantId,
           deptId: ctx.currentDeptId,
           createdBy: ctx.user.id,
         })
         .returning();
 
       // 5. 关联模板
-      if (templateId) {
-        await tx.insert(productTemplateTable).values({
-          productId: product.id,
-          templateId,
-        });
-      }
+      await tx.insert(productTemplateTable).values({
+        productId: product.id,
+        templateId: templateId!,
+      });
 
-      // 6. 关联主分类 (🔥 以前是靠 siteCategory，现在靠 template)
+      // 6. 关联主分类 (用于业务员分单逻辑)
       if (targetMasterCategoryId) {
         await tx.insert(productMasterCategoryTable).values({
           productId: product.id,
-          masterCategoryId: targetMasterCategoryId, // 使用模板绑定的主分类
-        });
-      }
-      // 7. 关联站点分类 (货架)
-      if (siteCategoryId) {
-        await tx.insert(productSiteCategoryTable).values({
-          productId: product.id,
-          siteCategoryId: siteCategory.id,
+          masterCategoryId: targetMasterCategoryId,
         });
       }
 
-      // 8. 关联媒体 (逻辑不变)
-      const allMediaIds = [...(mediaIds || []), ...(videoIds || [])];
-
-      if (allMediaIds.length > 0) {
-        // 验证媒体是否存在
-        const existingMedia = await tx
-          .select()
-          .from(mediaTable)
-          .where(inArray(mediaTable.id, allMediaIds));
-
-        const foundIds = existingMedia.map((m) => m.id);
-        const notFound = allMediaIds.filter((id) => !foundIds.includes(id));
-
-        if (notFound.length > 0) {
-          throw new HttpError.NotFound(`媒体 ID ${notFound.join(", ")} 不存在`);
-        }
-
-        // 构建媒体关联数据
-        const mediaRelations: any[] = [];
-
-        // 处理图片（sortOrder 从 0 开始）
-        if (mediaIds && mediaIds.length > 0) {
-          mediaIds.forEach((mediaId: string, index: number) => {
-            mediaRelations.push({
-              productId: product.id,
-              mediaId,
-              isMain: mediaId === mainImageId,
-              sortOrder: index,
-            });
-          });
-        }
-
-        // 处理视频（sortOrder 设为 -1）
-        if (videoIds && videoIds.length > 0) {
-          videoIds.forEach((mediaId: string, index: number) => {
-            mediaRelations.push({
-              productId: product.id,
-              mediaId,
-              isMain: false,
-              sortOrder: -1 - index, // -1, -2, -3... 保持顺序
-            });
-          });
-        }
-
-        if (mediaRelations.length > 0) {
-          await tx.insert(productMediaTable).values(mediaRelations);
-        }
-      }
-
-      // 9. 创建站点商品视图
+      // 7. 创建站点商品视图 (Site-Specific View)
       const [siteProduct] = await tx
         .insert(siteProductTable)
         .values({
@@ -655,11 +618,50 @@ export class ProductService {
           productId: product.id,
           siteName,
           siteDescription,
-          siteCategoryId,
           seoTitle,
           isVisible: true,
         })
         .returning();
+
+      // 8. 关联站点分类 (中间表 site_product_category_rel)
+      // 这里的表名请根据你的实际导出确认：siteProductSiteCategoryTable
+      if (siteCategoryId) {
+        await tx.insert(siteProductSiteCategoryTable).values({
+          siteProductId: siteProduct.id, // 🔥 关联的是 site_product 的 ID
+          siteCategoryId,
+        });
+      }
+
+      // 9. 关联媒体 (Images & Videos)
+      const allMediaIds = [...(mediaIds || []), ...(videoIds || [])];
+      if (allMediaIds.length > 0) {
+        // 构建媒体关联数据
+        const mediaRelations: any[] = [];
+
+        // 图片
+        mediaIds?.forEach((mediaId, index) => {
+          mediaRelations.push({
+            productId: product.id,
+            mediaId,
+            isMain: mediaId === mainImageId,
+            sortOrder: index,
+          });
+        });
+
+        // 视频
+        videoIds?.forEach((mediaId, index) => {
+          mediaRelations.push({
+            productId: product.id,
+            mediaId,
+            isMain: false,
+            sortOrder: -1 - index,
+          });
+        });
+
+        if (mediaRelations.length > 0) {
+          await tx.insert(productMediaTable).values(mediaRelations);
+        }
+      }
 
       return {
         product,
@@ -669,7 +671,7 @@ export class ProductService {
   }
 
   /**
-   * 更新商品（全量关联更新）分两种一种是全局商品，一种是站点商品
+   * 更新商品（全量关联更新）
    */
   public async update(
     productId: string,
@@ -677,17 +679,13 @@ export class ProductService {
     ctx: ServiceContext
   ) {
     const {
-      // 站点视图字段（集团站可编辑）
       siteName,
       siteDescription,
       seoTitle,
-      siteCategoryId,
-
+      siteCategoryId, // 站点分类ID
       spuCode,
-
       status,
       units,
-      // 源头控制字段 (集团站无权修改，传了也白传)
       templateId,
       mediaIds,
       mainImageId,
@@ -696,112 +694,134 @@ export class ProductService {
 
     const siteType = ctx.user.context.site.siteType || "group";
     let managedSiteIds: string[] = [ctx.user.context.site.id];
+
     if (siteType === "group") {
       managedSiteIds = await SiteSWithManageAble(ctx.user.context.tenantId);
     }
+
     if (managedSiteIds.length === 0) {
       throw new HttpError.BadRequest("当前部门未绑定站点");
     }
 
     return await ctx.db.transaction(async (tx) => {
-      // 1. 检查权限
-      const [siteProduct] = await tx
+      // 1. 查找或准备当前站点的 site_product 记录
+      const currentSiteId = ctx.user.context.site.id;
+
+      // =========================================================
+      // 场景 A: 集团站/普通站点 (只更新站点视图)
+      // =========================================================
+      if (siteType !== "factory") {
+        // 1.1 更新或插入 site_product 表 (注意：移除了 siteCategoryId)
+        const [upserted] = await tx
+          .insert(siteProductTable)
+          .values({
+            siteId: currentSiteId,
+            productId,
+            siteName,
+            siteDescription,
+            seoTitle,
+            isVisible: true,
+          })
+          .onConflictDoUpdate({
+            target: [siteProductTable.siteId, siteProductTable.productId],
+            set: {
+              siteName,
+              siteDescription,
+              seoTitle,
+            },
+          })
+          .returning({ id: siteProductTable.id });
+
+        // 1.2 更新中间表 site_product_category_rel
+        if (siteCategoryId) {
+          await tx
+            .delete(siteProductSiteCategoryTable)
+            .where(eq(siteProductSiteCategoryTable.siteProductId, upserted.id));
+
+          await tx.insert(siteProductSiteCategoryTable).values({
+            siteProductId: upserted.id,
+            siteCategoryId,
+          });
+        }
+
+        return { success: true, id: productId };
+      }
+
+      // =========================================================
+      // 场景 B: 工厂站 (源头修改 + 视图修改)
+      // =========================================================
+
+      // 2.1 校验工厂权限下的 site_product
+      const [factorySiteProduct] = await tx
         .select()
         .from(siteProductTable)
         .where(
           and(
             eq(siteProductTable.productId, productId),
-            inArray(siteProductTable.siteId, managedSiteIds)
+            eq(siteProductTable.siteId, currentSiteId)
           )
         )
         .limit(1);
 
-      if (!siteProduct) {
-        throw new HttpError.NotFound("商品不存在或无权访问");
-      }
-      // =========================================================
-      // 场景 A: 集团站/普通站点 (只更新视图，立即返回)
-      // =========================================================
-      if (siteType !== "factory") {
-        // 集团站id
-        const currentSiteId = ctx.user.context.site.id;
-
-        await tx.insert(siteProductTable).values({
-          siteId: currentSiteId,
-          productId,
-          siteName,
-          siteDescription,
-          seoTitle,
-          siteCategoryId,
-          isVisible: true,
-        }).onConflictDoUpdate({
-          // 定义冲突条件：同一个站点 + 同一个商品
-          // 需要在数据库建唯一索引: UNIQUE(site_id, product_id)
-          target: [siteProductTable.siteId, siteProductTable.productId],
-          set: {
-            siteName,
-            siteDescription,
-            seoTitle,
-            siteCategoryId,
-            isVisible: true,
-          },
-        })
-        return { success: true, id: productId }; // 🔥 集团站逻辑结束，直接返回
+      if (!factorySiteProduct) {
+        throw new HttpError.NotFound("工厂站点商品记录不存在");
       }
 
-      // =========================================================
-      // 场景 B: 工厂站 (源头修改，逻辑继续往下走)
-      // =========================================================
-      // 1. 更新源头表 (Product)
+      // 2.2 更新 SPU 源头
       await tx
         .update(productTable)
         .set({
-          name: siteName!, // 工厂视图强制同步标准名
+          name: siteName || undefined,
           spuCode,
-          description: siteDescription, // 工厂视图强制同步标准描述
+          description: siteDescription,
           status,
           units,
         })
         .where(eq(productTable.id, productId));
-      // 2. 强制同步工厂的站点表 (SiteProduct)
+
+      // 2.3 更新工厂自己的站点视图
       await tx
         .update(siteProductTable)
         .set({
-          siteName, // 工厂视图强制同步标准名
-          siteDescription, // 工厂视图强制同步标准描述
+          siteName,
+          siteDescription,
           seoTitle,
-          siteCategoryId,
         })
-        .where(eq(siteProductTable.id, siteProduct.id));
+        .where(eq(siteProductTable.id, factorySiteProduct.id));
 
-      // 3. [工厂特权] 处理模版 & 主分类联动
+      // 2.4 更新工厂站点的分类关联 (中间表)
+      if (siteCategoryId) {
+        await tx
+          .delete(siteProductSiteCategoryTable)
+          .where(
+            eq(
+              siteProductSiteCategoryTable.siteProductId,
+              factorySiteProduct.id
+            )
+          );
+
+        await tx.insert(siteProductSiteCategoryTable).values({
+          siteProductId: factorySiteProduct.id,
+          siteCategoryId,
+        });
+      }
+
+      // 3. [工厂特权] 处理模版 & 主分类联动 (逻辑保持不变)
       if (templateId !== undefined) {
-        // 先清理旧的
         await tx
           .delete(productTemplateTable)
           .where(eq(productTemplateTable.productId, productId));
-
-        // 如果传入了新的 templateId (非 null/空字符串)
         if (templateId) {
-          // 2.1 关联新模版
           await tx
             .insert(productTemplateTable)
             .values({ productId, templateId });
-
-          // 2.2 🔥 查出新模版对应的主分类
           const [newTemplate] = await tx
             .select({ masterCategoryId: templateTable.masterCategoryId })
             .from(templateTable)
             .where(eq(templateTable.id, templateId))
             .limit(1);
 
-          // ✨ 增加这个校验：确保模版有效
-          if (!newTemplate) {
-            throw new HttpError.NotFound("更新失败：指定的模板ID不存在");
-          }
-
-          // 2.3 级联更新商品的主分类
-          if (newTemplate.masterCategoryId) {
+          if (newTemplate?.masterCategoryId) {
             await tx
               .delete(productMasterCategoryTable)
               .where(eq(productMasterCategoryTable.productId, productId));
@@ -810,46 +830,35 @@ export class ProductService {
               masterCategoryId: newTemplate.masterCategoryId,
             });
           }
-        } else {
-          // 如果 templateId 是 null，表示用户想“解绑模版”
-          // 此时是否要删除 MasterCategory？
-          // 建议：保持 MasterCategory 不动，或者也删除。看业务定义。
-          // 目前你的代码是保持不动，这是安全的。
-          throw new HttpError.BadRequest("更新失败：模版ID不能为空");
         }
       }
 
-      // 4. [工厂特权] 媒体更新 (全量替换)
-      // --- 阶段 D: 媒体全量替换 (Images & Videos) ---
+      // 4. [工厂特权] 媒体全量替换 (逻辑保持不变)
       if (mediaIds !== undefined || videoIds !== undefined) {
         await tx
           .delete(productMediaTable)
           .where(eq(productMediaTable.productId, productId));
-
-        const allMediaIds = [...(mediaIds || []), ...(videoIds || [])];
-        if (allMediaIds.length > 0) {
-          const mediaRelations: any[] = [];
-          // 图片处理 (sortOrder >= 0)
-          mediaIds?.forEach((id: string, idx: number) => {
-            mediaRelations.push({
-              productId,
-              mediaId: id,
-              isMain: id === mainImageId,
-              sortOrder: idx,
-            });
+        const mediaRelations: any[] = [];
+        mediaIds?.forEach((id, idx) => {
+          mediaRelations.push({
+            productId,
+            mediaId: id,
+            isMain: id === mainImageId,
+            sortOrder: idx,
           });
-          // 视频处理 (sortOrder < 0)
-          videoIds?.forEach((id: string, idx: number) => {
-            mediaRelations.push({
-              productId,
-              mediaId: id,
-              isMain: false,
-              sortOrder: -1 - idx,
-            });
+        });
+        videoIds?.forEach((id, idx) => {
+          mediaRelations.push({
+            productId,
+            mediaId: id,
+            isMain: false,
+            sortOrder: -1 - idx,
           });
+        });
+        if (mediaRelations.length > 0)
           await tx.insert(productMediaTable).values(mediaRelations);
-        }
       }
+
       return { success: true, id: productId };
     });
   }
@@ -866,7 +875,6 @@ export class ProductService {
       throw new HttpError.BadRequest("当前部门未绑定站点");
     }
     if (!ids || ids.length === 0) return { count: 0 };
-
 
     await ctx.db.transaction(async (tx) => {
       // =========================================================
@@ -898,10 +906,18 @@ export class ProductService {
 
         // a. 删除关联表 (site_product, template, media, category)
         // 这些表都依赖 productId，可以直接删
-        await tx.delete(siteProductTable).where(inArray(siteProductTable.productId, validIds));
-        await tx.delete(productMediaTable).where(inArray(productMediaTable.productId, validIds));
-        await tx.delete(productTemplateTable).where(inArray(productTemplateTable.productId, validIds));
-        await tx.delete(productMasterCategoryTable).where(inArray(productMasterCategoryTable.productId, validIds));
+        await tx
+          .delete(siteProductTable)
+          .where(inArray(siteProductTable.productId, validIds));
+        await tx
+          .delete(productMediaTable)
+          .where(inArray(productMediaTable.productId, validIds));
+        await tx
+          .delete(productTemplateTable)
+          .where(inArray(productTemplateTable.productId, validIds));
+        await tx
+          .delete(productMasterCategoryTable)
+          .where(inArray(productMasterCategoryTable.productId, validIds));
 
         // b. 删除 SKU (物理库存)
         // 注意：如果 sku 表有关联 site_sku，需要依赖级联或先删 site_sku
@@ -926,14 +942,14 @@ export class ProductService {
           )
           .returning({ id: siteProductTable.id });
 
-
         // 2.2 删除 site_sku 表中的记录 (站点价格覆写)
         // 因为 site_sku 关联的是 site_product_id (根据你的Schema设计)
         // 如果你的 schema 设置了 site_product 级联删除 site_sku，这一步由于上面删了 site_product 会自动完成
         // 如果没有级联，或者想显式处理：
         if (result.length > 0) {
-          const siteProductIds = result.map(r => r.id);
-          await tx.delete(siteSkuTable) // 假设你有这张表
+          const siteProductIds = result.map((r) => r.id);
+          await tx
+            .delete(siteSkuTable) // 假设你有这张表
             .where(inArray(siteSkuTable.siteProductId, siteProductIds));
         }
       }
@@ -965,8 +981,8 @@ export class ProductService {
       with: {
         media: {
           columns: {
-            mediaId: true,
-            isMain: true,
+            id: true,
+            sortOrder: true,
           },
         },
       },

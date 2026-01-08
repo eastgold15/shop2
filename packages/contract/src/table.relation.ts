@@ -218,10 +218,10 @@ export const relations = defineRelations(schema, (r) => ({
     siteProducts: r.many.siteProductTable({
 
       from: r.siteCategoryTable.id.through(
-        r.siteProductCategoryTable.siteCategoryId
+        r.siteProductSiteCategoryTable.siteCategoryId
       ),
       to: r.siteProductTable.productId.through(
-        r.siteProductCategoryTable.siteProductId
+        r.siteProductSiteCategoryTable.siteProductId
       ),
     }),
   },
@@ -241,8 +241,8 @@ export const relations = defineRelations(schema, (r) => ({
 
     ),
     siteCategories: r.many.siteCategoryTable({
-      from: r.siteProductTable.id.through(r.siteProductCategoryTable.siteProductId),
-      to: r.siteCategoryTable.id.through(r.siteProductCategoryTable.siteCategoryId)
+      from: r.siteProductTable.id.through(r.siteProductSiteCategoryTable.siteProductId),
+      to: r.siteCategoryTable.id.through(r.siteProductSiteCategoryTable.siteCategoryId)
     })
   },
   // ==========================================

@@ -65,9 +65,13 @@ export function useProductList(
     staleTime: 5 * 60 * 1000,
   });
 }
-const res = await rpc.products({ id: "ss" }).get();
+
+
+const peoductDetail = async (id: string) => {
+  return await rpc.products({ id }).get();
+}
 export type ProductDetailRes = NonNullable<
-  Treaty.Data<typeof res>
+  Treaty.Data<typeof peoductDetail>
 >;
 
 /**
@@ -78,7 +82,7 @@ export function useProductDetail(id: string) {
     queryKey: ["product", id],
     queryFn: async () => {
       if (!id) throw new Error("Product ID is required");
-      const { data, error } = await rpc.products({ id }).get();
+      const { data, error } = await peoductDetail(id);
       if (error) {
         toast.error(error.value?.message || "获取商品详情失败");
       }

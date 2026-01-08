@@ -10,7 +10,7 @@ import {
   ProductContract,
   productMediaTable,
   productTable,
-  siteProductCategoryTable,
+  siteProductSiteCategoryTable,
   siteProductTable,
   siteSkuTable,
   skuTable,
@@ -73,14 +73,14 @@ export class SiteProductService {
       .innerJoin(productTable, eq(siteProductTable.productId, productTable.id))
       // 如果传入了站点分类 ID，则关联中间表过滤
       .leftJoin(
-        siteProductCategoryTable,
-        eq(siteProductTable.id, siteProductCategoryTable.siteProductId)
+        siteProductSiteCategoryTable,
+        eq(siteProductTable.id, siteProductSiteCategoryTable.siteProductId)
       );
 
     // 2. 注入过滤条件 (站点隔离是必须的)
     const filters = [eq(siteProductTable.siteId, ctx.site.id)];
     if (categoryId) {
-      filters.push(eq(siteProductCategoryTable.siteCategoryId, categoryId));
+      filters.push(eq(siteProductSiteCategoryTable.siteCategoryId, categoryId));
     }
 
     // 3. 执行查询
@@ -104,8 +104,8 @@ export class SiteProductService {
       .select({ count: sql<number>`count(distinct ${siteProductTable.id})` })
       .from(siteProductTable)
       .leftJoin(
-        siteProductCategoryTable,
-        eq(siteProductTable.id, siteProductCategoryTable.siteProductId)
+        siteProductSiteCategoryTable,
+        eq(siteProductTable.id, siteProductSiteCategoryTable.siteProductId)
       )
       .where(and(...filters));
 

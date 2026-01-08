@@ -1137,7 +1137,6 @@ async function clearDatabase() {
   const tables = [
     // 先删除有外键依赖的表
     siteProductTable,
-    productSiteCategoryTable,
     productMasterCategoryTable,
     productTemplateTable,
     skuMediaTable,
@@ -1312,7 +1311,6 @@ async function seedCompleteDatabase() {
     // 18. 插入产品关联数据
     console.log("🔗 插入产品关联数据...");
     await db.insert(productMasterCategoryTable).values(productMasterCategories);
-    await db.insert(productSiteCategoryTable).values(productSiteCategories);
     await db.insert(productTemplateTable).values(productTemplates);
     await db.insert(siteProductTable).values(siteProducts);
 

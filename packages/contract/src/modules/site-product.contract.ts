@@ -49,9 +49,10 @@ export const SiteProductContract = {
       videoIds: t.Optional(t.Array(t.String())), // 视频ID列表
     })
   ),
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+
   ListQuery: t.Object({
     ...t.Partial(t.Object(SiteProductInsertFields)).properties,
+    siteCategoryId: t.Optional(t.String()),
     ...PaginationParams.properties,
     ...SortParams.properties,
     isListed: t.Optional(t.Boolean()),

@@ -2,7 +2,7 @@ import {
   mediaTable,
   productMediaTable,
   productTable,
-  siteProductCategoryTable,
+  siteProductSiteCategoryTable,
   siteProductTable,
   siteSkuTable,
   skuTable,
@@ -62,8 +62,8 @@ export class SiteCategoryService {
         spuCode: productTable.spuCode,
         isFeatured: siteProductTable.isFeatured,
       })
-      .from(siteProductCategoryTable)
-      .innerJoin(siteProductTable, eq(siteProductCategoryTable.siteProductId, siteProductTable.id))
+      .from(siteProductSiteCategoryTable)
+      .innerJoin(siteProductTable, eq(siteProductSiteCategoryTable.siteProductId, siteProductTable.id))
       .innerJoin(productTable, eq(siteProductTable.productId, productTable.id))
       // 必须连接 sku 表，minPrice 才能算出来
       .innerJoin(skuTable, eq(skuTable.productId, productTable.id))
@@ -76,7 +76,7 @@ export class SiteCategoryService {
       )
       .where(
         and(
-          eq(siteProductCategoryTable.siteCategoryId, id),
+          eq(siteProductSiteCategoryTable.siteCategoryId, id),
           eq(siteProductTable.siteId, ctx.site.id)
         )
       )

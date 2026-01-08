@@ -9,14 +9,13 @@
         "./*"
       ]
     },
-    // 2. 必须显式配置 outDir（composite 隐含约束）
-    "outDir": "./dist",
     "declarationMap": true,
     "declaration": true,
     "sourceMap": true,
     // 1. 启用复合项目模式（核心配置）
     "composite": true,
     "incremental": true,
+    "outDir": "./dist",
     "skipLibCheck": true,
     "strict": true,
   },
