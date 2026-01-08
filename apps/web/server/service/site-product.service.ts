@@ -159,7 +159,7 @@ export class SiteProductService {
     // --- 开始清洗数据 ---
     return {
       // 1. 站点层基础属性 (直接展开)
-      siteProductId: result.productId,
+      siteProductId: result.id, // ✅ 修复：返回 siteProduct 的 ID，不是 product 的 ID
       siteId: result.siteId,
       sortOrder: result.sortOrder,
       isFeatured: result.isFeatured,

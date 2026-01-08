@@ -178,7 +178,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
       await inquiryMutation.mutateAsync({
         siteProductId: siteProduct.siteProductId,
         siteSkuId: selectedSku.siteSkuId,
-        skuMediaId: selectedSku.media[0].url,
+        skuMediaId: selectedSku.media[0].id, // ✅ 修复：传媒体ID（UUID），不是URL
         productName: siteProduct.displayName,
         productDesc: siteProduct.displayDesc || "",
         paymentMethod,
