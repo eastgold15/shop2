@@ -59,10 +59,11 @@ export const ImageComponent: React.FC<ImageProps> = ({
   const [isImgLoading, setIsImgLoading] = useState(true);
 
   // 确保传入字符串，避免 hook 报错
+
   const { data: imageUrl, isLoading: isQueryLoading } = useCurrentMediaDetail(
     String(imageId || "")
   );
-
+  console.log("imageUrl:", imageUrl);
   const finalSrc = imageUrl || defaultImage;
 
   // 判断是否需要显示骨架屏

@@ -146,7 +146,16 @@ export class InquiryService {
     });
 
     // 9. 事务外：异步执行耗时任务（邮件、Excel）
+    console.log("=== 📧 检查是否需要发送邮件 ===");
+    console.log("[业务员匹配结果]:", result.targetRep ? {
+      userId: result.targetRep.userId,
+      userName: result.targetRep.user?.name,
+      userEmail: result.targetRep.user?.email,
+      responsibilityId: result.targetRep.id,
+    } : "未匹配到业务员");
+
     if (result.targetRep) {
+      console.log("[✅] 开始异步发送邮件流程");
       this.sendFullInquiryEmail(
         result.targetRep,
         result.inquiry,
@@ -155,6 +164,8 @@ export class InquiryService {
         result.skuMediaMainID!,
         body
       ).catch(console.error);
+    } else {
+      console.log("[⚠️] 未匹配到业务员，询价单进入公海，不发送邮件");
     }
 
     return {
@@ -245,7 +256,8 @@ export class InquiryService {
     productId: string,
     ctx: ServiceContext
   ): Promise<string[]> {
-    const { site } = ctx;
+    console.log("=== 🔍 开始查询商品主分类 ===");
+    console.log("[商品ID]:", productId);
 
     // 查询商品的主分类
     const productCategories =
@@ -255,11 +267,20 @@ export class InquiryService {
         },
       });
 
+    console.log("[查询结果数量]:", productCategories.length);
+    console.log("[查询结果详情]:", productCategories.map(pc => ({
+      productId: pc.productId,
+      masterCategoryId: pc.masterCategoryId,
+    })));
+
     if (!productCategories.length) {
+      console.error("[❌] 商品没有分配主分类！");
       throw new HttpError.BadRequest("Product has no category assigned");
     }
 
-    return productCategories.map((pc) => pc.masterCategoryId);
+    const categoryIds = productCategories.map((pc) => pc.masterCategoryId);
+    console.log("[✅] 找到主分类ID列表]:", categoryIds);
+    return categoryIds;
   }
 
   /**
@@ -284,6 +305,10 @@ export class InquiryService {
     const { site } = ctx;
     const tenantId = site.tenantId;
 
+    console.log("=== 👥 开始匹配业务员 ===");
+    console.log("[租户ID]:", tenantId);
+    console.log("[主分类ID列表]:", masterCategoryIds);
+
     // 查询这些分类下的所有业务员责任关系
     const responsibilities = await tx.query.salesResponsibilityTable.findMany({
       where: {
@@ -305,10 +330,23 @@ export class InquiryService {
       },
     });
 
+    console.log("[查询到的责任关系数量]:", responsibilities.length);
+    console.log("[责任关系详情]:", responsibilities.map(r => ({
+      responsibilityId: r.id,
+      masterCategoryId: r.masterCategoryId,
+      userId: r.userId,
+      isAutoAssign: r.isAutoAssign,
+      userName: r.user?.name,
+      userEmail: r.user?.email,
+      userIsActive: r.user?.isActive,
+    })));
+
     // 过滤掉非活跃用户
     const activeReps = responsibilities.filter((r) => r.user.isActive);
+    console.log("[过滤后活跃业务员数量]:", activeReps.length);
 
     if (activeReps.length === 0) {
+      console.log("[⚠️] 没有找到活跃的业务员，询价单进入公海");
       return null; // 没有找到业务员，进公海
     }
 
@@ -319,11 +357,27 @@ export class InquiryService {
       const timeB = b.lastAssignedAt ? b.lastAssignedAt.getTime() : 0;
       return timeA - timeB;
     });
+
+    console.log("[排序后候选业务员]:", sorted.map((r, idx) => ({
+      排名: idx + 1,
+      姓名: r.user?.name,
+      邮箱: r.user?.email,
+      最后分配时间: r.lastAssignedAt,
+    })));
+
     if (sorted.length === 0 || !sorted) {
+      console.error("[❌] 排序后业务员列表为空");
       throw new HttpError.BadRequest("No active salesperson found");
     }
 
-    return sorted[0]; // 返回最闲的业务员
+    const selected = sorted[0];
+    console.log("[✅] 选中的业务员]:", {
+      name: selected.user?.name,
+      email: selected.user?.email,
+      responsibilityId: selected.id,
+    });
+
+    return selected; // 返回最闲的业务员
   }
 
   /**
@@ -401,49 +455,70 @@ export class InquiryService {
     skuMediaId: string,
     body: typeof InquiryContract.Create.static
   ) {
-    try {
-      // 1. 获取工厂信息 (假设站点通过关联的 Departments 对应工厂)
-      // 这里的逻辑可以根据你的具体 Schema 调整，通常是 Site -> Dept/Factory
-      const factories = await db.query.siteTable
-        .findFirst({
-          where: {
-            id: inquiry.siteId,
-          },
-          with: {
-            // 假设 site 关联了部门，部门即工厂
-            department: true,
-          },
-        })
-        .then((res) => res!.department);
+    console.log("=== 🚀 开始发送邮件流程 ===");
+    console.log("[1] 询价单号:", inquiry.inquiryNum);
+    console.log("[2] 业务员信息:", {
+      name: targetRep.user.name,
+      email: targetRep.user.email,
+      userId: targetRep.user.id,
+    });
 
-      // 2. 获取 SKU 的真实媒体信息用于下载
+    try {
+      // 1. 获取工厂信息
+      console.log("[3] 开始获取工厂信息，站点ID:", inquiry.siteId);
+      const siteWithDept = await db.query.siteTable.findFirst({
+        where: { id: inquiry.siteId },
+        with: { department: true },
+      });
+      console.log("[4] 站点查询结果:", siteWithDept ? "找到" : "未找到");
+      console.log("[5] 部门信息:", siteWithDept?.department);
+
+      const factories = siteWithDept?.department;
+      console.log("[6] 工厂信息:", factories?.name || "使用默认工厂");
+
+      // 2. 获取 SKU 媒体信息
+      console.log("[7] 开始获取媒体信息，媒体ID:", skuMediaId);
       const media = skuMediaId
         ? await db.query.mediaTable.findFirst({
-          where: {
-            id: skuMediaId,
-          },
+          where: { id: skuMediaId },
         })
         : null;
+      console.log("[8] 媒体查询结果:", media ? { id: media.id, url: media.url } : "未找到");
 
       // 3. 下载产品图片
+      console.log("[9] 开始下载产品图片");
       const photoData = media?.url ? await this.downloadImage(media.url) : null;
+      console.log("[10] 图片下载结果:", photoData ? "成功" : "失败");
 
-      // 4. 生成 Excel (利用之前讨论过的 generateQuotationExcel)
-      // 映射数据到 Excel 模板格式
-      const quotationData = this.mapToExcelData(
-        inquiry,
-        siteProduct,
-        siteSku,
-        factories,
-        photoData
-      );
+      // 4. 生成 Excel（暂时跳过，因为模板文件不存在）
+      console.log("[11] ⚠️ 跳过 Excel 生成（模板文件缺失）");
+      let excelBuffer: Buffer | null = null;
 
-      const excelBuffer = await generateQuotationExcel(quotationData);
+      try {
+        const quotationData = this.mapToExcelData(
+          inquiry,
+          siteProduct,
+          siteSku,
+          factories,
+          photoData
+        );
+        console.log("[12] Excel 数据准备完成");
+        console.log("[13] 开始生成 Excel 文件");
+        excelBuffer = await generateQuotationExcel(quotationData);
+        console.log("[14] Excel 生成完成，大小:", excelBuffer?.length || 0, "bytes");
+      } catch (error) {
+        console.warn("[⚠️] Excel 生成失败，将不附加 Excel 文件:", error instanceof Error ? error.message : error);
+        excelBuffer = null;
+      }
 
-      // 5. 构建邮件模板并发送
-      if (!targetRep.user.email) return;
+      // 5. 构建邮件模板
+      console.log("[15] 验证业务员邮箱");
+      if (!targetRep.user.email) {
+        console.error("[❌] 业务员邮箱为空，取消发送");
+        return;
+      }
+      console.log("[16] 邮箱验证通过:", targetRep.user.email);
 
-      // 准备 createSalesInquiryTemplate 所需的参数
       const inquiryWithItems = {
         ...inquiry,
         items: [
@@ -455,8 +530,9 @@ export class InquiryService {
             customerRequirements: inquiry.customerRequirements || "",
           },
         ],
-      } as any; // 临时类型断言，因为需要完整的 InquiryWithItems 类型
+      } as any;
 
+      console.log("[17] 开始生成邮件模板");
       const emailTemplate = createSalesInquiryTemplate(
         inquiryWithItems,
         inquiry.inquiryNum,
@@ -468,8 +544,12 @@ export class InquiryService {
           email: targetRep.user.email,
         }
       );
+      console.log("[18] 邮件模板生成完成");
+      console.log("[19] 邮件主题:", emailTemplate.subject);
 
-      await sendEmail({
+      // 6. 发送邮件
+      console.log("[20] 开始发送邮件...");
+      const emailPayload = {
         to: targetRep.user.email,
         template: {
           ...emailTemplate,
@@ -477,21 +557,32 @@ export class InquiryService {
             {
               filename: `Quotation-${inquiry.inquiryNum}.xlsx`,
               content: excelBuffer,
-              contentType:
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+              contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             },
           ],
         },
+      };
+      console.log("[21] 邮件载荷:", {
+        to: emailPayload.to,
+        subject: emailPayload.template.subject,
+        hasAttachments: !!emailPayload.template.attachments,
+        attachmentSize: emailPayload.template.attachments[0].content?.length,
       });
 
-      console.log(
-        `[Inquiry] Email sent for ${inquiry.inquiryNum} to ${targetRep.user.email}`
-      );
+      await sendEmail(emailPayload);
+
+      console.log("=== ✅ 邮件发送成功 ===");
+      console.log(`[Inquiry] Email sent for ${inquiry.inquiryNum} to ${targetRep.user.email}`);
     } catch (error) {
-      console.error(
-        `[Inquiry Error] Failed to process post-submit tasks for ${inquiry.inquiryNum}:`,
-        error
-      );
+      console.error("=== ❌ 邮件发送失败 ===");
+      console.error("[错误详情]:", error);
+      console.error("[错误堆栈]:", error instanceof Error ? error.stack : "No stack trace");
+
+      // 更详细的错误信息
+      if (error instanceof Error) {
+        console.error("[错误名称]:", error.name);
+        console.error("[错误消息]:", error.message);
+      }
     }
   }
   /**

@@ -30,8 +30,13 @@ export const mediaController = new Elysia({ prefix: "/media" }) // 获取图片 
    */
   .get(
     "/urls",
-    async ({ db, site, query: { ids } }) =>
-      await mediaService.getUrlsByIds(ids, { db, site }),
+    async ({ db, site, query: { ids } }) => {
+      // ✅ 防御：如果 ids 为空数组，返回空数组而不是发起无效查询
+      if (!ids || ids.length === 0) {
+        return [];
+      }
+      return await mediaService.getUrlsByIds(ids, { db, site });
+    },
     {
       query: t.Object({
         ids: t.Array(t.String()),

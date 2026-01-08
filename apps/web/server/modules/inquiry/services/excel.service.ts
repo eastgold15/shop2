@@ -19,7 +19,6 @@ const getTemplatePath = () => {
     // 如果当前工作目录已经在 apps/web 下，不需要再添加 apps/web
     return path.resolve(
       projectRoot,
-      "src",
       "server",
       "modules",
       "inquiry",
@@ -32,7 +31,6 @@ const getTemplatePath = () => {
     projectRoot,
     "apps",
     "web",
-    "src",
     "server",
     "modules",
     "inquiry",
