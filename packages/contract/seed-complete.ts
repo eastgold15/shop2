@@ -393,7 +393,7 @@ const departments = [
     parentId: null,
     name: "总部",
     code: "HQ",
-    category: "headquarters" as const,
+    category: "group" as const, // 修改：headquarters → group
     address: "深圳市福田区",
     contactPhone: "0755-88888888",
     isActive: true,
@@ -439,7 +439,7 @@ const departments = [
     parentId: dept1HeadquartersId,
     name: "上海办事处",
     code: "SH_OFFICE",
-    category: "office" as const,
+    category: "factory" as const, // 修改：office → group
     address: "上海市浦东新区",
     contactPhone: "021-55555555",
     isActive: true,
@@ -1015,6 +1015,9 @@ const customers = [
   },
 ];
 
+const siteProduct1Id = randomUUIDv7(); // siteProduct ID
+const siteProduct2Id = randomUUIDv7();
+
 const inquiry1Id = randomUUIDv7();
 
 const inquiries = [
@@ -1027,7 +1030,8 @@ const inquiries = [
     customerPhone: "2125551234",
     customerWhatsapp: "+12125551234",
     status: "pending" as const,
-    skuId: sku1Id,
+    siteProductId: siteProduct1Id, // 修复：使用正确的 siteProduct ID
+    siteSkuId: sku1Id,
     productName: "经典高跟鞋 Pumps Classic",
     productDescription: "经典款高跟鞋，舒适耐穿",
     quantity: 500,
@@ -1035,7 +1039,6 @@ const inquiries = [
     paymentMethod: "T/T",
     customerRequirements: "需要定制包装，印客户logo",
     tenantId: tenant1Id,
-    deptId: dept1Factory1Id,
     siteId: site1Id,
     createdBy: user4Id,
     isPublic: false,
@@ -1091,6 +1094,7 @@ const productTemplates = [
 
 const siteProducts = [
   {
+    id: siteProduct1Id, // 使用上面已声明的 siteProduct1Id
     siteId: site1Id,
     productId: product1Id,
     sitePrice: "89.99",
@@ -1102,6 +1106,7 @@ const siteProducts = [
     siteCategoryId: siteCategory1Id,
   },
   {
+    id: siteProduct2Id, // 添加 ID
     siteId: site2Id,
     productId: product2Id,
     sitePrice: "69.99",

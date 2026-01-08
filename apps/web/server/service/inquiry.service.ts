@@ -114,7 +114,7 @@ export class InquiryService {
           siteSkuId: siteSku!.id,
 
 
-          productName: siteProduct.siteName,
+          productName: siteProduct.siteName!,
           productDescription: siteProduct.siteDescription,
 
           quantity: body.quantity,
@@ -176,10 +176,14 @@ export class InquiryService {
     body: typeof InquiryContract.Create.static,
     ctx: ServiceContext
   ) {
-    // 获取站点商品
+    const { site } = ctx;
+    const siteId = site.id;
+
+    // 获取站点商品（必须属于当前站点）
     const siteProduct = await db.query.siteProductTable.findFirst({
       where: {
         id: body.siteProductId,
+        siteId, // ✅ 添加站点隔离，防止跨站点访问
       },
       with: {
         product: true,
@@ -195,10 +199,11 @@ export class InquiryService {
       return { siteProduct, siteSku: null, skuMediaMainID: undefined };
     }
 
-    // 获取站点SKU
+    // 获取站点SKU（必须属于当前站点的商品）
     const siteSku = await db.query.siteSkuTable.findFirst({
       where: {
         id: body.siteSkuId,
+        siteProductId: body.siteProductId, // ✅ 验证 SKU 属于该站点的商品
       },
       with: {
         sku: {
