@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useCurrentAdsQuery } from "@/hooks/api/ads-hook";
 import { cn } from "@/lib/utils";
-import IDImage from "../common/IDImage";
+import { ImageComponent } from "@/components/common/Image";
 import { Skeleton } from "../ui/skeleton";
 
 const Ad: React.FC = () => {
@@ -61,7 +61,7 @@ const Ad: React.FC = () => {
               key={ad.id}
               onClick={() => handleClick(ad.link)}
             >
-              <IDImage
+              <ImageComponent
                 alt={ad.title || "Advertisement"}
                 className="h-full w-full object-cover object-center md:object-[center_30%]" // 确保这里字段名对应 Hook 里的定义
                 imageId={ad.mediaId}

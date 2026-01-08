@@ -1,5 +1,5 @@
 {
-  "name": "next-elysia-prisma",
+  "name": "next-web",
   "version": "1.0.0",
   "type": "module",
   "private": true,
@@ -7,7 +7,6 @@
     "dev": "next dev",
     "build": "next build",
     "start": "NODE_ENV=production next start",
-    "test": "vitest",
     "check-type": "tsc --noEmit"
   },
   "dependencies": {

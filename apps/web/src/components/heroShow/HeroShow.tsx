@@ -5,7 +5,7 @@ import {
   type HeroCardRes,
   useCurrentHeroCardsQuery,
 } from "@/hooks/api/hero-cards-hook";
-import { MyImage } from "../MyImage";
+import { ImageComponent } from "@/components/common/Image";
 import { Skeleton } from "../ui/skeleton";
 import Shop from "./Shop";
 
@@ -157,7 +157,7 @@ const HeroShowComponent: React.FC = () => {
               description={card.description}
               title={card.title}
             >
-              <MyImage
+              <ImageComponent
                 alt={card.title}
                 className="h-full w-full transform object-cover transition-transform duration-700 group-hover:scale-105" // 统一字段名建议：mediaId
                 imageId={card.mediaId}

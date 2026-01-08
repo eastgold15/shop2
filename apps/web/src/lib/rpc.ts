@@ -1,9 +1,17 @@
 import { treaty } from "@elysiajs/eden";
-import { app } from "@/app/api/[[...slugs]]/route";
+// 1. 关键：只使用 import type
+import type { App } from "@/app/api/[[...slugs]]/route";
 import { env } from "@/env";
-export const rpc =
-  typeof process !== "undefined"
-    ? treaty(app).api
-    : treaty<typeof app>(`http://localhost:${env.PORT || 3000}`).api;
 
+// 2. 区分环境
+const getBaseURL = () => {
+  if (typeof window !== "undefined") {
+    // 浏览器环境：使用相对路径或配置好的环境变量
+    return window.location.origin;
+  }
+  // 服务端环境
+  return `http://localhost:${env.PORT || 3000}`;
+};
 
+// 3. 传入类型参数 <App>，但不传入 app 实例
+export const rpc = treaty<App>(getBaseURL()).api;

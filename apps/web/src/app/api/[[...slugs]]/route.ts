@@ -10,7 +10,7 @@ import { errorSuite } from "~/utils/err/errorSuite.plugin";
  * 使用 server.ts 中定义的服务器实例
  * 设置 /api 前缀以匹配路由路径
  */
-export const app = new Elysia({ name: "app", prefix: "/api" })
+const app = new Elysia({ name: "app", prefix: "/api" })
   .use(dbPlugin)
   .use(
     openapi({
@@ -53,3 +53,4 @@ export const DELETE = app.handle;
 export const PATCH = app.handle;
 
 
+export type App = typeof app;

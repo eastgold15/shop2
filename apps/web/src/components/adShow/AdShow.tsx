@@ -2,7 +2,7 @@
 import Link from "next/link";
 import type React from "react";
 import { useCurrentAdsQuery } from "@/hooks/api/ads-hook";
-import { MyImage } from "../MyImage";
+import { ImageComponent } from "@/components/common/Image";
 import { Skeleton } from "../ui/skeleton";
 
 interface AdShowProps {
@@ -105,7 +105,7 @@ const AdShowComponent: React.FC<AdShowProps> = ({
 
         {/* Image */}
         <div className="relative h-[400px] md:h-full">
-          <MyImage
+          <ImageComponent
             alt={ad.title || "Advertisement"}
             className="mt-20 h-full w-full transform object-cover transition-transform duration-1000 group-hover:scale-105 md:mt-0"
             imageId={ad.mediaId}
