@@ -12,6 +12,7 @@
   },
   "scripts": {
     "build": "tsc -b",
+    "db:dump": "mkdir -p backups && docker exec -i shop_postgres1 pg_dump -U shop -d shop --no-owner --no-acl --column-inserts --data-only > backups/shop_data.sql",
     "type-check": "tsc --noEmit",
     "clean": "rm -rf dist .turbo",
     "db:generate": "bun x drizzle-kit generate",
