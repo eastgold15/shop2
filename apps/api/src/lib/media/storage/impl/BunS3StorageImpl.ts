@@ -9,7 +9,9 @@ export class BunS3StorageImpl extends Storage {
     super(config);
 
     // 1. 提取纯域名并强制构建三级域名 Endpoint，解决 SecondLevelDomainForbidden 错误
-    const pureEndpoint = config.endpoint.replace(/^https?:\/\//, "").replace(/\/+$/, "");
+    const pureEndpoint = config.endpoint
+      .replace(/^https?:\/\//, "")
+      .replace(/\/+$/, "");
 
     this.client = new S3Client({
       accessKeyId: config.accessKeyId,
@@ -32,11 +34,14 @@ export class BunS3StorageImpl extends Storage {
    * 生成纯净的文件名，不带任何默认文件夹前缀
    */
   private generatePureFileName(originalName: string): string {
-    const ext = originalName.split('.').pop()?.toLowerCase() || 'jpg';
+    const ext = originalName.split(".").pop()?.toLowerCase() || "jpg";
     const random = Math.random().toString(36).substring(2, 8);
     const timestamp = Date.now();
     // 移除文件名中的非标准字符，防止 URL 编码导致 NoSuchKey
-    const safeName = originalName.split('.')[0].replace(/[^a-zA-Z0-9]/g, '').substring(0, 10);
+    const safeName = originalName
+      .split(".")[0]
+      .replace(/[^a-zA-Z0-9]/g, "")
+      .substring(0, 10);
     return `${timestamp}_${safeName}_${random}.${ext}`;
   }
 
@@ -46,7 +51,9 @@ export class BunS3StorageImpl extends Storage {
 
     // 构建 Key：如果传入 folder(category)，则拼接为 folder/filename，否则仅为 filename
     const fileName = this.generatePureFileName(originalName);
-    const fullPath = folder ? `${folder.replace(/\/+$/, "")}/${fileName}` : fileName;
+    const fullPath = folder
+      ? `${folder.replace(/\/+$/, "")}/${fileName}`
+      : fileName;
     const cleanKey = this.getCleanKey(fullPath);
 
     try {
@@ -55,8 +62,8 @@ export class BunS3StorageImpl extends Storage {
 
       const publicUrl = this.getPublicUrl(cleanKey);
 
-      console.log('Upload Success - Key:', cleanKey);
-      console.log('Upload Success - URL:', publicUrl);
+      console.log("Upload Success - Key:", cleanKey);
+      console.log("Upload Success - URL:", publicUrl);
 
       return {
         url: publicUrl,
@@ -94,7 +101,9 @@ export class BunS3StorageImpl extends Storage {
     }
 
     // 回退到阿里云虚拟托管域名格式
-    const pureEndpoint = this.config.endpoint.replace(/^https?:\/\//, "").replace(/\/+$/, "");
+    const pureEndpoint = this.config.endpoint
+      .replace(/^https?:\/\//, "")
+      .replace(/\/+$/, "");
     const bucketPrefix = `${this.config.bucket}.`;
 
     // 检查 endpoint 是否已包含 bucket 前缀，避免重复拼接

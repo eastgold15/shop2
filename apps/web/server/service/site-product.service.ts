@@ -90,14 +90,9 @@ export class SiteProductService {
       .offset((page - 1) * limit)
       .orderBy(
         sortOrder === "desc"
-          ? desc(
-            siteProductTable.createdAt
-          )
-          : asc(
-            siteProductTable.createdAt
-          )
+          ? desc(siteProductTable.createdAt)
+          : asc(siteProductTable.createdAt)
       );
-
 
     // 4. 计算总数
     const [{ count }] = await ctx.db
@@ -126,10 +121,14 @@ export class SiteProductService {
       extras: {
         // 这里的 table 代表 siteProductTable
         displayName: (table) =>
-          sql<string>`COALESCE(${table.siteName}, (SELECT ${productTable.name} FROM ${productTable} WHERE ${productTable.id} = ${table.productId}))`.as("display_name"),
+          sql<string>`COALESCE(${table.siteName}, (SELECT ${productTable.name} FROM ${productTable} WHERE ${productTable.id} = ${table.productId}))`.as(
+            "display_name"
+          ),
 
         displayDesc: (table) =>
-          sql<string>`COALESCE(${table.siteDescription}, (SELECT ${productTable.description} FROM ${productTable} WHERE ${productTable.id} = ${table.productId}))`.as("display_desc"),
+          sql<string>`COALESCE(${table.siteDescription}, (SELECT ${productTable.description} FROM ${productTable} WHERE ${productTable.id} = ${table.productId}))`.as(
+            "display_desc"
+          ),
       },
       // 嵌套拉取所有关联资产
       with: {
@@ -148,8 +147,8 @@ export class SiteProductService {
                 media: true,
               },
             },
-          }
-        }
+          },
+        },
       },
     });
 
@@ -175,18 +174,20 @@ export class SiteProductService {
       spuCode: result.product?.spuCode,
       units: result.product?.units,
 
-      // 4. 清洗视频列表 (Gallery) 
+      // 4. 清洗视频列表 (Gallery)
       //  第一张是视频
-      media: result.product.media.map(pm => ({
-        url: pm.url,
-        mediaType: pm.mediaType,
-        sortOrder: pm.sortOrder,
-        id: pm.id
-      })).sort((a, b) => a.sortOrder - b.sortOrder),
+      media: result.product.media
+        .map((pm) => ({
+          url: pm.url,
+          mediaType: pm.mediaType,
+          sortOrder: pm.sortOrder,
+          id: pm.id,
+        }))
+        .sort((a, b) => a.sortOrder - b.sortOrder),
 
       // 5. 清洗规格列表 (SKUs)
       // 逻辑：siteSku 覆盖价格和状态，物理 Sku 提供 code 和规格 JSON
-      skus: result.siteSkus.map(ss => {
+      skus: result.siteSkus.map((ss) => {
         const pSku = ss.sku; // 物理 SKU
         return {
           siteSkuId: ss.id,
@@ -202,21 +203,21 @@ export class SiteProductService {
           extraAttributes: pSku.extraAttributes,
           isActive: ss.isActive,
           // 规格图片展平
-          media: pSku.media.map(sm => ({
-            url: sm.url,
-            mediaType: sm.mediaType,
-            sortOrder: sm.sortOrder,
-            id: sm.id
-          })).sort((a, b) => a.sortOrder - b.sortOrder)
+          media: pSku.media
+            .map((sm) => ({
+              url: sm.url,
+              mediaType: sm.mediaType,
+              sortOrder: sm.sortOrder,
+              id: sm.id,
+            }))
+            .sort((a, b) => a.sortOrder - b.sortOrder),
         };
       }),
       // 6. 清洗分类 (简单的 ID 数组或对象数组)
-      siteCategories: result.siteCategories.map(sc => ({
+      siteCategories: result.siteCategories.map((sc) => ({
         id: sc.id,
-        name: sc.name
-      }))
+        name: sc.name,
+      })),
     };
   }
-
-
 }

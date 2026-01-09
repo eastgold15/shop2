@@ -13,7 +13,7 @@ export function useCreateInquiry() {
     mutationFn: async (args: Parameters<typeof rpc.inquiry.post>[0]) => {
       const { data, error } = await rpc.inquiry.post(args);
       if (error) {
-        toast.error((error.value as any) as string);
+        toast.error(error.value as any as string);
         throw error;
       }
       return data;

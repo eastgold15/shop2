@@ -1,4 +1,9 @@
-import { salesResponsibilityTable, type UserContract, userRoleTable, userTable } from "@repo/contract";
+import {
+  salesResponsibilityTable,
+  type UserContract,
+  userRoleTable,
+  userTable,
+} from "@repo/contract";
 import { eq } from "drizzle-orm";
 import { db } from "~/db/connection";
 import { auth } from "~/lib/auth";
@@ -109,10 +114,7 @@ export class UserService {
    * 创建用户（通用方法）
    * 支持创建任意角色的用户，包括业务员
    */
-  public async create(
-    body: UserContract["Create"],
-    ctx: ServiceContext
-  ) {
+  public async create(body: UserContract["Create"], ctx: ServiceContext) {
     const { db, user } = ctx;
 
     // 使用事务创建用户
@@ -132,7 +134,6 @@ export class UserService {
       });
       const updatedUser = newUser.user;
 
-
       // 3. 分配角色给用户
       await tx.insert(userRoleTable).values({
         userId: updatedUser.id,
@@ -141,7 +142,6 @@ export class UserService {
 
       // 4. 如果是业务员角色，分配主分类
       if (body.masterCategoryIds && body.masterCategoryIds.length > 0) {
-
         // 第一步：构建要插入的数据数组
         // 这里的 map 会返回一个对象数组：[{ userId: '...', masterCategoryId: '...', tenantId: '...' }, ...]
         const insertData = body.masterCategoryIds.map((catId) => ({
@@ -156,11 +156,10 @@ export class UserService {
         await tx.insert(salesResponsibilityTable).values(insertData);
       }
 
-
       // 返回用户详情
       const userDetails = await tx.query.userTable.findFirst({
         where: {
-          id: updatedUser.id
+          id: updatedUser.id,
         },
         with: {
           roles: true,
@@ -171,6 +170,4 @@ export class UserService {
       return userDetails;
     });
   }
-
-
 }

@@ -489,7 +489,8 @@ export function EditSKUModal({
                       <div className="flex flex-wrap gap-2">
                         {form.watch("mediaIds")?.map((mediaId) => {
                           // 优先从 mediaMap 获取，如果不存在则从原始数据获取（支持 allImages 和 media 两种格式）
-                          const originalImages = sku?.allImages || sku?.media || [];
+                          const originalImages =
+                            sku?.allImages || sku?.media || [];
                           const imageUrl: string =
                             (mediaMap.get(mediaId) as string | undefined) ||
                             originalImages.find((img) => img.id === mediaId)

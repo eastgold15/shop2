@@ -12,10 +12,7 @@ export const permissionController = new Elysia({ prefix: "/permission" })
   .get(
     "/",
     ({ user, db, currentDeptId, query }) =>
-      permissionService.list(
-        query,
-        { db, user, currentDeptId }
-      ),
+      permissionService.list(query, { db, user, currentDeptId }),
     {
       allPermissions: ["PERMISSION_VIEW"],
       query: t.Object({

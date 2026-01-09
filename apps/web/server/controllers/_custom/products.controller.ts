@@ -15,7 +15,10 @@ export const productsController = new Elysia({ prefix: "/products" })
     async ({ db, site, query }) => {
       const { page = 1, limit = 10 } = query;
 
-      const { data, total } = await siteProductService.list(query, { db, site });
+      const { data, total } = await siteProductService.list(query, {
+        db,
+        site,
+      });
 
       return {
         items: data,

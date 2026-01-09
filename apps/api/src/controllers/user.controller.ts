@@ -56,8 +56,6 @@ export const userController = new Elysia({ prefix: "/user" })
     }
   )
 
-
-
   /**
    * 创建用户（新版本）
    * 支持选择角色、部门，如果是业务员还可以选择负责的主分类

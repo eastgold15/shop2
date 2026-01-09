@@ -66,7 +66,7 @@ export const auth = betterAuth({
       tenantId: {
         type: "string",
         required: true, // 必填：因为数据库里是 notNull
-        input: true,    // 允许前端在 signUp 时传入
+        input: true, // 允许前端在 signUp 时传入
       },
       deptId: {
         type: "string",

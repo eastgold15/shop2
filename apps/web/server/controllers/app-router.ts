@@ -1,4 +1,4 @@
-import { Elysia } from 'elysia';
+import { Elysia } from "elysia";
 /**
  * 🤖 【路由挂载器 - 自动生成】
  * --------------------------------------------------------
@@ -20,4 +20,3 @@ export const appRouter = new Elysia({ name: "appRouter" })
   .use(mediaController)
   .use(sitecategoriesController)
   .use(inquiryController);
-

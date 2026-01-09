@@ -51,5 +51,4 @@ export class PermissionService {
       .returning();
     return res;
   }
-
 }

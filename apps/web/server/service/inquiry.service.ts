@@ -88,7 +88,7 @@ export class InquiryService {
       await this.upsertCustomer(body, ctx, tx);
 
       // 5. 生成业务单号
-      const inquiryNum = await generateInquiryNumber()
+      const inquiryNum = await generateInquiryNumber();
 
       // 6. 匹配业务员（轮询逻辑）
       const targetRep = await this.findBestSalesperson(
@@ -96,7 +96,6 @@ export class InquiryService {
         ctx,
         tx
       );
-
 
       // 7. 创建询价主表
       const [newInquiry] = await tx
@@ -112,7 +111,6 @@ export class InquiryService {
 
           siteProductId: siteProduct.id,
           siteSkuId: siteSku!.id,
-
 
           productName: siteProduct.siteName!,
           productDescription: siteProduct.siteDescription,
@@ -147,12 +145,17 @@ export class InquiryService {
 
     // 9. 事务外：异步执行耗时任务（邮件、Excel）
     console.log("=== 📧 检查是否需要发送邮件 ===");
-    console.log("[业务员匹配结果]:", result.targetRep ? {
-      userId: result.targetRep.userId,
-      userName: result.targetRep.user?.name,
-      userEmail: result.targetRep.user?.email,
-      responsibilityId: result.targetRep.id,
-    } : "未匹配到业务员");
+    console.log(
+      "[业务员匹配结果]:",
+      result.targetRep
+        ? {
+            userId: result.targetRep.userId,
+            userName: result.targetRep.user?.name,
+            userEmail: result.targetRep.user?.email,
+            responsibilityId: result.targetRep.id,
+          }
+        : "未匹配到业务员"
+    );
 
     if (result.targetRep) {
       console.log("[✅] 开始异步发送邮件流程");
@@ -268,10 +271,13 @@ export class InquiryService {
       });
 
     console.log("[查询结果数量]:", productCategories.length);
-    console.log("[查询结果详情]:", productCategories.map(pc => ({
-      productId: pc.productId,
-      masterCategoryId: pc.masterCategoryId,
-    })));
+    console.log(
+      "[查询结果详情]:",
+      productCategories.map((pc) => ({
+        productId: pc.productId,
+        masterCategoryId: pc.masterCategoryId,
+      }))
+    );
 
     if (!productCategories.length) {
       console.error("[❌] 商品没有分配主分类！");
@@ -331,15 +337,18 @@ export class InquiryService {
     });
 
     console.log("[查询到的责任关系数量]:", responsibilities.length);
-    console.log("[责任关系详情]:", responsibilities.map(r => ({
-      responsibilityId: r.id,
-      masterCategoryId: r.masterCategoryId,
-      userId: r.userId,
-      isAutoAssign: r.isAutoAssign,
-      userName: r.user?.name,
-      userEmail: r.user?.email,
-      userIsActive: r.user?.isActive,
-    })));
+    console.log(
+      "[责任关系详情]:",
+      responsibilities.map((r) => ({
+        responsibilityId: r.id,
+        masterCategoryId: r.masterCategoryId,
+        userId: r.userId,
+        isAutoAssign: r.isAutoAssign,
+        userName: r.user?.name,
+        userEmail: r.user?.email,
+        userIsActive: r.user?.isActive,
+      }))
+    );
 
     // 过滤掉非活跃用户
     const activeReps = responsibilities.filter((r) => r.user.isActive);
@@ -358,12 +367,15 @@ export class InquiryService {
       return timeA - timeB;
     });
 
-    console.log("[排序后候选业务员]:", sorted.map((r, idx) => ({
-      排名: idx + 1,
-      姓名: r.user?.name,
-      邮箱: r.user?.email,
-      最后分配时间: r.lastAssignedAt,
-    })));
+    console.log(
+      "[排序后候选业务员]:",
+      sorted.map((r, idx) => ({
+        排名: idx + 1,
+        姓名: r.user?.name,
+        邮箱: r.user?.email,
+        最后分配时间: r.lastAssignedAt,
+      }))
+    );
 
     if (sorted.length === 0 || !sorted) {
       console.error("[❌] 排序后业务员列表为空");
@@ -480,10 +492,13 @@ export class InquiryService {
       console.log("[7] 开始获取媒体信息，媒体ID:", skuMediaId);
       const media = skuMediaId
         ? await db.query.mediaTable.findFirst({
-          where: { id: skuMediaId },
-        })
+            where: { id: skuMediaId },
+          })
         : null;
-      console.log("[8] 媒体查询结果:", media ? { id: media.id, url: media.url } : "未找到");
+      console.log(
+        "[8] 媒体查询结果:",
+        media ? { id: media.id, url: media.url } : "未找到"
+      );
 
       // 3. 下载产品图片
       console.log("[9] 开始下载产品图片");
@@ -505,9 +520,16 @@ export class InquiryService {
         console.log("[12] Excel 数据准备完成");
         console.log("[13] 开始生成 Excel 文件");
         excelBuffer = await generateQuotationExcel(quotationData);
-        console.log("[14] Excel 生成完成，大小:", excelBuffer?.length || 0, "bytes");
+        console.log(
+          "[14] Excel 生成完成，大小:",
+          excelBuffer?.length || 0,
+          "bytes"
+        );
       } catch (error) {
-        console.warn("[⚠️] Excel 生成失败，将不附加 Excel 文件:", error instanceof Error ? error.message : error);
+        console.warn(
+          "[⚠️] Excel 生成失败，将不附加 Excel 文件:",
+          error instanceof Error ? error.message : error
+        );
         excelBuffer = null;
       }
 
@@ -556,8 +578,9 @@ export class InquiryService {
           attachments: [
             {
               filename: `Quotation-${inquiry.inquiryNum}.xlsx`,
-              content: excelBuffer,
-              contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+              content: excelBuffer || Buffer.from(""),
+              contentType:
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             },
           ],
         },
@@ -572,11 +595,16 @@ export class InquiryService {
       await sendEmail(emailPayload);
 
       console.log("=== ✅ 邮件发送成功 ===");
-      console.log(`[Inquiry] Email sent for ${inquiry.inquiryNum} to ${targetRep.user.email}`);
+      console.log(
+        `[Inquiry] Email sent for ${inquiry.inquiryNum} to ${targetRep.user.email}`
+      );
     } catch (error) {
       console.error("=== ❌ 邮件发送失败 ===");
       console.error("[错误详情]:", error);
-      console.error("[错误堆栈]:", error instanceof Error ? error.stack : "No stack trace");
+      console.error(
+        "[错误堆栈]:",
+        error instanceof Error ? error.stack : "No stack trace"
+      );
 
       // 更详细的错误信息
       if (error instanceof Error) {
@@ -595,10 +623,9 @@ export class InquiryService {
     factories: any,
     photo: any
   ) {
-    const mainFactory =
-      factories?.name
-        ? factories
-        : { name: "DONG QI FOOTWEAR (JIANGXI) CO., LTD" };
+    const mainFactory = factories?.name
+      ? factories
+      : { name: "DONG QI FOOTWEAR (JIANGXI) CO., LTD" };
 
     return {
       // Exporter (出口商)
@@ -630,10 +657,10 @@ export class InquiryService {
       clientPhone: Number.parseInt(inquiry.customerPhone!, 10) || 0,
       photoForRefer: photo
         ? {
-          buffer: photo.buffer,
-          mimeType: photo.mimeType,
-          name: `ref-${inquiry.inquiryNum}`,
-        }
+            buffer: photo.buffer,
+            mimeType: photo.mimeType,
+            name: `ref-${inquiry.inquiryNum}`,
+          }
         : null,
 
       // Terms (报价项) - 使用第一个 SKU 信息填充第一行

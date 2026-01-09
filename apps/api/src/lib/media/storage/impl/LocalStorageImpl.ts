@@ -3,7 +3,6 @@ import { promises as fs } from "node:fs";
 import { join } from "node:path";
 import { Storage } from "../Storage";
 
-
 export class LocalStorage extends Storage {
   private readonly baseDir: string;
   private readonly baseUrl: string;
@@ -12,17 +11,19 @@ export class LocalStorage extends Storage {
     super(config);
     this.baseDir = config.baseDir || "public/uploads";
     this.baseUrl = config.baseUrl || "/uploads";
-    fs.mkdir(this.baseDir, { recursive: true }).catch((e) => { console.error("本地目录创建失败:", e); });
+    fs.mkdir(this.baseDir, { recursive: true }).catch((e) => {
+      console.error("本地目录创建失败:", e);
+    });
   }
 
   async upload(file: File | Blob | Buffer | string, path?: string) {
     const { body, size, type } = await this.normalizeFile(file);
-    const fileName = (file as File).name || 'file.bin';
+    const fileName = (file as File).name || "file.bin";
     const key = path || this.generateKey(fileName);
     const fullPath = join(this.baseDir, key);
 
     // 确保子目录存在
-    const dir = join(this.baseDir, key.split('/').slice(0, -1).join('/'));
+    const dir = join(this.baseDir, key.split("/").slice(0, -1).join("/"));
     await fs.mkdir(dir, { recursive: true });
 
     await fs.writeFile(fullPath, body);

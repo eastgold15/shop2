@@ -4,8 +4,6 @@ import { dbPlugin } from "~/db/connection";
 import { siteMiddleware } from "~/middleware/site";
 import { inquiryService } from "~/service";
 
-
-
 export const inquiryController = new Elysia({ prefix: "/inquiry" })
   .use(dbPlugin)
   .use(siteMiddleware)

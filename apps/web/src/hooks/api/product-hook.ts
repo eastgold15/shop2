@@ -66,13 +66,10 @@ export function useProductList(
   });
 }
 
-
 const peoductDetail = async (id: string) => {
   return await rpc.products({ id }).get();
-}
-export type ProductDetailRes = NonNullable<
-  Treaty.Data<typeof peoductDetail>
->;
+};
+export type ProductDetailRes = NonNullable<Treaty.Data<typeof peoductDetail>>;
 
 /**
  * 获取单个商品详情
@@ -86,11 +83,10 @@ export function useProductDetail(id: string) {
       if (error) {
         toast.error(error.value?.message || "获取商品详情失败");
       }
-      return data! as unknown as ProductDetailRes
+      return data! as unknown as ProductDetailRes;
     },
     enabled: !!id,
     staleTime: 5 * 60 * 1000, // 5分钟缓存
     retry: 2,
   });
 }
-

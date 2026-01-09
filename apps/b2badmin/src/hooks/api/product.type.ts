@@ -1,4 +1,4 @@
-import { SkuListRes } from '@/hooks/api/sku.type';
+import { SkuListRes } from "@/hooks/api/sku.type";
 /**
  * 商品 - 前端接口类型定义
  * 用于后端接口开发参考
@@ -132,7 +132,6 @@ export interface ProductSkuSummary {
 }
 
 // ==================== 商品实体 ====================
-
 
 // ==================== 创建商品 ====================
 

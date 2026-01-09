@@ -49,7 +49,6 @@ export interface Media {
   factoryId?: string | null;
   ownerId?: string | null;
   isPublic: boolean; // 是否公开
-
 }
 
 // ==================== 上传媒体 ====================

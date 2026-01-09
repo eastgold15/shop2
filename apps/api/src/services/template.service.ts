@@ -179,7 +179,7 @@ export class TemplateService {
     body: TemplateContract["Update"],
     ctx: ServiceContext
   ) {
-    const { name, masterCategoryId, siteCategoryId, fields } = body
+    const { name, masterCategoryId, siteCategoryId, fields } = body;
 
     return await ctx.db.transaction(async (tx) => {
       // 1. 更新模板主体

@@ -9,8 +9,7 @@ export const herocardsController = new Elysia({ prefix: "/herocards" })
   .use(siteMiddleware)
   .get(
     "/current",
-    async ({ db, site }) =>
-      await heroCardService.findCurrent({ db, site }),
+    async ({ db, site }) => await heroCardService.findCurrent({ db, site }),
     {
       detail: {
         tags: ["Hero Cards"],

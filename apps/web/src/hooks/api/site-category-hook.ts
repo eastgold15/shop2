@@ -26,7 +26,6 @@ export function useSiteCategoryList(options?: { enabled?: boolean }) {
   });
 }
 
-
 export interface SiteCategoryDetailRes {
   id: string;
   createdAt: string;
@@ -49,7 +48,7 @@ export function useSiteCategoryDetail(
       if (error) {
         toast.error(error.value?.message || "获取分类目录详情失败");
       }
-      return data! as SiteCategoryDetailRes
+      return data! as SiteCategoryDetailRes;
     },
     enabled: options?.enabled ?? !!id,
     staleTime: 5 * 60 * 1000, // 5分钟

@@ -2,13 +2,15 @@
 export abstract class Storage {
   protected config: S3Config;
 
-  constructor(config: S3Config = {
-    accessKeyId: "",
-    secretAccessKey: "",
-    bucket: "",
-    endpoint: "",
-    region: ""
-  }) {
+  constructor(
+    config: S3Config = {
+      accessKeyId: "",
+      secretAccessKey: "",
+      bucket: "",
+      endpoint: "",
+      region: "",
+    }
+  ) {
     this.config = config;
   }
 

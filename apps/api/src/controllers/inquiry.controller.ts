@@ -8,9 +8,9 @@
 import { Elysia, t } from "elysia";
 import { dbPlugin } from "~/db/connection";
 import { authGuardMid } from "~/middleware/auth";
+import { generateInquiryNumber } from "~/modules/_lib/dayCount";
 import { InquiryContract } from "../../../../packages/contract/src/modules/inquiry.contract";
 import { InquiryService } from "../services/inquiry.service";
-import { generateInquiryNumber } from "~/modules/_lib/dayCount";
 
 const inquiryService = new InquiryService();
 /**
@@ -37,9 +37,13 @@ export const inquiryController = new Elysia({ prefix: "/inquiry" })
   .post(
     "/",
     async ({ body, user, db, currentDeptId }) => {
-      const inquiryNumber = await generateInquiryNumber()
+      const inquiryNumber = await generateInquiryNumber();
 
-      return inquiryService.create(body, inquiryNumber, { db, user, currentDeptId })
+      return inquiryService.create(body, inquiryNumber, {
+        db,
+        user,
+        currentDeptId,
+      });
     },
     {
       allPermissions: ["INQUIRY:CREATE"],

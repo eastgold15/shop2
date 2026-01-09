@@ -63,7 +63,10 @@ export class SiteCategoryService {
         isFeatured: siteProductTable.isFeatured,
       })
       .from(siteProductSiteCategoryTable)
-      .innerJoin(siteProductTable, eq(siteProductSiteCategoryTable.siteProductId, siteProductTable.id))
+      .innerJoin(
+        siteProductTable,
+        eq(siteProductSiteCategoryTable.siteProductId, siteProductTable.id)
+      )
       .innerJoin(productTable, eq(siteProductTable.productId, productTable.id))
       // 必须连接 sku 表，minPrice 才能算出来
       .innerJoin(skuTable, eq(skuTable.productId, productTable.id))

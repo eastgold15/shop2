@@ -30,18 +30,16 @@ export const siteMiddleware = new Elysia({ name: "site-middleware" })
     }
 
     return {
-      site
-    }
+      site,
+    };
   })
   .as("global");
-
-
 
 async function getSite(domain: string, db: DBtype) {
   const res = await db.query.siteTable.findFirst({
     where: {
       domain,
-    }
+    },
   });
   if (!res) {
     throw new HttpError.NotFound(`Site not found for domain: ${domain}`);
@@ -49,7 +47,6 @@ async function getSite(domain: string, db: DBtype) {
 
   return res;
 }
-
 
 export type Site = Awaited<ReturnType<typeof getSite>>;
 export type DBtype = typeof db;

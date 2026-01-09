@@ -274,7 +274,6 @@ export const trackingCols = {
 
 // --- 5. Business Tables (业务表 - 已应用 tenantCols) ---
 
-
 /**
  * @onlyGen contract
  */
@@ -425,8 +424,6 @@ export const productMasterCategoryTable = p.pgTable(
   (t) => [p.primaryKey({ columns: [t.productId, t.masterCategoryId] })]
 );
 
-
-
 /**
  * @onlyGen contract  资产
  */
@@ -453,7 +450,7 @@ export const templateTable = p.pgTable("template", {
   masterCategoryId: p
     .uuid("master_category_id")
     .notNull()
-    .references(() => masterCategoryTable.id)
+    .references(() => masterCategoryTable.id),
 });
 
 export const templateKeyTable = p.pgTable("template_key", {
@@ -491,10 +488,6 @@ export const productTemplateTable = p.pgTable("product_template", {
     .notNull()
     .references(() => templateTable.id),
 });
-
-
-
-
 
 // @skipGen  资产
 export const skuTable = p.pgTable("sku", {
@@ -550,7 +543,6 @@ export const customerTable = p.pgTable("customer", {
   // 客户是核心资产，使用 standardCols，可在多个站点复用
   ...standardCols,
 });
-
 
 // [站点表]：核心中的核心
 export const siteTable = p.pgTable("site", {
@@ -608,58 +600,75 @@ export const siteProductSiteCategoryTable = p.pgTable(
   (t) => [
     p.primaryKey({ columns: [t.siteProductId, t.siteCategoryId] }),
     // 索引加速：通过分类找商品（前台展示最常用）
-    p.index("idx_rel_category").on(t.siteCategoryId)
+    p
+      .index("idx_rel_category")
+      .on(t.siteCategoryId),
   ]
 );
 
-export const siteProductTable = p.pgTable("site_product", {
-  ...Audit,
-  siteName: p.varchar("site_name", { length: 200 }),
-  siteDescription: p.text("site_description"),
-  isFeatured: p.boolean("is_featured").default(false),
-  sortOrder: p.integer("sort_order").default(0),
-  isVisible: p.boolean("is_visible").default(true),
-  seoTitle: p.varchar("seo_title", { length: 200 }),
-  siteId: p
-    .uuid("site_id")
-    .references(() => siteTable.id, { onDelete: "cascade" })
-    .notNull(),
-  productId: p
-    .uuid("product_id")
-    .references(() => productTable.id, { onDelete: "cascade" })
-    .notNull(),
-}, (t) => [
-  // 1. 🔥 核心唯一索引：防止同一个站点下出现重复的同一个商品
-  // 这也是 Upsert (On Conflict) 逻辑必须依赖的物理约束
-  uniqueIndex("uk_site_product_unique").on(t.siteId, t.productId),
+export const siteProductTable = p.pgTable(
+  "site_product",
+  {
+    ...Audit,
+    siteName: p.varchar("site_name", { length: 200 }),
+    siteDescription: p.text("site_description"),
+    isFeatured: p.boolean("is_featured").default(false),
+    sortOrder: p.integer("sort_order").default(0),
+    isVisible: p.boolean("is_visible").default(true),
+    seoTitle: p.varchar("seo_title", { length: 200 }),
+    siteId: p
+      .uuid("site_id")
+      .references(() => siteTable.id, { onDelete: "cascade" })
+      .notNull(),
+    productId: p
+      .uuid("product_id")
+      .references(() => productTable.id, { onDelete: "cascade" })
+      .notNull(),
+  },
+  (t) => [
+    // 1. 🔥 核心唯一索引：防止同一个站点下出现重复的同一个商品
+    // 这也是 Upsert (On Conflict) 逻辑必须依赖的物理约束
+    uniqueIndex("uk_site_product_unique").on(t.siteId, t.productId),
 
-  // 3. 🚀 排序/筛选优化：按站点 + 排序/可见性
-  // 场景：获取某个站点的首页推荐商品，按 sortOrder 排序
-  index("idx_site_product_sort").on(t.siteId, t.sortOrder, t.isVisible),
+    // 3. 🚀 排序/筛选优化：按站点 + 排序/可见性
+    // 场景：获取某个站点的首页推荐商品，按 sortOrder 排序
+    index("idx_site_product_sort").on(t.siteId, t.sortOrder, t.isVisible),
 
-  // 4. 🧹 级联删除优化（可选）：
-  // 当你删除一个 Product 时，数据库需要查找所有关联的 site_product 来级联删除。
-  // 虽然 uk_site_product_unique 包含了 productId，但它在第二个位置。
-  // 如果你的商品库非常大（百万级），建议单独给 productId 加索引，加快物理删除速度。
-  index("idx_site_product_pid").on(t.productId),
-]);
+    // 4. 🧹 级联删除优化（可选）：
+    // 当你删除一个 Product 时，数据库需要查找所有关联的 site_product 来级联删除。
+    // 虽然 uk_site_product_unique 包含了 productId，但它在第二个位置。
+    // 如果你的商品库非常大（百万级），建议单独给 productId 加索引，加快物理删除速度。
+    index("idx_site_product_pid").on(t.productId),
+  ]
+);
 
-export const siteSkuTable = p.pgTable("site_sku", {
-  id: idUuid, // 自身ID
+export const siteSkuTable = p.pgTable(
+  "site_sku",
+  {
+    id: idUuid, // 自身ID
 
-  // 归属关系
-  siteId: p.uuid("site_id").notNull().references(() => siteTable.id, { onDelete: "cascade" }),
-  siteProductId: p.uuid("site_product_id").notNull().references(() => siteProductTable.id, { onDelete: "cascade" }),
+    // 归属关系
+    siteId: p
+      .uuid("site_id")
+      .notNull()
+      .references(() => siteTable.id, { onDelete: "cascade" }),
+    siteProductId: p
+      .uuid("site_product_id")
+      .notNull()
+      .references(() => siteProductTable.id, { onDelete: "cascade" }),
 
-  // 核心关联：指向源头 SKU
-  skuId: p.uuid("sku_id").notNull().references(() => skuTable.id, { onDelete: "cascade" }),
+    // 核心关联：指向源头 SKU
+    skuId: p
+      .uuid("sku_id")
+      .notNull()
+      .references(() => skuTable.id, { onDelete: "cascade" }),
 
-  // 站点覆写数据
-  price: p.decimal("price", { precision: 10, scale: 2 }), // 站点自定义价格，为空则继承原价
-  isActive: p.boolean("is_active").default(true), // 站点是否上架此规格
-}, (t) => [
-  uniqueIndex("uk_site_sku_unique").on(t.siteId, t.skuId)
-]);
+    // 站点覆写数据
+    price: p.decimal("price", { precision: 10, scale: 2 }), // 站点自定义价格，为空则继承原价
+    isActive: p.boolean("is_active").default(true), // 站点是否上架此规格
+  },
+  (t) => [uniqueIndex("uk_site_sku_unique").on(t.siteId, t.skuId)]
+);
 
 // 站点
 export const adTable = p.pgTable("advertisement", {
@@ -699,24 +708,24 @@ export const heroCardTable = p.pgTable("hero_card", {
   ...siteScopedCols,
 });
 
-
-export const siteConfigTable = p.pgTable("site_config", {
-  ...Audit,
-  key: p.varchar("key", { length: 100 }).notNull(), // 同一站点下唯一，所以 unique 要组合
-  value: p.text("value").notNull().default(""),
-  description: p.text("description").default(""),
-  category: p.varchar("category", { length: 50 }).default("general"),
-  url: p.varchar("url", { length: 255 }).default(""),
-  translatable: p.boolean("translatable").default(true),
-  visible: p.boolean("visible").default(false),
-  siteId: p
-    .uuid("site_id")
-    .notNull()
-    .references(() => siteTable.id, { onDelete: "cascade" }),
-}, (t) => [
-  uniqueIndex("uk_site_key").on(t.siteId, t.key)
-]);
-
+export const siteConfigTable = p.pgTable(
+  "site_config",
+  {
+    ...Audit,
+    key: p.varchar("key", { length: 100 }).notNull(), // 同一站点下唯一，所以 unique 要组合
+    value: p.text("value").notNull().default(""),
+    description: p.text("description").default(""),
+    category: p.varchar("category", { length: 50 }).default("general"),
+    url: p.varchar("url", { length: 255 }).default(""),
+    translatable: p.boolean("translatable").default(true),
+    visible: p.boolean("visible").default(false),
+    siteId: p
+      .uuid("site_id")
+      .notNull()
+      .references(() => siteTable.id, { onDelete: "cascade" }),
+  },
+  (t) => [uniqueIndex("uk_site_key").on(t.siteId, t.key)]
+);
 
 // 询价
 export const inquiryTable = p.pgTable("inquiry", {
@@ -730,7 +739,6 @@ export const inquiryTable = p.pgTable("inquiry", {
   customerWhatsapp: p.varchar("whatsapp", { length: 50 }),
 
   status: inquiryStatusEnum("status").default("pending").notNull(),
-
 
   // 询价关联的站点商品
   siteProductId: p
@@ -754,7 +762,9 @@ export const inquiryTable = p.pgTable("inquiry", {
   // 增加负责人字段
   ownerId: p.uuid("owner_id").references(() => userTable.id),
   // 增加主分类字段（用于匹配分配逻辑）
-  masterCategoryId: p.uuid("master_category_id").references(() => masterCategoryTable.id),
+  masterCategoryId: p
+    .uuid("master_category_id")
+    .references(() => masterCategoryTable.id),
 
   rawSnapshot: p.json("raw_snapshot").$type<{
     product: any;
@@ -796,12 +806,12 @@ export const quotationTable = p.pgTable("quotation", {
   totalUsd: p.decimal("total_usd", { precision: 12, scale: 2 }).notNull(),
   remark: p.text("remark"),
 
-
-  snapShortClientId: p.uuid("snap_client_id").references(() => customerTable.id, { onDelete: "set null" }),
+  snapShortClientId: p
+    .uuid("snap_client_id")
+    .references(() => customerTable.id, { onDelete: "set null" }),
   // 报价是交易数据，使用 trackingCols，sourceSiteId 记录来源站点（可为空）
   ...trackingCols,
 });
-
 
 export const dailyInquiryCounterTable = p.pgTable("daily_inquiry_counter", {
   ...Audit,
@@ -809,4 +819,3 @@ export const dailyInquiryCounterTable = p.pgTable("daily_inquiry_counter", {
   count: p.integer("count").default(0).notNull(),
   lastResetAt: p.timestamp("last_reset_at").defaultNow(),
 });
-

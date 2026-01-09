@@ -208,7 +208,6 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.siteCategoryTable.parentId,
       to: r.siteCategoryTable.id,
       alias: "parent_site",
-
     }),
     children: r.many.siteCategoryTable({
       from: r.siteCategoryTable.id,
@@ -216,7 +215,6 @@ export const relations = defineRelations(schema, (r) => ({
       alias: "child_site",
     }),
     siteProducts: r.many.siteProductTable({
-
       from: r.siteCategoryTable.id.through(
         r.siteProductSiteCategoryTable.siteCategoryId
       ),
@@ -237,13 +235,15 @@ export const relations = defineRelations(schema, (r) => ({
       optional: false,
     }),
 
-    siteSkus: r.many.siteSkuTable(
-
-    ),
+    siteSkus: r.many.siteSkuTable(),
     siteCategories: r.many.siteCategoryTable({
-      from: r.siteProductTable.id.through(r.siteProductSiteCategoryTable.siteProductId),
-      to: r.siteCategoryTable.id.through(r.siteProductSiteCategoryTable.siteCategoryId)
-    })
+      from: r.siteProductTable.id.through(
+        r.siteProductSiteCategoryTable.siteProductId
+      ),
+      to: r.siteCategoryTable.id.through(
+        r.siteProductSiteCategoryTable.siteCategoryId
+      ),
+    }),
   },
   // ==========================================
   // 4. 商品资源中心 (Products, SKU, Media)
@@ -272,7 +272,6 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.templateTable.masterCategoryId,
     }),
   },
-
 
   // [商品主表]
   productTable: {
@@ -352,7 +351,6 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.masterCategoryTable.id,
     }),
   },
-
 
   // ==========================================
   // 5. 属性系统 (Attributes)

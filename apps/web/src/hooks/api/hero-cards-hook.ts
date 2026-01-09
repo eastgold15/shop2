@@ -5,7 +5,9 @@ import { queryKeys } from "@/lib/query/query-keys";
 import { rpc } from "@/lib/rpc";
 
 // 类型定义
-export type HeroCardListRes = NonNullable<Treaty.Data<typeof rpc.herocards.current.get>>;
+export type HeroCardListRes = NonNullable<
+  Treaty.Data<typeof rpc.herocards.current.get>
+>;
 
 /**
  * 获取当前有效 Hero Cards 的 Hook

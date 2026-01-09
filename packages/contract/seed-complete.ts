@@ -1240,7 +1240,7 @@ async function seedCompleteDatabase() {
     }
 
     const batchSize = 100;
-    for (let i = 0;i < rolePermissionRelations.length;i += batchSize) {
+    for (let i = 0; i < rolePermissionRelations.length; i += batchSize) {
       const batch = rolePermissionRelations.slice(i, i + batchSize);
       await db.insert(rolePermissionTable).values(batch);
     }

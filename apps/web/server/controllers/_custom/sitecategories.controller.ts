@@ -28,10 +28,14 @@ export const sitecategoriesController = new Elysia({
   .get(
     "/category/:id",
     async ({ params: { id }, db, query, site }) => {
-      return await siteCategoryService.getProductsByCategoryId({
-        db,
-        site,
-      }, id, query);
+      return await siteCategoryService.getProductsByCategoryId(
+        {
+          db,
+          site,
+        },
+        id,
+        query
+      );
     },
     {
       params: t.Object({

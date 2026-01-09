@@ -26,7 +26,7 @@ export class MediaService {
       files.map(async (file) => {
         // 2. 物理上传
         const uploadResult = await client.upload(file, category);
-        console.log('uploadResult:', uploadResult)
+        console.log("uploadResult:", uploadResult);
         // 3. 直接插入数据库
         const insertData = {
           url: uploadResult.url || "",
@@ -61,10 +61,10 @@ export class MediaService {
       // 自动注入租户信息
       ...(ctx.user
         ? {
-          tenantId: ctx.user.context.tenantId!,
-          createdBy: ctx.user.id,
-          deptId: ctx.currentDeptId,
-        }
+            tenantId: ctx.user.context.tenantId!,
+            createdBy: ctx.user.id,
+            deptId: ctx.currentDeptId,
+          }
         : {}),
     };
     const [res] = await ctx.db
@@ -82,10 +82,10 @@ export class MediaService {
         deptId: ctx.currentDeptId,
         ...(ids
           ? {
-            id: {
-              in: ids,
-            },
-          }
+              id: {
+                in: ids,
+              },
+            }
           : {}),
         ...(search ? { originalName: { ilike: `%${search}%` } } : {}),
       },

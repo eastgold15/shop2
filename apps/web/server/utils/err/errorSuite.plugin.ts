@@ -3,16 +3,13 @@ import chalk from "chalk";
 import { Elysia } from "elysia";
 import { HttpError, httpProblemJsonPlugin } from "elysia-http-problem-json";
 import { mapDatabaseError } from "./database-error-mapper";
-import {
-  filterStack,
-  getValidationSummary,
-} from "./errorSuite.plugin.utils";
+import { filterStack, getValidationSummary } from "./errorSuite.plugin.utils";
 import { isDatabaseError } from "./guards";
 
 export const errorLoggerPlugin = new Elysia({
   name: "error-logger-plugin",
 }).onError({ as: "global" }, ({ code, error, path, request }) => {
-  console.log('error:', error)
+  console.log("error:", error);
   const method = request?.method || "UNKNOWN";
 
   let processedError: any = error;

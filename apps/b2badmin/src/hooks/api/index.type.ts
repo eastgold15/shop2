@@ -10,8 +10,6 @@
 // 广告相关类型
 export type * from "./ad.type";
 
-
-
 // 工厂相关类型
 export type * from "./factory.type";
 
@@ -27,11 +25,8 @@ export type * from "./media.type";
 // 产品相关类型
 export type * from "./product.type";
 
-
-
 // SKU相关类型
 export type * from "./sku.type";
 
 // 模板相关类型
 export type * from "./template.type";
-

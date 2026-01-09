@@ -1,4 +1,8 @@
-import { type RoleContract, rolePermissionTable, roleTable } from "@repo/contract";
+import {
+  type RoleContract,
+  rolePermissionTable,
+  roleTable,
+} from "@repo/contract";
 import { eq } from "drizzle-orm";
 import { type ServiceContext } from "../lib/type";
 
@@ -26,7 +30,6 @@ export class RoleService {
       },
     });
 
-
     return res;
   }
 
@@ -39,7 +42,7 @@ export class RoleService {
         id: roleId,
       },
       with: {
-        permissions: true
+        permissions: true,
       },
     });
     return role;
