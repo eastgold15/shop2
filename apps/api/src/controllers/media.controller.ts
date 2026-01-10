@@ -8,8 +8,9 @@
 import { Elysia, t } from "elysia";
 import { dbPlugin } from "~/db/connection";
 import { authGuardMid } from "~/middleware/auth";
-import { MediaContract } from "../../../../packages/contract/src/modules/media.contract";
+
 import { MediaService } from "../services/media.service";
+import { MediaContract } from "@repo/contract";
 
 const mediaService = new MediaService();
 

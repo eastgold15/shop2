@@ -12,16 +12,15 @@ export class MasterCategoryService {
     body: MasterCategoryContract["Create"],
     ctx: ServiceContext
   ) {
+    if (!ctx.user?.context?.tenantId) {
+      throw new Error("User context or tenantId is required");
+    }
+
     const insertData = {
       ...body,
-      // 自动注入租户信息
-      ...(ctx.user
-        ? {
-            tenantId: ctx.user.context.tenantId!,
-            createdBy: ctx.user.id,
-            deptId: ctx.currentDeptId,
-          }
-        : {}),
+      tenantId: ctx.user.context.tenantId!,
+      createdBy: ctx.user.id,
+      deptId: ctx.currentDeptId,
     };
     const [res] = await ctx.db
       .insert(masterCategoryTable)

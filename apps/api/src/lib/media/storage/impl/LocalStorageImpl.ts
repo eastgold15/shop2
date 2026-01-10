@@ -8,7 +8,16 @@ export class LocalStorage extends Storage {
   private readonly baseUrl: string;
 
   constructor(config: { baseDir?: string; baseUrl?: string } = {}) {
-    super(config);
+
+    const mapConfig = {
+      ...config,
+      accessKeyId: "站位置",
+      secretAccessKey: "站位置",
+      bucket: "站位置",
+      endpoint: "站位置",
+      region: "站位置",
+    }
+    super(mapConfig);
     this.baseDir = config.baseDir || "public/uploads";
     this.baseUrl = config.baseUrl || "/uploads";
     fs.mkdir(this.baseDir, { recursive: true }).catch((e) => {

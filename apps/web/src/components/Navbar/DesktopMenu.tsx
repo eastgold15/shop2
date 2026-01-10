@@ -3,9 +3,10 @@ import { useRef, useState } from "react";
 import type { SiteCategoryListRes } from "@/hooks/api/site-category-hook";
 import { useNavAction } from "./hook/useNavAction";
 import { DropdownIndicator, NAV_STYLES, NavLink } from "./NavParts";
-
-// 扩展类型定义，包含 children 字段（children 为可选）
-type CategoryWithChildren = SiteCategoryListRes[number];
+ 
+export type CategoryWithChildren = Omit<SiteCategoryListRes[number], "children"> & {
+  children?: CategoryWithChildren[];
+};
 
 // 单个菜单项组件（递归核心）
 const MenuItem = ({ category }: { category: CategoryWithChildren }) => {

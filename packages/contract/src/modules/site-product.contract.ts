@@ -9,6 +9,7 @@ const autoFields = ["id", "createdAt", "updatedAt", "siteId"];
 /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
 export const SiteProductInsertFields = spread(siteProductTable, "insert");
 /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+
 export const SiteProductFields = spread(siteProductTable, "select");
 const ProductFields = spread(productTable, "select");
 export const SiteProductContract = {
@@ -24,9 +25,9 @@ export const SiteProductContract = {
     status: t.Optional(ProductFields.status),
     units: t.Optional(ProductFields.units),
     templateId: ProductTemplateFields.templateId,
-
     seoTitle: t.Optional(SiteProductInsertFields.seoTitle),
     siteCategoryId: t.String(),
+    productId: t.String(),
     // 商品媒体关联
     mediaIds: t.Optional(t.Array(t.String())), // 商品图片ID列表
     mainImageId: t.Optional(t.String()), // 主图ID

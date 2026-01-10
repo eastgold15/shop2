@@ -3,7 +3,8 @@
  * 处理询价确认、询价通知等业务相关的邮件模板
  */
 
-import type { InquiryWithItems } from "@repo/contract";
+
+import { InquiryWithItems } from "~/service/inquiry.service";
 import type {
   EmailAttachment,
   EmailTemplate,
@@ -128,9 +129,9 @@ export function createSalesInquiryTemplate(
       ? `<div style="margin-top: 15px; font-size: 13px; color: #666;">
         <strong>关联/相似工厂推荐：</strong>
         ${factories
-          .slice(1)
-          .map((f) => `<span style="margin-right:10px;">• ${f.name}</span>`)
-          .join("")}
+        .slice(1)
+        .map((f) => `<span style="margin-right:10px;">• ${f.name}</span>`)
+        .join("")}
        </div>`
       : "";
 

@@ -43,7 +43,7 @@ export function useMediaPageList(
   return useQuery({
     queryKey: mediaKeys.list(params),
     queryFn: () =>
-      api.get<MediaPageListRes, typeof MediaContract.ListQuery.static>(
+      api.get<MediaPageListRes, typeof MediaContract.PageListQuery.static>(
         "/api/v1/media/page-list",
         {
           params,

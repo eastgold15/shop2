@@ -1,10 +1,13 @@
 "use client";
-import type { SiteCategoryTreeRes } from "@/hooks/api/site-category-hook";
+import type { SiteCategoryListRes } from "@/hooks/api/site-category-hook";
 import { useNavAction } from "./hook/useNavAction";
 import { NAV_STYLES, NavLink } from "./NavParts";
+import { CategoryWithChildren } from "./DesktopMenu";
+
+
 
 interface MobileMenuProps {
-  categories: SiteCategoryTreeRes[];
+  categories: CategoryWithChildren[];
   onClose: () => void;
 }
 
@@ -14,7 +17,7 @@ const MobileCategoryItem = ({
   onClose,
   depth = 0,
 }: {
-  category: SiteCategoryTreeRes;
+  category: CategoryWithChildren;
   onClose: () => void;
   depth?: number;
 }) => {

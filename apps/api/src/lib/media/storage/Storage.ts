@@ -88,4 +88,6 @@ export interface S3Config {
   region: string;
   domain?: string; // 自定义 CDN 域名
   isPublic?: boolean; // 是否是公共读 bucket
+  baseDir?: string; // 基础目录，默认 "uploads"
+  baseUrl?: string; // 基础 URL，默认 "https://{domain}/{baseDir}"
 }

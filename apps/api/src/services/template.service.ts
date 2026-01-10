@@ -10,17 +10,13 @@ import { type ServiceContext } from "../lib/type";
 
 export class TemplateService {
   public async create(body: TemplateContract["Create"], ctx: ServiceContext) {
-    const { name, masterCategoryId, siteCategoryId, fields } = body as any;
+    const { name, masterCategoryId, fields } = body as any;
 
     return await ctx.db.transaction(async (tx) => {
-      // 1. 创建属性模板
       const [templateRes] = await tx
         .insert(templateTable)
         .values({
           masterCategoryId,
-          // 将 "root" 或空值转为 null
-          siteCategoryId:
-            siteCategoryId && siteCategoryId !== "root" ? siteCategoryId : null,
           name,
         })
         .returning();
@@ -110,7 +106,6 @@ export class TemplateService {
           id: t.id,
           name: t.name,
           masterCategoryId: t.masterCategoryId,
-          siteCategoryId: t.siteCategoryId,
           fields: [],
         });
       }
@@ -179,16 +174,13 @@ export class TemplateService {
     body: TemplateContract["Update"],
     ctx: ServiceContext
   ) {
-    const { name, masterCategoryId, siteCategoryId, fields } = body;
+    const { name, masterCategoryId, fields } = body as any;
 
     return await ctx.db.transaction(async (tx) => {
       // 1. 更新模板主体
-      const updateData: any = {
+      const updateData = {
         name,
         masterCategoryId,
-        // 将 "root" 或空值转为 null
-        siteCategoryId:
-          siteCategoryId && siteCategoryId !== "root" ? siteCategoryId : null,
       };
 
       const [templateRes] = await tx

@@ -29,7 +29,7 @@ export function extractOssKeyFromUrl(fileUrl: string): string {
 
     // 检查是否为阿里云OSS默认域名格式 (bucket.oss-region.aliyuncs.com)
     const hostname = url.hostname;
-    const bucketName = envConfig.BUCKET || "";
+    const bucketName = envConfig.OSS.BUCKET || "";
 
     // 如果是阿里云OSS默认域名格式，直接返回pathname
     if (hostname.includes("aliyuncs.com") && hostname.startsWith(bucketName)) {
@@ -102,7 +102,7 @@ export function isOssDefaultDomain(fileUrl: string): boolean {
 export function isConfiguredEndpoint(fileUrl: string): boolean {
   try {
     const url = new URL(fileUrl);
-    const endpoint = envConfig.ENDPOINT || "";
+    const endpoint = envConfig.OSS.ENDPOINT || "";
 
     if (!endpoint) {
       return false;
