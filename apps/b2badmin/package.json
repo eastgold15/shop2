@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "next dev -p 8002",
     "build": " next build",
-    "start": "NODE_ENV=production  next start ",
+    "start": "next start ",
     "check": "npx ultracite check",
     "fix": "npx ultracite fix",
     "type-check": "tsc --noEmit"

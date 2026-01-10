@@ -16,12 +16,12 @@ const nextConfig: NextConfig = {
     },
   },
   transpilePackages: [],
+
   serverExternalPackages: [
-    "@repo/contract",
-    "pino",
-    "thread-stream",
-    "logixlysia",
+    "pg",
+    "@repo/contract"
   ],
+
 };
 
 export default nextConfig;

@@ -1,4 +1,4 @@
-import { SiteProductContract } from "@repo/contract";
+import { ProductContract, SiteProductContract } from "@repo/contract";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "./api-client";
 import { ProductPageListRes } from "./product.type";
@@ -50,8 +50,8 @@ export function useProductSkus(productId: string, enabled = !!productId) {
 export function useCreateProduct() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: typeof SiteProductContract.Create.static) =>
-      api.post<any, typeof SiteProductContract.Create.static>(
+    mutationFn: (data: typeof ProductContract.Create.static) =>
+      api.post<any, typeof ProductContract.Create.static>(
         "/api/v1/product",
         data
       ),

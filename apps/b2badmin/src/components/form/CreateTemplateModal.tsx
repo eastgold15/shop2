@@ -67,7 +67,7 @@ const templateFieldSchema = z.object({
 const templateFormSchema = z.object({
   name: z.string().min(1, "模版名称不能为空"),
   masterCategoryId: z.string().min(1, "请选择主分类"),
-  siteCategoryId: z.string().optional(),
+  // siteCategoryId: z.string().optional(),
   fields: z
     .array(templateFieldSchema)
     .min(1, "至少需要添加一个字段定义")
@@ -103,7 +103,7 @@ export function CreateTemplateModal({
     defaultValues: {
       name: "",
       masterCategoryId: "",
-      siteCategoryId: "",
+      // siteCategoryId: "",
       fields: [],
     },
   });
@@ -120,7 +120,7 @@ export function CreateTemplateModal({
       reset({
         name: editingTemplate.name || "",
         masterCategoryId: editingTemplate.masterCategoryId || "",
-        siteCategoryId: editingTemplate.siteCategoryId || "",
+        // siteCategoryId: editingTemplate.siteCategoryId || "",
         fields:
           editingTemplate.fields?.map((f: any) => ({
             id: f.id,
@@ -136,7 +136,7 @@ export function CreateTemplateModal({
       reset({
         name: "",
         masterCategoryId: "",
-        siteCategoryId: "",
+        // siteCategoryId: "",
         fields: [],
       });
     }
@@ -161,7 +161,7 @@ export function CreateTemplateModal({
       const submitData = {
         name: data.name.trim(),
         masterCategoryId: data.masterCategoryId,
-        ...(data.siteCategoryId && { siteCategoryId: data.siteCategoryId }),
+        // ...(data.siteCategoryId && { siteCategoryId: data.siteCategoryId }),
         fields: data.fields.map((f) => ({
           key: f.key,
           inputType: f.inputType,
@@ -258,7 +258,7 @@ export function CreateTemplateModal({
                     )}
                   />
 
-                  <FormField
+                  {/* <FormField
                     control={form.control}
                     name="siteCategoryId"
                     render={({ field }) => (
@@ -272,7 +272,7 @@ export function CreateTemplateModal({
                         <FormMessage />
                       </FormItem>
                     )}
-                  />
+                  /> */}
                 </div>
               </div>
 

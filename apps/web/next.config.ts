@@ -10,7 +10,11 @@ const nextConfig: NextConfig = {
       { hostname: "img.dongqifootwear.com" },
     ],
   },
-  transpilePackages: ["@repo/contract"],
+
+  serverExternalPackages: [
+    "pg",
+    "@repo/contract"
+  ],
 };
 
 export default nextConfig;

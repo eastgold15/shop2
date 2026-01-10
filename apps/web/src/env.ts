@@ -7,7 +7,7 @@ export const env = createEnv({
    * 使用 z.coerce 将 process.env 的字符串自动转换为数字或布尔值。
    */
   server: {
-    PORT: z.coerce.number().min(1).max(65_535).default(3000),
+    PORT: z.coerce.number().min(1).max(65_535).default(9001),
     // 必填项
     DATABASE_URL: z.string().min(1, "DATABASE_URL 是必需的"),
     BETTER_AUTH_SECRET: z.string().min(1, "BETTER_AUTH_SECRET 是必需的"),

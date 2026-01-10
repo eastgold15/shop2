@@ -11,9 +11,16 @@
         ".env*"
       ],
       "outputs": [
-        "dist/**",
-        "!.next/cache/**"
-      ]
+        // Next.js 项目（next-web）的默认输出路径
+        "next-web/.next/**",
+        "next-web/out/**",
+        // 若 b2badmin 是 Next.js 项目，添加对应路径；若为其他类型（如 React 组件库），修改为实际输出路径
+        "b2badmin/.next/**",
+        "b2badmin/out/**",
+        // 通用输出路径（适配其他类型包）
+        "**/dist/**",
+        "**/build/**"
+      ],
     },
     "//#check": {},
     "//#fix": {
