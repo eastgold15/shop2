@@ -30,6 +30,7 @@ import {
 import { HttpError } from "elysia-http-problem-json";
 import { SiteSWithManageAble } from "~/db/utils";
 import { type ServiceContext } from "../lib/type";
+import { getMediaUrl, getThumbnailUrl } from "~/lib/media-url";
 
 export class ProductService {
   /**

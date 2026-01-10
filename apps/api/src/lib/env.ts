@@ -45,6 +45,12 @@ export const envConfig = {
     DOMAIN: env.get("DOMAIN").asString(),
   },
 
+  // 图片域名（用于拼接图片URL）
+  IMGDOMAIN: env
+    .get("IMGDOMAIN")
+    .default("https://img.dongqifootwear.com")
+    .asString(),
+
   // 其他配置（带默认值）
   AUTH_COOKIE: env
     .get("AUTH_COOKIE")

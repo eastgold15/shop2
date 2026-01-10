@@ -3,9 +3,8 @@ import { and, eq, inArray, like, sql } from "drizzle-orm";
 import { HttpError } from "elysia-http-problem-json";
 import { BunS3StorageImpl } from "~/lib/media/storage/impl/BunS3StorageImpl";
 import { type ServiceContext } from "../lib/type";
-
-// 1. 初始化 OSS 客户端
-// 建议将密钥放在 .env 文件中，通过 Bun.env 读取
+import { envConfig } from "~/lib/env";
+import { getMediaUrl } from "~/lib/media-url";
 
 const client = new BunS3StorageImpl({
   accessKeyId: Bun.env.ACCESS_KEY_ID!,
@@ -13,7 +12,7 @@ const client = new BunS3StorageImpl({
   bucket: Bun.env.BUCKET!,
   region: Bun.env.REGION!,
   endpoint: Bun.env.ENDPOINT!,
-  domain: Bun.env.DOMAIN!,
+  domain: envConfig.IMGDOMAIN,
 });
 export class MediaService {
   /**
@@ -61,10 +60,10 @@ export class MediaService {
       // 自动注入租户信息
       ...(ctx.user
         ? {
-            tenantId: ctx.user.context.tenantId!,
-            createdBy: ctx.user.id,
-            deptId: ctx.currentDeptId,
-          }
+          tenantId: ctx.user.context.tenantId!,
+          createdBy: ctx.user.id,
+          deptId: ctx.currentDeptId,
+        }
         : {}),
     };
     const [res] = await ctx.db
@@ -82,10 +81,10 @@ export class MediaService {
         deptId: ctx.currentDeptId,
         ...(ids
           ? {
-              id: {
-                in: ids,
-              },
-            }
+            id: {
+              in: ids,
+            },
+          }
           : {}),
         ...(search ? { originalName: { ilike: `%${search}%` } } : {}),
       },
@@ -176,7 +175,7 @@ export class MediaService {
 
     return files.map((file: any) => ({
       ...file,
-      url: client.getPublicUrl(file.storageKey),
+      url: getMediaUrl(file.storageKey),
     }));
   }
 

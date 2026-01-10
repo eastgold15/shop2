@@ -15,9 +15,6 @@ export class SiteProductService {
     if (!ctx.user?.context?.site?.id) {
       throw new Error("Site context is required");
     }
-
-
-
     const insertData = {
       ...body,
       tenantId: ctx.user.context.tenantId!,

@@ -42,7 +42,7 @@ export function BatchPriceSetter({ onApply, skuCount }: BatchPriceSetterProps) {
           批量设置价格和库存
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[400px]">
+      <DialogContent className="sm:max-w-100">
         <DialogHeader>
           <DialogTitle>批量设置 SKU 价格和库存</DialogTitle>
           <DialogDescription>
