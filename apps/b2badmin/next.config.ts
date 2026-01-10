@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { hostname: "images.unsplash.com" },
       { hostname: "img.poripori.top" },
-      { hostname: "oss-cn-hongkong.aliyuncs.com" },
+      { hostname: "img.dongqifootwear.com" },
     ],
   },
   logging: {

@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { hostname: "images.unsplash.com" },
       { hostname: "img.poripori.top" },
+      { hostname: "img.dongqifootwear.com" },
     ],
   },
   transpilePackages: ["@repo/contract"],

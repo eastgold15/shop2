@@ -1,4 +1,4 @@
-import { SiteProductContract } from "@repo/contract";
+import { ProductContract, SiteProductContract } from "@repo/contract";
 import { Elysia, t } from "elysia";
 import { dbPlugin } from "~/db/connection";
 import { authGuardMid } from "~/middleware/auth";
@@ -59,7 +59,7 @@ export const productController = new Elysia({
     {
       allPermissions: ["PRODUCT_CREATE"],
       requireDept: true,
-      body: SiteProductContract.Create,
+      body: ProductContract.Create,
       detail: {
         summary: "创建商品",
         description:

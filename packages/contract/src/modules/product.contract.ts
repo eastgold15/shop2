@@ -16,16 +16,14 @@ export const ProductContract = {
   }),
 
   Create: t.Object({
-    ...t.Omit(t.Object(ProductInsertFields), [
-      "id",
-      "createdAt",
-      "updatedAt",
-      "tenantId", // 后端从 ctx.user.context.tenantId 注入
-      "deptId", // 后端从 ctx.currentDeptId 注入
-      "createdBy", // 后端从 ctx.user.id 注入
-    ]).properties,
-    // 站点ID
-    siteCategoryId: t.Optional(t.String()),
+    siteName: ProductFields.name,
+    siteDescription: ProductFields.description,
+    spuCode: ProductFields.spuCode,
+    status: t.Optional(ProductFields.status),
+    units: t.Optional(ProductFields.units),
+    templateId: ProductTemplateFields.templateId,
+    seoTitle: t.Optional(SiteProductInsertFields.seoTitle),
+    siteCategoryId: t.String(),
     // 商品媒体关联
     mediaIds: t.Optional(t.Array(t.String())), // 商品图片ID列表
     mainImageId: t.Optional(t.String()), // 主图ID

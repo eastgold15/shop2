@@ -14,6 +14,7 @@ import {
   templateKeyTable,
   templateTable,
   templateValueTable,
+  ProductContract,
 } from "@repo/contract";
 import {
   and,
@@ -525,7 +526,7 @@ export class ProductService {
    */
 
   public async create(
-    body: SiteProductContract["Create"],
+    body: ProductContract["Create"],
     ctx: ServiceContext
   ) {
     const {
