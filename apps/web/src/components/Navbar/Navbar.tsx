@@ -1,9 +1,10 @@
 "use client";
-import { Heart, Menu, Search, ShoppingBag, User, X } from "lucide-react";
+import { Heart, Menu, ShoppingBag, User, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useCategoryNavigation } from "@/hooks/useCategoryNavigation"; // 获取数据
+import { useCategoryNavigation } from "@/hooks/useCategoryNavigation";
 import { DesktopMenu } from "./DesktopMenu";
+import { SearchDropdown } from "./SearchDropdown";
 import { useNavAction } from "./hook/useNavAction";
 import { MobileMenu } from "./MobileMenu";
 
@@ -109,10 +110,7 @@ const Navbar = () => {
 
           {/* ... Right Icons ... */}
           <div className="flex w-1/4 items-center justify-end space-x-4">
-            {/* 搜索按钮（无跳转，仅交互） */}
-            <button className={styles.navIcon}>
-              <Search className={styles.icon} strokeWidth={1.5} />
-            </button>
+            <SearchDropdown />
 
             {/* 导航图标：使用配置数据映射 */}
             {navItems.map((item) => (

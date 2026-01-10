@@ -45,30 +45,30 @@ const ContentBlock: React.FC<ContentBlockProps> = ({
     {/* 下部：文字内容 - 固定高度 */}
     {title || description || buttonUrl ? (
       <div className="flex h-50 flex-col justify-center p-8 md:h-62.5 md:p-12">
-        <div className="mb-6">
-          {title && (
-            <h3
-              className={`mb-2 font-serif text-2xl italic md:text-3xl ${titleColor}`}
-            >
-              {title}
-            </h3>
-          )}
+        {title && (
+          <h3
+            className={`mb-4 font-serif text-2xl italic md:text-3xl ${titleColor}`}
+          >
+            {title}
+          </h3>
+        )}
+        <div className="flex items-center justify-between gap-4">
           {description && (
             <p className={`text-sm tracking-wide ${subtitleColor}`}>
               {description}
             </p>
           )}
+          {buttonUrl && (
+            <Link href={buttonUrl}>
+              <button
+                className={`shrink-0 px-8 py-3 font-bold text-[10px] uppercase tracking-[0.2em] transition-colors ${buttonBg} ${buttonText} ${buttonHover}`}
+                type="button"
+              >
+                {buttonTextContent || "EXPLORE"}
+              </button>
+            </Link>
+          )}
         </div>
-        {buttonUrl && (
-          <Link href={buttonUrl}>
-            <button
-              className={`px-8 py-3 font-bold text-[10px] uppercase tracking-[0.2em] transition-colors ${buttonBg} ${buttonText} ${buttonHover}`}
-              type="button"
-            >
-              {buttonTextContent || "EXPLORE"}
-            </button>
-          </Link>
-        )}
       </div>
     ) : null}
   </div>

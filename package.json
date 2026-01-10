@@ -7,7 +7,7 @@
     "dev": "turbo run dev",
     "start": "turbo run start",
     "check": "npx ultracite check",
-    "check-type": "turbo run check-type",
+    "type-check": "turbo run type-check",
     "clean": "bunx turbo@latest run clean  && rm -rf dist .turbo",
     "prepare": "husky",
     "docker:compose": "docker compose up -d",

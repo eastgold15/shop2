@@ -19,9 +19,9 @@
     "//#fix": {
       "cache": false
     },
-    "check-type": {
+    "type-check": {
       "dependsOn": [
-        "^check-type"
+        "^type-check"
       ]
     },
     "clean": {
