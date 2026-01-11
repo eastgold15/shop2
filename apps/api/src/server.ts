@@ -12,6 +12,7 @@ import { loggerPlugin } from "./middleware/logger";
 import { errorSuite } from "./utils/err/errorSuite.plugin";
 
 export const server = new Elysia({ name: "server", prefix: "/api" })
+  .get("/", () => ({ message: "Hello Elysia api" }))
   .use(
     openapi({
       documentation: {

@@ -6,6 +6,13 @@ import { loggerPlugin } from "~/middleware/logger";
 import { siteMiddleware } from "~/middleware/site";
 import { errorSuite } from "~/utils/err/errorSuite.plugin";
 
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("❌ 未捕获的拒绝:", reason);
+});
+
+process.on("uncaughtException", (error) => {
+  console.error("❌ 未捕获的异常:", error);
+});
 /**
  * 使用 server.ts 中定义的服务器实例
  * 设置 /api 前缀以匹配路由路径
