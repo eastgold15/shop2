@@ -9,7 +9,7 @@
     "start": "turbo run start",
     "check": "npx ultracite check",
     "type-check": "turbo run type-check",
-    "clean": "bunx turbo@latest run clean  && rm -rf dist .turbo",
+    "clean": " rimraf dist .turbo logs bun.lock",
     "prepare": "husky",
     "docker:compose": "docker compose up -d",
     "pipelineGen": "bun run script/gen.ts",

@@ -5,9 +5,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 8001",
-    "build": "NODE_ENV=production next build",
-    "start": "NODE_ENV=production next start",
-    "type-check": "tsc --noEmit"
+    "build": "next build",
+    "start": "bun --bun next start -p 9001",
+    "type-check": "tsc --noEmit",
+    "clean": "rimraf dist .turbo logs  .next"
   },
   "dependencies": {
     "@elysiajs/eden": "1.4.6",

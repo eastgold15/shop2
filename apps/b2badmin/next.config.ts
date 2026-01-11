@@ -15,12 +15,10 @@ const nextConfig: NextConfig = {
       fullUrl: true,
     },
   },
-  transpilePackages: [],
 
-  serverExternalPackages: [
-    "pg",
-    "@repo/contract"
-  ],
+
+  transpilePackages: ["@repo/contract"],
+
 
 };
 

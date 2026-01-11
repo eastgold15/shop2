@@ -11,10 +11,7 @@ const nextConfig: NextConfig = {
     ],
   },
 
-  serverExternalPackages: [
-    "pg",
-    "@repo/contract"
-  ],
+  transpilePackages: ["@repo/contract"],
 };
 
 export default nextConfig;

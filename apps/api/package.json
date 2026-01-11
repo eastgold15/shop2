@@ -3,11 +3,12 @@
   "version": "1.0.50",
   "type": "module",
   "scripts": {
-    "dev": " bun run --watch src/server.ts",
+    "dev": " bun run --watch src/server.ts  -p 8012",
     "build": "bun build --minify-whitespace --minify-syntax --target=bun --outfile ./dist/index.js src/server.ts",
     "build:exe": "bun build --compile --minify-whitespace --minify-syntax --target bun --outfile server src/server.ts",
-    "start": "NODE_ENV=production bun ./dist/index.js",
+    "start": "NODE_ENV=production bun ./dist/index.js -p 9012",
     "check": "npx ultracite check",
+    "clean": "rimraf dist .turbo logs ",
     "fix": "npx ultracite fix",
     "type-check": "tsc --noEmit"
   },
@@ -15,6 +16,7 @@
     "@elysiajs/cors": "^1.4.1",
     "@elysiajs/openapi": "^1.4.13",
     "@repo/contract": "workspace:*",
+    "@t3-oss/env-core": "^0.13.10",
     "better-auth": "catalog:",
     "chalk": "^5.6.2",
     "drizzle-orm": "catalog:",
@@ -23,7 +25,8 @@
     "env-var": "^7.5.0",
     "logixlysia": "catalog:",
     "nodemailer": "^7.0.12",
-    "pg": "^8.16.3"
+    "pg": "^8.16.3",
+    "typebox": "^1.0.77"
   },
   "devDependencies": {
     "@types/nodemailer": "^7.0.4",
