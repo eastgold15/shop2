@@ -17,7 +17,7 @@ interface SkuPanelProps {
   skus: SkuListRes[];
   onEdit: (sku: SkuListRes) => void;
   onDelete: (id: string, code: string) => void;
-  viewMode: "global" | "me";
+  viewMode: "global" | "my";
 }
 
 export function SkuPanel({ skus, onEdit, onDelete, viewMode }: SkuPanelProps) {
@@ -35,7 +35,7 @@ export function SkuPanel({ skus, onEdit, onDelete, viewMode }: SkuPanelProps) {
         <Table>
           <TableHeader>
             <TableRow className="bg-slate-50 hover:bg-slate-50">
-              <TableHead className="w-[180px]">SKU 编码</TableHead>
+              <TableHead className="w-45">SKU 编码</TableHead>
               <TableHead>规格属性</TableHead>
               <TableHead>价格</TableHead>
               <TableHead>库存</TableHead>

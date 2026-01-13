@@ -60,7 +60,7 @@ export function ImageGallery({
         <div className={`flex items-center gap-2 overflow-x-auto ${className}`}>
           {displayImages.map((image) => (
             <div
-              className={`${config.size} relative flex-shrink-0 cursor-pointer overflow-hidden rounded-lg border-2 bg-white shadow-sm transition-all hover:scale-105 hover:shadow-md`}
+              className={`${config.size} relative shrink-0 cursor-pointer overflow-hidden rounded-lg border-2 bg-white shadow-sm transition-all hover:scale-105 hover:shadow-md`}
               key={image.id}
               onClick={() => handlePreview(image.url)}
               style={{

@@ -184,7 +184,7 @@ export default function UserDashboard() {
                 </button>
               </Can>
 
-              <Can permission="PRODUCTS_TABLE_VIEW">
+              <Can permission="PRODUCTS_VIEW">
                 <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 font-semibold text-white transition-all hover:bg-blue-700 hover:shadow-lg active:scale-95">
                   <Package size={18} />
                   产品管理
