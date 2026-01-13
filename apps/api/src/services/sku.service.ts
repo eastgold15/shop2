@@ -104,7 +104,7 @@ export class SkuService {
 
       // 6. 处理图片关联
       const mediaRelations: any[] = [];
-      for (let i = 0; i < createdSkus.length; i++) {
+      for (let i = 0;i < createdSkus.length;i++) {
         const createdSku = createdSkus[i];
         const inputSku = skus[i]; // 假设顺序一致
         if (inputSku.mediaIds && inputSku.mediaIds.length > 0) {
@@ -275,7 +275,8 @@ export class SkuService {
       .where(
         and(
           eq(skuTable.id, id),
-          eq(skuTable.tenantId, ctx.user.context.tenantId!) // 安全校验
+          eq(skuTable.tenantId, ctx.user.context.tenantId!), // 安全校验：租户隔离
+          eq(skuTable.deptId, ctx.currentDeptId) // 安全校验：部门隔离
         )
       )
       .returning({ id: skuTable.id });
@@ -416,16 +417,16 @@ export class SkuService {
     const images =
       skuIds.length > 0
         ? await ctx.db
-            .select({
-              skuId: skuMediaTable.skuId,
-              mediaId: mediaTable.id,
-              url: mediaTable.url,
-              isMain: skuMediaTable.isMain,
-            })
-            .from(skuMediaTable)
-            .innerJoin(mediaTable, eq(skuMediaTable.mediaId, mediaTable.id))
-            .where(inArray(skuMediaTable.skuId, skuIds))
-            .orderBy(skuMediaTable.sortOrder)
+          .select({
+            skuId: skuMediaTable.skuId,
+            mediaId: mediaTable.id,
+            url: mediaTable.url,
+            isMain: skuMediaTable.isMain,
+          })
+          .from(skuMediaTable)
+          .innerJoin(mediaTable, eq(skuMediaTable.mediaId, mediaTable.id))
+          .where(inArray(skuMediaTable.skuId, skuIds))
+          .orderBy(skuMediaTable.sortOrder)
         : [];
 
     // 图片按 SKU 分组 Map

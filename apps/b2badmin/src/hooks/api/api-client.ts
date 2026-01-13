@@ -1,8 +1,6 @@
 // lib/api-client.ts
 import { useAuthStore } from "@/stores/auth-store";
 
-const currentDeptId = useAuthStore.getState().currentDeptId;
-
 // 1. 定义 RequestOptions，区分 Body 和 Query
 // TBody: 请求体类型 (POST/PUT 用)
 // TQuery: 查询参数类型 (GET列表筛选用)
@@ -46,6 +44,8 @@ async function request<
     headers.set("Content-Type", "application/json");
   }
 
+  // 🔥 动态获取 currentDeptId，确保每次请求都使用最新值
+  const currentDeptId = useAuthStore.getState().currentDeptId;
   if (currentDeptId) {
     headers.set("x-current-dept-id", currentDeptId);
   }

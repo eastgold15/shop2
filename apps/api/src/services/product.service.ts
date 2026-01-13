@@ -1,5 +1,6 @@
 import {
   mediaTable,
+  ProductContract,
   productMasterCategoryTable,
   productMediaTable,
   productTable,
@@ -14,7 +15,6 @@ import {
   templateKeyTable,
   templateTable,
   templateValueTable,
-  ProductContract,
 } from "@repo/contract";
 import {
   and,
@@ -31,7 +31,6 @@ import {
 import { HttpError } from "elysia-http-problem-json";
 import { SiteSWithManageAble } from "~/db/utils";
 import { type ServiceContext } from "../lib/type";
-import { getMediaUrl, getThumbnailUrl } from "~/lib/media-url";
 
 export class ProductService {
   /**
@@ -68,6 +67,7 @@ export class ProductService {
         createdAt: productTable.createdAt,
         updatedAt: productTable.updatedAt,
         templateId: sql<string>`${productTemplateTable.templateId}`,
+        site_product_id: siteProductTable.id, // 🔥 用于查询站点分类
 
         // 🔥【核心修正】智能字段：数据库直接计算最终值 (站点优先 > 原厂兜底)
         name: sql<string>`COALESCE(${siteProductTable.siteName}, ${productTable.name})`,
@@ -192,8 +192,27 @@ export class ProductService {
       .limit(Number(limit))
       .offset((page - 1) * limit);
 
-    // 获取商品ID列表
+    // 获取商品ID列表和siteProduct ID列表
     const productIds = result.map((p) => p.id);
+    const siteProductIds = result
+      .map((p) => p.site_product_id)
+      .filter((id) => id != null) as string[];
+
+    // 查询站点分类关联（用于回显）
+    const siteCategoryMap = new Map<string, string>();
+    if (siteProductIds.length > 0) {
+      const siteCategories = await ctx.db
+        .select({
+          siteProductId: siteProductSiteCategoryTable.siteProductId,
+          siteCategoryId: siteProductSiteCategoryTable.siteCategoryId,
+        })
+        .from(siteProductSiteCategoryTable)
+        .where(inArray(siteProductSiteCategoryTable.siteProductId, siteProductIds));
+
+      siteCategories.forEach((sc) => {
+        siteCategoryMap.set(sc.siteProductId, sc.siteCategoryId);
+      });
+    }
 
     // 提取所有涉及的 templateId (去重 & 去空)
     const templateIds = [
@@ -449,6 +468,11 @@ export class ProductService {
         isVisible: product.isVisible ?? true,
         isCustomized: product.isCustomized,
 
+        // 🔥 站点分类（用于回显）
+        siteCategoryId: product.site_product_id
+          ? siteCategoryMap.get(product.site_product_id)
+          : undefined,
+
         // 调试/对比用字段
         originalName: product.originalName,
         originalDescription: product.originalDescription,
@@ -525,10 +549,7 @@ export class ProductService {
    * 创建商品（支持站点隔离和模板绑定）只能是工厂创建
    */
 
-  public async create(
-    body: ProductContract["Create"],
-    ctx: ServiceContext
-  ) {
+  public async create(body: ProductContract["Create"], ctx: ServiceContext) {
     const {
       spuCode,
       status = 0,
@@ -977,7 +998,6 @@ export class ProductService {
       where: {
         productId: id,
         tenantId: ctx.user.context.tenantId,
-
         deptId: ctx.currentDeptId,
       },
       with: {
