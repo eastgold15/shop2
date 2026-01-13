@@ -14,9 +14,7 @@ import { DepartmentService } from "../services/department.service";
 
 const departmentService = new DepartmentService();
 
-/**
- * @generated
- */
+
 export const departmentController = new Elysia({ prefix: "/department" })
   .use(dbPlugin)
   .use(authGuardMid)

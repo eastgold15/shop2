@@ -13,6 +13,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { useDepartmentList } from "@/hooks/api/department";
+import { useAuthStore } from "@/stores/auth-store";
 
 export default function UsersPage() {
   const [isCreateDeptModalOpen, setIsCreateDeptModalOpen] = useState(false);
@@ -29,7 +30,11 @@ export default function UsersPage() {
     isLoading: departmentsLoading,
     refetch: refetchDepartments,
   } = useDepartmentList();
-  const departments = departmentsResponse?.data || [];
+  const currentDeptId = useAuthStore(
+    (state) => state.user?.context.department.id
+  );
+  const departments =
+    departmentsResponse?.filter((item) => item.id !== currentDeptId) || [];
 
   // 如果还没挂载，返回一个加载状态的占位符
   if (!isMounted) {

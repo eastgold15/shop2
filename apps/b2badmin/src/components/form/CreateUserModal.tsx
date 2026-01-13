@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -34,38 +35,42 @@ import { Switch } from "@/components/ui/switch";
 import { useMasterCategoryList } from "@/hooks/api";
 import { useDepartmentList } from "@/hooks/api/department";
 import { useRoleList } from "@/hooks/api/role";
-import { useCreateUser } from "@/hooks/api/user";
+import { useCreateUser, useUpdateUser } from "@/hooks/api/user";
 
 const formSchema = z.object({
-  // 用户信息
   name: z.string().min(1, "姓名不能为空"),
-  email: z.string().email("请输入有效的邮箱地址"),
-  password: z.string().min(6, "密码至少6个字符"),
-  phone: z.string(),
-  whatsapp: z.string(),
-  position: z.string(),
-  // 角色和部门
+  email: z.email("请输入有效的邮箱地址"),
+  password: z.string().optional(),
+  phone: z.string().optional(),
+  whatsapp: z.string().optional(),
+  position: z.string().optional(),
   roleId: z.string().min(1, "请选择角色"),
   deptId: z.string().min(1, "请选择部门"),
   isActive: z.boolean().default(true),
-  // 主分类（如果是业务员）
   masterCategoryIds: z.array(z.string()).optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
 
-interface CreateUserModalProps {
+interface UserModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
+  userId?: string;
+  initialData?: Partial<FormData>;
 }
 
 export function CreateUserModal({
   open,
   onOpenChange,
   onSuccess,
-}: CreateUserModalProps) {
+  userId,
+  initialData,
+}: UserModalProps) {
+  const isEdit = !!userId;
   const createUser = useCreateUser();
+  const updateUser = useUpdateUser();
+
   const {
     data: rolesData,
     isLoading: rolesLoading,
@@ -79,16 +84,11 @@ export function CreateUserModal({
   const { data: masterCategoriesData, isLoading: categoriesLoading } =
     useMasterCategoryList();
 
-  // 调试：在控制台输出数据
-  console.log("Roles Data:", rolesData);
-  console.log("Departments Data:", departmentsData);
-  console.log("MasterCategories Data:", masterCategoriesData);
-
   const roles = rolesData?.data || rolesData || [];
   const departments = departmentsData?.data || departmentsData || [];
   const masterCategories = masterCategoriesData || [];
 
-  const form = useForm({
+  const form = useForm<any>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
@@ -104,19 +104,69 @@ export function CreateUserModal({
     },
   });
 
-  // 监听角色变化，如果是业务员角色才显示主分类选择
+  useEffect(() => {
+    if (isEdit && initialData) {
+      const currentMasterCategoryIds = initialData.masterCategoryIds || [];
+      form.reset({
+        name: initialData.name || "",
+        email: initialData.email || "",
+        password: "",
+        phone: initialData.phone || "",
+        whatsapp: initialData.whatsapp || "",
+        position: initialData.position || "",
+        roleId: initialData.roleId || "",
+        deptId: initialData.deptId || "",
+        isActive: initialData.isActive ?? true,
+        masterCategoryIds: currentMasterCategoryIds,
+      });
+    } else if (!isEdit) {
+      form.reset({
+        name: "",
+        email: "",
+        password: "",
+        phone: "",
+        whatsapp: "",
+        position: "",
+        roleId: "",
+        deptId: "",
+        isActive: true,
+        masterCategoryIds: [],
+      });
+    }
+  }, [isEdit, initialData, form]);
+
   const selectedRole = form.watch("roleId");
   const isSalesperson =
     roles.find((r: any) => r.id === selectedRole)?.name === "salesperson";
 
   const onSubmit = async (data: FormData) => {
     try {
-      await createUser.mutateAsync(data);
+      const submitData = {
+        ...data,
+        phone: data.phone || null,
+        whatsapp: data.whatsapp || null,
+        position: data.position || null,
+      };
+
+      if (isEdit) {
+        await updateUser.mutateAsync({
+          id: userId!,
+          data: submitData,
+        });
+      } else {
+        if (!data.password) {
+          throw new Error("创建用户时密码不能为空");
+        }
+        await createUser.mutateAsync({
+          ...submitData,
+          password: data.password,
+        });
+      }
       onSuccess?.();
       form.reset();
       onOpenChange(false);
     } catch (error) {
-      // 错误已在 mutation 中处理
+      console.error("操作失败:", error);
     }
   };
 
@@ -127,21 +177,22 @@ export function CreateUserModal({
     onOpenChange(isOpen);
   };
 
-  const isLoading = createUser.isPending;
+  const isLoading = createUser.isPending || updateUser.isPending;
 
   return (
     <Dialog onOpenChange={handleOpenChange} open={open}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>创建用户</DialogTitle>
+          <DialogTitle>{isEdit ? "编辑用户" : "创建用户"}</DialogTitle>
           <DialogDescription>
-            创建新用户并分配角色和部门。如果是业务员角色，可以分配负责的主分类。
+            {isEdit
+              ? "编辑用户信息。如果是业务员角色，可以调整负责的主分类。"
+              : "创建新用户并分配角色和部门。如果是业务员角色，可以分配负责的主分类。"}
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
           <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
-            {/* 账号信息 */}
             <div className="space-y-4">
               <div className="border-slate-200 border-b pb-2">
                 <h3 className="font-semibold text-slate-900">账号信息</h3>
@@ -185,10 +236,22 @@ export function CreateUserModal({
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>密码 *</FormLabel>
+                    <FormLabel>
+                      密码{" "}
+                      {isEdit && (
+                        <span className="font-normal text-slate-500">
+                          (留空不修改密码不能更新，忘记就删除用户)
+                        </span>
+                      )}
+                      {!isEdit && "*"}
+                    </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="请输入密码（至少6个字符）"
+                        placeholder={
+                          isEdit
+                            ? "留空则不修改密码"
+                            : "请输入密码（至少6个字符）"
+                        }
                         type="password"
                         {...field}
                       />
@@ -199,7 +262,6 @@ export function CreateUserModal({
               />
             </div>
 
-            {/* 联系方式 */}
             <div className="space-y-4">
               <div className="border-slate-200 border-b pb-2">
                 <h3 className="font-semibold text-slate-900">联系方式</h3>
@@ -253,7 +315,6 @@ export function CreateUserModal({
               />
             </div>
 
-            {/* 角色和部门 */}
             <div className="space-y-4">
               <div className="border-slate-200 border-b pb-2">
                 <h3 className="font-semibold text-slate-900">角色和部门</h3>
@@ -262,21 +323,13 @@ export function CreateUserModal({
                 </p>
               </div>
 
-              {/* 调试信息 */}
-              {(rolesError || departmentsError) && (
+              {rolesError || departmentsError ? (
                 <div className="rounded-md bg-red-50 p-3 text-red-700 text-sm">
                   <p>加载数据失败：</p>
                   {rolesError && <p>角色: {rolesError.message}</p>}
                   {departmentsError && <p>部门: {departmentsError.message}</p>}
                 </div>
-              )}
-
-              <div className="rounded-md bg-slate-50 p-3 text-slate-700 text-sm">
-                <p>调试信息：</p>
-                <p>角色数量: {roles.length}</p>
-                <p>部门数量: {departments.length}</p>
-                <p>主分类数量: {masterCategories.length}</p>
-              </div>
+              ) : null}
 
               <div className="grid grid-cols-2 gap-4">
                 <FormField
@@ -358,7 +411,6 @@ export function CreateUserModal({
               />
             </div>
 
-            {/* 主分类分配（仅业务员） */}
             {isSalesperson && (
               <div className="space-y-4">
                 <div className="border-slate-200 border-b pb-2">
@@ -398,7 +450,9 @@ export function CreateUserModal({
                                 } else {
                                   form.setValue(
                                     "masterCategoryIds",
-                                    current.filter((id) => id !== category.id)
+                                    current.filter(
+                                      (id: string) => id !== category.id
+                                    )
                                   );
                                 }
                               }}
@@ -428,8 +482,10 @@ export function CreateUserModal({
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    创建中...
+                    {isEdit ? "更新中..." : "创建中..."}
                   </>
+                ) : isEdit ? (
+                  "保存修改"
                 ) : (
                   "创建用户"
                 )}

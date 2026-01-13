@@ -16,10 +16,25 @@ export const authGuardMid = new Elysia({ name: "authGuard" })
     const headers = request.headers;
     const session = await auth.api.getSession({ headers });
     if (!session) throw new HttpError.Unauthorized("未登录");
-    let userRolePermission = await getUserWithRoles(session.user.id, db);
 
     // 检查是否有 x-current-dept-id 请求头，如果有则覆盖用户 context 中的部门信息
     const currentDeptIdFromHeader = request.headers.get(CURRENT_DEPT_HEADER);
+    console.log('currentDeptIdFromHeader:', currentDeptIdFromHeader)
+
+    let targetDept = null;
+    if (currentDeptIdFromHeader) {
+      targetDept = await db.query.departmentTable.findFirst({
+        where: {
+          id: currentDeptIdFromHeader,
+        },
+      });
+    }
+
+    let userRolePermission = await getUserWithRoles(
+      session.user.id,
+      db,
+      targetDept?.category
+    );
     if (currentDeptIdFromHeader) {
       const targetDept = await db.query.departmentTable.findFirst({
         where: {
@@ -115,7 +130,11 @@ export const authGuardMid = new Elysia({ name: "authGuard" })
 
 // --- 辅助函数保持不变 ---
 
-async function getUserWithRoles(userID: string, db: DBtype) {
+async function getUserWithRoles(
+  userID: string,
+  db: DBtype,
+  deptCategory?: string
+) {
   const rawUser = await db.query.userTable.findFirst({
     where: { id: userID },
     with: {
@@ -189,8 +208,59 @@ async function getUserWithRoles(userID: string, db: DBtype) {
     isSuperAdmin: !!rawUser.isSuperAdmin,
     context,
     roles,
-    permissions,
+    permissions:
+      deptCategory === "factory" ? FACTORY_ROLE_PERMISSIONS : permissions,
   };
 }
 
 export type UserDto = Awaited<NonNullable<ReturnType<typeof getUserWithRoles>>>;
+
+const FACTORY_ROLE_PERMISSIONS = [
+  "USER_VIEW",
+  "USER_CREATE",
+  "USER_EDIT",
+  "USER_DELETE",
+  "SITE_VIEW",
+  "SITE_EDIT",
+  "PRODUCT_VIEW",
+  "PRODUCT_CREATE",
+  "PRODUCT_EDIT",
+  "PRODUCT_DELETE",
+  "SKU_VIEW",
+  "SKU_CREATE",
+  "SKU_EDIT",
+  "SKU_DELETE",
+  "MEDIA_VIEW",
+  "MEDIA_CREATE",
+  "MEDIA_EDIT",
+  "MEDIA_DELETE",
+  "AD_VIEW",
+  "AD_CREATE",
+  "AD_EDIT",
+  "AD_DELETE",
+  "HERO_CARD_VIEW",
+  "HERO_CARD_CREATE",
+  "HERO_CARD_EDIT",
+  "HERO_CARD_DELETE",
+  "CUSTOMER_VIEW",
+  "CUSTOMER_CREATE",
+  "CUSTOMER_EDIT",
+  "CUSTOMER_DELETE",
+  "INQUIRY_VIEW",
+  "INQUIRY_CREATE",
+  "INQUIRY_EDIT",
+  "INQUIRY_DELETE",
+  "QUOTATION_VIEW",
+  "QUOTATION_CREATE",
+  "QUOTATION_EDIT",
+  "QUOTATION_DELETE",
+  "SITE_CATEGORY_VIEW",
+  "SITE_CATEGORY_CREATE",
+  "SITE_CATEGORY_EDIT",
+  "SITE_CATEGORY_DELETE",
+  "MEDIA_VIEW",
+  "MEDIA_CREATE",
+  "MEDIA_EDIT",
+  "MEDIA_DELETE",
+  "MASTER_CATEGORY_VIEW"
+];

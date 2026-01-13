@@ -7,7 +7,6 @@ import {
   Layers,
   type LucideIcon,
   PieChart,
-  Settings,
   Shield,
   ShoppingBag,
   SquareTerminal,
@@ -102,12 +101,12 @@ const SIDEBAR_CONFIG: NavSection[] = [
         icon: Frame,
         permission: PERMISSIONS.HERO_CARD_VIEW,
       },
-      {
-        title: "站点配置",
-        url: "/dashboard/site-config",
-        icon: Settings,
-        permission: PERMISSIONS.SITE_CONFIG_VIEW,
-      },
+      // {
+      //   title: "站点配置",
+      //   url: "/dashboard/site-config",
+      //   icon: Settings,
+      //   permission: PERMISSIONS.SITE_CONFIG_VIEW,
+      // },
     ],
   },
   {
@@ -129,7 +128,7 @@ const SIDEBAR_CONFIG: NavSection[] = [
         title: "全局分类",
         url: "/dashboard/master-category",
         icon: Layers,
-        permission: PERMISSIONS.MASTER_CATEGORY_VIEW,
+        permission: PERMISSIONS.MASTER_CATEGORY_CREATE,
       },
     ],
   },
@@ -160,12 +159,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       return [];
     }
 
-    const isSuperAdmin = user.isSuperAdmin;
+    // const isSuperAdmin = user.isSuperAdmin;
 
     return SIDEBAR_CONFIG.map((section) => ({
       ...section,
       items: section.items.filter((item) => {
-        if (isSuperAdmin) return true; // 超管无视一切
+        // if (isSuperAdmin) return true; // 超管无视一切
         if (!item.permission) return true;
 
         return hasPermission(item.permission);

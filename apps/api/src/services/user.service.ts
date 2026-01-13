@@ -31,19 +31,86 @@ export class UserService {
     return res;
   }
 
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   public async update(
     id: string,
     body: UserContract["Update"],
-    ctx: ServiceContext
+    ctx: ServiceContext,
+    headers: any
   ) {
-    const updateData = { ...body, updatedAt: new Date() };
-    const [res] = await ctx.db
-      .update(userTable)
-      .set(updateData)
-      .where(eq(userTable.id, id))
-      .returning();
-    return res;
+    return await ctx.db.transaction(async (tx) => {
+      const { masterCategoryIds, roleId, password, ...updateData } = body;
+
+      const [updatedUser] = await tx
+        .update(userTable)
+        .set(updateData)
+        .where(eq(userTable.id, id))
+        .returning();
+
+      if (password) {
+        const data = await auth.api.changePassword({
+          body: {
+            newPassword: password, // required
+            currentPassword: "12345678", // required
+            revokeOtherSessions: true,
+          },
+          // This endpoint requires session cookies.
+          headers,
+        });
+      }
+
+      if (roleId) {
+        await tx.delete(userRoleTable).where(eq(userRoleTable.userId, id));
+        await tx.insert(userRoleTable).values({
+          userId: id,
+          roleId,
+        });
+      }
+
+      if (masterCategoryIds) {
+        await tx
+          .delete(salesResponsibilityTable)
+          .where(eq(salesResponsibilityTable.userId, id));
+
+        if (masterCategoryIds.length > 0) {
+          await tx.insert(salesResponsibilityTable).values(
+            masterCategoryIds.map((catId: string) => ({
+              userId: id,
+              masterCategoryId: catId,
+              siteId: ctx.user.context.site.id,
+              tenantId: ctx.user.context.tenantId!,
+            }))
+          );
+        }
+      }
+
+      // 4. 处理角色（先删除旧角色，再插入新角色）
+      if (roleId) {
+        await tx.delete(userRoleTable).where(eq(userRoleTable.userId, id));
+        await tx.insert(userRoleTable).values({
+          userId: id,
+          roleId,
+        });
+      }
+
+      if (masterCategoryIds) {
+        await tx
+          .delete(salesResponsibilityTable)
+          .where(eq(salesResponsibilityTable.userId, id));
+
+        if (masterCategoryIds.length > 0) {
+          await tx.insert(salesResponsibilityTable).values(
+            masterCategoryIds.map((catId: string) => ({
+              userId: id,
+              masterCategoryId: catId,
+              siteId: ctx.user.context.site.id,
+              tenantId: ctx.user.context.tenantId!,
+            }))
+          );
+        }
+      }
+
+      return updatedUser;
+    });
   }
 
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */

@@ -26,7 +26,47 @@ interface SwitchableDept {
   current: DeptInfo;
   switchableDepartments: DeptInfo[];
 }
-
+export interface UserListRes {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  name: string;
+  email: string;
+  emailVerified: boolean;
+  image: string;
+  tenantId: string;
+  deptId: string;
+  phone: string;
+  whatsapp?: any;
+  position: string;
+  isActive: boolean;
+  isSuperAdmin: boolean;
+  roles: Role[];
+  department: Department;
+}
+interface Department {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  tenantId: string;
+  parentId?: any;
+  name: string;
+  code: string;
+  category: string;
+  address: string;
+  contactPhone: string;
+  logo?: any;
+  extensions?: any;
+  isActive: boolean;
+}
+interface Role {
+  id: string;
+  name: string;
+  dataScope: string;
+  description: string;
+  type: string;
+  priority: number;
+}
 export interface UserInfo {
   id: string;
   name: string;

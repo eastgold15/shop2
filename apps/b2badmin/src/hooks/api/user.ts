@@ -15,7 +15,7 @@ import {
 } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { api } from "./api-client";
-import { MeRes } from "./user.type";
+import { MeRes, UserListRes } from "./user.type";
 
 // --- Query Keys ---
 export const userKeys = {
@@ -42,7 +42,6 @@ export function useMe(options?: UseMeOptions) {
   });
 }
 
-// --- 1. 列表查询 (GET) ---
 export function useUserList(
   params?: typeof UserContract.ListQuery.static,
   enabled = true
@@ -50,9 +49,12 @@ export function useUserList(
   return useQuery({
     queryKey: userKeys.list(params),
     queryFn: () =>
-      api.get<any, typeof UserContract.ListQuery.static>("/api/v1/user", {
-        params,
-      }),
+      api.get<UserListRes[], typeof UserContract.ListQuery.static>(
+        "/api/v1/user",
+        {
+          params,
+        }
+      ),
     enabled,
   });
 }

@@ -139,8 +139,6 @@ export const userTable = p.pgTable("sys_user", {
   email: p.text("email").notNull().unique(),
   emailVerified: p.boolean("email_verified").default(false),
   image: p.text("image"),
-  password: p.text("password"), // 如果需要密码登录
-
   // 🔥 核心归属：决定用户在组织树的哪个位置（强制必填）
   tenantId: p
     .uuid("tenant_id")
@@ -167,6 +165,7 @@ export const userRoleTable = p.pgTable(
     userId: p
       .uuid("user_id")
       .notNull()
+      .unique()
       .references(() => userTable.id, { onDelete: "cascade" }),
     roleId: p
       .uuid("role_id")

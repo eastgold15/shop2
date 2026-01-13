@@ -24,15 +24,19 @@ export const UserContract = {
     isActive: t.Boolean(),
     masterCategoryIds: t.Optional(t.Array(t.String())),
   }),
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+
   Update: t.Partial(
     t.Object({
-      ...t.Omit(t.Object(UserInsertFields), [
-        "id",
-        "createdAt",
-        "updatedAt",
-        "siteId",
-      ]).properties,
+      name: UserFields.name,
+      email: UserFields.email,
+      phone: UserFields.phone,
+      whatsapp: t.Optional(UserInsertFields.whatsapp),
+      position: t.Optional(UserInsertFields.position),
+      password: t.String(),
+      deptId: t.String(),
+      roleId: t.String(),
+      isActive: t.Boolean(),
+      masterCategoryIds: t.Optional(t.Array(t.String())),
     })
   ),
 

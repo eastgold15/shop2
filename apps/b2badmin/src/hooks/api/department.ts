@@ -10,6 +10,7 @@ import { DepartmentContract } from "@repo/contract";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { api } from "./api-client";
+import { DeptListRes } from "./department.type";
 
 /**
  * @generated
@@ -22,9 +23,7 @@ export const departmentKeys = {
   details: () => [...departmentKeys.all, "detail"] as const,
   detail: (id: string) => [...departmentKeys.details(), id] as const,
 };
-/**
- * @generated
- */
+
 export function useDepartmentList(
   params?: DepartmentContract["ListQuery"],
   enabled?: boolean
@@ -32,7 +31,7 @@ export function useDepartmentList(
   return useQuery({
     queryKey: departmentKeys.list(params),
     queryFn: () =>
-      api.get<any, DepartmentContract["ListQuery"]>("/api/v1/department", {
+      api.get<DeptListRes[], DepartmentContract["ListQuery"]>("/api/v1/department", {
         params,
       }),
     enabled: enabled ?? true,

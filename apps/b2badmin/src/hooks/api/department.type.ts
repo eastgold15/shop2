@@ -3,8 +3,27 @@
  * 用于后端接口开发参考
  */
 
-// ==================== 列表查询 ====================
 
+export interface DeptListRes {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  tenantId: string;
+  parentId?: string;
+  name: string;
+  code: string;
+  category: string;
+  address: string;
+  contactPhone: string;
+  logo?: any;
+  extensions?: Extension;
+  isActive: boolean;
+}
+interface Extension {
+  mainProducts: string;
+  annualRevenue: string;
+  employeeCount: number;
+}
 /**
  * 部门列表查询参数
  */
@@ -31,28 +50,23 @@ export interface DepartmentListResponse {
 
 // ==================== 部门实体 ====================
 
-/**
- * 部门实体
- */
-export interface Department {
+
+interface Department {
   id: string;
+  createdAt: string;
+  updatedAt: string;
+  tenantId: string;
+  parentId?: any;
   name: string;
   code: string;
-  description?: string | null;
-  parentId?: string | null;
-  sortOrder: number;
+  category: string;
+  address: string;
+  contactPhone: string;
+  logo?: any;
+  extensions?: any;
   isActive: boolean;
-  createdAt: string; // ISO 8601 datetime string
-  updatedAt: string; // ISO 8601 datetime string
-
-  // 关联数据
-  parent?: {
-    id: string;
-    name: string;
-  };
-  children?: Department[];
-  users?: DepartmentUser[];
 }
+
 
 /**
  * 部门用户关联

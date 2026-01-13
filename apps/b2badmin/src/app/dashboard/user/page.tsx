@@ -22,17 +22,19 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { useDeleteUser, useUserList } from "@/hooks/api/user";
+import { useAuthStore } from "@/stores/auth-store";
 
 export default function UsersPage() {
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingUserId, setEditingUserId] = useState<string | undefined>();
+  const [editingUserData, setEditingUserData] = useState<any>(undefined);
   const [isMounted, setIsMounted] = useState(false);
+  const currentUserId = useAuthStore((state) => state.user?.id);
 
-  // 避免hydration错误
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // 获取用户列表
   const {
     data: response,
     isLoading,
@@ -40,9 +42,8 @@ export default function UsersPage() {
   } = useUserList({
     search: "",
   });
-  const users = response || [];
+  const users = response?.filter((item) => item.id !== currentUserId) || [];
 
-  // 删除用户
   const deleteUser = useDeleteUser();
 
   const handleDelete = async (id: string, name: string) => {
@@ -52,7 +53,31 @@ export default function UsersPage() {
     await deleteUser.mutateAsync(id);
   };
 
-  // 如果还没挂载，返回一个加载状态的占位符
+  const handleEdit = (user: any) => {
+    setEditingUserId(user.id);
+    setEditingUserData(user);
+    setIsModalOpen(true);
+  };
+
+  const handleCreate = () => {
+    setEditingUserId(undefined);
+    setEditingUserData(undefined);
+    setIsModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setEditingUserId(undefined);
+    setEditingUserData(undefined);
+    setIsModalOpen(false);
+  };
+
+  const handleModalSuccess = () => {
+    setEditingUserId(undefined);
+    setEditingUserData(undefined);
+    setIsModalOpen(false);
+    refetch();
+  };
+
   if (!isMounted) {
     return (
       <SidebarProvider>
@@ -96,7 +121,7 @@ export default function UsersPage() {
               <HasRole
                 role={["super_admin", "exporter_admin", "factory_admin"]}
               >
-                <Button onClick={() => setIsCreateModalOpen(true)}>
+                <Button onClick={handleCreate}>
                   <Plus className="mr-2" size={18} />
                   创建用户
                 </Button>
@@ -120,7 +145,7 @@ export default function UsersPage() {
                 <HasRole
                   role={["super_admin", "exporter_admin", "factory_admin"]}
                 >
-                  <Button onClick={() => setIsCreateModalOpen(true)}>
+                  <Button onClick={handleCreate}>
                     <Plus className="mr-2" size={18} />
                     创建第一个用户
                   </Button>
@@ -155,7 +180,6 @@ export default function UsersPage() {
                         ) : (
                           <XCircle className="h-5 w-5 text-red-500" />
                         )}
-                        {/* 显示角色 */}
                         {user.roles && user.roles.length > 0 && (
                           <div className="rounded-full bg-blue-100 px-2 py-1">
                             <span className="font-medium text-blue-700 text-xs">
@@ -194,7 +218,10 @@ export default function UsersPage() {
                           <span>用户</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <button className="font-medium text-indigo-600 text-sm hover:text-indigo-700">
+                          <button
+                            className="font-medium text-indigo-600 text-sm hover:text-indigo-700"
+                            onClick={() => handleEdit(user)}
+                          >
                             编辑
                           </button>
                           <button
@@ -216,13 +243,12 @@ export default function UsersPage() {
         </div>
       </SidebarInset>
 
-      {/* 创建用户弹窗 */}
       <CreateUserModal
-        onOpenChange={setIsCreateModalOpen}
-        onSuccess={() => {
-          refetch();
-        }}
-        open={isCreateModalOpen}
+        initialData={editingUserData}
+        onOpenChange={handleModalClose}
+        onSuccess={handleModalSuccess}
+        open={isModalOpen}
+        userId={editingUserId}
       />
     </SidebarProvider>
   );
