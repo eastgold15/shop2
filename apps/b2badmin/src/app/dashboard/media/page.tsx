@@ -21,6 +21,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { Can } from "@/components/auth";
 import { MediaUpload } from "@/components/MediaUpload";
 import { Button } from "@/components/ui/button";
+import { CategorySelect } from "@/components/ui/category-select";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,7 +38,7 @@ import {
 import { useBatchDeleteMedia, useMediaPageList } from "@/hooks/api";
 import { cn } from "@/lib/utils";
 
-interface UseMediaList {
+export interface UseMediaList {
   id: string;
   createdAt: string;
   updatedAt: string;
@@ -160,7 +161,6 @@ export default function MediaLibrary() {
             </div>
           </div>
 
-          {/* 搜索与筛选控制台 */}
           <div className="flex flex-col gap-4 rounded-xl border bg-white p-4 shadow-sm sm:flex-row">
             <div className="relative flex-1">
               <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-400" />
@@ -179,16 +179,14 @@ export default function MediaLibrary() {
                 </button>
               )}
             </div>
-            <select
-              className="rounded-lg border border-slate-200 px-4 py-2 text-slate-700 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20"
-              onChange={(e) => setCategory(e.target.value)}
-              value={category}
-            >
-              <option value="">所有类型</option>
-              <option value="image">图片</option>
-              <option value="video">视频</option>
-              <option value="general">通用文件</option>
-            </select>
+            <div className="w-64">
+              <CategorySelect
+                allowClear={true}
+                onChange={setCategory}
+                placeholder="筛选分类..."
+                value={category}
+              />
+            </div>
           </div>
 
           {/* 全选控制条 */}
