@@ -1,46 +1,45 @@
 /**
- * 1. 定义所有资源基础名称 (从你的 getAllTableNames 提取)
+ * 1. 定义所有资源基础名称 (与后端 API 保持一致)
  */
 export const PERMISSION_RESOURCES = [
-  "USERS",
+  "TENANT",
+  "DEPARTMENT",
+  "USER",
   "ACCOUNT",
   "SESSION",
   "VERIFICATION",
-  "ROLES",
-  "PERMISSIONS",
-  "ROLE_PERMISSIONS",
-  "USER_SITE_ROLES",
-  "EXPORTERS",
-  "MASTER_CATEGORIES",
-  "FACTORIES",
-  "SALESPERSONS",
-  "SALESPERSON_AFFILIATIONS",
-  "SALESPERSON_CATEGORIES",
-  "MEDIA",
-  "MEDIA_METADATA",
-  "ADVERTISEMENTS",
-  "HERO_CARDS",
-  "PRODUCTS",
-  "PRODUCT_MASTER_CATEGORIES",
+  "ROLE",
+  "PERMISSION",
+  "ROLE_PERMISSION",
+  "USER_SITE_ROLE",
+  "EXPORTER",
+  "MASTER_CATEGORY",
+  "FACTORY",
+  "SALESPERSON",
+  "SALESPERSON_AFFILIATION",
+  "SALESPERSON_CATEGORY",
+  "SITE",
+  "SITE_CATEGORY",
+  "SITE_PRODUCT",
+  "SITE_CONFIG",
+  "PRODUCT",
+  "PRODUCT_MASTER_CATEGORY",
+  "PRODUCT_SITE_CATEGORY",
   "PRODUCT_MEDIA",
-  "ATTRIBUTE_TEMPLATES",
-  "ATTRIBUTES",
-  "ATTRIBUTE_VALUES",
   "PRODUCT_TEMPLATE",
   "TEMPLATE",
-  "SKUS",
+  "TEMPLATE_KEY",
+  "TEMPLATE_VALUE",
+  "SKU",
   "SKU_MEDIA",
+  "MEDIA",
+  "MEDIA_METADATA",
+  "AD",
+  "HERO_CARD",
   "CUSTOMER",
-  "INQUIRIES",
-  "INQUIRY_ITEMS",
-  "QUOTATIONS",
-  "QUOTATION_ITEMS",
-  "SITE_CONFIG",
+  "INQUIRY",
+  "QUOTATION",
   "DAILY_INQUIRY_COUNTER",
-  "TRANSLATION_DICT",
-  "SITES",
-  "SITE_CATEGORIES",
-  "SITE_PRODUCTS",
 ] as const; // 使用 as const 锁定字面量
 
 /**
@@ -58,7 +57,7 @@ type CRUDPermissions =
 /**
  * 4. 加上特殊的非标准权限
  */
-export type ExtraPermissions = "SITES_MANAGE";
+export type ExtraPermissions = "SITES_MANAGE" | "TENANTS_MANAGE";
 
 /**
  * 最终导出的权限类型
@@ -67,7 +66,7 @@ export type PermissionType = CRUDPermissions | ExtraPermissions;
 
 /**
  * 5. (可选) 导出权限常量对象，方便在代码中直接引用而非写字符串
- * 这样写：PERMISSIONS.USERS_VIEW 而不是 "USERS_VIEW"
+ * 这样写：PERMISSIONS.USER_VIEW 而不是 "USER_VIEW"
  */
 export const PERMISSIONS = [
   ...PERMISSION_RESOURCES.flatMap((res) => [
@@ -77,6 +76,7 @@ export const PERMISSIONS = [
     `${res}_DELETE`,
   ]),
   "SITES_MANAGE",
+  "TENANTS_MANAGE",
 ].reduce(
   (acc, curr) => {
     acc[curr as PermissionType] = curr as PermissionType;

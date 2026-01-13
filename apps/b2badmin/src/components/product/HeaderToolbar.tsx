@@ -98,7 +98,7 @@ export function HeaderToolbar({
         </div>
 
         <div className="flex items-center gap-2">
-          <Can permission="PRODUCTS_CREATE">
+          <Can permission="PRODUCT_CREATE">
             <Button
               className="bg-indigo-600 hover:bg-indigo-700"
               onClick={onAdd}
@@ -110,7 +110,7 @@ export function HeaderToolbar({
           </Can>
 
           {selectedCount > 0 && (
-            <Can permission="PRODUCTS_DELETE">
+            <Can permission="PRODUCT_DELETE">
               <Button onClick={onBatchDelete} size="sm" variant="destructive">
                 <Trash2 className="mr-2 h-4 w-4" />
                 批量删除 ({selectedCount})

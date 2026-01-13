@@ -174,6 +174,18 @@ async function getUserWithRoles(
     )
   );
 
+  let permissionWithDeptCategory = permissions;
+  switch (deptCategory) {
+    case "factory":
+      permissionWithDeptCategory = permissions.filter(p => !FACTORY_NO_PERMISSIONS.includes(p))
+      break;
+    case "group":
+      permissionWithDeptCategory = permissions.filter((p) => !GROUPSITE_NO_PERMISSIONS.includes(p));
+      break;
+    default:
+      break;
+  }
+
   // 2. 提取角色名
   const roles = rawUser.roles.map((r) => ({
     name: r.name,
@@ -208,59 +220,22 @@ async function getUserWithRoles(
     isSuperAdmin: !!rawUser.isSuperAdmin,
     context,
     roles,
-    permissions:
-      deptCategory === "factory" ? FACTORY_ROLE_PERMISSIONS : permissions,
+    permissions: permissionWithDeptCategory
   };
 }
 
 export type UserDto = Awaited<NonNullable<ReturnType<typeof getUserWithRoles>>>;
 
-const FACTORY_ROLE_PERMISSIONS = [
-  "USER_VIEW",
-  "USER_CREATE",
-  "USER_EDIT",
-  "USER_DELETE",
-  "SITE_VIEW",
-  "SITE_EDIT",
-  "PRODUCT_VIEW",
-  "PRODUCT_CREATE",
-  "PRODUCT_EDIT",
-  "PRODUCT_DELETE",
-  "SKU_VIEW",
-  "SKU_CREATE",
-  "SKU_EDIT",
-  "SKU_DELETE",
-  "MEDIA_VIEW",
-  "MEDIA_CREATE",
-  "MEDIA_EDIT",
-  "MEDIA_DELETE",
-  "AD_VIEW",
-  "AD_CREATE",
-  "AD_EDIT",
-  "AD_DELETE",
-  "HERO_CARD_VIEW",
-  "HERO_CARD_CREATE",
-  "HERO_CARD_EDIT",
-  "HERO_CARD_DELETE",
-  "CUSTOMER_VIEW",
-  "CUSTOMER_CREATE",
-  "CUSTOMER_EDIT",
-  "CUSTOMER_DELETE",
-  "INQUIRY_VIEW",
-  "INQUIRY_CREATE",
-  "INQUIRY_EDIT",
-  "INQUIRY_DELETE",
-  "QUOTATION_VIEW",
-  "QUOTATION_CREATE",
-  "QUOTATION_EDIT",
-  "QUOTATION_DELETE",
-  "SITE_CATEGORY_VIEW",
-  "SITE_CATEGORY_CREATE",
-  "SITE_CATEGORY_EDIT",
-  "SITE_CATEGORY_DELETE",
-  "MEDIA_VIEW",
-  "MEDIA_CREATE",
-  "MEDIA_EDIT",
-  "MEDIA_DELETE",
-  "MASTER_CATEGORY_VIEW"
+const FACTORY_NO_PERMISSIONS = [
+  "SITES_MANAGE",
+  "TENANTS_MANAGE"
 ];
+
+
+// 集团站权限
+const GROUPSITE_NO_PERMISSIONS = [
+  "SKU_CREATE",
+  "SKU_DELETE",
+  "PRODUCT_CREATE",
+  "PRODUCT_DELETE",
+]

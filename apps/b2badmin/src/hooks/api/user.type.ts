@@ -76,20 +76,20 @@ export interface UserInfo {
   position: string;
   isSuperAdmin: boolean;
   context: Context;
-  roles: Role[];
+  roles: SimpleRole[];
   permissions: string[];
 }
-interface Role {
+interface SimpleRole {
   name: string;
   dataScope: string;
 }
 interface Context {
   tenantId: string;
-  department: Department;
+  department: SimpleDepartment;
   site: Site;
 }
 
-interface Department {
+interface SimpleDepartment {
   id: string;
   name: string;
   category: string;

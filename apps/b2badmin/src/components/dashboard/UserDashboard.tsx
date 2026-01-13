@@ -184,21 +184,21 @@ export default function UserDashboard() {
                 </button>
               </Can>
 
-              <Can permission="PRODUCTS_VIEW">
+              <Can permission="PRODUCT_VIEW">
                 <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 font-semibold text-white transition-all hover:bg-blue-700 hover:shadow-lg active:scale-95">
                   <Package size={18} />
                   产品管理
                 </button>
               </Can>
 
-              <Can permission="FACTORIES_VIEW">
+              <Can permission="FACTORY_VIEW">
                 <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 font-semibold text-white transition-all hover:bg-emerald-700 hover:shadow-lg active:scale-95">
                   <Building2 size={18} />
                   工厂管理
                 </button>
               </Can>
 
-              <Can permission="QUOTATIONS_VIEW">
+              <Can permission="QUOTATION_VIEW">
                 <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 font-semibold text-white transition-all hover:bg-indigo-700 hover:shadow-lg active:scale-95">
                   <ShoppingCart size={18} />
                   订单管理

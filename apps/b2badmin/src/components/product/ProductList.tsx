@@ -149,13 +149,13 @@ export function ProductList({
                     <DropdownMenuItem onClick={() => onEdit(product)}>
                       编辑商品
                     </DropdownMenuItem>
-                    <Can permission="SKUS_CREATE">
+                    <Can permission="SKU_CREATE">
                       <DropdownMenuItem onClick={() => onCreateSku(product.id)}>
                         <Plus className="mr-2 h-4 w-4" />
                         添加 SKU
                       </DropdownMenuItem>
                     </Can>
-                    <Can permission="PRODUCTS_DELETE">
+                    <Can permission="PRODUCT_DELETE">
                       <DropdownMenuItem
                         className="text-red-600"
                         onClick={() => onDelete(product)}
