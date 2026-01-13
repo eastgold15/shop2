@@ -1,5 +1,5 @@
-// components/product/header-toolbar.tsx
 import { Download, Filter, Plus, Search, Trash2 } from "lucide-react";
+import { Can } from "@/components/auth/Can";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -10,16 +10,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { useAuthStore } from "@/stores/auth-store";
 import { HasGroup } from "../auth/Has";
 
 interface HeaderToolbarProps {
@@ -28,12 +20,8 @@ interface HeaderToolbarProps {
   onSearchChange: (val: string) => void;
   onAdd: () => void;
   onBatchDelete: () => void;
-  /** 是否显示"添加商品"按钮（工厂站点显示，集团站点隐藏） */
-  showAddButton?: boolean;
-  /** 当前选择的商品池类型 */
-  listedType: "listed" | "unlisted";
-  /** 商品池类型变化回调 */
-  onListedTypeChange: (type: "listed" | "unlisted") => void;
+  viewMode: "global" | "my";
+  onViewModeChange: (mode: "global" | "my") => void;
 }
 
 export function HeaderToolbar({
@@ -42,20 +30,15 @@ export function HeaderToolbar({
   onSearchChange,
   onAdd,
   onBatchDelete,
-  showAddButton = true,
-  listedType,
-  onListedTypeChange,
+  viewMode,
+  onViewModeChange,
 }: HeaderToolbarProps) {
-  const siteType = useAuthStore((state) => state.getCurrentSite()?.siteType);
-
   return (
     <div className="sticky top-0 z-10 flex flex-col gap-4 border-b bg-background/95 p-4 backdrop-blur supports-backdrop-filter:bg-background/60">
-      {/* 第一行：面包屑与标题区 */}
       <div className="flex items-center gap-2">
         <SidebarTrigger className="-ml-1" />
         <Separator className="mr-2 h-4" orientation="vertical" />
         <h1 className="font-semibold text-lg leading-none tracking-tight">
-          {siteType === "factory" ? "工厂" : "集团"}
           商品管理
         </h1>
         {selectedCount > 0 && (
@@ -80,20 +63,22 @@ export function HeaderToolbar({
           </div>
           {/* 商品池类型选择 */}
           <HasGroup>
-            <Select
-              onValueChange={(value) =>
-                onListedTypeChange(value as "listed" | "unlisted")
-              }
-              value={listedType}
-            >
-              <SelectTrigger className="w-35">
-                <SelectValue placeholder="选择商品池" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="listed">我的商品</SelectItem>
-                <SelectItem value="unlisted">商品池</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => onViewModeChange("global")}
+                size="sm"
+                variant={viewMode === "global" ? "default" : "outline"}
+              >
+                全局商品
+              </Button>
+              <Button
+                onClick={() => onViewModeChange("my")}
+                size="sm"
+                variant={viewMode === "my" ? "default" : "outline"}
+              >
+                我的商品
+              </Button>
+            </div>
           </HasGroup>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -113,27 +98,30 @@ export function HeaderToolbar({
         </div>
 
         <div className="flex items-center gap-2">
-          {selectedCount > 0 ? (
-            <Button onClick={onBatchDelete} size="sm" variant="destructive">
-              <Trash2 className="mr-2 h-4 w-4" />
-              批量删除
+          <Can permission="PRODUCTS_CREATE">
+            <Button
+              className="bg-indigo-600 hover:bg-indigo-700"
+              onClick={onAdd}
+              size="sm"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              新建商品
             </Button>
-          ) : (
-            <>
-              <Button className="hidden sm:flex" size="sm" variant="outline">
-                <Download className="mr-2 h-4 w-4" /> 导出
+          </Can>
+
+          {selectedCount > 0 && (
+            <Can permission="PRODUCTS_DELETE">
+              <Button onClick={onBatchDelete} size="sm" variant="destructive">
+                <Trash2 className="mr-2 h-4 w-4" />
+                批量删除 ({selectedCount})
               </Button>
-              {showAddButton && (
-                <Button
-                  className="bg-indigo-600 hover:bg-indigo-700"
-                  onClick={onAdd}
-                  size="sm"
-                >
-                  <Plus className="mr-2 h-4 w-4" /> 新建商品
-                </Button>
-              )}
-            </>
+            </Can>
           )}
+
+          <Button className="hidden sm:flex" size="sm" variant="outline">
+            <Download className="mr-2 h-4 w-4" />
+            导出
+          </Button>
         </div>
       </div>
     </div>

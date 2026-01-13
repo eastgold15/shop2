@@ -1,6 +1,7 @@
 // components/product/product-list.tsx
-import { Box, ChevronDown, MoreHorizontal, Plus } from "lucide-react";
+import { ChevronDown, MoreHorizontal, Plus } from "lucide-react";
 import Image from "next/image";
+import { Can } from "@/components/auth/Can";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -24,6 +25,7 @@ interface ProductListProps {
   products: Product[];
   selectedIds: Set<string>;
   expandedIds: Set<string>;
+  viewMode: "global" | "my";
   onSelect: (id: string, checked: boolean) => void;
   onToggleExpand: (id: string) => void;
   // 操作回调
@@ -32,15 +34,13 @@ interface ProductListProps {
   onCreateSku: (id: string) => void;
   onEditSku: (sku: SkuListRes) => void;
   onDeleteSku: (id: string, code: string) => void;
-  showCreateSku?: boolean;
-  /** 是否显示删除按钮（只有"我的商品"才显示） */
-  showDelete?: boolean;
 }
 
 export function ProductList({
   products,
   selectedIds,
   expandedIds,
+  viewMode,
   onSelect,
   onToggleExpand,
   onEdit,
@@ -48,17 +48,12 @@ export function ProductList({
   onCreateSku,
   onEditSku,
   onDeleteSku,
-  showCreateSku = true,
-  showDelete = true,
 }: ProductListProps) {
   if (products.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
         <div className="rounded-full bg-slate-100 p-4">
-          <Box className="h-8 w-8 text-slate-400" />
-        </div>
-        <div className="space-y-1">
-          <h3 className="font-semibold">暂无商品</h3>
+          <p className="font-semibold">暂无商品</p>
           <p className="text-muted-foreground text-sm">
             点击右上角按钮开始创建。
           </p>
@@ -83,14 +78,12 @@ export function ProductList({
             onOpenChange={() => onToggleExpand(product.id)}
             open={isExpanded}
           >
-            {/* 商品主行 */}
             <div className="flex items-center gap-4 p-4">
               <Checkbox
                 checked={isSelected}
                 onCheckedChange={(c) => onSelect(product.id, !!c)}
               />
 
-              {/* 图片 */}
               <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md border bg-slate-100">
                 {product.mainImage ? (
                   <Image
@@ -98,6 +91,7 @@ export function ProductList({
                     className="object-cover"
                     fill
                     src={product.mainImage}
+                    unoptimized
                   />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center text-muted-foreground text-xs">
@@ -106,7 +100,6 @@ export function ProductList({
                 )}
               </div>
 
-              {/* 信息 */}
               <div className="grid flex-1 gap-1">
                 <div className="flex items-center gap-2">
                   <h3 className="font-semibold leading-none">{product.name}</h3>
@@ -123,14 +116,12 @@ export function ProductList({
                 </div>
               </div>
 
-              {/* 价格 */}
               <div className="hidden text-right sm:block">
                 <div className="font-medium">
                   ¥{product.sitePrice || "0.00"}
                 </div>
               </div>
 
-              {/* 操作区 */}
               <div className="flex items-center gap-2">
                 <CollapsibleTrigger asChild>
                   <Button
@@ -158,30 +149,31 @@ export function ProductList({
                     <DropdownMenuItem onClick={() => onEdit(product)}>
                       编辑商品
                     </DropdownMenuItem>
-                    {showCreateSku && (
+                    <Can permission="SKUS_CREATE">
                       <DropdownMenuItem onClick={() => onCreateSku(product.id)}>
-                        <Plus className="mr-2 h-4 w-4" /> 添加 SKU
+                        <Plus className="mr-2 h-4 w-4" />
+                        添加 SKU
                       </DropdownMenuItem>
-                    )}
-                    {showDelete && (
+                    </Can>
+                    <Can permission="PRODUCTS_DELETE">
                       <DropdownMenuItem
                         className="text-red-600"
                         onClick={() => onDelete(product)}
                       >
                         删除商品
                       </DropdownMenuItem>
-                    )}
+                    </Can>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
             </div>
 
-            {/* 展开的 SKU 面板 */}
             <CollapsibleContent>
               <SkuPanel
                 onDelete={onDeleteSku}
                 onEdit={onEditSku}
                 skus={product.skus}
+                viewMode={viewMode}
               />
             </CollapsibleContent>
           </Collapsible>

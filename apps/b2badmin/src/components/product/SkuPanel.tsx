@@ -17,9 +17,10 @@ interface SkuPanelProps {
   skus: SkuListRes[];
   onEdit: (sku: SkuListRes) => void;
   onDelete: (id: string, code: string) => void;
+  viewMode: "global" | "me";
 }
 
-export function SkuPanel({ skus, onEdit, onDelete }: SkuPanelProps) {
+export function SkuPanel({ skus, onEdit, onDelete, viewMode }: SkuPanelProps) {
   if (skus.length === 0) {
     return (
       <div className="flex h-24 flex-col items-center justify-center border-t bg-slate-50 text-muted-foreground text-sm">

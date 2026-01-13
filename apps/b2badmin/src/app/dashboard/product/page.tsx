@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { AppSidebar } from "@/components/app-sidebar";
-// 引入弹窗
 import { CreateProductModal } from "@/components/form/CreateProductModal";
 import { CreateSKUModal } from "@/components/form/CreateSKUModal";
 import { EditSKUModal } from "@/components/form/EditSKUModal";
@@ -11,7 +10,6 @@ import { HeaderToolbar } from "@/components/product/HeaderToolbar";
 import { ProductList } from "@/components/product/ProductList";
 
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-// Hooks & Types
 import {
   useBatchDeleteProduct,
   useDeleteProduct,
@@ -20,24 +18,17 @@ import {
 import { Product } from "@/hooks/api/product.type";
 import { useDeleteSku } from "@/hooks/api/sku";
 import { SkuListRes } from "@/hooks/api/sku.type";
-import { useAuthStore } from "@/stores/auth-store";
-
-// 引入三个核心组件
 
 export default function ProductsPage() {
-  // --- 1. 数据 ---
-  const [listedType, setListedType] = useState<"listed" | "unlisted">("listed");
+  const [viewMode, setViewMode] = useState<"global" | "my">("my");
   const { data, isLoading, refetch } = useProductPageList({
     page: 1,
     limit: 100,
-    isListed: listedType === "listed",
+    isListed: viewMode === "my",
   });
   const deleteSkuMutation = useDeleteSku();
   const deleteProductMutation = useBatchDeleteProduct();
   const deleteSingleProductMutation = useDeleteProduct();
-
-  // 获取当前站点类型（直接获取原始值避免无限循环）
-  const siteType = useAuthStore((state) => state.getCurrentSite()?.siteType);
 
   // --- 2. 状态 ---
   const [searchTerm, setSearchTerm] = useState("");
@@ -97,7 +88,7 @@ export default function ProductsPage() {
     refetch();
   };
 
-  if (isLoading) return null; // 或者 loading skeleton
+  if (isLoading) return null;
 
   return (
     <SidebarProvider>
@@ -105,15 +96,14 @@ export default function ProductsPage() {
       <SidebarInset className="flex flex-col overflow-hidden bg-slate-50/50">
         {/* 模块 1: 头部与工具栏 */}
         <HeaderToolbar
-          listedType={listedType}
           onAdd={() => setProductModal({ open: true })}
           onBatchDelete={handleBatchDelete}
-          onListedTypeChange={setListedType}
           onSearchChange={setSearchTerm}
-          // 集团站点隐藏"添加商品"按钮
+          onViewModeChange={setViewMode}
           searchTerm={searchTerm}
+          // 集团站点隐藏"添加商品"按钮
           selectedCount={selectedIds.size}
-          showAddButton={siteType === "factory"}
+          viewMode={viewMode}
         />
 
         {/* 模块 2: 滚动列表区域 */}
@@ -129,10 +119,7 @@ export default function ProductsPage() {
             onToggleExpand={handleToggleExpand}
             products={filteredProducts}
             selectedIds={selectedIds}
-            // 集团站点隐藏 SKU 创建功能
-            showCreateSku={siteType === "factory"}
-            // 只有"我的商品"才显示删除按钮
-            showDelete={listedType === "listed"}
+            viewMode={viewMode}
           />
         </div>
 
