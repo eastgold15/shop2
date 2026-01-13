@@ -11,98 +11,41 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
-import { Can } from "@/components/auth/Can"; // 我们之前写的权限组件
+import { Can } from "@/components/auth/Can";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useNotifications, useStatistics } from "@/hooks/api/statistics";
 import { useAuthStore } from "@/stores/auth-store";
 
-// --- 1. 配置定义：统计数据预设 ---
-const STATS_PRESETS = {
-  super_admin: [
-    {
-      label: "管理站点",
-      value: "全部",
-      icon: ShieldCheck,
-      color: "bg-purple-500",
-    },
-    {
-      label: "出口商数量",
-      value: "8",
-      icon: Building2,
-      color: "bg-indigo-500",
-    },
-    { label: "系统用户", value: "156", icon: Users, color: "bg-emerald-500" },
-    { label: "活跃站点", value: "24", icon: Globe, color: "bg-amber-500" },
-  ],
-  exporter_admin: [
-    { label: "管理工厂", value: "5", icon: Building2, color: "bg-indigo-500" },
-    { label: "团队成员", value: "23", icon: Users, color: "bg-emerald-500" },
-    { label: "总产品数", value: "156", icon: Package, color: "bg-blue-500" },
-    { label: "本月订单", value: "89", icon: TrendingUp, color: "bg-amber-500" },
-  ],
-  factory_admin: [
-    { label: "工厂业务员", value: "8", icon: Users, color: "bg-emerald-500" },
-    { label: "工厂产品", value: "42", icon: Package, color: "bg-indigo-500" },
-    { label: "待审核", value: "3", icon: AlertCircle, color: "bg-amber-500" },
-  ],
-  default: [
-    {
-      label: "Total Products",
-      value: "48",
-      icon: Package,
-      color: "bg-indigo-500",
-    },
-    { label: "Active Users", value: "8", icon: Users, color: "bg-blue-500" },
-  ],
-};
-
-// --- 2. 配置定义：角色通知预设 ---
-const NOTIFICATION_PRESETS = {
-  super_admin: [
-    { text: "系统运行状态良好，所有服务正常", color: "bg-purple-500" },
-    { text: "新增2个出口商申请，需要审核", color: "bg-blue-500" },
-  ],
-  exporter_admin: [
-    { text: "本月新增5个工厂合作申请", color: "bg-blue-500" },
-    { text: "产品销量环比增长15%", color: "bg-emerald-500" },
-  ],
-  factory_admin: [
-    { text: "生产线A维护通知，预计停工2天", color: "bg-amber-500" },
-    { text: "新订单待处理：15个", color: "bg-blue-500" },
-  ],
-};
-
-// --- 子组件：统计卡片 ---
-const StatCard = ({ label, value, icon: Icon, color }: any) => (
-  <div className="flex items-start justify-between rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition-hover hover:shadow-md">
-    <div>
-      <p className="mb-1 font-medium text-slate-500 text-sm">{label}</p>
-      <h3 className="font-bold text-2xl text-slate-900">{value}</h3>
+function StatCard({ label, value, icon: Icon, color }: any) {
+  return (
+    <div className="flex items-start justify-between rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md">
+      <div>
+        <p className="mb-1 font-medium text-slate-500 text-sm">{label}</p>
+        <h3 className="font-bold text-2xl text-slate-900">{value}</h3>
+      </div>
+      <div className={`rounded-lg p-3 ${color} text-white shadow-inner`}>
+        <Icon size={24} />
+      </div>
     </div>
-    <div className={`rounded-lg p-3 ${color} text-white shadow-inner`}>
-      <Icon size={24} />
-    </div>
-  </div>
-);
+  );
+}
 
 export default function UserDashboard() {
   const { user } = useAuthStore();
-
-  // 3. 根据当前角色获取配置 (使用 useMemo 优化)
-  // 现在返回的是 roles 数组，取第一个角色
-  const roleName = user?.roles?.[0]?.name || "default";
-  const stats =
-    STATS_PRESETS[roleName as keyof typeof STATS_PRESETS] ||
-    STATS_PRESETS.default;
-  const notifications =
-    NOTIFICATION_PRESETS[roleName as keyof typeof NOTIFICATION_PRESETS] || [];
+  const { data: statistics, isLoading } = useStatistics();
+  const { data: notifications } = useNotifications();
 
   if (!user) {
     return <DashboardSkeleton />;
   }
 
+  const roleName = user.roles?.[0]?.name;
+  // @ts-expect-error
+  const roleStats = statistics?.[roleName];
+  console.log("roleStats:", roleStats);
+
   return (
     <div className="space-y-8 p-6 lg:p-10">
-      {/* 欢迎头部 */}
       <header className="flex flex-col gap-1">
         <h1 className="font-extrabold text-3xl text-slate-900 tracking-tight">
           欢迎回来，{user.name} 👋
@@ -112,28 +55,115 @@ export default function UserDashboard() {
         </p>
       </header>
 
-      {/* 1. 统计区域 (数据驱动渲染) */}
       <section className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat, index) => (
-          <StatCard key={index} {...stat} />
-        ))}
+        {isLoading ? (
+          [1, 2, 3, 4].map((i) => (
+            <Skeleton className="h-32 rounded-xl" key={i} />
+          ))
+        ) : roleStats ? (
+          [
+            roleName === "super_admin" && [
+              {
+                label: "管理站点",
+                value: roleStats.totalSites?.toString() || "0",
+                icon: ShieldCheck,
+                color: "bg-purple-500",
+              },
+              {
+                label: "出口商数量",
+                value: roleStats.totalExporters?.toString() || "0",
+                icon: Building2,
+                color: "bg-indigo-500",
+              },
+              {
+                label: "系统用户",
+                value: roleStats.totalUsers?.toString() || "0",
+                icon: Users,
+                color: "bg-emerald-500",
+              },
+              {
+                label: "活跃站点",
+                value: roleStats.activeSites?.toString() || "0",
+                icon: Globe,
+                color: "bg-amber-500",
+              },
+            ],
+            roleName === "tenant_admin" && [
+              {
+                label: "管理工厂",
+                value: roleStats.totalFactories?.toString() || "0",
+                icon: Building2,
+                color: "bg-indigo-500",
+              },
+              {
+                label: "团队成员",
+                value: roleStats.totalTeamMembers?.toString() || "0",
+                icon: Users,
+                color: "bg-emerald-500",
+              },
+              {
+                label: "总产品数",
+                value: roleStats.totalProducts?.toString() || "0",
+                icon: Package,
+                color: "bg-blue-500",
+              },
+              {
+                label: "本月订单",
+                value: roleStats.thisMonthOrders?.toString() || "0",
+                icon: TrendingUp,
+                color: "bg-amber-500",
+              },
+            ],
+            roleName === "dept_manager" && [
+              {
+                label: "部门业务员",
+                value: roleStats.totalStaff?.toString() || "0",
+                icon: Users,
+                color: "bg-emerald-500",
+              },
+              {
+                label: "工厂产品",
+                value: roleStats.totalProducts?.toString() || "0",
+                icon: Package,
+                color: "bg-indigo-500",
+              },
+              {
+                label: "待审核",
+                value: roleStats.pendingOrders?.toString() || "0",
+                icon: AlertCircle,
+                color: "bg-amber-500",
+              },
+            ],
+          ]
+            .flat()
+            .filter(Boolean)
+            .map((stat, index) => <StatCard key={index} {...stat} />)
+        ) : (
+          <p className="col-span-full text-center text-slate-400">
+            暂无统计数据
+          </p>
+        )}
       </section>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-        {/* 2. 通知中心 (条件渲染) */}
         <div className="lg:col-span-2">
           <div className="h-full rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <h2 className="mb-6 font-bold text-slate-900 text-xl">通知中心</h2>
             <div className="space-y-5">
-              {notifications.length > 0 ? (
+              {notifications && notifications.length > 0 ? (
                 notifications.map((note, i) => (
                   <div className="group flex items-center gap-4" key={i}>
                     <div
                       className={`h-2.5 w-2.5 shrink-0 rounded-full ${note.color} ring-4 ring-slate-50`}
                     />
-                    <p className="text-slate-600 transition-colors group-hover:text-slate-900">
-                      {note.text}
-                    </p>
+                    <div className="flex flex-col">
+                      <p className="text-slate-600 transition-colors group-hover:text-slate-900">
+                        {note.text}
+                      </p>
+                      <span className="text-slate-400 text-xs">
+                        {new Date(note.createdAt).toLocaleDateString("zh-CN")}
+                      </span>
+                    </div>
                   </div>
                 ))
               ) : (
@@ -143,32 +173,35 @@ export default function UserDashboard() {
           </div>
         </div>
 
-        {/* 3. 快速操作 (权限驱动渲染 - 关键改动) */}
         <aside>
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <h2 className="mb-6 font-bold text-slate-900 text-xl">快速操作</h2>
             <div className="flex flex-col gap-3">
               <Can permission="SITES_MANAGE">
                 <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-purple-600 px-4 py-3 font-semibold text-white transition-all hover:bg-purple-700 hover:shadow-lg active:scale-95">
-                  <Settings size={18} /> 系统设置
+                  <Settings size={18} />
+                  系统设置
                 </button>
               </Can>
 
               <Can permission="PRODUCTS_TABLE_VIEW">
                 <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 font-semibold text-white transition-all hover:bg-blue-700 hover:shadow-lg active:scale-95">
-                  <Package size={18} /> 产品管理
+                  <Package size={18} />
+                  产品管理
                 </button>
               </Can>
 
               <Can permission="FACTORIES_VIEW">
                 <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 font-semibold text-white transition-all hover:bg-emerald-700 hover:shadow-lg active:scale-95">
-                  <Building2 size={18} /> 工厂管理
+                  <Building2 size={18} />
+                  工厂管理
                 </button>
               </Can>
 
               <Can permission="QUOTATIONS_VIEW">
                 <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 font-semibold text-white transition-all hover:bg-indigo-700 hover:shadow-lg active:scale-95">
-                  <ShoppingCart size={18} /> 订单管理
+                  <ShoppingCart size={18} />
+                  订单管理
                 </button>
               </Can>
             </div>
@@ -179,7 +212,6 @@ export default function UserDashboard() {
   );
 }
 
-// 骨架屏组件
 function DashboardSkeleton() {
   return (
     <div className="space-y-8 p-6 lg:p-10">
