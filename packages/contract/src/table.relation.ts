@@ -38,10 +38,11 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.departmentTable.parentId,
       alias: "dept_hierarchy",
     }),
+
     users: r.many.userTable({
       from: r.departmentTable.id,
       to: r.userTable.deptId,
-    }), // 部门下的员工
+    }),
     site: r.one.siteTable({
       from: r.departmentTable.id,
       to: r.siteTable.boundDeptId,

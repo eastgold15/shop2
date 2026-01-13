@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Building2, Loader2, Server, User } from "lucide-react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -31,7 +32,6 @@ import {
 } from "@/components/ui/select";
 import { useCreateDepartmentWithSiteAndAdmin } from "@/hooks/api/department";
 
-// 表单验证模式
 const formSchema = z.object({
   // 部门信息
   departmentName: z.string().min(2, "部门名称至少需要2个字符"),
@@ -44,10 +44,10 @@ const formSchema = z.object({
   siteName: z.string().min(2, "站点名称至少需要2个字符"),
   domain: z.string().min(2, "站点域名至少需要2个字符"),
 
-  // 管理员信息
-  adminName: z.string().min(2, "管理员姓名至少需要2个字符"),
-  adminEmail: z.string().email("请输入有效的邮箱地址"),
-  adminPassword: z.string().min(6, "密码至少需要6个字符"),
+  // 管理员信息（编辑时可选）
+  adminName: z.string().optional(),
+  adminEmail: z.email("请输入有效的邮箱地址").optional(),
+  adminPassword: z.string().min(6, "密码至少需要6个字符").optional(),
   adminPhone: z.string().optional(),
   adminPosition: z.string().optional(),
 });
@@ -58,13 +58,22 @@ interface CreateDepartmentWithSiteModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
+  mode?: "create" | "edit";
+  initialData?: {
+    department: any;
+    site: any;
+    admin?: any;
+  };
 }
 
 export function CreateDepartmentWithSiteModal({
   open,
   onOpenChange,
   onSuccess,
+  mode = "create",
+  initialData,
 }: CreateDepartmentWithSiteModalProps) {
+  const isEdit = mode === "edit";
   const createDepartment = useCreateDepartmentWithSiteAndAdmin();
 
   const form = useForm<FormData>({
@@ -85,9 +94,43 @@ export function CreateDepartmentWithSiteModal({
     },
   });
 
+  useEffect(() => {
+    if (isEdit && initialData) {
+      form.reset({
+        departmentName: initialData.department.name || "",
+        departmentCode: initialData.department.code || "",
+        category: initialData.department.category || "factory",
+        address: initialData.department.address || "",
+        contactPhone: initialData.department.contactPhone || "",
+        siteName: initialData.site.name || "",
+        domain: initialData.site.domain || "",
+        adminName: initialData.admin?.name || "",
+        adminEmail: initialData.admin?.email || "",
+        adminPassword: "",
+        adminPhone: initialData.admin?.phone || "",
+        adminPosition: initialData.admin?.position || "部门管理员",
+      });
+    } else if (!isEdit) {
+      form.reset({
+        departmentName: "",
+        departmentCode: "",
+        category: "factory",
+        address: "",
+        contactPhone: "",
+        siteName: "",
+        domain: "",
+        adminName: "",
+        adminEmail: "",
+        adminPassword: "",
+        adminPhone: "",
+        adminPosition: "部门管理员",
+      });
+    }
+  }, [isEdit, initialData, form]);
+
   const onSubmit = async (data: FormData) => {
     try {
-      await createDepartment.mutateAsync({
+      const payload = {
         department: {
           name: data.departmentName,
           code: data.departmentCode,
@@ -100,19 +143,38 @@ export function CreateDepartmentWithSiteModal({
           domain: data.domain,
           isActive: true,
         },
-        admin: {
-          name: data.adminName,
-          email: data.adminEmail,
-          password: data.adminPassword,
-          phone: data.adminPhone,
-          position: data.adminPosition,
-        },
-      });
+        ...(isEdit
+          ? {
+              admin:
+                data.adminName && data.adminEmail
+                  ? {
+                      name: data.adminName,
+                      email: data.adminEmail,
+                      ...(data.adminPassword && {
+                        password: data.adminPassword,
+                      }),
+                      phone: data.adminPhone,
+                      position: data.adminPosition,
+                    }
+                  : undefined,
+            }
+          : {
+              admin: {
+                name: data.adminName!,
+                email: data.adminEmail!,
+                password: data.adminPassword!,
+                phone: data.adminPhone,
+                position: data.adminPosition,
+              },
+            }),
+      };
+
+      await createDepartment.mutateAsync(payload as any);
       form.reset();
       onSuccess?.();
       onOpenChange(false);
     } catch (error) {
-      // 错误已在 mutation 中处理
+      console.error("操作失败:", error);
     }
   };
 
@@ -123,16 +185,20 @@ export function CreateDepartmentWithSiteModal({
     onOpenChange(isOpen);
   };
 
+  const isLoading = createDepartment.isPending;
+
   return (
     <Dialog onOpenChange={handleOpenChange} open={open}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-175">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Building2 className="h-5 w-5 text-indigo-600" />
-            创建新部门
+            {isEdit ? "编辑部门" : "创建新部门"}
           </DialogTitle>
           <DialogDescription>
-            一次性创建部门、关联站点和管理员账号
+            {isEdit
+              ? "编辑部门信息、站点设置和管理员信息（管理员信息为可选）"
+              : "一次性创建部门、关联站点和管理员账号"}
           </DialogDescription>
         </DialogHeader>
 
@@ -274,7 +340,12 @@ export function CreateDepartmentWithSiteModal({
             <div className="space-y-4">
               <div className="flex items-center gap-2 border-b pb-2">
                 <User className="h-4 w-4 text-indigo-600" />
-                <h3 className="font-semibold text-slate-900">管理员信息</h3>
+                <h3 className="font-semibold text-slate-900">
+                  管理员信息{" "}
+                  {isEdit && (
+                    <span className="font-normal text-slate-500">(可选)</span>
+                  )}
+                </h3>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -283,9 +354,21 @@ export function CreateDepartmentWithSiteModal({
                   name="adminName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>管理员姓名 *</FormLabel>
+                      <FormLabel>管理员姓名 {!isEdit && "*"}</FormLabel>
                       <FormControl>
-                        <Input placeholder="例如：张三" {...field} />
+                        <Input
+                          placeholder="例如：张三"
+                          readOnly={isEdit}
+                          style={
+                            isEdit
+                              ? {
+                                  backgroundColor: "#f5f5f5",
+                                  cursor: "not-allowed",
+                                }
+                              : {}
+                          }
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -297,10 +380,19 @@ export function CreateDepartmentWithSiteModal({
                   name="adminEmail"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>邮箱地址 *</FormLabel>
+                      <FormLabel>邮箱地址 {!isEdit && "*"}</FormLabel>
                       <FormControl>
                         <Input
                           placeholder="admin@example.com"
+                          readOnly={isEdit}
+                          style={
+                            isEdit
+                              ? {
+                                  backgroundColor: "#f5f5f5",
+                                  cursor: "not-allowed",
+                                }
+                              : {}
+                          }
                           type="email"
                           {...field}
                         />
@@ -313,13 +405,32 @@ export function CreateDepartmentWithSiteModal({
 
               <FormField
                 control={form.control}
+                disabled={isLoading}
                 name="adminPassword"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>登录密码 *</FormLabel>
+                    <FormLabel>
+                      登录密码 {!isEdit && "*"}{" "}
+                      {isEdit && (
+                        <span className="font-normal text-slate-500">
+                          (留空不修改)
+                        </span>
+                      )}
+                    </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="请输入至少6位密码"
+                        placeholder={
+                          isEdit ? "留空则不修改密码" : "请输入至少6位密码"
+                        }
+                        readOnly={isEdit}
+                        style={
+                          isEdit
+                            ? {
+                                backgroundColor: "#f5f5f5",
+                                cursor: "not-allowed",
+                              }
+                            : {}
+                        }
                         type="password"
                         {...field}
                       />
@@ -337,7 +448,19 @@ export function CreateDepartmentWithSiteModal({
                     <FormItem>
                       <FormLabel>手机号码</FormLabel>
                       <FormControl>
-                        <Input placeholder="13800000000" {...field} />
+                        <Input
+                          placeholder="13800000000"
+                          readOnly={isEdit}
+                          style={
+                            isEdit
+                              ? {
+                                  backgroundColor: "#f5f5f5",
+                                  cursor: "not-allowed",
+                                }
+                              : {}
+                          }
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -362,23 +485,23 @@ export function CreateDepartmentWithSiteModal({
 
             <DialogFooter>
               <Button
-                disabled={createDepartment.isPending}
+                disabled={isLoading}
                 onClick={() => onOpenChange(false)}
                 type="button"
                 variant="outline"
               >
                 取消
               </Button>
-              <Button disabled={createDepartment.isPending} type="submit">
-                {createDepartment.isPending ? (
+              <Button type="submit">
+                {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    创建中...
+                    {isEdit ? "更新中..." : "创建中..."}
                   </>
                 ) : (
                   <>
                     <Building2 className="mr-2 h-4 w-4" />
-                    创建部门
+                    {isEdit ? "保存修改" : "创建部门"}
                   </>
                 )}
               </Button>

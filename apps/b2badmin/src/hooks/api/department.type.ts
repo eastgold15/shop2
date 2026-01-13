@@ -3,7 +3,6 @@
  * 用于后端接口开发参考
  */
 
-
 export interface DeptListRes {
   id: string;
   createdAt: string;
@@ -50,7 +49,6 @@ export interface DepartmentListResponse {
 
 // ==================== 部门实体 ====================
 
-
 interface Department {
   id: string;
   createdAt: string;
@@ -66,7 +64,6 @@ interface Department {
   extensions?: any;
   isActive: boolean;
 }
-
 
 /**
  * 部门用户关联
@@ -163,4 +160,33 @@ export interface DepartmentOption {
   name: string;
   code: string;
   parentId?: string | null;
+}
+
+/**
+ * 部门详情响应
+ */
+export interface DepartmentDetailResponse {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  tenantId: string;
+  parentId?: string | null;
+  name: string;
+  code: string;
+  category: string;
+  address: string;
+  contactPhone: string;
+  logo?: any;
+  extensions?: any;
+  isActive: boolean;
+  manager: {
+    id: string;
+    name: string;
+    email: string;
+  } | null;
+  emplyee: {
+    id: string;
+    name: string;
+    email: string;
+  } | null;
 }

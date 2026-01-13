@@ -84,8 +84,8 @@ export function CreateUserModal({
   const { data: masterCategoriesData, isLoading: categoriesLoading } =
     useMasterCategoryList();
 
-  const roles = rolesData?.data || rolesData || [];
-  const departments = departmentsData?.data || departmentsData || [];
+  const roles = rolesData || [];
+  const departments = departmentsData || [];
   const masterCategories = masterCategoriesData || [];
 
   const form = useForm<any>({

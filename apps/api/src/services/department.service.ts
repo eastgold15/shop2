@@ -67,6 +67,41 @@ export class DepartmentService {
     return res;
   }
 
+  public async detail(id: string, ctx: ServiceContext) {
+    const department = await ctx.db.query.departmentTable.findFirst({
+      where: {
+        id,
+      },
+      with: {
+        users: {
+          with: {
+            roles: true,
+          },
+        },
+      },
+    });
+
+    if (!department) {
+      throw new HttpError.NotFound("部门不存在");
+    }
+
+    const manager = department.users?.find(
+      (user) =>
+        user.roles.some((role) => role.name === "dept_manager") && user.isActive
+    );
+
+    return {
+      ...department,
+      manager: manager
+        ? {
+          id: manager.id,
+          name: manager.name,
+          email: manager.email,
+        }
+        : null,
+    };
+  }
+
   /**
    * 创建部门+站点+管理员
    * 使用事务确保数据一致性

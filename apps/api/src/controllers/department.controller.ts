@@ -14,7 +14,6 @@ import { DepartmentService } from "../services/department.service";
 
 const departmentService = new DepartmentService();
 
-
 export const departmentController = new Elysia({ prefix: "/department" })
   .use(dbPlugin)
   .use(authGuardMid)
@@ -29,6 +28,24 @@ export const departmentController = new Elysia({ prefix: "/department" })
       detail: {
         summary: "获取Department列表",
         description: "分页查询Department数据，支持搜索和排序",
+        tags: ["Department"],
+      },
+    }
+  )
+  .get(
+    "/:id",
+    ({ params, user, db }) =>
+      departmentService.detail(params.id, {
+        db,
+        user,
+        currentDeptId: params.id,
+      }),
+    {
+      params: t.Object({ id: t.String() }),
+      allPermissions: ["DEPARTMENT_VIEW"],
+      detail: {
+        summary: "获取Department详情",
+        description: "根据ID获取Department详情信息",
         tags: ["Department"],
       },
     }

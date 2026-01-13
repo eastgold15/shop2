@@ -1,6 +1,13 @@
 "use client";
 
-import { Building2, CheckCircle, Loader2, Phone, Plus } from "lucide-react";
+import {
+  Building2,
+  CheckCircle,
+  Loader2,
+  Phone,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
 import { HasRole } from "@/components/auth";
@@ -12,19 +19,20 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { useDepartmentList } from "@/hooks/api/department";
+import { useDepartmentDetail, useDepartmentList } from "@/hooks/api/department";
+import { DeptListRes } from "@/hooks/api/department.type";
 import { useAuthStore } from "@/stores/auth-store";
 
 export default function UsersPage() {
-  const [isCreateDeptModalOpen, setIsCreateDeptModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingDeptId, setEditingDeptId] = useState<string | undefined>();
+  const [editingDeptData, setEditingDeptData] = useState<any>(undefined);
   const [isMounted, setIsMounted] = useState(false);
 
-  // 避免hydration错误
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // 获取部门列表
   const {
     data: departmentsResponse,
     isLoading: departmentsLoading,
@@ -33,10 +41,86 @@ export default function UsersPage() {
   const currentDeptId = useAuthStore(
     (state) => state.user?.context.department.id
   );
+
+  const { data: detailResponse, error } = useDepartmentDetail(
+    editingDeptId,
+    !!editingDeptId
+  );
+
   const departments =
     departmentsResponse?.filter((item) => item.id !== currentDeptId) || [];
 
-  // 如果还没挂载，返回一个加载状态的占位符
+  const handleEdit = (dept: Partial<DeptListRes>) => {
+    setEditingDeptId(dept.id);
+    setEditingDeptData({
+      department: {
+        id: dept.id,
+        name: dept.name,
+        code: dept.code,
+        category: dept.category,
+        address: dept.address,
+        contactPhone: dept.contactPhone,
+      },
+      site: {
+        id: dept.id,
+        name: dept.name,
+        domain: dept.name,
+      },
+    });
+    setIsModalOpen(true);
+  };
+
+  useEffect(() => {
+    if (detailResponse && editingDeptId) {
+      setEditingDeptData((prev: any) => ({
+        ...prev,
+        admin: detailResponse.manager
+          ? {
+              id: detailResponse.manager.id,
+              name: detailResponse.manager.name,
+              email: detailResponse.manager.email,
+            }
+          : undefined,
+      }));
+    }
+  }, [detailResponse, editingDeptId]);
+
+  const handleCreate = () => {
+    setEditingDeptId(undefined);
+    setEditingDeptData(undefined);
+    setIsModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setEditingDeptId(undefined);
+    setEditingDeptData(undefined);
+    setIsModalOpen(false);
+  };
+
+  const handleModalSuccess = () => {
+    setEditingDeptId(undefined);
+    setEditingDeptData(undefined);
+    setIsModalOpen(false);
+    refetchDepartments();
+  };
+
+  const handleDelete = async (id: string, name: string) => {
+    const message = `确定要删除部门 "${name}" 吗？\n\n注意：这将同时删除：\n1. 该部门的所有下级部门\n2. 关联的站点\n3. 该部门的所有用户\n\n此操作不可恢复！`;
+    if (!confirm(message)) {
+      return;
+    }
+    try {
+      await fetch(`/api/v1/department/${id}`, {
+        method: "DELETE",
+      });
+      alert("部门删除成功");
+      refetchDepartments();
+    } catch (error) {
+      console.error("删除失败:", error);
+      alert("删除失败，请稍后重试");
+    }
+  };
+
   if (!isMounted) {
     return (
       <SidebarProvider>
@@ -80,7 +164,7 @@ export default function UsersPage() {
               <HasRole
                 role={["super_admin", "exporter_admin", "factory_admin"]}
               >
-                <Button onClick={() => setIsCreateDeptModalOpen(true)}>
+                <Button onClick={handleCreate}>
                   <Plus className="mr-2" size={18} />
                   创建部门
                 </Button>
@@ -104,7 +188,7 @@ export default function UsersPage() {
                 <HasRole
                   role={["super_admin", "exporter_admin", "factory_admin"]}
                 >
-                  <Button onClick={() => setIsCreateDeptModalOpen(true)}>
+                  <Button onClick={handleCreate}>
                     <Plus className="mr-2" size={18} />
                     创建第一个部门
                   </Button>
@@ -144,7 +228,7 @@ export default function UsersPage() {
                           <div className="rounded-full bg-green-100 px-2 py-1">
                             <span className="font-medium text-green-700 text-xs">
                               {department.category === "group"
-                                ? "集团"
+                                ? "出口商"
                                 : "工厂"}
                             </span>
                           </div>
@@ -171,14 +255,26 @@ export default function UsersPage() {
                       <div className="border-slate-100 border-t pt-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-1 text-slate-500 text-xs">
-                            <Building2 className="h-3 w-3" />
+                            <Building2 className="h-5 w-5" />
                             <span>部门</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <button className="font-medium text-indigo-600 text-sm hover:text-indigo-700">
+                            <button
+                              className="mr-1 inline font-medium text-indigo-600 text-sm hover:text-indigo-700"
+                              onClick={() => handleEdit(department)}
+                            >
                               编辑
                             </button>
-                            <button className="font-medium text-red-600 text-sm hover:text-red-700">
+                            <button
+                              className="mr-1 inline font-medium text-red-600 text-sm hover:text-red-700"
+                              onClick={() =>
+                                handleDelete(
+                                  department.id,
+                                  department.name || "未命名"
+                                )
+                              }
+                            >
+                              <Trash2 className="mr-1 inline h-3 w-3" />
                               删除
                             </button>
                           </div>
@@ -193,13 +289,12 @@ export default function UsersPage() {
         </div>
       </SidebarInset>
 
-      {/* 创建部门弹窗 */}
       <CreateDepartmentWithSiteModal
-        onOpenChange={setIsCreateDeptModalOpen}
-        onSuccess={() => {
-          refetchDepartments();
-        }}
-        open={isCreateDeptModalOpen}
+        initialData={editingDeptData}
+        mode={editingDeptId ? "edit" : "create"}
+        onOpenChange={handleModalClose}
+        onSuccess={handleModalSuccess}
+        open={isModalOpen}
       />
     </SidebarProvider>
   );
