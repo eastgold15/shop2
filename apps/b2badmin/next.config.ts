@@ -19,12 +19,9 @@ const nextConfig: NextConfig = {
   },
 
   transpilePackages: ["@repo/contract"],
-  experimental: {
-    // @ts-expect-error
-    turbopack: {
-      root: path.resolve(__dirname, "../../"),
-    },
-  },
+  turbopack: {
+    root: path.resolve(__dirname, "../../"),
+  }
 };
 
 export default nextConfig;
