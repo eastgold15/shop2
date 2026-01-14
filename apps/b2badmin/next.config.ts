@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 import "./src/env.ts";
+import path from "node:path";
+
 const nextConfig: NextConfig = {
   /* config options here */
   poweredByHeader: false,
@@ -17,6 +19,12 @@ const nextConfig: NextConfig = {
   },
 
   transpilePackages: ["@repo/contract"],
+  experimental: {
+    // @ts-expect-error
+    turbopack: {
+      root: path.resolve(__dirname, "../../"),
+    },
+  },
 };
 
 export default nextConfig;
