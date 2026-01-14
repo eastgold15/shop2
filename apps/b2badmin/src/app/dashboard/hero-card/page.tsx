@@ -1,7 +1,6 @@
 "use client";
 
 import { Edit, GripVertical, Plus, Trash2 } from "lucide-react";
-import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
 import { AppSidebar } from "@/components/app-sidebar";
@@ -28,6 +27,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { ImageGallery } from "@/components/ui/image-gallery";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MediaSelect } from "@/components/ui/media-select";
@@ -467,12 +467,16 @@ export default function HeroCardsPage() {
                             />
                             <GripVertical className="mt-1 h-5 w-5 text-muted-foreground" />
                             {card.media.url && (
-                              <Image
-                                alt={card.title}
-                                className="h-16 w-16 rounded object-cover"
-                                height={40}
-                                src={card.media.url}
-                                width={40}
+                              <ImageGallery
+                                images={[
+                                  {
+                                    id: card.id,
+                                    url: card.media.url,
+                                    isMain: true,
+                                    originalName: card.title,
+                                  },
+                                ]}
+                                size="md"
                               />
                             )}
                             <div className="flex-1">

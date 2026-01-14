@@ -1,7 +1,6 @@
 "use client";
 
 import { Check, X } from "lucide-react";
-import Image from "next/image";
 import type React from "react";
 import { useState } from "react";
 

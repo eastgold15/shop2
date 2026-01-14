@@ -10,7 +10,6 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
 import { AppSidebar } from "@/components/app-sidebar";
@@ -34,6 +33,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { ImageGallery } from "@/components/ui/image-gallery";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MediaSelect } from "@/components/ui/media-select";
@@ -542,21 +542,23 @@ export default function AdsPage() {
                       type="checkbox"
                     />
 
-                    <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-slate-100">
-                      {ad.mediaUrl ? (
-                        <Image
-                          alt={ad.title}
-                          className="h-full w-full object-cover"
-                          height={64}
-                          src={ad.mediaUrl}
-                          width={64}
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center">
-                          <ImageIcon className="h-6 w-6 text-slate-400" />
-                        </div>
-                      )}
-                    </div>
+                    {ad.mediaUrl ? (
+                      <ImageGallery
+                        images={[
+                          {
+                            id: ad.id,
+                            url: ad.mediaUrl,
+                            isMain: true,
+                            originalName: ad.title,
+                          },
+                        ]}
+                        size="md"
+                      />
+                    ) : (
+                      <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-slate-100">
+                        <ImageIcon className="h-6 w-6 text-slate-400" />
+                      </div>
+                    )}
 
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">

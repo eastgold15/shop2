@@ -12,7 +12,6 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useDebounce } from "use-debounce"; // 建议安装: bun add use-debounce
@@ -29,6 +28,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ImageGallery } from "@/components/ui/image-gallery";
 import { Separator } from "@/components/ui/separator";
 import {
   SidebarInset,
@@ -354,12 +354,16 @@ function MediaCard({
       {/* 预览区 */}
       <div className="relative aspect-square w-full bg-slate-100">
         {isImage ? (
-          <Image
-            alt={asset.originalName}
-            className="object-cover transition-transform group-hover:scale-105"
-            fill
-            sizes="(max-width: 768px) 50vw, 20vw"
-            src={asset.url}
+          <ImageGallery
+            autoSingleMode={true}
+            images={[
+              {
+                id: asset.id,
+                url: asset.url,
+                isMain: false,
+                originalName: asset.originalName,
+              },
+            ]}
           />
         ) : (
           <div className="flex h-full flex-col items-center justify-center gap-2">
@@ -386,7 +390,7 @@ function MediaCard({
               <DropdownMenuItem
                 onClick={() => window.open(asset.url, "_blank")}
               >
-                预览文件
+                打开文件
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => {

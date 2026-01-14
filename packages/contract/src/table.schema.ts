@@ -742,13 +742,11 @@ export const inquiryTable = p.pgTable("inquiry", {
   // 询价关联的站点商品
   siteProductId: p
     .uuid("site_product_id")
-    .notNull()
     .references(() => siteProductTable.id, { onDelete: "set null" }),
   // 询盘关联的 SKU
 
   siteSkuId: p
     .uuid("site_sku_id")
-    .notNull()
     .references(() => siteSkuTable.id, { onDelete: "set null" }),
 
   productName: p.varchar("product_name", { length: 255 }).notNull(),

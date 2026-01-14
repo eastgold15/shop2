@@ -1,6 +1,7 @@
 // components/product/product-list.tsx
+"use client";
+
 import { ChevronDown, MoreHorizontal, Plus } from "lucide-react";
-import Image from "next/image";
 import { Can } from "@/components/auth/Can";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ImageGallery } from "@/components/ui/image-gallery";
 import { Product } from "@/hooks/api/product.type";
 import { SkuListRes } from "@/hooks/api/sku.type";
 import { cn } from "@/lib/utils";
@@ -84,21 +86,23 @@ export function ProductList({
                 onCheckedChange={(c) => onSelect(product.id, !!c)}
               />
 
-              <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md border bg-slate-100">
-                {product.mainImage ? (
-                  <Image
-                    alt={product.name}
-                    className="object-cover"
-                    fill
-                    src={product.mainImage}
-                    unoptimized
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-muted-foreground text-xs">
-                    No Img
-                  </div>
-                )}
-              </div>
+              {product.mainImage ? (
+                <ImageGallery
+                  images={[
+                    {
+                      id: product.mainImageId || product.id,
+                      url: product.mainImage,
+                      isMain: true,
+                      originalName: product.name,
+                    },
+                  ]}
+                  size="md"
+                />
+              ) : (
+                <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-slate-100 text-muted-foreground text-xs">
+                  No Img
+                </div>
+              )}
 
               <div className="grid flex-1 gap-1">
                 <div className="flex items-center gap-2">
