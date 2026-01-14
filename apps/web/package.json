@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "next dev -p 8001",
     "build": "NODE_ENV=production bun next build",
-    "start": "NODE_ENV=production bun --bun next start -p 9001",
+    "start": "NODE_ENV=production bun  next start -p 9001",
     "type-check": "tsc --noEmit",
     "clean": "rimraf dist .turbo logs  .next"
   },
