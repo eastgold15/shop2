@@ -1,10 +1,6 @@
 {
   "extends": "@repo/tsconfig/base.json",
   "compilerOptions": {
-    "paths": {
-      "~/*": ["./src/*"],
-      "*": ["./*"]
-    },
     "declarationMap": true,
     "declaration": true,
     "sourceMap": true,
@@ -15,6 +11,11 @@
     "skipLibCheck": true,
     "strict": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["dist", "node_modules"]
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "dist",
+    "node_modules"
+  ]
 }

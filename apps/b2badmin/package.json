@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 8002",
-    "build": "NODE_ENV=production bun --bun next build",
+    "build": "NODE_ENV=production next build",
     "start": "NODE_ENV=production bun --bun next start -p 9002",
     "clean": "rimraf dist .turbo logs  .next",
     "check": "npx ultracite check",

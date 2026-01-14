@@ -1,5 +1,7 @@
 import { t } from "elysia";
-import { InferDTO } from "~/helper/utils";
+import { InferDTO } from "../helper/utils";
+
+
 
 export const StatisticsContract = {
   Response: t.Object({
