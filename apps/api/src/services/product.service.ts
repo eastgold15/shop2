@@ -207,7 +207,9 @@ export class ProductService {
           siteCategoryId: siteProductSiteCategoryTable.siteCategoryId,
         })
         .from(siteProductSiteCategoryTable)
-        .where(inArray(siteProductSiteCategoryTable.siteProductId, siteProductIds));
+        .where(
+          inArray(siteProductSiteCategoryTable.siteProductId, siteProductIds)
+        );
 
       siteCategories.forEach((sc) => {
         siteCategoryMap.set(sc.siteProductId, sc.siteCategoryId);

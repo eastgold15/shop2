@@ -16,10 +16,7 @@ const nextConfig: NextConfig = {
     },
   },
 
-
   transpilePackages: ["@repo/contract"],
-
-
 };
 
 export default nextConfig;

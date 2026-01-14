@@ -1,10 +1,7 @@
 "use client";
-import type { SiteCategoryListRes } from "@/hooks/api/site-category-hook";
+import { CategoryWithChildren } from "./DesktopMenu";
 import { useNavAction } from "./hook/useNavAction";
 import { NAV_STYLES, NavLink } from "./NavParts";
-import { CategoryWithChildren } from "./DesktopMenu";
-
-
 
 interface MobileMenuProps {
   categories: CategoryWithChildren[];

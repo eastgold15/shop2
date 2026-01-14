@@ -5,30 +5,14 @@
     "build": {
       // 这里的 ^build 表示先构建依赖包。
       // 因为你的 contract 没构建脚本，Turbo 会自动跳过它，这是正确的。
-      "dependsOn": [
-        "^build"
-      ],
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        ".env*"
-      ],
-      "outputs": [
-        ".next/**",
-        "!.next/cache/**",
-        "dist/**",
-        "build/**"
-      ]
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**", "build/**"]
     },
     "type-check": {
-      "dependsOn": [
-        "^type-check"
-      ],
-      "inputs": [
-        "$TURBO_DEFAULT$"
-      ],
-      "outputs": [
-        "**/*.tsbuildinfo"
-      ] // 关键：缓存 TS 的增量信息，让下次检查秒开
+      "dependsOn": ["^type-check"],
+      "inputs": ["$TURBO_DEFAULT$"],
+      "outputs": ["**/*.tsbuildinfo"] // 关键：缓存 TS 的增量信息，让下次检查秒开
     },
     "//#check": {},
     "//#fix": {

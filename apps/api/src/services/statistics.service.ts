@@ -45,8 +45,8 @@ export class StatisticsService {
         totalExporters: totalExporters.count,
         totalUsers: totalUsers.count,
         activeSites: activeSites.count,
-      }
-    }
+      },
+    };
   }
 
   async getExporterStats(tenantId: string, ctx: ServiceContext) {
@@ -90,8 +90,8 @@ export class StatisticsService {
         totalTeamMembers: totalTeamMembers.count,
         totalProducts: totalProducts.count,
         thisMonthOrders: thisMonthOrders.count,
-      }
-    }
+      },
+    };
   }
 
   async getFactoryStats(tenantId: string, deptId: string, ctx: ServiceContext) {
@@ -117,8 +117,8 @@ export class StatisticsService {
         totalStaff: totalStaff.count,
         totalProducts: totalProducts.count,
         pendingOrders: pendingOrders.count,
-      }
-    }
+      },
+    };
   }
 
   async getStatisticsByRole(

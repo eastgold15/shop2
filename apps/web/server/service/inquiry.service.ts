@@ -149,11 +149,11 @@ export class InquiryService {
       "[业务员匹配结果]:",
       result.targetRep
         ? {
-          userId: result.targetRep.userId,
-          userName: result.targetRep.user?.name,
-          userEmail: result.targetRep.user?.email,
-          responsibilityId: result.targetRep.id,
-        }
+            userId: result.targetRep.userId,
+            userName: result.targetRep.user?.name,
+            userEmail: result.targetRep.user?.email,
+            responsibilityId: result.targetRep.id,
+          }
         : "未匹配到业务员"
     );
 
@@ -492,8 +492,8 @@ export class InquiryService {
       console.log("[7] 开始获取媒体信息，媒体ID:", skuMediaId);
       const media = skuMediaId
         ? await db.query.mediaTable.findFirst({
-          where: { id: skuMediaId },
-        })
+            where: { id: skuMediaId },
+          })
         : null;
       console.log(
         "[8] 媒体查询结果:",
@@ -540,7 +540,6 @@ export class InquiryService {
         return;
       }
       console.log("[16] 邮箱验证通过:", targetRep.user.email);
-
 
       // 2. 内部直接调用，逻辑还是只有一份
       const inquiryWithItems = InquiryService.transformInquiry(inquiry);
@@ -664,10 +663,10 @@ export class InquiryService {
       clientPhone: Number.parseInt(inquiry.customerPhone!, 10) || 0,
       photoForRefer: photo
         ? {
-          buffer: photo.buffer,
-          mimeType: photo.mimeType,
-          name: `ref-${inquiry.inquiryNum}`,
-        }
+            buffer: photo.buffer,
+            mimeType: photo.mimeType,
+            name: `ref-${inquiry.inquiryNum}`,
+          }
         : null,
 
       // Terms (报价项) - 使用第一个 SKU 信息填充第一行
@@ -725,4 +724,6 @@ export class InquiryService {
   }
 }
 // 3. 关键：在文件末尾导出类型，完全不需要手写 interface
-export type InquiryWithItems = ReturnType<typeof InquiryService.transformInquiry>;
+export type InquiryWithItems = ReturnType<
+  typeof InquiryService.transformInquiry
+>;

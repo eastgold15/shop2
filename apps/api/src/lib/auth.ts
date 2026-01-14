@@ -33,9 +33,9 @@ export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg", // 数据库类型
     schema: {
-      user: userTable,         // 用户基本信息表
-      account: accountTable,   // 第三方登录账号关联表
-      session: sessionTable,   // 用户会话表
+      user: userTable, // 用户基本信息表
+      account: accountTable, // 第三方登录账号关联表
+      session: sessionTable, // 用户会话表
       verification: verificationTable, // 验证码/验证链接表
     },
   }),
@@ -52,7 +52,7 @@ export const auth = betterAuth({
   // 策略：常规邮箱密码登录
   emailAndPassword: {
     enabled: true,
-    autoSignIn: true,             // 注册后自动登录
+    autoSignIn: true, // 注册后自动登录
     requireEmailVerification: false, // 暂时不需要邮箱验证即可登录
     // 重置密码邮件回调
     sendResetPassword: async ({ user, url }) => {
@@ -89,7 +89,7 @@ export const auth = betterAuth({
       tenantId: {
         type: "string",
         required: true, // 强制必填
-        input: true,    // 允许前端在注册接口中传入
+        input: true, // 允许前端在注册接口中传入
       },
       // 部门 ID
       deptId: {
@@ -121,6 +121,6 @@ export const auth = betterAuth({
   // 会话管理策略
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 会话有效期：7 天
-    updateAge: 60 * 60 * 24,     // 刷新频率：每 24 小时更新一次数据库中的会话活跃时间
+    updateAge: 60 * 60 * 24, // 刷新频率：每 24 小时更新一次数据库中的会话活跃时间
   },
 });

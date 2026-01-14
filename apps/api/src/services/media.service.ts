@@ -1,10 +1,10 @@
 import { type MediaContract, mediaTable } from "@repo/contract";
 import { and, eq, inArray, like, sql } from "drizzle-orm";
 import { HttpError } from "elysia-http-problem-json";
-import { BunS3StorageImpl } from "~/lib/media/storage/impl/BunS3StorageImpl";
-import { type ServiceContext } from "../lib/type";
 import { envConfig } from "~/lib/env";
+import { BunS3StorageImpl } from "~/lib/media/storage/impl/BunS3StorageImpl";
 import { getMediaUrl } from "~/lib/media-url";
+import { type ServiceContext } from "../lib/type";
 
 const client = new BunS3StorageImpl({
   accessKeyId: Bun.env.ACCESS_KEY_ID!,
@@ -60,10 +60,10 @@ export class MediaService {
       // 自动注入租户信息
       ...(ctx.user
         ? {
-          tenantId: ctx.user.context.tenantId!,
-          createdBy: ctx.user.id,
-          deptId: ctx.currentDeptId,
-        }
+            tenantId: ctx.user.context.tenantId!,
+            createdBy: ctx.user.id,
+            deptId: ctx.currentDeptId,
+          }
         : {}),
     };
     const [res] = await ctx.db
@@ -81,10 +81,10 @@ export class MediaService {
         deptId: ctx.currentDeptId,
         ...(ids
           ? {
-            id: {
-              in: ids,
-            },
-          }
+              id: {
+                in: ids,
+              },
+            }
           : {}),
         ...(search ? { originalName: { ilike: `%${search}%` } } : {}),
       },

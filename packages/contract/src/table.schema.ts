@@ -743,13 +743,13 @@ export const inquiryTable = p.pgTable("inquiry", {
   siteProductId: p
     .uuid("site_product_id")
     .notNull()
-    .references(() => siteProductTable.id),
+    .references(() => siteProductTable.id, { onDelete: "set null" }),
   // 询盘关联的 SKU
 
   siteSkuId: p
     .uuid("site_sku_id")
     .notNull()
-    .references(() => siteSkuTable.id),
+    .references(() => siteSkuTable.id, { onDelete: "set null" }),
 
   productName: p.varchar("product_name", { length: 255 }).notNull(),
   productDescription: p.text("product_description"),

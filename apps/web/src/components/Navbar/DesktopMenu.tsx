@@ -3,8 +3,11 @@ import { useRef, useState } from "react";
 import type { SiteCategoryListRes } from "@/hooks/api/site-category-hook";
 import { useNavAction } from "./hook/useNavAction";
 import { DropdownIndicator, NAV_STYLES, NavLink } from "./NavParts";
- 
-export type CategoryWithChildren = Omit<SiteCategoryListRes[number], "children"> & {
+
+export type CategoryWithChildren = Omit<
+  SiteCategoryListRes[number],
+  "children"
+> & {
   children?: CategoryWithChildren[];
 };
 

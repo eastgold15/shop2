@@ -5,12 +5,12 @@
  * 💡 如需自定义，请删除下方的 @generated 标记，或新建一个 controller。
  * --------------------------------------------------------
  */
+
+import { MediaContract } from "@repo/contract";
 import { Elysia, t } from "elysia";
 import { dbPlugin } from "~/db/connection";
 import { authGuardMid } from "~/middleware/auth";
-
 import { MediaService } from "../services/media.service";
-import { MediaContract } from "@repo/contract";
 
 const mediaService = new MediaService();
 

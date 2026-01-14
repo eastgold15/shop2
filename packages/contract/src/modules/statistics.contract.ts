@@ -2,7 +2,6 @@ import { t } from "elysia";
 import { InferDTO } from "~/helper/utils";
 
 export const StatisticsContract = {
-
   Response: t.Object({
     super_admin: t.Optional(
       t.Object({

@@ -80,7 +80,7 @@ export const userController = new Elysia({ prefix: "/user" })
   .put(
     "/:id",
     ({ params, body, user, db, currentDeptId, headers }) =>
-      userService.update(params.id, body, { db, user, currentDeptId, }, headers),
+      userService.update(params.id, body, { db, user, currentDeptId }, headers),
     {
       params: t.Object({ id: t.String() }),
       body: UserContract.Update,

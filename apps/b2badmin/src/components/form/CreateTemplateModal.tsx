@@ -41,7 +41,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { SiteCategoryTreeSelect } from "@/components/ui/site-category-tree-select";
 import { useCreateTemplate, useUpdateTemplate } from "@/hooks/api/template";
 import { TemplateFieldRow } from "./TemplateFieldRow/TemplateFieldRow";
 

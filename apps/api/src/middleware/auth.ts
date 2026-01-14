@@ -19,7 +19,7 @@ export const authGuardMid = new Elysia({ name: "authGuard" })
 
     // 检查是否有 x-current-dept-id 请求头，如果有则覆盖用户 context 中的部门信息
     const currentDeptIdFromHeader = request.headers.get(CURRENT_DEPT_HEADER);
-    console.log('currentDeptIdFromHeader:', currentDeptIdFromHeader)
+    console.log("currentDeptIdFromHeader:", currentDeptIdFromHeader);
 
     let targetDept = null;
     if (currentDeptIdFromHeader) {
@@ -177,10 +177,14 @@ async function getUserWithRoles(
   let permissionWithDeptCategory = permissions;
   switch (deptCategory) {
     case "factory":
-      permissionWithDeptCategory = permissions.filter(p => !FACTORY_NO_PERMISSIONS.includes(p))
+      permissionWithDeptCategory = permissions.filter(
+        (p) => !FACTORY_NO_PERMISSIONS.includes(p)
+      );
       break;
     case "group":
-      permissionWithDeptCategory = permissions.filter((p) => !GROUPSITE_NO_PERMISSIONS.includes(p));
+      permissionWithDeptCategory = permissions.filter(
+        (p) => !GROUPSITE_NO_PERMISSIONS.includes(p)
+      );
       break;
     default:
       break;
@@ -220,17 +224,13 @@ async function getUserWithRoles(
     isSuperAdmin: !!rawUser.isSuperAdmin,
     context,
     roles,
-    permissions: permissionWithDeptCategory
+    permissions: permissionWithDeptCategory,
   };
 }
 
 export type UserDto = Awaited<NonNullable<ReturnType<typeof getUserWithRoles>>>;
 
-const FACTORY_NO_PERMISSIONS = [
-  "SITES_MANAGE",
-  "TENANTS_MANAGE"
-];
-
+const FACTORY_NO_PERMISSIONS = ["SITES_MANAGE", "TENANTS_MANAGE"];
 
 // 集团站权限
 const GROUPSITE_NO_PERMISSIONS = [
@@ -238,4 +238,4 @@ const GROUPSITE_NO_PERMISSIONS = [
   "SKU_DELETE",
   "PRODUCT_CREATE",
   "PRODUCT_DELETE",
-]
+];

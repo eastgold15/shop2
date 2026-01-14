@@ -4,9 +4,9 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useCategoryNavigation } from "@/hooks/useCategoryNavigation";
 import { DesktopMenu } from "./DesktopMenu";
-import { SearchDropdown } from "./SearchDropdown";
 import { useNavAction } from "./hook/useNavAction";
 import { MobileMenu } from "./MobileMenu";
+import { SearchDropdown } from "./SearchDropdown";
 
 // 引入你原来的 useNavigation 或直接写在这里
 // 引入 NavIcon 组件（可以保持你原来的不变，或者也移到 NavParts）
