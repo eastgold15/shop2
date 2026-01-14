@@ -354,19 +354,22 @@ function MediaCard({
       {/* 预览区 */}
       <div className="relative aspect-square w-full bg-slate-100">
         {isImage ? (
-          <ImageGallery
-            autoSingleMode={true}
-            images={[
-              {
-                id: asset.id,
-                url: asset.url,
-                isMain: false,
-                originalName: asset.originalName,
-              },
-            ]}
-          />
+          <div className="absolute inset-0">
+            <ImageGallery
+              autoSingleMode={true}
+              images={[
+                {
+                  id: asset.id,
+                  url: asset.url,
+                  isMain: false,
+                  originalName: asset.originalName,
+                },
+              ]}
+              size="fill"
+            />
+          </div>
         ) : (
-          <div className="flex h-full flex-col items-center justify-center gap-2">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
             <FileIcon className="size-10 text-slate-400" />
             <span className="font-bold text-[10px] text-slate-400 uppercase">
               {asset.mimeType?.split("/")[1]}
@@ -412,23 +415,23 @@ function MediaCard({
       </div>
 
       {/* 信息区 */}
-      <div className="flex flex-col p-3">
+      <div className="p-2">
         <p
-          className="truncate font-semibold text-slate-900 text-xs"
+          className="truncate font-medium text-[11px] text-slate-900"
           title={asset.originalName}
         >
           {asset.originalName}
         </p>
-        <div className="mt-1 flex items-center justify-between text-[10px] text-slate-500">
+        <div className="mt-0.5 flex items-center gap-1.5 text-[9px] text-slate-400">
           <span>{asset.mimeType?.split("/")[0].toUpperCase()}</span>
-          <span>{asset.status ? "已上传" : "未上传"}</span>
+          {asset.category && (
+            <>
+              <span>·</span>
+              <Tag className="text-slate-400" size={8} />
+              <span className="truncate">{asset.category}</span>
+            </>
+          )}
         </div>
-        {asset.category && (
-          <div className="mt-2 flex items-center gap-1">
-            <Tag className="text-slate-400" size={10} />
-            <span className="text-[10px] text-slate-500">{asset.category}</span>
-          </div>
-        )}
       </div>
     </div>
   );

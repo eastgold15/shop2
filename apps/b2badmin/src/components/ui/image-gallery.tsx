@@ -21,7 +21,7 @@ interface ImageItem {
 interface ImageGalleryProps {
   images: ImageItem[];
   maxDisplay?: number;
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "fill";
   title?: string;
   onPreview?: (url: string) => void;
   className?: string;
@@ -37,6 +37,7 @@ const sizeConfig = {
   sm: { size: "h-12 w-12", sizes: "48px" },
   md: { size: "h-16 w-16", sizes: "64px" },
   lg: { size: "h-20 w-20", sizes: "80px" },
+  fill: { size: "h-full w-full", sizes: "100vw" },
 };
 
 export function ImageGallery({
@@ -128,13 +129,13 @@ export function ImageGallery({
           <div
             className={
               isSingleMode
-                ? ""
+                ? `h-full w-full ${className}`
                 : `flex items-center gap-2 overflow-x-auto ${className}`
             }
           >
             {displayImages.map((image, idx) => (
               <div
-                className={`${config.size} relative shrink-0 cursor-pointer overflow-hidden rounded-lg border-2 bg-white shadow-sm transition-all hover:scale-105 hover:shadow-md`}
+                className={`${config.size} relative ${isSingleMode ? "" : "shrink-0"} cursor-pointer overflow-hidden rounded-lg border-2 bg-white shadow-sm transition-all hover:scale-105 hover:shadow-md`}
                 key={image.id}
                 onClick={() => handlePreview(image.url)}
                 style={{
