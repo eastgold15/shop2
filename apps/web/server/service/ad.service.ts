@@ -1,4 +1,4 @@
-import { ServiceContext } from "~/middleware/site";
+import type { ServiceContext } from "~/middleware/site";
 
 export class AdService {
   // 💡 注意：一定要接收 context (包含 db 和 siteId)

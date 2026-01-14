@@ -7,7 +7,7 @@
  */
 import {
   mediaTable,
-  ProductContract,
+  type ProductContract,
   productMediaTable,
   productTable,
   siteProductSiteCategoryTable,
@@ -16,7 +16,7 @@ import {
   skuTable,
 } from "@repo/contract";
 import { and, asc, desc, eq, sql } from "drizzle-orm";
-import { ServiceContext } from "~/middleware/site";
+import type { ServiceContext } from "~/middleware/site";
 
 export class SiteProductService {
   /**

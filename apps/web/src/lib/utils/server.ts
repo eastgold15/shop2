@@ -1,5 +1,6 @@
 import { cookies, headers } from "next/headers";
 import { env } from "@/env";
+import { SERVER_URL_KEY } from "./constants";
 /**
  * get cookie from nextjs header for RPC calls in server components ONLY.
  * @returns An object containing the cookie header for authentication.
@@ -21,4 +22,4 @@ export const setCookies = async () => {
  * Retrieves the server URL from server components ONLY, connected with `middlerware.ts`
  * @returns The server URL string or undefined if not present.
  */
-export const serverUrl = async () => (await headers()).get(env.SERVER_URL_KEY);
+export const serverUrl = async () => (await headers()).get(SERVER_URL_KEY);

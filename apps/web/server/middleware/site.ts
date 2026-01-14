@@ -1,6 +1,6 @@
 import Elysia from "elysia";
 import { HttpError } from "elysia-http-problem-json";
-import { db, dbPlugin } from "../db/connection";
+import { type db, dbPlugin } from "../db/connection";
 
 /**
  * 站点中间件 - 根据域名查找站点ID并注入上下文

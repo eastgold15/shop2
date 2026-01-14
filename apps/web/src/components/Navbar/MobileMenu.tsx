@@ -1,5 +1,5 @@
 "use client";
-import { CategoryWithChildren } from "./DesktopMenu";
+import type { CategoryWithChildren } from "./DesktopMenu";
 import { useNavAction } from "./hook/useNavAction";
 import { NAV_STYLES, NavLink } from "./NavParts";
 

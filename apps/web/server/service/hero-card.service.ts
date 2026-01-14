@@ -1,4 +1,4 @@
-import { ServiceContext } from "~/middleware/site";
+import type { ServiceContext } from "~/middleware/site";
 
 export class HeroCardService {
   /**

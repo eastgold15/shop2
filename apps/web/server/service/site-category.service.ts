@@ -8,7 +8,7 @@ import {
   skuTable,
 } from "@repo/contract";
 import { and, eq, min, sql } from "drizzle-orm";
-import { ServiceContext } from "~/middleware/site";
+import type { ServiceContext } from "~/middleware/site";
 
 /**
  * 🛠️ Category 业务实现

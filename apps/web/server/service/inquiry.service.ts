@@ -20,7 +20,7 @@ import { eq } from "drizzle-orm";
 import { HttpError } from "elysia-http-problem-json";
 import { db } from "~/db/connection";
 import { sendEmail } from "~/lib/email/email";
-import { ServiceContext } from "~/middleware/site";
+import type { ServiceContext } from "~/middleware/site";
 import { generateInquiryNumber } from "~/modules/inquiry/services/dayCount";
 import { generateQuotationExcel } from "~/modules/inquiry/services/excel.service";
 import { createSalesInquiryTemplate } from "~/modules/inquiry/services/inquiry.templates";

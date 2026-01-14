@@ -23,18 +23,6 @@ export const envConfig = {
     FROM: env.get("EMAIL_FROM").asString(),
   },
 
-  // 阿里云凭证（带默认值）
-  ALIBABA_CLOUD: {
-    ACCESS_KEY_ID: env
-      .get("ALIBABA_CLOUD_ACCESS_KEY_ID")
-      .default("xxxx")
-      .asString(),
-    ACCESS_KEY_SECRET: env
-      .get("ALIBABA_CLOUD_ACCESS_KEY_SECRET")
-      .default("dddd")
-      .asString(),
-  },
-
   // OSS 配置（可选，无默认值）
   OSS: {
     ACCESS_KEY_ID: env.get("ACCESS_KEY_ID").asString(),
@@ -50,13 +38,6 @@ export const envConfig = {
     .get("IMGDOMAIN")
     .default("https://img.dongqifootwear.com")
     .asString(),
-
-  // 其他配置（带默认值）
-  AUTH_COOKIE: env
-    .get("AUTH_COOKIE")
-    .default("better-auth.session-token")
-    .asString(),
-  SERVER_URL_KEY: env.get("SERVER_URL_KEY").default("x-url").asString(),
 };
 // import { createEnv } from "@t3-oss/env-core";
 

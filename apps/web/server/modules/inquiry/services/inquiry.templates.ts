@@ -3,7 +3,7 @@
  * 处理询价确认、询价通知等业务相关的邮件模板
  */
 
-import { InquiryWithItems } from "~/service/inquiry.service";
+import type { InquiryWithItems } from "~/service/inquiry.service";
 import type {
   EmailAttachment,
   EmailTemplate,
