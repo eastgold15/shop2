@@ -1,0 +1,27 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "services": {
+    "api": {
+      "rootDir": "/",
+      "buildCommand": "bun --filter @railway-test/api run build",
+      "startCommand": "./apps/api/dist/server",
+      "env": {
+        "NODE_ENV": "production"
+      }
+    },
+    "b2badmin": {
+      "rootDir": "/",
+      "buildCommand": "bun install && cd apps/ui && bun run build",
+      "env": {
+        "RAILPACK_SPA_OUTPUT_DIR": "apps/ui/dist"
+      }
+    },
+    "web": {
+      "rootDir": "/",
+      "buildCommand": "bun install && cd apps/ui && bun run build",
+      "env": {
+        "RAILPACK_SPA_OUTPUT_DIR": "apps/ui/dist"
+      }
+    }
+  }
+}
