@@ -1,5 +1,5 @@
 import { t } from "elysia";
-import { InferDTO } from "../helper/utils";
+import type { InferDTO } from "../helper/utils";
 
 
 
