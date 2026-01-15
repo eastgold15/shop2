@@ -52,7 +52,10 @@ export const server = new Elysia({ name: "server" })
     })
   )
   .use(dbPlugin)
-  .mount("/", auth.handler) // 使用 Better Auth 认证中间件
+
+  // .all("/api/auth/*", (ctx) => auth.handler(ctx.request))
+  // .mount("/", auth.handler) // 使用 Better Auth 认证中间件
+  .all("/api/auth/*", (ctx) => auth.handler(ctx.request))
   .get("/", () => ({ message: "Hello Elysia api" }))
   .use(api)
   .listen(envConfig.PORT);
