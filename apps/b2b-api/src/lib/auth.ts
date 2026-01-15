@@ -45,7 +45,9 @@ export const auth = betterAuth({
     },
     // 开发/特定环境下禁用来源检查，解决跨域或内网穿透时的访问限制
     disableOriginCheck: true,
-    debug: true
+    debug: true,
+    // 1. 关键：在生产环境下强制使用安全 Cookie
+    useSecureCookies: process.env.NODE_ENV === "production",
   },
 
   // 策略：常规邮箱密码登录
