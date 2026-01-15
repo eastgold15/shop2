@@ -25,9 +25,7 @@ const api = new Elysia({ name: "api", prefix: "/api" })
         tags: [],
       },
       references: fromTypes(
-        process.env.NODE_ENV === "production"
-          ? "dist/server.d.ts"
-          : "src/server.ts",
+        "src/server.ts",
         {
           // 关键：指定项目根目录，以便编译器能找到 tsconfig.json 和其他文件
           // 这里使用 import.meta.dir (Bun) 或 process.cwd()
