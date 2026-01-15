@@ -13,12 +13,10 @@ export const env = createEnv({
     EMAIL_FROM: z.string().optional(),
   },
   client: {
-    NEXT_PUBLIC_API_URL: z.url().default("http://localhost:3000"),
   },
   runtimeEnv: {
     PORT: process.env.PORT,
     DATABASE_URL: process.env.DATABASE_URL,
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
     AUTH_COOKIE: process.env.AUTH_COOKIE,
     EMAIL_HOST: process.env.EMAIL_HOST,
     EMAIL_PORT: process.env.EMAIL_PORT,

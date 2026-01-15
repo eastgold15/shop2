@@ -1,11 +1,11 @@
 // import { type Static, type TSchema, Type as t } from "typebox";
 import env from "env-var";
 export const envConfig = {
-  SERVERPORT: env.get("SERVERPORT").default(4000).asPortNumber(),
+  SERVERPORT: env.get("SERVERPORT").asPortNumber(),
   // 必填项：必须存在且非空字符串
-  DATABASE_URL: env.get("DATABASE_URL").default("").asString(),
+  DATABASE_URL: env.get("DATABASE_URL").asString(),
   BETTER_AUTH_SECRET: env.get("BETTER_AUTH_SECRET").asString(),
-  TRUSTED_ORIGINS: env.get("TRUSTED_ORIGINS").default("").asString(),
+  TRUSTED_ORIGINS: env.get("TRUSTED_ORIGINS").asString(),
 
   // 合法URL校验
   BETTER_AUTH_BASE_URL: env.get("BETTER_AUTH_BASE_URL").asUrlString(),
@@ -16,7 +16,7 @@ export const envConfig = {
 
   // 邮件服务（可选，带默认值/可选配置）
   EMAIL: {
-    HOST: env.get("EMAIL_HOST").default("smtp.gmail.com").asString(),
+    HOST: env.get("EMAIL_HOST").asString(),
     PORT: env.get("EMAIL_PORT").asPortNumber(), // 可选，无默认值，非法值返回undefined
     USER: env.get("EMAIL_USER").asString(),
     PASSWORD: env.get("EMAIL_PASSWORD").asString(),
@@ -36,7 +36,6 @@ export const envConfig = {
   // 图片域名（用于拼接图片URL）
   IMGDOMAIN: env
     .get("IMGDOMAIN")
-    .default("https://img.dongqifootwear.com")
     .asString(),
 };
 // import { createEnv } from "@t3-oss/env-core";
