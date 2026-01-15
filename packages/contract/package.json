@@ -4,9 +4,14 @@
   "description": "契约层 - 统一的 Zod Schema 和类型管理",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
   },
   "scripts": {
+    "build": "tsc --emitDeclarationOnly --declarationDir dist",
     "db:dump": "mkdir -p backups && docker exec -i shop_postgres1 pg_dump -U shop -d shop --no-owner --no-acl --column-inserts --data-only > backups/shop_data.sql",
     "type-check": "tsc --noEmit",
     "clean": "rm -rf dist .turbo",
