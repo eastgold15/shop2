@@ -543,17 +543,19 @@ export default function AdsPage() {
                     />
 
                     {ad.mediaUrl ? (
-                      <ImageGallery
-                        images={[
-                          {
-                            id: ad.id,
-                            url: ad.mediaUrl,
-                            isMain: true,
-                            originalName: ad.title,
-                          },
-                        ]}
-                        size="md"
-                      />
+                      <div>
+                        <ImageGallery
+                          images={[
+                            {
+                              id: ad.id,
+                              url: ad.mediaUrl,
+                              isMain: true,
+                              originalName: ad.title,
+                            },
+                          ]}
+                          size="md"
+                        />
+                      </div>
                     ) : (
                       <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-slate-100">
                         <ImageIcon className="h-6 w-6 text-slate-400" />
