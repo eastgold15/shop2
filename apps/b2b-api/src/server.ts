@@ -11,8 +11,7 @@ import { authGuardMid } from "./middleware/auth";
 import { loggerPlugin } from "./middleware/logger";
 import { errorSuite } from "./utils/err/errorSuite.plugin";
 
-export const server = new Elysia({ name: "server", prefix: "/api" })
-  .get("/", () => ({ message: "Hello Elysia api" }))
+const api = new Elysia({ name: "api", prefix: "/api" })
   .use(
     openapi({
       documentation: {
@@ -40,12 +39,10 @@ export const server = new Elysia({ name: "server", prefix: "/api" })
       ),
     })
   )
-  .decorate("myProperty", "myValue")
-  .use(localeMiddleware) // 在全局级别添加语言中间件
-  .state({
-    version: "1.0.0",
-    environment: process.env.NODE_ENV || "development",
-  })
+  .group("/v1", (app) => app.use(authGuardMid).use(appRouter))
+
+export const server = new Elysia({ name: "server" })
+
   .use(
     cors({
       origin: [...envConfig.TRUSTED_ORIGINS.split(",")],
@@ -56,8 +53,9 @@ export const server = new Elysia({ name: "server", prefix: "/api" })
   .use(loggerPlugin)
   // 2. 核心错误处理插件 (拦截所有错误，进行转换和手动日志记录)
   .use(errorSuite)
+  .use(localeMiddleware) // 在全局级别添加语言中间件
   .use(dbPlugin)
-  .mount("/", auth.handler) // 使用 Better Auth 认证中间件
-  .group("/v1", (app) => app.use(authGuardMid).use(appRouter))
-
+  .mount(auth.handler) // 使用 Better Auth 认证中间件
+  .get("/", () => ({ message: "Hello Elysia api" }))
+  .use(api)
   .listen(envConfig.PORT);

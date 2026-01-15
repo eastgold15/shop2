@@ -1,7 +1,7 @@
 // import { type Static, type TSchema, Type as t } from "typebox";
 import env from "env-var";
 export const envConfig = {
-  PORT: env.get("PORT").asPortNumber(),
+  PORT: env.get("PORT").required().asPortNumber(),
   // 必填项：必须存在且非空字符串
   DATABASE_URL: env.get("DATABASE_URL").required().asString(),
   BETTER_AUTH_SECRET: env.get("BETTER_AUTH_SECRET").required().asString(),
