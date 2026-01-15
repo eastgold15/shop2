@@ -60,18 +60,6 @@ export const server = new Elysia({ name: "server" })
     console.log("Auth Request URL:", ctx.request.url); // 观察远程输出的 URL 是否包含 /api/auth
     return auth.handler(ctx.request);
   })
-  .onError(({ code, error, set, request }) => {
-    // 专门针对 404 或特定的请求错误进行深度日志
-    if (code === 'NOT_FOUND') {
-      console.error(`远程 404 路径探测: ${request.url}`);
-      return { message: "路径未找到", path: request.url };
-    }
-
-    // 打印完整的错误对象
-    console.dir(error, { depth: null });
-
-    return new Response(error.message, { status: 500 });
-  })
   .get("/", () => ({ message: "Hello Elysia api" }))
   .use(api)
   .listen(envConfig.PORT);
