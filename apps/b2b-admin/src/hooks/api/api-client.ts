@@ -1,4 +1,5 @@
 // lib/api-client.ts
+import { env } from "@/env";
 import { useAuthStore } from "@/stores/auth-store";
 
 // 1. 定义 RequestOptions，区分 Body 和 Query
@@ -22,7 +23,7 @@ async function request<
   endpoint: string,
   { params, body, token, ...options }: RequestOptions<TBody, TQuery> = {}
 ): Promise<TRes> {
-  const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
+  const BASE_URL = env.NEXT_PUBLIC_API_URL || "";
   const url = new URL(
     endpoint.startsWith("http") ? endpoint : `${BASE_URL}${endpoint}`
   );

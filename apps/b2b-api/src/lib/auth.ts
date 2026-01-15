@@ -48,6 +48,14 @@ export const auth = betterAuth({
     disableOriginCheck: true,
     debug: true,
   },
+  cookie: {
+    namePrefix: "better-auth", // 或者保持默认
+    attributes: {
+      sameSite: "none", // 必须是小写的 "none"
+      secure: true,     // SameSite=None 时必须为 true
+      httpOnly: true,
+    }
+  },
 
   // 策略：常规邮箱密码登录
   emailAndPassword: {

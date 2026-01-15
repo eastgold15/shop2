@@ -24,7 +24,7 @@ export const env = createEnv({
    * 必须以 NEXT_PUBLIC_ 开头。
    */
   client: {
-    NEXT_PUBLIC_API_URL: z.url().default("http://localhost:3000"),
+    NEXT_PUBLIC_API_URL: z.url().default("https://b2b-api-production-1.up.railway.app"),
   },
 
   /**
