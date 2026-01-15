@@ -43,11 +43,10 @@ export const auth = betterAuth({
       // 禁用自动生成 ID，使用数据库自身的默认值（如 cuid 或 uuid）
       generateId: false,
     },
+    useSecureCookies: true, // 强制开启，因为 Railway 外部是 HTTPS
     // 开发/特定环境下禁用来源检查，解决跨域或内网穿透时的访问限制
     disableOriginCheck: true,
     debug: true,
-    // 1. 关键：在生产环境下强制使用安全 Cookie
-    useSecureCookies: process.env.NODE_ENV === "production",
   },
 
   // 策略：常规邮箱密码登录
