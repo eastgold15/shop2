@@ -457,8 +457,8 @@ export default function HeroCardsPage() {
                         }`}
                         key={card.id}
                       >
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-start gap-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
                             <input
                               checked={selectedCards.includes(card.id)}
                               className="mt-1 rounded"
@@ -467,17 +467,19 @@ export default function HeroCardsPage() {
                             />
                             <GripVertical className="mt-1 h-5 w-5 text-muted-foreground" />
                             {card.media.url && (
-                              <ImageGallery
-                                images={[
-                                  {
-                                    id: card.id,
-                                    url: card.media.url,
-                                    isMain: true,
-                                    originalName: card.title,
-                                  },
-                                ]}
-                                size="md"
-                              />
+                              <div>
+                                <ImageGallery
+                                  images={[
+                                    {
+                                      id: card.id,
+                                      url: card.media.url,
+                                      isMain: true,
+                                      originalName: card.title,
+                                    },
+                                  ]}
+                                  size="md"
+                                />
+                              </div>
                             )}
                             <div className="flex-1">
                               <h3 className="font-semibold text-lg">
