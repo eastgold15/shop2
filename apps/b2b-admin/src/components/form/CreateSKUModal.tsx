@@ -378,7 +378,7 @@ export function CreateSKUModal({
                         <TableHeader className="sticky top-0 z-10 bg-slate-50">
                           <TableRow>
                             <TableHead className="w-[50px]">#</TableHead>
-                            {currentProduct?.specs?.map((spec: any) => (
+                            {currentProduct?.specs?.map((spec) => (
                               <TableHead key={spec.key}>{spec.label}</TableHead>
                             ))}
                             <TableHead className="w-[100px]">

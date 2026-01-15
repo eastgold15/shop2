@@ -182,7 +182,25 @@ export function TemplateFieldRow({
             </FormItem>
           )}
         />
-        {/* 其他开关... */}
+        <FormField
+          control={control}
+          name={`fields.${index}.isSkuSpec`}
+          render={({ field }) => (
+            <FormItem className="flex items-center gap-2 space-y-0">
+              <FormControl>
+                <input
+                  checked={field.value}
+                  className="accent-indigo-600"
+                  onChange={field.onChange}
+                  type="checkbox"
+                />
+              </FormControl>
+              <FormLabel className="font-medium text-indigo-600 text-xs">
+                作为 SKU 规格
+              </FormLabel>
+            </FormItem>
+          )}
+        />
       </div>
     </div>
   );

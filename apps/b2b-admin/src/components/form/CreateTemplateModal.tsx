@@ -255,23 +255,7 @@ export function CreateTemplateModal({
                         <FormMessage />
                       </FormItem>
                     )}
-                  />
-
-                  {/* <FormField
-                    control={form.control}
-                    name="siteCategoryId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>站点分类</FormLabel>
-                        <SiteCategoryTreeSelect
-                          onChange={field.onChange}
-                          placeholder="选择站点分类（可选）"
-                          value={field.value}
-                        />
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  /> */}
+                  />  
                 </div>
               </div>
 

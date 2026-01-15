@@ -5,7 +5,6 @@
   "scripts": {
     "dev": " bun run --watch src/server.ts  -p 8012",
     "build": "NODE_ENV=production bun build --compile --minify --target=bun --outfile dist/server ./src/server.ts",
-    // 3. 启动时运行 .js 文件
     "start": "NODE_ENV=production dist/server",
     "check": "npx ultracite check",
     "clean": "rimraf dist .turbo logs ",
