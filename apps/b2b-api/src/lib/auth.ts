@@ -43,7 +43,7 @@ export const auth = betterAuth({
       generateId: false,
     },
     // 开发/特定环境下禁用来源检查，解决跨域或内网穿透时的访问限制
-    disableOriginCheck: true,
+    // disableOriginCheck: true,
   },
 
   // 策略：常规邮箱密码登录
