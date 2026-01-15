@@ -87,36 +87,42 @@ export function ProductList({
               />
 
               {product.mainImage ? (
-                <ImageGallery
-                  images={[
-                    {
-                      id: product.mainImageId || product.id,
-                      url: product.mainImage,
-                      isMain: true,
-                      originalName: product.name,
-                    },
-                  ]}
-                  size="md"
-                />
+                <div className="h-16 w-16 shrink-0 overflow-hidden rounded-md">
+                  {" "}
+                  {/* 添加一个包装层固定大小 */}
+                  <ImageGallery
+                    images={[
+                      {
+                        id: product.mainImageId || product.id,
+                        url: product.mainImage,
+                        isMain: true,
+                        originalName: product.name,
+                      },
+                    ]}
+                    size="md"
+                  />
+                </div>
               ) : (
                 <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-slate-100 text-muted-foreground text-xs">
                   No Img
                 </div>
               )}
 
-              <div className="grid flex-1 gap-1">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-semibold leading-none">{product.name}</h3>
+              <div className="flex flex-1 flex-col gap-1">
+                <div className="flex min-w-0 items-center gap-2">
+                  <h3 className="truncate font-semibold leading-none">
+                    {product.name}
+                  </h3>
                   <Badge
-                    className="h-5 px-1.5 text-[10px]"
+                    className="h-5 shrink-0 px-1.5 text-[10px]"
                     variant={product.status === 1 ? "default" : "secondary"}
                   >
                     {product.status === 1 ? "发布" : "草稿"}
                   </Badge>
                 </div>
-                <div className="flex items-center gap-4 text-muted-foreground text-sm">
-                  <span>编码: {product.spuCode}</span>
-                  <span>SKU: {product.skuCount}</span>
+                <div className="flex items-center gap-8 text-muted-foreground text-sm sm:gap-4">
+                  <span className="truncate">编码: {product.spuCode}</span>
+                  <span className="shrink-0">SKU: {product.skuCount}</span>
                 </div>
               </div>
 

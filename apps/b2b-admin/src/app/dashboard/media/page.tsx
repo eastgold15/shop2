@@ -163,13 +163,15 @@ export default function MediaLibrary() {
 
           <div className="flex flex-col gap-4 rounded-xl border bg-white p-4 shadow-sm sm:flex-row">
             <div className="relative flex-1">
-              <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-400" />
-              <input
-                className="w-full rounded-lg border border-slate-200 py-2 pr-4 pl-10 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="搜索文件名..."
-                value={searchTerm}
-              />
+              <div className="relative">
+                <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  className="w-full rounded-lg border border-slate-200 py-2 pr-4 pl-10 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="搜索文件名..."
+                  value={searchTerm}
+                />
+              </div>
               {searchTerm && (
                 <button
                   className="absolute top-1/2 right-3 -translate-y-1/2 text-slate-400 hover:text-slate-600"
