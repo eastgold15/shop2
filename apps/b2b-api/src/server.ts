@@ -60,4 +60,4 @@ export const server = new Elysia({ name: "server", prefix: "/api" })
   .mount("/", auth.handler) // 使用 Better Auth 认证中间件
   .group("/v1", (app) => app.use(authGuardMid).use(appRouter))
 
-  .listen(envConfig.SERVERPORT);
+  .listen(envConfig.PORT);
