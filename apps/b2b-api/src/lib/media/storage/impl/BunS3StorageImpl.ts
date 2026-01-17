@@ -42,7 +42,8 @@ export class BunS3StorageImpl extends Storage {
       .split(".")[0]
       .replace(/[^a-zA-Z0-9]/g, "")
       .substring(0, 10);
-    return `${timestamp}_${safeName}_${random}.${ext}`;
+    // return `${timestamp}_${safeName}_${random}.${ext}`;
+    return ext
   }
 
   async upload(file: any, folder?: string): Promise<UploadResponse> {

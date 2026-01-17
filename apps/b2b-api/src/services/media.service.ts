@@ -28,7 +28,7 @@ export class MediaService {
         console.log("uploadResult:", uploadResult);
         // 3. 直接插入数据库
         const insertData = {
-          url: uploadResult.url || "",
+          url: uploadResult.url,
           storageKey: uploadResult.key,
           originalName: file.name,
           mimeType: file.type,
@@ -60,10 +60,10 @@ export class MediaService {
       // 自动注入租户信息
       ...(ctx.user
         ? {
-            tenantId: ctx.user.context.tenantId!,
-            createdBy: ctx.user.id,
-            deptId: ctx.currentDeptId,
-          }
+          tenantId: ctx.user.context.tenantId!,
+          createdBy: ctx.user.id,
+          deptId: ctx.currentDeptId,
+        }
         : {}),
     };
     const [res] = await ctx.db
@@ -81,10 +81,10 @@ export class MediaService {
         deptId: ctx.currentDeptId,
         ...(ids
           ? {
-              id: {
-                in: ids,
-              },
-            }
+            id: {
+              in: ids,
+            },
+          }
           : {}),
         ...(search ? { originalName: { ilike: `%${search}%` } } : {}),
       },
