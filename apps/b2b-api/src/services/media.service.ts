@@ -74,7 +74,7 @@ export class MediaService {
   }
 
   public async list(query: MediaContract["ListQuery"], ctx: ServiceContext) {
-    const { search, ids } = query;
+    const { search, ids, category } = query;
     const res = await ctx.db.query.mediaTable.findMany({
       where: {
         tenantId: ctx.user.context.tenantId!,
@@ -86,6 +86,7 @@ export class MediaService {
             },
           }
           : {}),
+        ...(category ? { category } : {}),
         ...(search ? { originalName: { ilike: `%${search}%` } } : {}),
       },
     });

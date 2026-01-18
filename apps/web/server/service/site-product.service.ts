@@ -45,7 +45,6 @@ export class SiteProductService {
         // --- 物理产品字段 ---
         productId: productTable.id,
         spuCode: productTable.spuCode,
-        units: productTable.units,
 
         // --- 聚合：最低价 (SiteSku 优先) ---
         minPrice: sql<string>`(
@@ -111,41 +110,130 @@ export class SiteProductService {
    * 🔍 获取商品详情 (使用 Relational Query)
    */
 
+  // async getDetail(id: string, ctx: ServiceContext) {
+  //   const result = await ctx.db.query.siteProductTable.findFirst({
+  //     where: {
+  //       id,
+  //       siteId: ctx.site.id,
+  //     },
+  //     // 🔥 使用 extras 混合原生 SQL 逻辑
+  //     extras: {
+  //       // 这里的 table 代表 siteProductTable
+  //       displayName: (table) =>
+  //         sql<string>`COALESCE(${table.siteName}, (SELECT ${productTable.name} FROM ${productTable} WHERE ${productTable.id} = ${table.productId}))`.as(
+  //           "display_name"
+  //         ),
+
+  //       displayDesc: (table) =>
+  //         sql<string>`COALESCE(${table.siteDescription}, (SELECT ${productTable.description} FROM ${productTable} WHERE ${productTable.id} = ${table.productId}))`.as(
+  //           "display_desc"
+  //         ),
+  //     },
+  //     // 嵌套拉取所有关联资产
+  //     with: {
+  //       // 拉取物理商品表（如果你还想看原始字段）
+  //       product: {
+  //         with: {
+  //           media: true,
+  //         },
+  //       },
+  //       // 拉取站点分类
+  //       siteCategories: true,
+  //       siteSkus: {
+  //         with: {
+  //           sku: {
+  //             with: {
+  //               media: true,
+  //             },
+  //           },
+  //         },
+  //       },
+  //     },
+  //   });
+
+  //   if (!result) throw new Error("商品不存在");
+
+  //   // --- 开始清洗数据 ---
+  //   // --- 开始清洗数据 ---
+  //   return {
+  //     // 1. 站点层基础属性 (直接展开)
+  //     siteProductId: result.id, // ✅ 修复：返回 siteProduct 的 ID，不是 product 的 ID
+  //     siteId: result.siteId,
+  //     sortOrder: result.sortOrder,
+  //     isFeatured: result.isFeatured,
+  //     isVisible: result.isVisible,
+  //     seoTitle: result.seoTitle,
+  //     createdAt: result.createdAt,
+
+  //     // 2. 应用覆盖逻辑 (使用 SQL extras 算出的结果)
+  //     displayName: result.displayName,
+  //     displayDesc: result.displayDesc,
+
+  //     // 3. 资产层物理属性 (spuCode 等)
+  //     spuCode: result.product?.spuCode,
+
+  //     // 4. 清洗视频列表 (Gallery)
+  //     //  第一张是视频
+  //     media: result.product.media
+  //       .map((pm) => ({
+  //         url: pm.url,
+  //         mediaType: pm.mediaType,
+  //         sortOrder: pm.sortOrder,
+  //         id: pm.id,
+  //       }))
+  //       .sort((a, b) => a.sortOrder - b.sortOrder),
+
+  //     // 5. 清洗规格列表 (SKUs)
+  //     // 逻辑：siteSku 覆盖价格和状态，物理 Sku 提供 code 和规格 JSON
+  //     skus: result.siteSkus.map((ss) => {
+  //       const pSku = ss.sku; // 物理 SKU
+  //       return {
+  //         siteSkuId: ss.id,
+  //         skuCode: pSku.skuCode,
+  //         // 价格逻辑：站点价格不存在(null)则回退到物理价格
+  //         price: pSku.price,
+  //         costPrice: pSku.costPrice,
+  //         marketPrice: pSku.marketPrice,
+  //         weight: pSku.weight,
+  //         volume: pSku.volume,
+  //         stock: pSku.stock,
+  //         specJson: pSku.specJson, // 存储颜色、尺寸等
+  //         extraAttributes: pSku.extraAttributes,
+  //         isActive: ss.isActive,
+  //         // 规格图片展平
+  //         media: pSku.media
+  //           .map((sm) => ({
+  //             url: sm.url,
+  //             mediaType: sm.mediaType,
+  //             sortOrder: sm.sortOrder,
+  //             id: sm.id,
+  //           }))
+  //           .sort((a, b) => a.sortOrder - b.sortOrder),
+  //       };
+  //     }),
+  //     // 6. 清洗分类 (简单的 ID 数组或对象数组)
+  //     siteCategories: result.siteCategories.map((sc) => ({
+  //       id: sc.id,
+  //       name: sc.name,
+  //     })),
+  //   };
+  // }
+
   async getDetail(id: string, ctx: ServiceContext) {
     const result = await ctx.db.query.siteProductTable.findFirst({
       where: {
         id,
         siteId: ctx.site.id,
       },
-      // 🔥 使用 extras 混合原生 SQL 逻辑
-      extras: {
-        // 这里的 table 代表 siteProductTable
-        displayName: (table) =>
-          sql<string>`COALESCE(${table.siteName}, (SELECT ${productTable.name} FROM ${productTable} WHERE ${productTable.id} = ${table.productId}))`.as(
-            "display_name"
-          ),
-
-        displayDesc: (table) =>
-          sql<string>`COALESCE(${table.siteDescription}, (SELECT ${productTable.description} FROM ${productTable} WHERE ${productTable.id} = ${table.productId}))`.as(
-            "display_desc"
-          ),
-      },
-      // 嵌套拉取所有关联资产
       with: {
-        // 拉取物理商品表（如果你还想看原始字段）
         product: {
-          with: {
-            media: true,
-          },
+          with: { media: true },
         },
-        // 拉取站点分类
         siteCategories: true,
         siteSkus: {
           with: {
             sku: {
-              with: {
-                media: true,
-              },
+              with: { media: true },
             },
           },
         },
@@ -154,67 +242,70 @@ export class SiteProductService {
 
     if (!result) throw new Error("商品不存在");
 
-    // --- 开始清洗数据 ---
-    // --- 开始清洗数据 ---
+    // --- 统一媒体处理逻辑 (包含你要求的排序) ---
+    const processMedia = (mediaArr: any[], offset = 0, isVideoLast = true) => {
+      return mediaArr.map((m) => {
+        let weight = (m.sortOrder ?? 0) + offset;
+        if (isVideoLast && m.mediaType?.startsWith("video")) {
+          weight += 10_000; // 视频权重极大，确保置底
+        }
+        return {
+          id: m.id,
+          url: m.url,
+          mediaType: m.mediaType,
+          sortOrder: weight,
+        };
+      });
+    };
+
+    // 聚合所有媒体
+    const spuMedia = processMedia(result.product.media, 0);
+    const skuMedia = result.siteSkus.flatMap(
+      (ss) => processMedia(ss.sku.media, 2000) // SKU图起跳权重2000
+    );
+
+    const gallery = [...spuMedia, ...skuMedia].sort(
+      (a, b) => a.sortOrder - b.sortOrder
+    );
+
+    // --- 响应值封装 ---
     return {
-      // 1. 站点层基础属性 (直接展开)
-      siteProductId: result.id, // ✅ 修复：返回 siteProduct 的 ID，不是 product 的 ID
-      siteId: result.siteId,
-      sortOrder: result.sortOrder,
+      // 1. 身份信息
+      id: result.id, // 前端直接用 id
+      productId: result.productId,
+      spuCode: result.product?.spuCode,
+
+      // 2. 显示内容 (已处理覆盖逻辑)
+      name: result.siteName || result.product?.name,
+      description: result.siteDescription || result.product?.description,
+      seoTitle: result.seoTitle,
+
+      // 3. 状态与配置
       isFeatured: result.isFeatured,
       isVisible: result.isVisible,
-      seoTitle: result.seoTitle,
       createdAt: result.createdAt,
 
-      // 2. 应用覆盖逻辑 (使用 SQL extras 算出的结果)
-      displayName: result.displayName,
-      displayDesc: result.displayDesc,
-
-      // 3. 资产层物理属性 (spuCode 等)
-      spuCode: result.product?.spuCode,
-      units: result.product?.units,
-
-      // 4. 清洗视频列表 (Gallery)
-      //  第一张是视频
-      media: result.product.media
-        .map((pm) => ({
-          url: pm.url,
-          mediaType: pm.mediaType,
-          sortOrder: pm.sortOrder,
-          id: pm.id,
-        }))
-        .sort((a, b) => a.sortOrder - b.sortOrder),
-
-      // 5. 清洗规格列表 (SKUs)
-      // 逻辑：siteSku 覆盖价格和状态，物理 Sku 提供 code 和规格 JSON
+      // 4. 规格列表
       skus: result.siteSkus.map((ss) => {
-        const pSku = ss.sku; // 物理 SKU
+        const pSku = ss.sku;
         return {
-          siteSkuId: ss.id,
+          id: ss.id, // siteSkuId
           skuCode: pSku.skuCode,
-          // 价格逻辑：站点价格不存在(null)则回退到物理价格
-          price: pSku.price,
-          costPrice: pSku.costPrice,
-          marketPrice: pSku.marketPrice,
-          weight: pSku.weight,
-          volume: pSku.volume,
+          // ⚠️ 修复：站点价格覆盖逻辑
+          price: ss.price || pSku.price,
           stock: pSku.stock,
-          specJson: pSku.specJson, // 存储颜色、尺寸等
-          extraAttributes: pSku.extraAttributes,
+          specJson: pSku.specJson as Record<string, string>,
           isActive: ss.isActive,
-          // 规格图片展平
-          media: pSku.media
-            .map((sm) => ({
-              url: sm.url,
-              mediaType: sm.mediaType,
-              sortOrder: sm.sortOrder,
-              id: sm.id,
-            }))
-            .sort((a, b) => a.sortOrder - b.sortOrder),
+          // 该 SKU 关联的图片 ID 列表，方便前端联动
+          mediaIds: pSku.media.map((m) => m.id),
         };
       }),
-      // 6. 清洗分类 (简单的 ID 数组或对象数组)
-      siteCategories: result.siteCategories.map((sc) => ({
+
+      // 5. 媒体库 (已排好序：SPU图 > SKU图 > 视频)
+      gallery,
+
+      // 6. 分类
+      categories: result.siteCategories.map((sc) => ({
         id: sc.id,
         name: sc.name,
       })),

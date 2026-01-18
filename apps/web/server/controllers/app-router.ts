@@ -10,12 +10,12 @@ import { adsController } from "./_custom/ads.controller";
 import { herocardsController } from "./_custom/herocards.controller";
 import { inquiryController } from "./_custom/inquiry.controller";
 import { mediaController } from "./_custom/media.controller";
-import { productsController } from "./_custom/products.controller";
+import { siteProductsController } from "./_custom/site-products.controller";
 import { sitecategoriesController } from "./_custom/sitecategories.controller";
 
 export const appRouter = new Elysia({ name: "appRouter" })
   .use(adsController)
-  .use(productsController)
+  .use(siteProductsController)
   .use(herocardsController)
   .use(mediaController)
   .use(sitecategoriesController)

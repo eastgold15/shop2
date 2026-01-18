@@ -4,6 +4,7 @@ import { Check, Image as ImageIcon, Search, Video, X } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { CategorySelect } from "@/components/ui/category-select";
 import {
   Dialog,
   DialogContent,
@@ -12,8 +13,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useMediaList } from "@/hooks/api";
 
 interface MediaSelectorDialogProps {
@@ -42,10 +43,12 @@ export function MediaSelectorDialog({
     new Set(initialSelected)
   );
   const [activeTab, setActiveTab] = useState<"image" | "video">("image");
+  // 内部分类状态，使用传入的 category 作为初始值
+  const [internalCategory, setInternalCategory] = useState(category || "");
 
   // 获取媒体列表
   const { data: mediaListData, isLoading } = useMediaList({
-    category,
+    category: internalCategory,
     search,
   });
 
@@ -103,12 +106,13 @@ export function MediaSelectorDialog({
 
   return (
     <Dialog onOpenChange={handleClose} open={open}>
-      <DialogContent className="max-h-[80vh] max-w-4xl">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[90vh] max-w-4xl flex-col p-0">
+        <DialogHeader className="px-6 pt-6 pb-4">
           <DialogTitle>选择媒体文件</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        {/* 固定顶部：搜索和分类 */}
+        <div className="space-y-3 border-b px-6">
           {/* 搜索框 */}
           <div className="relative">
             <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -120,95 +124,109 @@ export function MediaSelectorDialog({
             />
           </div>
 
-          {/* 媒体类型切换 */}
-          <Tabs
-            onValueChange={(v) => setActiveTab(v as "image" | "video")}
-            value={activeTab}
-          >
-            <TabsList className="grid w-full max-w-[200px] grid-cols-2">
-              <TabsTrigger value="image">
-                <ImageIcon className="mr-2 h-4 w-4" />
-                图片
-              </TabsTrigger>
-              <TabsTrigger value="video">
-                <Video className="mr-2 h-4 w-4" />
-                视频
-              </TabsTrigger>
-            </TabsList>
+          {/* 分类和类型切换 */}
+          <div className="flex gap-4">
+            <div className="flex-1 space-y-1.5">
+              <Label htmlFor="media-category-select">文件分类</Label>
+              <CategorySelect
+                allowClear={true}
+                id="media-category-select"
+                onChange={setInternalCategory}
+                placeholder="全部分类"
+                value={internalCategory}
+              />
+            </div>
 
-            <TabsContent className="mt-4" value={activeTab}>
-              {isLoading ? (
-                <div className="flex h-64 items-center justify-center">
-                  <p className="text-muted-foreground">加载中...</p>
-                </div>
-              ) : filteredMedia.length === 0 ? (
-                <div className="flex h-64 flex-col items-center justify-center">
-                  <ImageIcon className="mb-2 h-12 w-12 text-muted-foreground" />
-                  <p className="text-muted-foreground">
-                    {search ? "没有找到匹配的媒体文件" : "暂无媒体文件"}
-                  </p>
-                </div>
-              ) : (
-                <ScrollArea className="h-96">
-                  <div className="grid grid-cols-3 gap-4 pr-4 sm:grid-cols-4 md:grid-cols-5">
-                    {filteredMedia.map((media) => {
-                      const isSelected = selectedIds.has(media.id);
-                      const video = isVideo(media.mimeType || "");
+            <Tabs
+              onValueChange={(v) => setActiveTab(v as "image" | "video")}
+              value={activeTab}
+            >
+              <TabsList className="grid grid-cols-2">
+                <TabsTrigger value="image">
+                  <ImageIcon className="h-4 w-4" />
+                </TabsTrigger>
+                <TabsTrigger value="video">
+                  <Video className="h-4 w-4" />
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+        </div>
 
-                      return (
-                        <div
-                          className={`group relative aspect-square cursor-pointer overflow-hidden rounded-lg border-2 transition-colors ${
-                            isSelected
-                              ? "border-primary"
-                              : "border-border hover:border-primary/50"
-                          }`}
-                          key={media.id}
-                          onClick={() => toggleSelect(media.id)}
-                        >
-                          {video ? (
-                            <div className="flex h-full items-center justify-center bg-muted">
-                              <Video className="h-8 w-8 text-muted-foreground" />
-                            </div>
-                          ) : (
-                            <Image
-                              alt={media.originalName || "媒体"}
-                              className="h-full w-full object-cover"
-                              fill
-                              sizes="(max-width: 768px) 33vw, 20vw"
-                              src={media.url}
-                            />
-                          )}
+        {/* 可滚动内容区：图片列表 */}
+        <div className="flex-1 overflow-y-auto">
+          {isLoading ? (
+            <div className="flex h-64 items-center justify-center">
+              <p className="text-muted-foreground">加载中...</p>
+            </div>
+          ) : filteredMedia.length === 0 ? (
+            <div className="flex h-64 flex-col items-center justify-center">
+              <ImageIcon className="mb-2 h-12 w-12 text-muted-foreground" />
+              <p className="text-muted-foreground">
+                {search ? "没有找到匹配的媒体文件" : "暂无媒体文件"}
+              </p>
+            </div>
+          ) : (
+            <div className="p-6">
+              <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-5">
+                {filteredMedia.map((media) => {
+                  const isSelected = selectedIds.has(media.id);
+                  const video = isVideo(media.mimeType || "");
 
-                          {/* 选中标记 */}
-                          {isSelected && (
-                            <div className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary">
-                              <Check className="h-4 w-4 text-primary-foreground" />
-                            </div>
-                          )}
-
-                          {/* 视频标记 */}
-                          {video && (
-                            <div className="absolute bottom-2 left-2 flex h-6 w-6 items-center justify-center rounded-full bg-black/50">
-                              <Video className="h-3 w-3 text-white" />
-                            </div>
-                          )}
-
-                          {/* 悬停显示文件名 */}
-                          <div className="absolute inset-x-0 bottom-0 bg-black/60 p-1 opacity-0 transition-opacity group-hover:opacity-100">
-                            <p className="truncate text-white text-xs">
-                              {media.originalName}
-                            </p>
-                          </div>
+                  return (
+                    <div
+                      className={`group relative aspect-square cursor-pointer overflow-hidden rounded-lg border-2 transition-colors ${
+                        isSelected
+                          ? "border-primary"
+                          : "border-border hover:border-primary/50"
+                      }`}
+                      key={media.id}
+                      onClick={() => toggleSelect(media.id)}
+                    >
+                      {video ? (
+                        <div className="flex h-full items-center justify-center bg-muted">
+                          <Video className="h-8 w-8 text-muted-foreground" />
                         </div>
-                      );
-                    })}
-                  </div>
-                </ScrollArea>
-              )}
-            </TabsContent>
-          </Tabs>
+                      ) : (
+                        <Image
+                          alt={media.originalName || "媒体"}
+                          className="h-full w-full object-cover"
+                          fill
+                          sizes="(max-width: 768px) 33vw, 20vw"
+                          src={media.url}
+                        />
+                      )}
 
-          {/* 已选择数量提示 */}
+                      {/* 选中标记 */}
+                      {isSelected && (
+                        <div className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary">
+                          <Check className="h-4 w-4 text-primary-foreground" />
+                        </div>
+                      )}
+
+                      {/* 视频标记 */}
+                      {video && (
+                        <div className="absolute bottom-2 left-2 flex h-6 w-6 items-center justify-center rounded-full bg-black/50">
+                          <Video className="h-3 w-3 text-white" />
+                        </div>
+                      )}
+
+                      {/* 悬停显示文件名 */}
+                      <div className="absolute inset-x-0 bottom-0 bg-black/60 p-1 opacity-0 transition-opacity group-hover:opacity-100">
+                        <p className="truncate text-white text-xs">
+                          {media.originalName}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* 固定底部：选择提示和按钮 */}
+        <div className="space-y-3 border-t px-6 py-4">
           {selectedIds.size > 0 && (
             <div className="flex items-center justify-between text-muted-foreground text-sm">
               <span>
@@ -225,16 +243,15 @@ export function MediaSelectorDialog({
               </Button>
             </div>
           )}
+          <DialogFooter className="px-0 pb-0">
+            <Button onClick={handleClose} variant="outline">
+              取消
+            </Button>
+            <Button disabled={selectedIds.size === 0} onClick={handleConfirm}>
+              确认选择
+            </Button>
+          </DialogFooter>
         </div>
-
-        <DialogFooter>
-          <Button onClick={handleClose} variant="outline">
-            取消
-          </Button>
-          <Button disabled={selectedIds.size === 0} onClick={handleConfirm}>
-            确认选择
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
