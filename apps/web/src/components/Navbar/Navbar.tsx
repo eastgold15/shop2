@@ -71,11 +71,13 @@ const Navbar = () => {
 
   return (
     <nav
-      className={`fixed top-0 left-0 z-50 w-full bg-white transition-all duration-300 ${isScrolled ? "pb-2 shadow-sm" : "pb-4"}`}
+      className={`sticky top-0 left-0 z-50 w-full border-gray-200 border-b bg-white transition-all duration-300 ${isScrolled ? "pb-2 shadow-sm" : "pb-4"} sm:h-(--navbar-height-sm) md:h-(--navbar-height)`}
+      style={{
+        height: "var(--navbar-height)", // 使用 CSS 变量
+      }}
     >
       <div className="max-w-full px-4 md:px-8 lg:px-12">
-        {/* Top Row: Header (Logo, Icons) - 这部分代码比较固定，保持你原来的结构即可 */}
-        <div className="flex h-16 items-center justify-between md:h-20">
+        <div className="flex h-full items-center justify-between md:h-full">
           {/* ... Left Section (Menu Toggle / Lang) ... */}
           <div className="flex w-1/4 items-center">
             <button
@@ -101,7 +103,7 @@ const Navbar = () => {
           {/* ... Center Logo ... */}
           <div className="flex w-1/2 justify-center">
             <Link
-              className="font-serif text-3xl tracking-widest md:text-5xl"
+              className="font-serif text-3xl tracking-widest md:text-4xl"
               href="/"
             >
               GINA

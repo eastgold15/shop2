@@ -30,7 +30,10 @@ export const AdShowComponent: React.FC<AdShowProps> = ({
   // 加载状态 - 显示骨架屏
   if (isLoading && showSkeleton) {
     return (
-      <section className={`w-full bg-white ${className}`}>
+      <section
+        className={`min-h-screen w-full bg-white ${className}`}
+        style={{ height: "calc(100vh - var(--navbar-height))" }}
+      >
         {/* 这里的网格结构要和 displayAds.length === 2 的情况完全一致 */}
         <div className="grid h-auto grid-cols-1 md:h-200 md:grid-cols-2">
           <Skeleton

@@ -6,6 +6,7 @@ import {
   type HeroCardListRes,
   useCurrentHeroCardsList,
 } from "@/hooks/api/hero-cards-hook";
+import { cn } from "@/lib/utils";
 import { Skeleton } from "../ui/skeleton";
 import Shop from "./Shop";
 
@@ -36,15 +37,15 @@ const ContentBlock: React.FC<ContentBlockProps> = ({
   buttonUrl,
   buttonTextContent,
 }) => (
-  <div className={`group flex flex-col overflow-hidden ${bgColor}`}>
+  <div className={`flex h-full flex-col ${bgColor}`}>
     {/* 上部：根据传入的children渲染 */}
-    <div className="relative aspect-4/5 w-full overflow-hidden md:aspect-square">
+    <div className="relative aspect-square w-full grow overflow-hidden">
       {children}
     </div>
 
     {/* 下部：文字内容 - 固定高度 */}
     {title || description || buttonUrl ? (
-      <div className="flex h-50 flex-col justify-center p-8 md:h-62.5 md:p-12">
+      <div className="flex min-h-42.5 flex-col justify-center p-8">
         {title && (
           <h3
             className={`mb-4 font-serif text-2xl italic md:text-3xl ${titleColor}`}
@@ -78,12 +79,15 @@ const ContentBlock: React.FC<ContentBlockProps> = ({
  * HeroShow 组件
  * 使用 ContentBlock 来简化结构
  */
-const HeroShowComponent: React.FC = () => {
+export const HeroShowComponent: React.FC = () => {
   const { data: heroCards, isLoading, error } = useCurrentHeroCardsList();
   // 使用封装的 Skeleton
   if (isLoading) {
     return (
-      <section className="w-full bg-white py-12">
+      <section
+        className="min-h-screen w-full"
+        style={{ height: "calc(100vh - var(--navbar-height))" }}
+      >
         <div className="grid grid-cols-1 md:grid-cols-2">
           {/* 这里高度应该与 ContentBlock 的 [500+200]px 对应 */}
           {Array.from({ length: 4 }).map((_, i) => (
@@ -124,9 +128,8 @@ const HeroShowComponent: React.FC = () => {
   ];
 
   return (
-    <section className="w-full bg-white py-12">
+    <section className={cn("min-h-screen w-full")}>
       <div className="grid grid-cols-1 gap-0 md:grid-cols-2">
-        {/* 将所有卡片组合（Shop + HeroCards）统一处理 */}
         {[{ type: "shop" }, ...heroCards.slice(0, 3)].map((item, index) => {
           // 核心逻辑：index 0和3用配置0，1和2用配置1 (即 1-2-2-1 模式)
           const config = colorConfigs[index === 0 || index === 3 ? 0 : 1];
@@ -156,7 +159,7 @@ const HeroShowComponent: React.FC = () => {
             >
               <ImageComponent
                 alt={card.title}
-                className="h-full w-full transform object-cover transition-transform duration-700 group-hover:scale-105" // 统一字段名建议：mediaId
+                className="absolute inset-0 h-full w-full transform bg-white object-cover transition-transform duration-700 group-hover:scale-105"
                 imageId={card.mediaId}
               />
             </ContentBlock>
@@ -166,5 +169,3 @@ const HeroShowComponent: React.FC = () => {
     </section>
   );
 };
-
-export const HeroShow = HeroShowComponent;

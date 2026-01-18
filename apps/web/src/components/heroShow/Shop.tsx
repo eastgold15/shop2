@@ -1,11 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import type React from "react";
-import { useState } from "react";
 import { useProductList } from "@/hooks/api/product-hook";
-import { cn } from "@/lib/utils";
+import { BaseImage } from "../common/Image/baseImage";
 import { Skeleton } from "../ui/skeleton";
 
 interface ShopProps {
@@ -25,37 +23,6 @@ const ShopSkeleton = () => (
   </div>
 );
 
-/**
- * Product 图片组件 - 独立处理图片加载
- */
-const ProductImage: React.FC<{
-  imageUrl: string | null | undefined;
-  alt: string;
-}> = ({ imageUrl, alt }) => {
-  const [isLoaded, setIsLoaded] = useState(false);
-  const defaultImage =
-    "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?q=80&w=2080&auto=format&fit=crop";
-
-  return (
-    <div className="relative h-full w-full bg-gray-50">
-      {/* 图片未完成加载时显示一个淡色的 Skeleton */}
-      {!isLoaded && <Skeleton className="absolute inset-0 z-10" />}
-
-      <Image
-        alt={alt}
-        className={cn(
-          "object-contain mix-blend-multiply transition-opacity duration-500",
-          isLoaded ? "opacity-100" : "opacity-0"
-        )}
-        fill
-        onLoad={() => setIsLoaded(true)}
-        sizes="(max-width: 768px) 50vw, 25vw"
-        src={imageUrl || defaultImage}
-      />
-    </div>
-  );
-};
-
 const Shop: React.FC<ShopProps> = ({ onProductSelect }) => {
   const router = useRouter();
   const { data, isLoading, error } = useProductList({ limit: 4 });
@@ -67,33 +34,25 @@ const Shop: React.FC<ShopProps> = ({ onProductSelect }) => {
   if (error || !data) return null;
 
   const products = data.items || [];
-  const handleProductClick = (productId: string) => {
-    router.push(`/product/${productId}`);
-  };
 
   return (
-    <div className="flex h-full w-full items-center justify-center bg-white py-8">
-      <div className="grid h-full w-full max-w-2xl grid-cols-2 gap-x-8 gap-y-16">
-        {products.slice(0, 4).map((product) => (
-          <div
-            className="group flex cursor-pointer flex-col items-center"
-            key={product.siteProductId}
-            onClick={() => router.push(`/product/${product.siteProductId}`)}
-          >
-            <div className="relative mb-6 aspect-4/3 w-full overflow-hidden">
-              <ProductImage
-                alt={product.displayName}
-                imageUrl={product.mainMedia}
-              />
-            </div>
-            <div className="text-center">
-              <h3 className="mb-1 font-serif text-black text-lg italic transition-colors group-hover:text-gray-600 md:text-xl">
-                {product.displayName}
-              </h3>
-            </div>
+    <div className="grid h-full w-full gap-x-8 gap-y-4 bg-white p-8 md:grid-cols-2">
+      {products.slice(0, 4).map((product) => (
+        <div
+          className="group flex basis-100 cursor-pointer flex-col items-center"
+          key={product.siteProductId}
+          onClick={() => router.push(`/product/${product.siteProductId}`)}
+        >
+          <div className="relative mb-6 aspect-4/3 w-full overflow-hidden">
+            <BaseImage alt={product.displayName} imageUrl={product.mainMedia} />
           </div>
-        ))}
-      </div>
+          <div className="text-center">
+            <h3 className="mb-1 font-serif text-black text-lg italic transition-colors group-hover:text-gray-600 md:text-xl">
+              {product.displayName}
+            </h3>
+          </div>
+        </div>
+      ))}
     </div>
   );
 };

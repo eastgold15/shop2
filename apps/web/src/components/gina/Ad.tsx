@@ -7,7 +7,7 @@ import { useCurrentAdsList } from "@/hooks/api/ads-hook";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "../ui/skeleton";
 
-const Ad: React.FC = () => {
+const Ad: React.FC<{ className?: string }> = ({ className }) => {
   const router = useRouter();
   // 拿到的是处理好的纯数组，不需要再判断 .data
   const { data: ads, isLoading } = useCurrentAdsList();
@@ -28,7 +28,7 @@ const Ad: React.FC = () => {
   // 加载中显示大骨架屏
   if (isLoading) {
     return (
-      <section className="relative mt-26 w-full overflow-hidden md:mt-34">
+      <section className="relative mt-26 w-full overflow-hidden">
         <Skeleton className="h-[60vh] w-full md:h-[85vh]" variant="rectangle" />
       </section>
     );
@@ -42,11 +42,11 @@ const Ad: React.FC = () => {
 
   return (
     <section
-      className="relative mt-26 w-full overflow-hidden md:mt-34"
+      className={cn("relative h-full w-full overflow-hidden", className)}
       onMouseEnter={() => setIsPaused(true)} // 悬停暂停
       onMouseLeave={() => setIsPaused(false)} // 移开恢复
     >
-      <div className="relative h-[60vh] w-full md:h-[85vh]">
+      <div className="relative h-full w-full">
         {/* 核心优化：渲染所有 Slide，通过 opacity 切换 */}
         {ads.map((ad, index) => {
           const isActive = index === currentIndex;

@@ -1,1 +1,0 @@
-export { HeroShow } from "./HeroShow";

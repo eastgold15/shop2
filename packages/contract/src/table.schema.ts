@@ -547,6 +547,8 @@ export const customerTable = p.pgTable("customer", {
 export const siteTable = p.pgTable("site", {
   ...Audit,
   name: p.varchar("name", { length: 100 }).notNull(),
+  trueName: p.varchar("true_name", { length: 200 }),
+  description: p.text("description"),
   domain: p.varchar("domain", { length: 255 }).unique().notNull(),
   isActive: p.boolean("is_active").default(true),
 

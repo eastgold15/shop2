@@ -1,45 +1,19 @@
 "use client";
 import Ad from "@/components/gina/Ad";
-import { HeroShow } from "@/components/heroShow";
+import { HeroShowComponent } from "@/components/heroShow/HeroShow";
 import Footer from "@/components/layout/Footer";
 import Navbar from "@/components/Navbar/Navbar";
 
 const page: React.FC = () => {
-  // const [isSubscribeOpen, setIsSubscribeOpen] = useState(false);
-  // const [isMounted, setIsMounted] = useState(false);
-
-  // useEffect(() => {
-  //   setIsMounted(true);
-  // }, []);
-
   return (
-    <div className="relative min-h-screen bg-white font-sans text-black selection:bg-black selection:text-white">
+    <div className="relative min-h-screen bg-red-400 font-sans text-black selection:bg-black selection:text-white">
+      {/* Navbar 固定在顶部，不占用内容空间 */}
       <Navbar />
 
-      <main>
-        <Ad />
-        <HeroShow />
-      </main>
+      <Ad className="h-[calc(100vh-var(--navbar-height))]" />
+      <HeroShowComponent />
 
       <Footer />
-
-      {/* {isMounted && (
-        <button
-          className="fixed bottom-8 left-8 z-40 hidden items-center border border-black bg-white px-6 py-4 text-black shadow-xl transition-all duration-300 hover:bg-black hover:text-white md:flex"
-          onClick={() => setIsSubscribeOpen(true)}
-        >
-          <span className="font-bold text-xs uppercase tracking-widest">
-            Subscribe
-          </span>
-        </button>
-      )}
-
-      {isMounted && (
-        <SubscribeModal
-          isOpen={isSubscribeOpen}
-          onClose={() => setIsSubscribeOpen(false)}
-        />
-      )} */}
     </div>
   );
 };

@@ -7,7 +7,8 @@ import { useCurrentMediaDetail } from "@/hooks/api/meida-hook";
 import { cn } from "@/lib/utils";
 
 interface ImageProps {
-  imageId: string | null | undefined;
+  imageId?: string | null | undefined;
+  src?: string;
   alt: string;
   className?: string;
   priority?: boolean;
@@ -16,6 +17,9 @@ interface ImageProps {
   fill?: boolean;
   width?: number;
   height?: number;
+  aspectRatio?: string;
+  hoverSrc?: string;
+  showSkeleton?: boolean;
 }
 
 const DEFAULT_IMAGE =
@@ -32,6 +36,8 @@ const DEFAULT_SIZES = "(max-width: 768px) 100vw, 80vw";
  * - 支持优先加载控制（用于首屏图片）
  * - 支持自定义兜底图
  * - 支持响应式 sizes 配置
+ * - 支持悬停图片效果
+ * - 支持宽高比配置
  *
  * @example
  * ```tsx
@@ -43,10 +49,17 @@ const DEFAULT_SIZES = "(max-width: 768px) 100vw, 80vw";
  *
  * // 自定义兜底图
  * <Image imageId="xxx" alt="产品图片" defaultImage="/placeholder.jpg" />
+ *
+ * // 悬停效果
+ * <Image imageId="xxx" alt="产品图片" hoverSrc="hover-image.jpg" />
+ *
+ * // 宽高比配置
+ * <Image imageId="xxx" alt="产品图片" aspectRatio="aspect-4/3" />
  * ```
  */
 export const ImageComponent: React.FC<ImageProps> = ({
   imageId,
+  src,
   alt,
   className,
   priority = false,
@@ -55,6 +68,9 @@ export const ImageComponent: React.FC<ImageProps> = ({
   fill = true,
   width,
   height,
+  aspectRatio,
+  hoverSrc,
+  showSkeleton,
 }) => {
   const [isImgLoading, setIsImgLoading] = useState(true);
 
@@ -68,7 +84,7 @@ export const ImageComponent: React.FC<ImageProps> = ({
 
   // 判断是否需要显示骨架屏
   // 逻辑：正在查API 或 API查完了但图片文件还没下载完
-  const showSkeleton = isQueryLoading || isImgLoading;
+  const showSkeletonValue = showSkeleton || isQueryLoading || isImgLoading;
 
   // 如果不使用 fill 模式，必须提供 width 和 height
   const imageProps = fill
@@ -79,11 +95,12 @@ export const ImageComponent: React.FC<ImageProps> = ({
       };
 
   return (
-    <div className={cn("relative overflow-hidden", className)}>
+    <div className={cn("relative overflow-hidden", className, aspectRatio)}>
       {showSkeleton && (
         <Skeleton className="absolute inset-0 z-10 h-full w-full bg-gray-200" />
       )}
 
+      {/* 主图片 */}
       <Image
         alt={alt}
         className={cn(
@@ -97,6 +114,23 @@ export const ImageComponent: React.FC<ImageProps> = ({
         src={finalSrc}
         {...imageProps}
       />
+
+      {/* 悬停图片 */}
+      {hoverSrc && (
+        <Image
+          alt={`${alt} - hover`}
+          className={cn(
+            "absolute inset-0 object-cover transition-opacity duration-700",
+            isImgLoading ? "opacity-0" : "opacity-0",
+            "group-hover:opacity-100"
+          )}
+          onLoad={() => setIsImgLoading(false)}
+          priority={priority}
+          sizes={sizes}
+          src={hoverSrc}
+          {...imageProps}
+        />
+      )}
     </div>
   );
 };
