@@ -57,6 +57,7 @@ import {
   useAdCreate,
   useAdDelete,
   useAdList,
+  useAdToggleStatus,
   useAdUpdate,
 } from "@/hooks/api/ad";
 
@@ -368,6 +369,7 @@ export default function AdsPage() {
   const { data: adsData, isLoading, refetch } = useAdList();
   const deleteMutation = useAdDelete();
   const batchDeleteMutation = useAdBatchDelete();
+  const toggleStatusMutation = useAdToggleStatus();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingAd, setEditingAd] = useState<Ad | undefined>();
@@ -422,9 +424,9 @@ export default function AdsPage() {
     setSelectedIds(newSelectedIds);
   };
 
-  const handleToggleActive = (ad: any) => {
+  const handleToggleActive = async (ad: any) => {
     try {
-      refetch();
+      await toggleStatusMutation.mutateAsync(ad.id);
     } catch (error) {
       toast.error("操作失败");
     }

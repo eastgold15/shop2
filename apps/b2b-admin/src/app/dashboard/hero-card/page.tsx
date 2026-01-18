@@ -43,6 +43,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   useCreateHeroCard,
   useDeleteHeroCard,
+  useHeroCardBatchDelete,
   useHeroCardList,
   useHeroCardToggleStatus,
   useUpdateHeroCard,
@@ -75,6 +76,9 @@ export default function HeroCardsPage() {
 
   // 删除首页展示卡片
   const deleteMutation = useDeleteHeroCard();
+
+  // 批量删除首页展示卡片
+  const batchDeleteMutation = useHeroCardBatchDelete();
 
   // 切换激活状态
   const toggleStatusMutation = useHeroCardToggleStatus();
@@ -166,20 +170,17 @@ export default function HeroCardsPage() {
   };
 
   // 批量删除
-  const handleBatchDelete = () => {
+  const handleBatchDelete = async () => {
     if (selectedCards.length === 0) {
       toast.error("请选择要删除的首页展示卡片");
       return;
     }
 
     try {
-      // await batchDeleteMutation.mutateAsync(selectedCards);
-      toast.success(`成功删除 ${selectedCards.length} 个首页展示卡片`);
+      await batchDeleteMutation.mutateAsync(selectedCards);
       setSelectedCards([]);
-      refetch();
     } catch (error) {
       console.error("批量删除失败:", error);
-      toast.error("批量删除失败");
     }
   };
 

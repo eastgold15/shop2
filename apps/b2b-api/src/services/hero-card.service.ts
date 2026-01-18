@@ -10,6 +10,7 @@ import {
   eq,
   getColumns,
   ilike,
+  inArray,
   or,
   type SQL,
   sql,
@@ -119,11 +120,11 @@ export class HeroCardService {
         tenantId: ctx.user.context.tenantId!,
         ...(search
           ? {
-              OR: [
-                { title: { ilike: `%${search}%` } },
-                { description: { ilike: `%${search}%` } },
-              ],
-            }
+            OR: [
+              { title: { ilike: `%${search}%` } },
+              { description: { ilike: `%${search}%` } },
+            ],
+          }
           : {}),
       },
       with: {
@@ -217,5 +218,36 @@ export class HeroCardService {
       isActive: updated.isActive,
       message: updated.isActive ? "已激活" : "已停用",
     };
+  }
+
+  /**
+   * 批量删除首页展示卡片
+   */
+  async batchDelete(ids: string[], ctx: ServiceContext) {
+    const whereConditions: SQL[] = [inArray(heroCardTable.id, ids)];
+
+    if (ctx.currentDeptId) {
+      whereConditions.push(eq(heroCardTable.deptId, ctx.currentDeptId));
+    }
+    if (ctx.user?.context.tenantId) {
+      whereConditions.push(
+        eq(heroCardTable.tenantId, ctx.user.context.tenantId)
+      );
+    }
+
+    // 查找所有符合条件的卡片
+    const cards = await ctx.db
+      .select()
+      .from(heroCardTable)
+      .where(and(...whereConditions));
+
+    if (cards.length === 0) {
+      throw new HttpError.NotFound("未找到可删除的首页展示卡片");
+    }
+
+    // 批量删除
+    await ctx.db.delete(heroCardTable).where(and(...whereConditions));
+
+    return { count: cards.length, message: `成功删除 ${cards.length} 个首页展示卡片` };
   }
 }

@@ -159,6 +159,56 @@ export class AdService {
   }
 
   /**
+   * 切换状态
+   */
+  async patchStatus(id: string, ctx: ServiceContext) {
+    const ad = await ctx.db.query.adTable.findFirst({
+      where: {
+        id,
+        deptId: ctx.currentDeptId,
+        tenantId: ctx.user.context!.tenantId!,
+      },
+    });
+    if (!ad) throw new HttpError.NotFound("记录不存在");
+    const [updated] = await ctx.db
+      .update(adTable)
+      .set({ isActive: !ad.isActive })
+      .where(eq(adTable.id, id))
+      .returning();
+
+    return {
+      id: updated.id,
+      isActive: updated.isActive,
+      message: updated.isActive ? "已激活" : "已停用",
+    };
+  }
+
+  /**
+   * 获取单个广告详情
+   */
+  async detail(id: string, ctx: ServiceContext) {
+    const ad = await ctx.db.query.adTable.findFirst({
+      where: {
+        id,
+        deptId: ctx.currentDeptId,
+        tenantId: ctx.user.context!.tenantId!,
+      },
+      with: {
+        media: true,
+      },
+    });
+
+    if (!ad) {
+      throw new HttpError.NotFound("广告不存在");
+    }
+
+    return {
+      ...ad,
+      mediaUrl: (ad as any)?.media?.url || null,
+    };
+  }
+
+  /**
    * 批量删除广告
    */
   async batchDelete(ids: string[], ctx: ServiceContext) {

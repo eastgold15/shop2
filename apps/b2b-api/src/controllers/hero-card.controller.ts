@@ -71,4 +71,58 @@ export const heroCardController = new Elysia({ prefix: "/hero-card" })
         tags: ["HeroCard"],
       },
     }
+  )
+  .patch(
+    "/sort",
+    ({ body, user, db, currentDeptId }) =>
+      heroCardService.updateSortOrder(body.items, { db, user, currentDeptId }),
+    {
+      body: t.Object({
+        items: t.Array(
+          t.Object({
+            id: t.String(),
+            sortOrder: t.Number(),
+          })
+        ),
+      }),
+      allPermissions: ["HERO_CARD_EDIT"],
+      requireDept: true,
+      detail: {
+        summary: "批量更新HeroCard排序",
+        description: "批量更新多个HeroCard的排序值",
+        tags: ["HeroCard"],
+      },
+    }
+  )
+  .patch(
+    "/:id/toggle",
+    ({ params, user, db, currentDeptId }) =>
+      heroCardService.patchStatus(params.id, { db, user, currentDeptId }),
+    {
+      params: t.Object({ id: t.String() }),
+      allPermissions: ["HERO_CARD_EDIT"],
+      requireDept: true,
+      detail: {
+        summary: "切换HeroCard激活状态",
+        description: "切换指定HeroCard的启用/禁用状态",
+        tags: ["HeroCard"],
+      },
+    }
+  )
+  .delete(
+    "/batch",
+    ({ body, user, db, currentDeptId }) =>
+      heroCardService.batchDelete(body.ids, { db, user, currentDeptId }),
+    {
+      body: t.Object({
+        ids: t.Array(t.String()),
+      }),
+      allPermissions: ["HERO_CARD_DELETE"],
+      requireDept: true,
+      detail: {
+        summary: "批量删除HeroCard",
+        description: "根据ID列表批量删除HeroCard记录",
+        tags: ["HeroCard"],
+      },
+    }
   );

@@ -80,4 +80,51 @@ export const adController = new Elysia({ prefix: "/ad" })
         tags: ["Ad"],
       },
     }
+  )
+  .get(
+    "/:id",
+    ({ params, user, db, currentDeptId }) =>
+      adService.detail(params.id, { db, user, currentDeptId }),
+    {
+      params: t.Object({ id: t.String() }),
+      allPermissions: ["AD_VIEW"],
+      requireDept: true,
+      detail: {
+        summary: "获取Ad详情",
+        description: "根据ID获取单个Ad的详细信息",
+        tags: ["Ad"],
+      },
+    }
+  )
+  .delete(
+    "/batch",
+    ({ body, user, db, currentDeptId }) =>
+      adService.batchDelete(body.ids, { db, user, currentDeptId }),
+    {
+      body: t.Object({
+        ids: t.Array(t.String()),
+      }),
+      allPermissions: ["AD_DELETE"],
+      requireDept: true,
+      detail: {
+        summary: "批量删除Ad",
+        description: "根据ID列表批量删除Ad记录",
+        tags: ["Ad"],
+      },
+    }
+  )
+  .patch(
+    "/:id/toggle",
+    ({ params, user, db, currentDeptId }) =>
+      adService.patchStatus(params.id, { db, user, currentDeptId }),
+    {
+      params: t.Object({ id: t.String() }),
+      allPermissions: ["AD_EDIT"],
+      requireDept: true,
+      detail: {
+        summary: "切换Ad激活状态",
+        description: "切换指定Ad的启用/禁用状态",
+        tags: ["Ad"],
+      },
+    }
   );

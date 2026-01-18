@@ -119,3 +119,18 @@ export function useAdBatchDelete() {
     },
   });
 }
+
+// --- 7. 切换激活状态 (PATCH /:id/toggle) ---
+export function useAdToggleStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.patch<any, {}>(`/api/v1/ad/${id}/toggle`),
+    onSuccess: () => {
+      toast.success("状态更新成功");
+      queryClient.invalidateQueries({ queryKey: adKeys.lists() });
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "更新状态失败");
+    },
+  });
+}

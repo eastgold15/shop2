@@ -149,3 +149,20 @@ export function useHeroCardToggleStatus() {
     },
   });
 }
+
+// --- 批量删除 (DELETE /batch) ---
+export function useHeroCardBatchDelete() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (ids: string[]) =>
+      api.delete<any, { ids: string[] }>("/api/v1/hero-card/batch", { ids }),
+    onSuccess: () => {
+      toast.success("批量删除成功");
+      queryClient.invalidateQueries({ queryKey: herocardKeys.lists() });
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "批量删除失败");
+    },
+  });
+}
