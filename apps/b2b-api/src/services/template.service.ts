@@ -6,11 +6,12 @@ import {
 } from "@repo/contract";
 import { asc, eq, inArray, like } from "drizzle-orm";
 import { HttpError } from "elysia-http-problem-json";
+import type { Transaction } from "~/db/connection";
 import { type ServiceContext } from "../lib/type";
 
 export class TemplateService {
   public async create(body: TemplateContract["Create"], ctx: ServiceContext) {
-    const { name, masterCategoryId, fields } = body as any;
+    const { name, masterCategoryId, fields } = body;
 
     return await ctx.db.transaction(async (tx) => {
       const [templateRes] = await tx
@@ -168,13 +169,12 @@ export class TemplateService {
     return Array.from(templateMap.values());
   }
 
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   public async update(
     id: string,
     body: TemplateContract["Update"],
     ctx: ServiceContext
   ) {
-    const { name, masterCategoryId, fields } = body as any;
+    const { name, masterCategoryId, fields } = body;
 
     return await ctx.db.transaction(async (tx) => {
       // 1. 更新模板主体
@@ -273,14 +273,14 @@ export class TemplateService {
    * 内部清理方法：删除模板关联的所有属性和属性值
    * 抽离出来供 delete 和 update 复用
    */
-  private async clearTemplateRelations(templateId: string, tx: any) {
+  private async clearTemplateRelations(templateId: string, tx: Transaction) {
     // 找到该模板下的所有属性 ID
     const oldAttributes = await tx
-      .select({ id: templateKeyTable.id })
+      .select()
       .from(templateKeyTable)
       .where(eq(templateKeyTable.templateId, templateId));
 
-    const oldAttributeIds = oldAttributes.map((a: any) => a.id);
+    const oldAttributeIds = oldAttributes.map((a) => a.id);
 
     if (oldAttributeIds.length > 0) {
       // a. 删除关联的所有属性值 (ValueTable)

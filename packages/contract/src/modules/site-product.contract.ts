@@ -6,14 +6,14 @@ import { productTable, siteProductTable } from "../table.schema";
 import { ProductTemplateFields } from "./product-template.contract";
 
 const autoFields = ["id", "createdAt", "updatedAt", "siteId"];
-/** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+
 export const SiteProductInsertFields = spread(siteProductTable, "insert");
-/** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+
 
 export const SiteProductFields = spread(siteProductTable, "select");
 const ProductFields = spread(productTable, "select");
 export const SiteProductContract = {
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+
   Response: t.Object({
     ...SiteProductFields,
   }),
@@ -24,7 +24,7 @@ export const SiteProductContract = {
     siteDescription: ProductFields.description,
     spuCode: ProductFields.spuCode,
     status: t.Optional(ProductFields.status),
-    units: t.Optional(ProductFields.units),
+
     templateId: ProductTemplateFields.templateId,
     seoTitle: t.Optional(SiteProductInsertFields.seoTitle),
     siteCategoryId: t.String(),
@@ -40,7 +40,7 @@ export const SiteProductContract = {
       siteDescription: SiteProductInsertFields.siteDescription,
       spuCode: ProductFields.spuCode,
       status: ProductFields.status,
-      units: ProductFields.units,
+
       templateId: ProductTemplateFields.templateId,
       seoTitle: SiteProductInsertFields.seoTitle,
       siteCategoryId: t.Optional(t.String()),
@@ -59,7 +59,6 @@ export const SiteProductContract = {
     isListed: t.Optional(t.Boolean()),
     search: t.Optional(t.String()),
   }),
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   ListResponse: t.Object({
     data: t.Array(t.Object({ ...SiteProductFields })),
     total: t.Number(),

@@ -25,8 +25,7 @@ import { siteProductController } from "./site-product.controller";
 import { skuController } from "./sku.controller";
 import { statisticsController } from "./statistics.controller";
 import { templateController } from "./template.controller";
-import { templateKeyController } from "./template-key.controller";
-import { templateValueController } from "./template-value.controller";
+
 import { tenantController } from "./tenant.controller";
 import { userController } from "./user.controller";
 
@@ -50,8 +49,8 @@ export const appRouter = (app: Elysia) =>
     .use(siteProductController)
     .use(skuController)
     .use(templateController)
-    .use(templateKeyController)
-    .use(templateValueController)
+    // .use(templateKeyController)
+    // .use(templateValueController)
     .use(tenantController)
     .use(userController)
     .use(statisticsController);

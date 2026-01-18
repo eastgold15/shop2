@@ -63,7 +63,6 @@ export class ProductService {
         id: productTable.id,
         spuCode: productTable.spuCode,
         status: productTable.status,
-        units: productTable.units,
         createdAt: productTable.createdAt,
         updatedAt: productTable.updatedAt,
         templateId: sql<string>`${productTemplateTable.templateId}`,
@@ -459,11 +458,9 @@ export class ProductService {
         // 核心展示信息 (SQL 已处理好优先级)
         name: product.name,
         description: product.description,
-
         // 基础属性
         spuCode: product.spuCode,
         status: product.status,
-        units: product.units,
         createdAt: product.createdAt,
         updatedAt: product.updatedAt,
 
@@ -555,7 +552,6 @@ export class ProductService {
     const {
       spuCode,
       status = 0,
-      units,
       siteCategoryId,
       templateId,
       siteName,
@@ -614,7 +610,6 @@ export class ProductService {
           spuCode,
           description: siteDescription,
           status,
-          units,
           tenantId,
           deptId: ctx.currentDeptId,
           createdBy: ctx.user.id,
@@ -710,7 +705,6 @@ export class ProductService {
       siteCategoryId, // 站点分类ID
       spuCode,
       status,
-      units,
       templateId,
       mediaIds,
       mainImageId,
@@ -800,7 +794,7 @@ export class ProductService {
           spuCode,
           description: siteDescription,
           status,
-          units,
+
         })
         .where(eq(productTable.id, productId));
 
@@ -855,6 +849,88 @@ export class ProductService {
               masterCategoryId: newTemplate.masterCategoryId,
             });
           }
+        }
+      }
+
+      // 🔥 修复后的逻辑
+      // if (templateId !== undefined && templateId) {
+      //   // 1. 获取新模板的规格键
+      //   const newTemplateKeys = await tx
+      //     .select({ key: templateKeyTable.key })
+      //     .from(templateKeyTable)
+      //     .where(
+      //       and(
+      //         eq(templateKeyTable.templateId, templateId),
+      //         eq(templateKeyTable.isSkuSpec, true)
+      //       )
+      //     );
+
+      //   const newSpecKeys = newTemplateKeys.map((k) => k.key);
+
+      //   // 2. 更新已有 SKU 的 specJson
+      //   if (newSpecKeys.length === 0) {
+      //     // 如果新模板没规格，清空所有 SKU 的规格
+      //     await tx
+      //       .update(skuTable)
+      //       .set({ specJson: {}, updatedAt: new Date() })
+      //       .where(eq(skuTable.productId, productId));
+      //   } else {
+      //     await tx
+      //       .update(skuTable)
+      //       .set({
+      //         // 关键点修复：
+      //         // 1. 使用 ::jsonb 强制转换防止函数找不到
+      //         // 2. 使用 ARRAY[...] 构造数组解决 ANY 报错
+      //         // 3. 使用 sql.join 处理动态参数个数
+      //         specJson: sql`COALESCE(
+      //     (
+      //       SELECT jsonb_object_agg(key, value)
+      //       FROM jsonb_each(${skuTable.specJson}::jsonb)
+      //       WHERE key = ANY(${newSpecKeys}::text[])
+      //     ),
+      //     '{}'::jsonb
+      //   )`,
+      //         updatedAt: new Date(),
+      //       })
+      //       .where(eq(skuTable.productId, productId));
+      //   }
+      // }
+
+      // 🔥 修复后的逻辑
+      if (templateId !== undefined && templateId) {
+        const newTemplateKeys = await tx
+          .select({ key: templateKeyTable.key })
+          .from(templateKeyTable)
+          .where(
+            and(
+              eq(templateKeyTable.templateId, templateId),
+              eq(templateKeyTable.isSkuSpec, true)
+            )
+          );
+
+        const newSpecKeys = newTemplateKeys.map((k) => k.key);
+
+        if (newSpecKeys.length === 0) {
+          await tx
+            .update(skuTable)
+            .set({ specJson: {}, updatedAt: new Date() })
+            .where(eq(skuTable.productId, productId));
+        } else {
+          await tx
+            .update(skuTable)
+            .set({
+              // 关键点：使用 ARRAY[...] 并在内部通过 sql.join 展开参数
+              specJson: sql`COALESCE(
+          (
+            SELECT jsonb_object_agg(key, value)
+            FROM jsonb_each(${skuTable.specJson}::jsonb)
+            WHERE key = ANY(ARRAY[${sql.join(newSpecKeys, sql`, `)}]::text[])
+          ),
+          '{}'::jsonb
+        )`,
+              updatedAt: new Date(),
+            })
+            .where(eq(skuTable.productId, productId));
         }
       }
 

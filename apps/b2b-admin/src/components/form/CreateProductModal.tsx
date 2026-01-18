@@ -36,7 +36,6 @@ const formSchema = z.object({
   siteDescription: z.string(),
   spuCode: z.string().min(1, "SPU编码不能为空"),
   status: z.number().optional(),
-  units: z.string().optional(),
   templateId: z.string().min(1, "请选择属性模板"),
   seoTitle: z.string().optional(),
   siteCategoryId: z.string().min(1, "请选择站点分类"),
@@ -76,7 +75,6 @@ export function CreateProductModal({
       spuCode: "",
       siteName: "",
       siteDescription: "",
-      units: "",
       siteCategoryId: "",
       templateId: undefined,
       mediaIds: [],
@@ -95,7 +93,6 @@ export function CreateProductModal({
         spuCode: product.spuCode || "",
         siteName: product.siteName || product.name || "",
         siteDescription: product.siteDescription || product.description || "",
-        units: product.units || "",
         siteCategoryId: product.siteCategoryId || "",
         templateId: product.templateId || undefined,
         seoTitle: product.seoTitle || "",
@@ -151,7 +148,7 @@ export function CreateProductModal({
       onOpenChange={handleOpenChange}
       open={open}
     >
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[700px]">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-175">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
@@ -230,22 +227,10 @@ export function CreateProductModal({
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="">
               {/* 工厂站专属字段：计量单位和属性模板 */}
               <HasFactory>
-                <FormField
-                  control={form.control}
-                  name="units"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>计量单位</FormLabel>
-                      <FormControl>
-                        <Input placeholder="例如：个、件、套" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div />
               </HasFactory>
 
               <HasFactory>
@@ -276,9 +261,6 @@ export function CreateProductModal({
                   )}
                 />
               </HasFactory>
-
-              {/* 空占位，保持 grid 布局 */}
-              <div className="hidden" />
             </div>
 
             <FormField

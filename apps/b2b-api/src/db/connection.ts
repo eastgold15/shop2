@@ -16,3 +16,7 @@ export const db = drizzle(envConfig.DATABASE_URL, { relations });
 export const dbPlugin = new Elysia({ name: "db" })
   .decorate("db", db)
   .as("global");
+
+
+// 自动推断事务回调中 tx 的类型
+export type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];

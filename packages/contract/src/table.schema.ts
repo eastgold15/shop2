@@ -400,8 +400,6 @@ export const productTable = p.pgTable("product", {
   name: p.varchar("name", { length: 255 }).notNull(),
   description: p.text("description"),
   status: p.integer("status").notNull().default(1),
-  units: p.varchar("units", { length: 20 }),
-
   // 商品是核心资产，使用 standardCols，可在多个站点复用
   ...standardCols,
 });

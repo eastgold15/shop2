@@ -5,12 +5,11 @@ import { productTable } from "../table.schema";
 import { ProductTemplateFields } from "./product-template.contract";
 import { SiteProductInsertFields } from "./site-product.contract";
 
-/** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+
 export const ProductInsertFields = spread(productTable, "insert");
-/** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+
 export const ProductFields = spread(productTable, "select");
 export const ProductContract = {
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Response: t.Object({
     ...ProductFields,
   }),
@@ -20,7 +19,6 @@ export const ProductContract = {
     siteDescription: ProductFields.description,
     spuCode: ProductFields.spuCode,
     status: t.Optional(ProductFields.status),
-    units: t.Optional(ProductFields.units),
     templateId: ProductTemplateFields.templateId,
     seoTitle: t.Optional(SiteProductInsertFields.seoTitle),
     siteCategoryId: t.String(),
@@ -37,9 +35,7 @@ export const ProductContract = {
       description: ProductFields.description,
       spuCode: ProductFields.spuCode,
       status: ProductFields.status,
-      units: ProductFields.units,
       templateId: ProductTemplateFields.templateId,
-
       seoTitle: SiteProductInsertFields.seoTitle,
       siteCategoryId: t.String(),
       // 商品媒体关联
@@ -73,11 +69,7 @@ export const ProductContract = {
     search: t.Optional(t.String()),
     categoryId: t.Optional(t.String()),
   }),
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
-  ListResponse: t.Object({
-    data: t.Array(t.Object({ ...ProductFields })),
-    total: t.Number(),
-  }),
+
 } as const;
 
 export type ProductContract = InferDTO<typeof ProductContract>;
