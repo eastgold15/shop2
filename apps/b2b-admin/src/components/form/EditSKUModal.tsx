@@ -80,7 +80,11 @@ export function EditSKUModal({
 
   // 获取选中媒体的完整信息（通过 ids 从后端获取）
   const selectedMediaIds = form.watch("mediaIds");
-  const { data: mediaList = [] } = useMediaList({ ids: selectedMediaIds });
+  const { data: mediaList = [] } = useMediaList(
+    { ids: selectedMediaIds },
+    // 只在有选中的媒体 ID 时才发起请求
+    Boolean(selectedMediaIds && selectedMediaIds.length > 0)
+  );
 
   // 创建媒体 ID 到 URL 的映射
   const mediaMap = new Map(

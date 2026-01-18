@@ -53,6 +53,14 @@ export function useMediaPageList(
   });
 }
 // --- 2. 单个详情 (GET) ---
+// TRes = any
+export function useMediaDetail(id: string, enabled = !!id) {
+  return useQuery({
+    queryKey: mediaKeys.detail(id),
+    queryFn: () => api.get<any>(`/api/v1/media/${id}`),
+    enabled,
+  });
+}
 /**
  * @generated
  */
@@ -69,14 +77,7 @@ export function useDeleteMedia() {
     },
   });
 }
-// TRes = any
-export function useMediaDetail(id: string, enabled = !!id) {
-  return useQuery({
-    queryKey: mediaKeys.detail(id),
-    queryFn: () => api.get<any>(`/api/v1/media/${id}`),
-    enabled,
-  });
-}
+
 
 // --- 3. 创建 (POST) ---
 // TRes = any, TBody = typeof MediaContract.Create.static

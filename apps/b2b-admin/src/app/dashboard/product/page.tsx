@@ -8,7 +8,6 @@ import { CreateSKUModal } from "@/components/form/CreateSKUModal";
 import { EditSKUModal } from "@/components/form/EditSKUModal";
 import { HeaderToolbar } from "@/components/product/HeaderToolbar";
 import { ProductList } from "@/components/product/ProductList";
-
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import {
   useBatchDeleteProduct,
