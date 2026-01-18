@@ -6,7 +6,7 @@ import Navbar from "@/components/Navbar/Navbar";
 
 const page: React.FC = () => {
   return (
-    <div className="relative min-h-screen bg-red-400 font-sans text-black selection:bg-black selection:text-white">
+    <div className="relative min-h-screen font-sans text-black selection:bg-black selection:text-white">
       {/* Navbar 固定在顶部，不占用内容空间 */}
       <Navbar />
 
