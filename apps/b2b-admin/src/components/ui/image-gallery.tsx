@@ -148,8 +148,10 @@ export function ImageGallery({
                   alt={image.originalName || "图片"}
                   className="h-full w-full object-cover"
                   fill
+                  key={image.id + image.url}
                   sizes={config.sizes}
                   src={image.url}
+                  unoptimized
                 />
                 {!isSingleMode && image.isMain && (
                   <div className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600 text-white text-xs shadow-sm">
@@ -294,8 +296,10 @@ export function ImageGallery({
                       alt={img.originalName || `图片 ${idx + 1}`}
                       className="h-full w-full object-cover"
                       fill
+                      key={img.id + img.url}
                       sizes="64px"
                       src={img.url}
+                      unoptimized
                     />
                     {idx === currentIndex && (
                       <div className="absolute inset-0 flex items-center justify-center bg-black/30">
