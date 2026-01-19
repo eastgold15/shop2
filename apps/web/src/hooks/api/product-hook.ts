@@ -13,7 +13,6 @@ export type ProductListItem = {
   sortOrder: number | null;
   productId: string;
   spuCode: string;
-  units: string | null;
   minPrice: string;
   mainMedia: string;
 };

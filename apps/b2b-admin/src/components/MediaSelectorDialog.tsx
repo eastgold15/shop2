@@ -130,7 +130,6 @@ export function MediaSelectorDialog({
               <Label htmlFor="media-category-select">文件分类</Label>
               <CategorySelect
                 allowClear={true}
-                id="media-category-select"
                 onChange={setInternalCategory}
                 placeholder="全部分类"
                 value={internalCategory}
