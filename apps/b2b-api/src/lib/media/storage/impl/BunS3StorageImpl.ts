@@ -31,19 +31,15 @@ export class BunS3StorageImpl extends Storage {
   }
 
   /**
-   * 生成纯净的文件名，不带任何默认文件夹前缀
+   * 生成纯净的文件名，使用原始文件名
    */
   private generatePureFileName(originalName: string): string {
     const ext = originalName.split(".").pop()?.toLowerCase() || "jpg";
-    const random = Math.random().toString(36).substring(2, 8);
-    const timestamp = Date.now();
-    // 移除文件名中的非标准字符，防止 URL 编码导致 NoSuchKey
     const safeName = originalName
-      .split(".")[0]
-      .replace(/[^a-zA-Z0-9]/g, "")
-      .substring(0, 10);
-    // return `${timestamp}_${safeName}_${random}.${ext}`;
-    return ext
+      .replace(/\.[^/.]+$/, "") // 移除扩展名
+      .replace(/[^a-zA-Z0-9]/g, "") // 移除非标准字符
+      .substring(0, 20); // 限制长度
+    return `${safeName}.${ext}`;
   }
 
   async upload(file: any, folder?: string): Promise<UploadResponse> {
