@@ -24,6 +24,14 @@ export class MediaService {
     const results = await Promise.all(
       files.map(async (file) => {
         // 2. 物理上传
+        console.log("File object:", file);
+        console.log("File type:", typeof file);
+        console.log("File has name property:", "name" in file);
+        console.log("File has type property:", "type" in file);
+        console.log("File has size property:", "size" in file);
+        console.log("File name:", file?.name);
+        console.log("File type:", file?.type);
+        console.log("File size:", file?.size);
         const uploadResult = await client.upload(file, category);
         console.log("uploadResult:", uploadResult);
         // 3. 直接插入数据库

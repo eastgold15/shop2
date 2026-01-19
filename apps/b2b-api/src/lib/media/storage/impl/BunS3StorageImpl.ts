@@ -43,8 +43,16 @@ export class BunS3StorageImpl extends Storage {
   }
 
   async upload(file: any, folder?: string): Promise<UploadResponse> {
+    console.log("Upload file object:", file);
+    console.log("File type:", typeof file);
+    console.log("File has name property:", "name" in file);
+    console.log("File has type property:", "type" in file);
+    console.log("File has size property:", "size" in file);
+    console.log("File has body property:", "body" in file);
+
     const { body, size, type } = await this.normalizeFile(file);
     const originalName = file instanceof File ? file.name : "file.bin";
+    console.log("Original name:", originalName);
 
     // 构建 Key：如果传入 folder(category)，则拼接为 folder/filename，否则仅为 filename
     const fileName = this.generatePureFileName(originalName);

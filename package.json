@@ -19,7 +19,8 @@
     "prepare": "husky",
     "docker:compose": "docker compose up -d",
     "pipelineGen": "bun run script/gen.ts",
-    "postpipelineGen": "bun run fix"
+    "postpipelineGen": "bun run fix",
+    "db:dump2": "packages/sync-db.bat"
   },
   "engines": {
     "bun": ">=1.3.0"
