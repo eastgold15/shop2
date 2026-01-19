@@ -35,16 +35,25 @@ const Footer: React.FC = () => {
                 <a className="hover:text-black" href="#">
                   Contact Us
                 </a>
+                <Link className="hover:text-black" href="/single/contact">
+                  Contact Us
+                </Link>
               </li>
               <li>
                 <a className="hover:text-black" href="#">
                   Shipping & Returns
                 </a>
+                <Link className="hover:text-black" href="/single/ship">
+                  Shipping & Returns
+                </Link>
               </li>
               <li>
                 <a className="hover:text-black" href="#">
                   Size Guide
                 </a>
+                <Link className="hover:text-black" href="/single/size">
+                  Size Guide
+                </Link>
               </li>
             </ul>
           </div>
@@ -71,11 +80,17 @@ const Footer: React.FC = () => {
                 <a className="hover:text-black" href="#">
                   Privacy Policy
                 </a>
+                <Link className="hover:text-black" href="/single/privacy">
+                  Privacy Policy
+                </Link>
               </li>
               <li>
                 <a className="hover:text-black" href="#">
                   Terms & Conditions
                 </a>
+                <Link className="hover:text-black" href="/single/terms">
+                  Terms & Conditions
+                </Link>
               </li>
             </ul>
           </div>
