@@ -38,7 +38,7 @@ export class BunS3StorageImpl extends Storage {
     const safeName = originalName
       .replace(/\.[^/.]+$/, "") // 移除扩展名
       .replace(/[^a-zA-Z0-9]/g, "") // 移除非标准字符
-      .substring(0, 20); // 限制长度
+      .substring(0, 150); // 增加长度限制，保留更多字符
     return `${safeName}.${ext}`;
   }
 
