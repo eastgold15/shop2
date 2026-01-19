@@ -14,7 +14,7 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
   description,
 }) => {
   return (
-    <div className="min-h-screen bg-white pt-32 pb-20">
+    <div className="min-h-screen bg-white  pb-20">
       {/* Header */}
       <div className="mt-12 mb-12 px-6 text-center">
         <h1 className="mb-4 font-serif text-4xl uppercase tracking-widest md:text-6xl">
