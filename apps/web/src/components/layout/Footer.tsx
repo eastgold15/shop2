@@ -1,4 +1,4 @@
-import { Facebook, Instagram, Twitter } from "lucide-react";
+import Link from "next/link";
 import type React from "react";
 
 const Footer: React.FC = () => {
@@ -7,7 +7,9 @@ const Footer: React.FC = () => {
       <div className="mx-auto max-w-350 px-6">
         {/* Newsletter */}
         <div className="mx-auto mb-20 max-w-xl text-center">
-          <h4 className="mb-4 font-serif text-2xl">Join the World of GINA</h4>
+          <h4 className="mb-4 font-serif text-2xl">
+            Join the World of DONGQIFOOTWEAR
+          </h4>
           <p className="mb-8 text-gray-500 text-sm">
             Be the first to know about new collections and exclusive events.
           </p>
@@ -44,11 +46,6 @@ const Footer: React.FC = () => {
                   Size Guide
                 </a>
               </li>
-              <li>
-                <a className="hover:text-black" href="#">
-                  My Account
-                </a>
-              </li>
             </ul>
           </div>
 
@@ -58,24 +55,9 @@ const Footer: React.FC = () => {
             </h5>
             <ul className="space-y-3 text-gray-500 text-sm">
               <li>
-                <a className="hover:text-black" href="#">
-                  About GINA
-                </a>
-              </li>
-              <li>
-                <a className="hover:text-black" href="#">
-                  Couture
-                </a>
-              </li>
-              <li>
-                <a className="hover:text-black" href="#">
-                  Press
-                </a>
-              </li>
-              <li>
-                <a className="hover:text-black" href="#">
-                  Careers
-                </a>
+                <Link className="hover:text-black" href="/single/about">
+                  About DONGQIFOOTWEAR
+                </Link>
               </li>
             </ul>
           </div>
@@ -95,15 +77,10 @@ const Footer: React.FC = () => {
                   Terms & Conditions
                 </a>
               </li>
-              <li>
-                <a className="hover:text-black" href="#">
-                  Cookie Policy
-                </a>
-              </li>
             </ul>
           </div>
 
-          <div>
+          {/* <div>
             <h5 className="mb-6 font-bold text-xs uppercase tracking-widest">
               Follow Us
             </h5>
@@ -118,13 +95,13 @@ const Footer: React.FC = () => {
                 <Twitter className="h-5 w-5" />
               </a>
             </div>
-          </div>
+          </div> */}
         </div>
 
         <div className="mt-20 flex flex-col items-center justify-between border-gray-100 border-t pt-8 text-center text-gray-400 text-xs uppercase tracking-wider md:flex-row">
-          <p>&copy; {new Date().getFullYear()} GINA Shoes Ltd.</p>
+          <p>&copy; {new Date().getFullYear()} DONGQIFOOTWEAR Shoes Ltd.</p>
           <div className="mt-4 flex space-x-4 md:mt-0">
-            <span>United Kingdom (£)</span>
+            <span>+86 15920611313</span>
           </div>
         </div>
       </div>
