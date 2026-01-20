@@ -236,7 +236,9 @@ export const standardCols = {
   deptId: p.uuid("dept_id").references(() => departmentTable.id),
 
   // 创建人：数据是谁创建的
-  createdBy: p.uuid("created_by").references(() => userTable.id),
+  createdBy: p.uuid("created_by").references(() => userTable.id, {
+    onDelete: "set null",
+  }),
 
   // 可选：是否公开（通常指是否跨部门可见）
   isPublic: p.boolean("is_public").default(false).notNull(),
@@ -757,7 +759,7 @@ export const inquiryTable = p.pgTable("inquiry", {
   customerRequirements: p.text("customer_requirements"),
 
   // 增加负责人字段
-  ownerId: p.uuid("owner_id").references(() => userTable.id),
+  ownerId: p.uuid("owner_id").references(() => userTable.id, { onDelete: "set null" }),
   // 增加主分类字段（用于匹配分配逻辑）
   masterCategoryId: p
     .uuid("master_category_id")
@@ -767,6 +769,7 @@ export const inquiryTable = p.pgTable("inquiry", {
     product: any;
     sku: any;
     siteConfig: any;
+    owner: any;
   }>(),
   // 询盘是交易数据，使用 trackingCols，sourceSiteId 记录来源站点（可为空）
   ...trackingCols,

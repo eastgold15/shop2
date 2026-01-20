@@ -13,6 +13,7 @@ import {
 import { useEffect, useState } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
 import { HasRole } from "@/components/auth";
+import { HasFactory, HasGroup } from "@/components/auth/Has";
 import { CreateUserModal } from "@/components/form/CreateUserModal";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -106,14 +107,29 @@ export default function UsersPage() {
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
             <Separator className="mr-2 h-4" orientation="vertical" />
-            <nav className="font-medium text-sm">用户管理</nav>
+
+            <HasGroup>
+              <nav className="font-medium text-sm">出口商业务员</nav>
+            </HasGroup>
+            <HasFactory>
+              <nav className="font-medium text-sm">用户管理</nav>
+            </HasFactory>
           </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="font-bold text-2xl text-slate-900">用户管理</h1>
+                <HasGroup>
+                  <h1 className="font-bold text-2xl text-slate-900">
+                    出口商业务员管理
+                  </h1>
+                </HasGroup>
+                <HasFactory>
+                  <h1 className="font-bold text-2xl text-slate-900">
+                    业务员管理
+                  </h1>
+                </HasFactory>
                 <p className="mt-1 text-slate-500">
                   管理您团队中的所有用户，分配角色和权限
                 </p>
@@ -172,6 +188,11 @@ export default function UsersPage() {
                               {user.position}
                             </p>
                           )}
+                          <HasGroup>
+                            <p className="text-slate-400 text-xs">
+                              出口商管理员
+                            </p>
+                          </HasGroup>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
