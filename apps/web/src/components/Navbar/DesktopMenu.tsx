@@ -70,14 +70,10 @@ const MenuItem = ({ category }: { category: CategoryWithChildren }) => {
   );
 };
 
-// 下拉菜单项（支持多级嵌套，向右展开）
+// 下拉菜单项（显示子分类）
 const DropdownItem = ({ category }: { category: CategoryWithChildren }) => {
   const { getCategoryHref, handleNavigate } = useNavAction();
   const href = getCategoryHref(category.id);
-  const hasChildren = category.children && category.children.length > 0;
-
-  // 这里可以复用上面的 hover 逻辑来实现多级菜单，
-  // 为保持简单，演示代码中仅处理了二级，如需三级只需将上面的 MenuItem 逻辑复刻到这里即可
 
   return (
     <NavLink
@@ -94,10 +90,17 @@ export const DesktopMenu = ({
   categories,
 }: {
   categories: SiteCategoryListRes;
-}) => (
-  <div className="hidden items-center justify-center space-x-8 md:flex lg:space-x-12">
-    {categories.map((cat) => (
-      <MenuItem category={cat as CategoryWithChildren} key={cat.id} />
-    ))}
-  </div>
-);
+}) => {
+  // 过滤出一级分类（parentId为null的分类）
+  const topLevelCategories = categories.filter(
+    (cat) => cat.parentId === null || cat.parentId === undefined
+  );
+
+  return (
+    <div className="hidden items-center justify-center space-x-8 md:flex lg:space-x-12">
+      {topLevelCategories.map((cat) => (
+        <MenuItem category={cat as CategoryWithChildren} key={cat.id} />
+      ))}
+    </div>
+  );
+};

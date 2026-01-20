@@ -103,7 +103,7 @@ const Navbar = () => {
           {/* ... Center Logo ... */}
           <div className="flex w-1/2 justify-center">
             <Link
-              className="font-serif text-3xl tracking-widest md:text-4xl"
+              className="pt-2 font-serif text-4xl tracking-widest md:text-5xl"
               href="/"
             >
               GINA

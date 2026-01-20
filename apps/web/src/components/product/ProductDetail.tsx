@@ -161,7 +161,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
   const mediaItem = allMedia[activeMedia];
 
   return (
-    <div className="min-h-screen bg-white  pb-16">
+    <div className="min-h-screen bg-white pt-16 pb-16">
       <div className="mx-auto max-w-325 px-6">
         <div className="mb-24 grid grid-cols-1 gap-12 lg:grid-cols-12">
           {/* --- LEFT: GALLERY --- */}

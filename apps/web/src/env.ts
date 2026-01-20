@@ -12,8 +12,7 @@ export const env = createEnv({
     EMAIL_PASSWORD: z.string().optional(),
     EMAIL_FROM: z.string().optional(),
   },
-  client: {
-  },
+  client: {},
   runtimeEnv: {
     PORT: process.env.PORT,
     DATABASE_URL: process.env.DATABASE_URL,
