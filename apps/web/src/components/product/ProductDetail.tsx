@@ -74,16 +74,27 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
   const [selectedSpecs, setSelectedSpecs] = useState<Record<string, string>>(
     {}
   );
+  const [originalMediaIndex, setOriginalMediaIndex] = useState(0);
+  const [lastSelectedSpecs, setLastSelectedSpecs] = useState<
+    Record<string, string>
+  >({});
 
   const selectedSku = useMemo(() => {
-    if (Object.keys(selectedSpecs).length === 0) return null;
+    const specKeys = Object.keys(specOptions);
+    const selectedKeys = Object.keys(selectedSpecs);
+
+    // 只有当用户选择的规格数量等于规格总类数时，才认为匹配到了具体 SKU
+    if (specKeys.length === 0 || selectedKeys.length < specKeys.length) {
+      return undefined;
+    }
+
     return skus.find((sku) => {
       const specJson = (sku.specJson as Record<string, string>) || {};
       return Object.entries(selectedSpecs).every(
         ([key, value]) => specJson[key] === value
       );
     });
-  }, [skus, selectedSpecs]);
+  }, [skus, selectedSpecs, specOptions]);
 
   const displayPrice = useMemo(() => {
     if (selectedSku) return Number(selectedSku.price);
@@ -92,6 +103,10 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
   }, [selectedSku, skus]);
 
   // 4. 核心联动修复：选中规格时，通过 mediaIds 定位 gallery 中的图片
+  useEffect(() => {
+    setOriginalMediaIndex(0);
+  }, []);
+
   useEffect(() => {
     if (selectedSku && selectedSku.mediaIds?.length > 0) {
       const targetId = selectedSku.mediaIds[0];
@@ -109,6 +124,28 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const inquiryMutation = useCreateInquiry();
 
+  const handleThumbnailClick = (idx: number) => {
+    setActiveMedia(idx);
+
+    const targetMedia = allMedia[idx];
+    if (!targetMedia) return;
+
+    // 反向查找：寻找包含此图片 ID 的第一个 SKU
+    const matchedSku = skus.find((sku) =>
+      sku.mediaIds?.includes(targetMedia.id)
+    );
+
+    // 如果找到了对应的 SKU，同步更新规格选择
+    if (matchedSku?.specJson) {
+      setSelectedSpecs(matchedSku.specJson as Record<string, string>);
+    } else {
+      // 如果这个图片不属于任何 SKU（它是 SPU 通用图），则清空规格选择
+      setSelectedSpecs({});
+    }
+    // 清除可能存在的临时记录
+    setLastSelectedSpecs({});
+  };
+
   const handleInquirySubmit = async (values: InquiryFormValues) => {
     try {
       if (!selectedSku) return alert("Please select a product variant first");
@@ -116,10 +153,13 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
       const { remarks, ...contactInfo } = values;
       localStorage.setItem("gina_user_info", JSON.stringify(contactInfo));
 
+      // 直接使用 selectedSku 的 mediaId
+      const finalSkuMediaId = selectedSku.mediaIds?.[0] || "";
+
       await inquiryMutation.mutateAsync({
         siteProductId: siteProduct.id,
         siteSkuId: selectedSku.id,
-        skuMediaId: selectedSku.mediaIds?.[0] || "",
+        skuMediaId: finalSkuMediaId,
         productName: siteProduct.name,
         productDesc: siteProduct.description || "",
         paymentMethod,
@@ -215,7 +255,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
               ) : null}
             </div>
 
-            {/* Thumbnails */}
+            {/* Thumbnails缩略图 */}
             <div className="no-scrollbar flex max-w-full space-x-4 overflow-x-auto pb-2">
               {allMedia.map((m, idx) => (
                 <button
@@ -226,7 +266,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
                       : "border-gray-100"
                   )}
                   key={m.id}
-                  onClick={() => setActiveMedia(idx)}
+                  onClick={() => handleThumbnailClick(idx)}
                 >
                   {m.mediaType?.startsWith("video") ? (
                     <div className="flex h-full w-full items-center justify-center bg-gray-100">
@@ -277,27 +317,86 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
                           : "border-gray-200 text-black hover:border-black"
                       )}
                       key={val}
-                      onClick={() => {
-                        // 1. 设置选中状态
-                        setSelectedSpecs((prev) => ({ ...prev, [key]: val }));
+                      // onClick={() => {
+                      //   const wasSelected = selectedSpecs[key] === val;
 
-                        // 2. 立即寻找带有所选规格的第一张图片进行跳转（模糊匹配）
-                        const firstMatchingSku = skus.find((sku) => {
-                          const specJson =
-                            (sku.specJson as Record<string, string>) || {};
-                          return specJson[key] === val;
+                      //   // 1. 切换选中状态（支持反选）
+                      //   setSelectedSpecs((prev) => {
+                      //     const next = { ...prev };
+
+                      //     if (wasSelected) {
+                      //       // 取消选择：恢复到原始图片
+                      //       delete next[key];
+                      //       setActiveMedia(originalMediaIndex);
+                      //     } else {
+                      //       // 选择：保存当前图片状态，然后跳转到新图片
+                      //       setOriginalMediaIndex(activeMedia);
+                      //       next[key] = val;
+                      //     }
+
+                      //     return next;
+                      //   });
+
+                      //   // 2. 只有在选择时才触发图片联动
+                      //   if (!wasSelected) {
+                      //     const firstMatchingSku = skus.find((sku) => {
+                      //       const specJson =
+                      //         (sku.specJson as Record<string, string>) || {};
+                      //       return specJson[key] === val;
+                      //     });
+
+                      //     if (
+                      //       firstMatchingSku &&
+                      //       firstMatchingSku.mediaIds?.length > 0
+                      //     ) {
+                      //       const targetId = firstMatchingSku.mediaIds[0];
+                      //       const mediaIndex = allMedia.findIndex(
+                      //         (m) => m.id === targetId
+                      //       );
+                      //       if (mediaIndex !== -1) {
+                      //         setActiveMedia(mediaIndex);
+                      //       }
+                      //     }
+                      //   }
+                      // }}
+
+                      // 规格选择器内部的 onClick
+                      onClick={() => {
+                        const wasSelected = selectedSpecs[key] === val;
+
+                        // 1. 切换选中状态
+                        setSelectedSpecs((prev) => {
+                          const next = { ...prev };
+                          if (wasSelected) {
+                            // --- 关键修复：取消选择时 ---
+                            delete next[key];
+                            setActiveMedia(0); // 直接复原到第一张主图
+                          } else {
+                            // 选择时
+                            next[key] = val;
+                          }
+                          return next;
                         });
 
-                        if (
-                          firstMatchingSku &&
-                          firstMatchingSku.mediaIds?.length > 0
-                        ) {
-                          const targetId = firstMatchingSku.mediaIds[0];
-                          const mediaIndex = allMedia.findIndex(
-                            (m) => m.id === targetId
-                          );
-                          if (mediaIndex !== -1) {
-                            setActiveMedia(mediaIndex);
+                        // 2. 只有在【选中】动作时才触发模糊匹配跳转
+                        if (!wasSelected) {
+                          const firstMatchingSku = skus.find((sku) => {
+                            const specJson =
+                              (sku.specJson as Record<string, string>) || {};
+                            return specJson[key] === val;
+                          });
+
+                          if (
+                            firstMatchingSku &&
+                            firstMatchingSku?.mediaIds?.length > 0
+                          ) {
+                            const targetId = firstMatchingSku.mediaIds[0];
+                            const mediaIndex = allMedia.findIndex(
+                              (m) => m.id === targetId
+                            );
+                            if (mediaIndex !== -1) {
+                              setActiveMedia(mediaIndex);
+                            }
                           }
                         }
                       }}

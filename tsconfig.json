@@ -8,7 +8,7 @@
       "path": "./apps/web"
     },
     {
-      "path": "./apps/b2badmin"
+      "path": "./apps/b2b-admin"
     }
   ]
 }

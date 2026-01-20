@@ -149,11 +149,11 @@ export class InquiryService {
       "[业务员匹配结果]:",
       result.targetRep
         ? {
-            userId: result.targetRep.userId,
-            userName: result.targetRep.user?.name,
-            userEmail: result.targetRep.user?.email,
-            responsibilityId: result.targetRep.id,
-          }
+          userId: result.targetRep.userId,
+          userName: result.targetRep.user?.name,
+          userEmail: result.targetRep.user?.email,
+          responsibilityId: result.targetRep.id,
+        }
         : "未匹配到业务员"
     );
 
@@ -232,10 +232,15 @@ export class InquiryService {
       throw new HttpError.BadRequest("SKU not found");
     }
 
+    // 确保 sku 和 media 关联存在
+    if (!(siteSku.sku?.media)) {
+      throw new HttpError.BadRequest("SKU or its media not found");
+    }
+
     // 获取SKU媒体（主图）
     const skuMediaMainID =
       body.skuMediaId ||
-      siteSku.sku?.media.sort((a, b) => a.sortOrder - b.sortOrder)?.[0].id;
+      siteSku.sku.media.sort((a, b) => a.sortOrder - b.sortOrder)[0].id;
 
     if (!skuMediaMainID) {
       throw new HttpError.BadRequest("SKU has no media");
@@ -492,8 +497,8 @@ export class InquiryService {
       console.log("[7] 开始获取媒体信息，媒体ID:", skuMediaId);
       const media = skuMediaId
         ? await db.query.mediaTable.findFirst({
-            where: { id: skuMediaId },
-          })
+          where: { id: skuMediaId },
+        })
         : null;
       console.log(
         "[8] 媒体查询结果:",
@@ -663,10 +668,10 @@ export class InquiryService {
       clientPhone: Number.parseInt(inquiry.customerPhone!, 10) || 0,
       photoForRefer: photo
         ? {
-            buffer: photo.buffer,
-            mimeType: photo.mimeType,
-            name: `ref-${inquiry.inquiryNum}`,
-          }
+          buffer: photo.buffer,
+          mimeType: photo.mimeType,
+          name: `ref-${inquiry.inquiryNum}`,
+        }
         : null,
 
       // Terms (报价项) - 使用第一个 SKU 信息填充第一行

@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { hostname: "images.unsplash.com" },
       { hostname: "img.poripori.top" },
+      { hostname: "img2.dongqifootwear.com" },
       { hostname: "img.dongqifootwear.com" },
     ],
   },
@@ -30,8 +31,8 @@ const nextConfig: NextConfig = {
        * 这样当你访问前端 /api/auth/login 时，
        * 它会准确转发到 后端/api/auth/login。
        */
-      source: '/api/:path*',
-      destination: `https://b2b-api-production-1.up.railway.app/api/:path*`,
+      source: "/api/:path*",
+      destination: "https://b2b-api-production-1.up.railway.app/api/:path*",
     },
   ],
 };
