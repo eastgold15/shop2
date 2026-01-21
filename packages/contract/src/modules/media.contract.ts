@@ -12,6 +12,7 @@ export const MediaContract = {
   Response: t.Object({
     ...MediaFields,
   }),
+  MediaType: MediaInsertFields.mediaType,
   Entity: t.Object(MediaFields),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Create: t.Object({

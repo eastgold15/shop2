@@ -332,14 +332,21 @@ export class ProductService {
           sortOrder: media.sortOrder,
         };
 
-        // sortOrder >= 0 是图片，< 0 是视频
-        if (media.sortOrder >= 0) {
+        // 根据媒体类型正确分类，而不是仅根据 sortOrder
+        if (media.mediaType === "image") {
           productMedia.images.push(mediaInfo);
           if (media.isMain) {
             productMedia.mainImage = mediaInfo;
           }
-        } else {
+        } else if (media.mediaType === "video") {
           productMedia.videos.push(mediaInfo);
+        } else {
+          // 对于未知类型，根据 sortOrder 兼容处理
+          if (media.sortOrder >= 0) {
+            productMedia.images.push(mediaInfo);
+          } else {
+            productMedia.videos.push(mediaInfo);
+          }
         }
       }
 
@@ -794,7 +801,6 @@ export class ProductService {
           spuCode,
           description: siteDescription,
           status,
-
         })
         .where(eq(productTable.id, productId));
 
