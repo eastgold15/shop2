@@ -60,6 +60,7 @@ import {
   useAdToggleStatus,
   useAdUpdate,
 } from "@/hooks/api/ad";
+import { Has } from "@/components/auth/Has";
 
 // 广告类型
 interface Ad {
@@ -529,6 +530,10 @@ export default function AdsPage() {
                 </DialogTrigger>
               </Dialog>
             </div>
+
+
+
+
           </div>
 
           {/* 广告列表 */}
@@ -656,32 +661,39 @@ export default function AdsPage() {
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
+                      <Has permission="AD_VIEW">
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              className="text-red-600 hover:text-red-700"
+                              size="sm"
+                              variant="ghost"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>确认删除</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                确定要删除广告 "{ad.title}" 吗？此操作不可撤销。
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>取消</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDelete(ad)}>
+                                删除
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </Has>
 
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            className="text-red-600 hover:text-red-700"
-                            size="sm"
-                            variant="ghost"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>确认删除</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              确定要删除广告 "{ad.title}" 吗？此操作不可撤销。
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>取消</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(ad)}>
-                              删除
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+
+                      
+
+
+
                     </div>
                   </div>
                 ))}
