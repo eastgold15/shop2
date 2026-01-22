@@ -44,7 +44,11 @@ const Shop: React.FC<ShopProps> = ({ onProductSelect }) => {
           onClick={() => router.push(`/product/${product.siteProductId}`)}
         >
           <div className="relative mb-6 aspect-4/3 w-full overflow-hidden">
-            <BaseImage alt={product.displayName} imageUrl={product.mainMedia} />
+            <BaseImage
+              alt={product.displayName}
+              className="h-full w-full object-contain"
+              imageUrl={product.mainMedia}
+            />
           </div>
           <div className="text-center">
             <h3 className="mb-1 font-serif text-black text-lg italic transition-colors group-hover:text-gray-600 md:text-xl">
