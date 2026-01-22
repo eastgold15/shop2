@@ -19,7 +19,6 @@ export const siteProductController = new Elysia({ prefix: "/site-product" })
       allPermissions: ["SITE_PRODUCT:VIEW"],
       requireDept: true,
       query: SiteProductContract.ListQuery,
-
       detail: {
         summary: "获取SiteProduct列表",
         description: "分页查询SiteProduct数据，支持搜索和排序",

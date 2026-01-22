@@ -14,14 +14,14 @@ export interface RoleDetailRes {
   priority: number;
   permissions: Permission[];
 }
-interface Permission {
+
+export interface Permission {
   id: string;
   createdAt: string;
   updatedAt: string;
   name: string;
   description: string;
 }
-
 /**
  * 角色列表查询参数
  */

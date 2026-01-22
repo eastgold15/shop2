@@ -20,11 +20,14 @@ interface PermissionListRes {
   name: string;
   description: string;
 }
+
 // --- 1. 列表查询 (GET) ---
 type usePermissionsListOptions = Omit<
   UseQueryOptions<PermissionListRes[], Error>,
   "queryKey" | "queryFn"
 >;
+
+
 export function usePermissionsList(
   query?: typeof PermissionContract.ListQuery.static,
   options?: usePermissionsListOptions
