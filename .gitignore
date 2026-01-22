@@ -161,3 +161,4 @@ packages/contract/src/helper/utils.d.ts
 packages/contract/src/helper/utils.types.d.ts
 **.exe
 packages/sync-db.bat
+packages/contract/sync-db.bat
