@@ -313,6 +313,11 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.productTable.id,
       to: r.siteProductTable.productId,
     }),
+    // 变体媒体关联
+    variantMedia: r.many.productVariantMediaTable({
+      from: r.productTable.id,
+      to: r.productVariantMediaTable.productId,
+    }),
   },
 
   // [SKU]
@@ -455,6 +460,22 @@ export const relations = defineRelations(schema, (r) => ({
     siteSkus: r.many.siteSkuTable({
       from: r.skuMediaTable.skuId,
       to: r.siteSkuTable.skuId,
+    }),
+  },
+
+  // 变体媒体关联表
+  productVariantMediaTable: {
+    product: r.one.productTable({
+      from: r.productVariantMediaTable.productId,
+      to: r.productTable.id,
+    }),
+    media: r.one.mediaTable({
+      from: r.productVariantMediaTable.mediaId,
+      to: r.mediaTable.id,
+    }),
+    attributeValue: r.one.templateValueTable({
+      from: r.productVariantMediaTable.attributeValueId,
+      to: r.templateValueTable.id,
     }),
   },
 

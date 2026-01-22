@@ -14,7 +14,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { api } from "./api-client";
-import { RoleDetailRes } from "./role.type";
+import { RoleDetailRes, RoleListRes } from "./role.type";
 
 // --- Query Keys ---
 export const roleKeys = {
@@ -34,7 +34,7 @@ export function useRoleList(
   return useQuery({
     queryKey: roleKeys.list(params),
     queryFn: () =>
-      api.get<any, typeof RoleContract.ListQuery.static>("/api/v1/role", {
+      api.get<RoleListRes[], typeof RoleContract.ListQuery.static>("/api/v1/role", {
         params,
       }),
     enabled,

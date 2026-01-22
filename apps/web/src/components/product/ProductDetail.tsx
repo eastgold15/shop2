@@ -52,7 +52,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
     [productList, siteProduct.id]
   );
 
-  // 2. 媒体库直接使用后端的 gallery (后端已排好序：SPU图片 > SKU图片 > 视频)
+  // 2. 媒体库：后端的 gallery (后端已排好序：SPU图片 > 变体图 > SKU图片 > 视频)
   const allMedia = siteProduct.gallery || [];
 
   // 3. SKU & 规格逻辑
@@ -102,20 +102,27 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
     return Math.min(...skus.map((s) => Number(s.price)));
   }, [selectedSku, skus]);
 
+  // 🔥 根据选中 SKU 的 mediaIds 动态计算画廊
+  const displayGallery = useMemo(() => {
+    // 如果选中了 SKU 且有 mediaIds，过滤出该 SKU 的图片
+    if (selectedSku && selectedSku.mediaIds && selectedSku.mediaIds.length > 0) {
+      return allMedia.filter((m) => selectedSku.mediaIds!.includes(m.id));
+    }
+
+    // 未选中 SKU 时，只显示 SPU 级图片（sortOrder < 1000）
+    return allMedia.filter((m) => (m.sortOrder ?? 0) < 1000);
+  }, [selectedSku, allMedia]);
+
   // 4. 核心联动修复：选中规格时，通过 mediaIds 定位 gallery 中的图片
   useEffect(() => {
     setOriginalMediaIndex(0);
   }, []);
 
+  // 🔥 SKU 变化时重置到第一张图片
+  // 由于 displayGallery 已经根据 SKU 的 mediaIds 过滤，第一张图片始终是该 SKU 的图片
   useEffect(() => {
-    if (selectedSku && selectedSku.mediaIds?.length > 0) {
-      const targetId = selectedSku.mediaIds[0];
-      const index = allMedia.findIndex((m) => m.id === targetId);
-      if (index !== -1) {
-        setActiveMedia(index);
-      }
-    }
-  }, [selectedSku, allMedia]);
+    setActiveMedia(0);
+  }, [selectedSku]);
 
   // 5. 表单提交逻辑
   const [quantity, setQuantity] = useState(1);
@@ -127,7 +134,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
   const handleThumbnailClick = (idx: number) => {
     setActiveMedia(idx);
 
-    const targetMedia = allMedia[idx];
+    const targetMedia = displayGallery[idx]; // 🔥 使用 displayGallery
     if (!targetMedia) return;
 
     // 反向查找：寻找包含此图片 ID 的第一个 SKU
@@ -198,7 +205,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
     setShowInquiryForm(true);
   };
 
-  const mediaItem = allMedia[activeMedia];
+  const mediaItem = displayGallery[activeMedia];
 
   return (
     <div className="min-h-screen bg-white pt-16 pb-16">
@@ -207,13 +214,13 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
           {/* --- LEFT: GALLERY --- */}
           <div className="flex flex-col items-center lg:col-span-7">
             <div className="group relative mb-8 aspect-4/3 w-full overflow-hidden bg-gray-50">
-              {allMedia.length > 1 && (
+              {displayGallery.length > 1 && (
                 <>
                   <button
                     className="absolute top-1/2 left-0 z-10 -translate-y-1/2 p-4 opacity-0 transition-opacity group-hover:opacity-100"
                     onClick={() =>
                       setActiveMedia(
-                        (p) => (p - 1 + allMedia.length) % allMedia.length
+                        (p) => (p - 1 + displayGallery.length) % displayGallery.length
                       )
                     }
                   >
@@ -222,7 +229,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
                   <button
                     className="absolute top-1/2 right-0 z-10 -translate-y-1/2 p-4 opacity-0 transition-opacity group-hover:opacity-100"
                     onClick={() =>
-                      setActiveMedia((p) => (p + 1) % allMedia.length)
+                      setActiveMedia((p) => (p + 1) % displayGallery.length)
                     }
                   >
                     <ChevronRight className="h-8 w-8 text-gray-400 hover:text-black" />
@@ -257,7 +264,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
 
             {/* Thumbnails缩略图 */}
             <div className="no-scrollbar flex max-w-full space-x-4 overflow-x-auto pb-2">
-              {allMedia.map((m, idx) => (
+              {displayGallery.map((m, idx) => (
                 <button
                   className={cn(
                     "relative h-20 w-20 shrink-0 border transition-all",

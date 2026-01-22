@@ -14,9 +14,12 @@ import {
   customerTable,
   type InquiryContract,
   inquiryTable,
+  productTemplateTable,
   salesResponsibilityTable,
+  templateKeyTable,
+  templateValueTable,
 } from "@repo/contract";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { HttpError } from "elysia-http-problem-json";
 import { db } from "~/db/connection";
 import { sendEmail } from "~/lib/email/email";
@@ -184,7 +187,7 @@ export class InquiryService {
    * 验证逻辑：
    * - 验证 productId 是否在当前站点有对应的 siteProduct
    * - 验证 skuId 是否存在且属于该 siteProduct
-   * - 获取 SKU 的主图媒体
+   * - 获取 SKU 的主图媒体（支持三级继承：SKU专属 > 变体级 > 商品级）
    */
   async validateAndGetSkuData(
     body: typeof InquiryContract.Create.static,
@@ -200,7 +203,19 @@ export class InquiryService {
         siteId, // ✅ 添加站点隔离，防止跨站点访问
       },
       with: {
-        product: true,
+        product: {
+          with: {
+            // 🔥 新增：查询商品级媒体
+            media: true,
+            // 🔥 新增：查询变体媒体
+            variantMedia: {
+              with: {
+                media: true,
+                attributeValue: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -232,23 +247,92 @@ export class InquiryService {
       throw new HttpError.BadRequest("SKU not found");
     }
 
-    // 确保 sku 和 media 关联存在
-    if (!(siteSku.sku?.media)) {
-      throw new HttpError.BadRequest("SKU or its media not found");
+    // 🔥 识别颜色属性（复用 SiteProductService 的逻辑）
+    const identifyColorAttribute = async () => {
+      const [productTemplate] = await db
+        .select()
+        .from(productTemplateTable)
+        .where(eq(productTemplateTable.productId, siteProduct.productId));
+
+      if (!productTemplate) return null;
+
+      const keys = await db
+        .select()
+        .from(templateKeyTable)
+        .where(
+          and(
+            eq(templateKeyTable.templateId, productTemplate.templateId),
+            eq(templateKeyTable.isSkuSpec, true)
+          )
+        );
+
+      const colorKey = keys.find((k) => /color|颜色|colour/i.test(k.key));
+      return colorKey ? { key: colorKey.key, keyId: colorKey.id } : null;
+    };
+
+    const colorAttr = await identifyColorAttribute();
+
+    // 🔥 构建颜色值到 attributeValueId 的映射
+    const colorValueToIdMap = new Map<string, string>();
+    if (colorAttr) {
+      const values = await db
+        .select()
+        .from(templateValueTable)
+        .where(eq(templateValueTable.templateKeyId, colorAttr.keyId));
+
+      values.forEach((v) => {
+        colorValueToIdMap.set(v.value, v.id);
+      });
     }
 
-    // 获取SKU媒体（主图）
-    const skuMediaMainID =
-      body.skuMediaId ||
-      siteSku.sku.media.sort((a, b) => a.sortOrder - b.sortOrder)[0].id;
+    // 🔥 三级继承逻辑：获取 SKU 的所有有效媒体 ID
+    const specs = siteSku.sku.specJson as Record<string, string>;
+    const ownMediaIds = siteSku.sku.media.map((m) => m.id);
 
-    if (!skuMediaMainID) {
-      throw new HttpError.BadRequest("SKU has no media");
+    let inheritedMediaIds: string[] = [];
+    if (colorAttr && colorValueToIdMap.size > 0) {
+      const colorValue = specs[colorAttr.key] || specs.颜色;
+      if (colorValue) {
+        const attributeValueId = colorValueToIdMap.get(colorValue);
+        if (attributeValueId) {
+          inheritedMediaIds =
+            siteProduct.product.variantMedia
+              ?.filter((vm) => vm.attributeValueId === attributeValueId)
+              .map((vm) => vm.mediaId) || [];
+        }
+      }
     }
-    if (!siteSku.sku?.media.find((m) => m.id === skuMediaMainID)) {
-      throw new HttpError.BadRequest("SKU media not found");
+
+    const productMediaIds = siteProduct.product.media.map((m) => m.id);
+
+    // 合并所有有效的媒体 ID（优先级：SKU专属 > 变体级 > 商品级）
+    const allValidMediaIds = Array.from(
+      new Set([...ownMediaIds, ...inheritedMediaIds, ...productMediaIds])
+    );
+
+    // 获取SKU媒体（主图）- 使用三级继承逻辑
+    let skuMediaMainID = body.skuMediaId;
+
+    // 如果前端传的 mediaId 无效，使用第一个有效媒体 ID
+    if (!(skuMediaMainID && allValidMediaIds.includes(skuMediaMainID))) {
+      // 优先使用 SKU 专属媒体的第一张图
+      if (ownMediaIds.length > 0) {
+        skuMediaMainID = ownMediaIds[0];
+      }
+      // 其次使用变体级媒体的第一张图
+      else if (inheritedMediaIds.length > 0) {
+        skuMediaMainID = inheritedMediaIds[0];
+      }
+      // 最后使用商品级媒体的第一张图
+      else if (productMediaIds.length > 0) {
+        skuMediaMainID = productMediaIds[0];
+      } else {
+        throw new HttpError.BadRequest("SKU has no media");
+      }
     }
-    if (!siteSku.sku?.media.find((m) => m.id === skuMediaMainID)) {
+
+    // 🔥 新的验证逻辑：使用 allValidMediaIds 而非只检查 SKU 专属媒体
+    if (!allValidMediaIds.includes(skuMediaMainID)) {
       throw new HttpError.BadRequest("SKU media not found");
     }
 

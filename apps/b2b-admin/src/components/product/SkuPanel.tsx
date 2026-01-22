@@ -1,5 +1,5 @@
 // components/product/sku-panel.tsx
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Palette, Trash2 } from "lucide-react";
 import { Can } from "@/components/auth/Can";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,9 +19,18 @@ interface SkuPanelProps {
   onEdit: (sku: SkuListRes) => void;
   onDelete: (id: string, code: string) => void;
   viewMode: "global" | "my";
+  productId?: string;
+  onManageVariantMedia?: () => void;
 }
 
-export function SkuPanel({ skus, onEdit, onDelete, viewMode }: SkuPanelProps) {
+export function SkuPanel({
+  skus,
+  onEdit,
+  onDelete,
+  viewMode,
+  productId,
+  onManageVariantMedia,
+}: SkuPanelProps) {
   if (skus.length === 0) {
     return (
       <div className="flex h-24 flex-col items-center justify-center border-t bg-slate-50 text-muted-foreground text-sm">
@@ -32,6 +41,16 @@ export function SkuPanel({ skus, onEdit, onDelete, viewMode }: SkuPanelProps) {
 
   return (
     <div className="fade-in zoom-in-95 animate-in border-t bg-slate-50/50 px-4 py-2 duration-200">
+      {/* 工具栏 */}
+      {onManageVariantMedia && (
+        <div className="mb-2 flex justify-end">
+          <Button onClick={onManageVariantMedia} size="sm" variant="outline">
+            <Palette className="mr-2 h-4 w-4" />
+            管理变体图片
+          </Button>
+        </div>
+      )}
+
       <div className="rounded-md border bg-white">
         <Table>
           <TableHeader>

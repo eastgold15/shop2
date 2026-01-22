@@ -136,8 +136,15 @@ export function CreateUserModal({
   }, [isEdit, initialData, form]);
 
   const selectedRole = form.watch("roleId");
-  const isSalesperson =
-    roles.find((r: any) => r.id === selectedRole)?.name === "salesperson";
+
+  const isSalesperson = ["工厂业务员", "出口商业务员"].includes(
+    roles.find((r) => r.id === selectedRole)?.name || ""
+  );
+  console.log(
+    " roles.find((r) => r.id === selectedRole)?.name:",
+    roles.find((r) => r.id === selectedRole)?.name
+  );
+  console.log("isSalesperson:", isSalesperson);
 
   const onSubmit = async (data: FormData) => {
     try {

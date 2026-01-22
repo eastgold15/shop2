@@ -4,6 +4,15 @@
  */
 
 // ==================== 列表查询 ====================
+export interface RoleListRes {
+  id: string;
+  name: string;
+  dataScope: string;
+  description: string;
+  type: string;
+  priority: number;
+}
+
 
 export interface RoleDetailRes {
   id: string;

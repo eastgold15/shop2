@@ -6,6 +6,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { CreateProductModal } from "@/components/form/CreateProductModal";
 import { CreateSKUModal } from "@/components/form/CreateSKUModal";
 import { EditSKUModal } from "@/components/form/EditSKUModal";
+import { VariantMediaModal } from "@/components/form/VariantMediaModal";
 import { HeaderToolbar } from "@/components/product/HeaderToolbar";
 import { ProductList } from "@/components/product/ProductList";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
@@ -41,6 +42,9 @@ export default function ProductsPage() {
   }>({ open: false });
   const [skuCreateId, setSkuCreateId] = useState<string | null>(null);
   const [skuEditData, setSkuEditData] = useState<SkuListRes | null>(null);
+  const [variantMediaProductId, setVariantMediaProductId] = useState<
+    string | null
+  >(null);
 
   // --- 3. 逻辑处理 ---
   const filteredProducts =
@@ -114,6 +118,7 @@ export default function ProductsPage() {
             onDeleteSku={handleDeleteSku}
             onEdit={(p) => setProductModal({ open: true, data: p })}
             onEditSku={(sku) => setSkuEditData(sku)}
+            onManageVariantMedia={setVariantMediaProductId}
             onSelect={handleSelect}
             onToggleExpand={handleToggleExpand}
             products={filteredProducts}
@@ -146,6 +151,12 @@ export default function ProductsPage() {
           onSuccess={refetch}
           open={!!skuEditData}
           sku={skuEditData || undefined}
+        />
+        <VariantMediaModal
+          onOpenChange={() => setVariantMediaProductId(null)}
+          onSuccess={refetch}
+          open={!!variantMediaProductId}
+          productId={variantMediaProductId || ""}
         />
       </SidebarInset>
     </SidebarProvider>

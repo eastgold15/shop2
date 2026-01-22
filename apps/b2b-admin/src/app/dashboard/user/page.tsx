@@ -137,15 +137,13 @@ export default function UsersPage() {
   const users = response?.filter((item) => item.id !== currentUserId) || [];
 
   // 分类：管理员和业务员
-  const administrators = users.filter((user: any) =>
+  const administrators = users.filter((user) =>
     user.roles?.some((r: any) =>
       ["super_admin", "出口商管理员", "工厂管理员"].includes(r.name)
     )
   );
-  const salespeople = users.filter((user: any) =>
-    user.roles?.some((r: any) =>
-      ["工厂业务员", "出口商业务员"].includes(r.name)
-    )
+  const salespeople = users.filter((user) =>
+    user.roles?.some((r) => ["工厂业务员", "出口商业务员"].includes(r.name))
   );
 
   const deleteUser = useDeleteUser();

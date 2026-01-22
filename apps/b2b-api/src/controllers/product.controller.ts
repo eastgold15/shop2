@@ -1,4 +1,8 @@
-import { ProductContract, SiteProductContract } from "@repo/contract";
+import {
+  ProductContract,
+  ProductVariantContract,
+  SiteProductContract,
+} from "@repo/contract";
 import { Elysia, t } from "elysia";
 import { dbPlugin } from "~/db/connection";
 import { authGuardMid } from "~/middleware/auth";
@@ -123,6 +127,89 @@ export const productController = new Elysia({
       detail: {
         summary: "删除商品",
         description: "根据ID删除单个商品记录及其关联数据",
+      },
+    }
+  );
+
+
+
+/**
+ * 变体媒体管理路由
+ * 用于按颜色属性值绑定图片，避免为每个 SKU 重复上传
+ */
+export const productVariantController = new Elysia({
+  prefix: "/product-variant",
+  tags: ["Product Variant Media"],
+})
+  .use(dbPlugin)
+  .use(authGuardMid)
+  /**
+   * 获取商品变体媒体配置
+   */
+  .get(
+    "/:productId",
+    ({ params, user, db, currentDeptId }) =>
+      productService.getVariantMedia(params.productId, {
+        db,
+        user,
+        currentDeptId,
+      }),
+    {
+      params: t.Object({
+        productId: t.String(),
+      }),
+      allPermissions: ["PRODUCT_VIEW"],
+      requireDept: true,
+      detail: {
+        summary: "获取商品变体媒体配置",
+        description:
+          "获取商品按颜色属性配置的变体图片，返回每个颜色值的图片列表",
+      },
+    }
+  )
+  /**
+   * 保存商品变体媒体配置
+   */
+  .post(
+    "/",
+    ({ body, user, db, currentDeptId }) =>
+      productService.setVariantMedia(body, {
+        db,
+        user,
+        currentDeptId,
+      }),
+    {
+      body: ProductVariantContract.SetVariantMedia,
+      allPermissions: ["PRODUCT_EDIT"],
+      requireDept: true,
+      detail: {
+        summary: "保存商品变体媒体配置",
+        description:
+          "为商品的不同颜色属性值设置专属图片，避免为每个 SKU 重复上传",
+      },
+    }
+  )
+  /**
+   * 获取 SKU 媒体（三级继承逻辑）
+   */
+  .get(
+    "/sku/:skuId/media",
+    ({ params, user, db, currentDeptId }) =>
+      productService.getSkuMedia(params.skuId, {
+        db,
+        user,
+        currentDeptId,
+      }),
+    {
+      params: t.Object({
+        skuId: t.String(),
+      }),
+      allPermissions: ["PRODUCT_VIEW"],
+      requireDept: true,
+      detail: {
+        summary: "获取 SKU 媒体（继承逻辑）",
+        description:
+          "按 SKU专属 > 变体级(颜色) > 商品级 的优先级获取图片，返回媒体来源和图片列表",
       },
     }
   );

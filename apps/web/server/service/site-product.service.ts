@@ -10,10 +10,13 @@ import {
   type ProductContract,
   productMediaTable,
   productTable,
+  productTemplateTable,
   siteProductSiteCategoryTable,
   siteProductTable,
   siteSkuTable,
   skuTable,
+  templateKeyTable,
+  templateValueTable,
 } from "@repo/contract";
 import { and, asc, desc, eq, sql } from "drizzle-orm";
 import type { ServiceContext } from "~/middleware/site";
@@ -227,7 +230,16 @@ export class SiteProductService {
       },
       with: {
         product: {
-          with: { media: true },
+          with: {
+            media: true,
+            // 🔥 新增：查询变体媒体
+            variantMedia: {
+              with: {
+                media: true,
+                attributeValue: true, // 获取属性值信息
+              },
+            },
+          },
         },
         siteCategories: true,
         siteSkus: {
@@ -241,6 +253,44 @@ export class SiteProductService {
     });
 
     if (!result) throw new Error("商品不存在");
+
+    // 🔥 识别颜色属性
+    const identifyColorAttribute = async () => {
+      const [productTemplate] = await ctx.db
+        .select()
+        .from(productTemplateTable)
+        .where(eq(productTemplateTable.productId, result.productId));
+
+      if (!productTemplate) return null;
+
+      const keys = await ctx.db
+        .select()
+        .from(templateKeyTable)
+        .where(
+          and(
+            eq(templateKeyTable.templateId, productTemplate.templateId),
+            eq(templateKeyTable.isSkuSpec, true)
+          )
+        );
+
+      const colorKey = keys.find((k) => /color|颜色|colour/i.test(k.key));
+      return colorKey ? { key: colorKey.key, keyId: colorKey.id } : null;
+    };
+
+    const colorAttr = await identifyColorAttribute();
+
+    // 🔥 构建颜色值到 attributeValueId 的映射
+    const colorValueToIdMap = new Map<string, string>();
+    if (colorAttr) {
+      const values = await ctx.db
+        .select()
+        .from(templateValueTable)
+        .where(eq(templateValueTable.templateKeyId, colorAttr.keyId));
+
+      values.forEach((v) => {
+        colorValueToIdMap.set(v.value, v.id);
+      });
+    }
 
     // --- 统一媒体处理逻辑 (包含你要求的排序) ---
     const processMedia = (mediaArr: any[], offset = 0, isVideoLast = true) => {
@@ -258,13 +308,20 @@ export class SiteProductService {
       });
     };
 
-    // 聚合所有媒体
+    // 聚合所有媒体 (SPU: 0, Variant: 1000, SKU: 2000)
     const spuMedia = processMedia(result.product.media, 0);
-    const skuMedia = result.siteSkus.flatMap(
-      (ss) => processMedia(ss.sku.media, 2000) // SKU图起跳权重2000
+
+    // 🔥 变体媒体权重 1000
+    const variantMedia =
+      result.product.variantMedia?.flatMap((vm) =>
+        processMedia([vm.media], 1000)
+      ) || [];
+
+    const skuMedia = result.siteSkus.flatMap((ss) =>
+      processMedia(ss.sku.media, 2000)
     );
 
-    const gallery = [...spuMedia, ...skuMedia].sort(
+    const gallery = [...spuMedia, ...variantMedia, ...skuMedia].sort(
       (a, b) => a.sortOrder - b.sortOrder
     );
 
@@ -285,23 +342,49 @@ export class SiteProductService {
       isVisible: result.isVisible,
       createdAt: result.createdAt,
 
-      // 4. 规格列表
+      // 4. 规格列表 (包含变体媒体继承逻辑)
       skus: result.siteSkus.map((ss) => {
         const pSku = ss.sku;
+        const specs = pSku.specJson as Record<string, string>;
+
+        // 🔥 三级继承逻辑计算 mediaIds
+        // 1. SKU 专属媒体 (最高优先级)
+        const ownMediaIds = pSku.media.map((m) => m.id);
+
+        // 2. 变体级媒体 (按颜色继承)
+        let inheritedMediaIds: string[] = [];
+        if (colorAttr && colorValueToIdMap.size > 0) {
+          const colorValue = specs[colorAttr.key] || specs["颜色"];
+          if (colorValue) {
+            const attributeValueId = colorValueToIdMap.get(colorValue);
+            if (attributeValueId) {
+              inheritedMediaIds =
+                result.product.variantMedia
+                  ?.filter((vm) => vm.attributeValueId === attributeValueId)
+                  .map((vm) => vm.mediaId) || [];
+            }
+          }
+        }
+
+        // 合并：变体级继承 + SKU专属 (SKU专属优先级更高，放在后面)
+        const mediaIds = Array.from(
+          new Set([...inheritedMediaIds, ...ownMediaIds])
+        );
+
         return {
           id: ss.id, // siteSkuId
           skuCode: pSku.skuCode,
           // ⚠️ 修复：站点价格覆盖逻辑
           price: ss.price || pSku.price,
           stock: pSku.stock,
-          specJson: pSku.specJson as Record<string, string>,
+          specJson: specs,
           isActive: ss.isActive,
-          // 该 SKU 关联的图片 ID 列表，方便前端联动
-          mediaIds: pSku.media.map((m) => m.id),
+          // 🔥 前端根据此过滤 gallery
+          mediaIds,
         };
       }),
 
-      // 5. 媒体库 (已排好序：SPU图 > SKU图 > 视频)
+      // 5. 媒体库 (已排好序：SPU图 > 变体图 > SKU图 > 视频)
       gallery,
 
       // 6. 分类
@@ -309,6 +392,9 @@ export class SiteProductService {
         id: sc.id,
         name: sc.name,
       })),
+
+      // 7. 颜色属性名 (前端用于识别颜色选择器)
+      colorAttributeKey: colorAttr?.key,
     };
   }
 }

@@ -36,6 +36,7 @@ interface ProductListProps {
   onCreateSku: (id: string) => void;
   onEditSku: (sku: SkuListRes) => void;
   onDeleteSku: (id: string, code: string) => void;
+  onManageVariantMedia?: (productId: string) => void;
 }
 
 export function ProductList({
@@ -50,6 +51,7 @@ export function ProductList({
   onCreateSku,
   onEditSku,
   onDeleteSku,
+  onManageVariantMedia,
 }: ProductListProps) {
   if (products.length === 0) {
     return (
@@ -182,6 +184,12 @@ export function ProductList({
               <SkuPanel
                 onDelete={onDeleteSku}
                 onEdit={onEditSku}
+                onManageVariantMedia={
+                  onManageVariantMedia
+                    ? () => onManageVariantMedia(product.id)
+                    : undefined
+                }
+                productId={product.id}
                 skus={product.skus}
                 viewMode={viewMode}
               />
