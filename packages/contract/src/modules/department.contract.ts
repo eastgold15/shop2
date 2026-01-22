@@ -16,6 +16,7 @@ export const DepartmentFields = spread(departmentTable, "select");
 const CreateDepartmentWithSiteAndAdmin = t.Object({
   // 部门信息
   department: t.Object({
+    id: t.Optional(t.String()),
     name: t.String({ minLength: 2 }),
     code: t.String({ minLength: 2 }),
     category: t.Union([t.Literal("group"), t.Literal("factory")]),

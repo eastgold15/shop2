@@ -31,8 +31,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCreateDepartmentWithSiteAndAdmin } from "@/hooks/api/department";
+import { useAuthStore } from "@/stores/auth-store";
 
 const formSchema = z.object({
+  id: z.string().optional(),
   // 部门信息
   departmentName: z.string().min(2, "部门名称至少需要2个字符"),
   departmentCode: z.string().min(2, "部门编码至少需要2个字符"),
@@ -59,12 +61,14 @@ interface CreateDepartmentWithSiteModalProps {
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
   mode?: "create" | "edit";
-  initialData?: {
-    department: any;
-    site: any;
-    admin?: any;
-  };
+  initialData?: EditDeptData;
 }
+
+export type EditDeptData = {
+  department: any;
+  site: any;
+  admin?: any;
+};
 
 export function CreateDepartmentWithSiteModal({
   open,
@@ -75,7 +79,10 @@ export function CreateDepartmentWithSiteModal({
 }: CreateDepartmentWithSiteModalProps) {
   const isEdit = mode === "edit";
   const createDepartment = useCreateDepartmentWithSiteAndAdmin();
+  const user = useAuthStore((state) => state.user);
+  const isSuperAdmin = user?.isSuperAdmin;
 
+  const isReadOnly = !isSuperAdmin && isEdit;
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -97,6 +104,7 @@ export function CreateDepartmentWithSiteModal({
   useEffect(() => {
     if (isEdit && initialData) {
       form.reset({
+        id: initialData.department.id,
         departmentName: initialData.department.name || "",
         departmentCode: initialData.department.code || "",
         category: initialData.department.category || "factory",
@@ -132,6 +140,7 @@ export function CreateDepartmentWithSiteModal({
     try {
       const payload = {
         department: {
+          id: isEdit ? data.id : undefined,
           name: data.departmentName,
           code: data.departmentCode,
           category: data.category,
@@ -358,9 +367,9 @@ export function CreateDepartmentWithSiteModal({
                       <FormControl>
                         <Input
                           placeholder="例如：张三"
-                          readOnly={isEdit}
+                          readOnly={isReadOnly}
                           style={
-                            isEdit
+                            isReadOnly
                               ? {
                                   backgroundColor: "#f5f5f5",
                                   cursor: "not-allowed",
@@ -384,9 +393,9 @@ export function CreateDepartmentWithSiteModal({
                       <FormControl>
                         <Input
                           placeholder="admin@example.com"
-                          readOnly={isEdit}
+                          readOnly={isReadOnly}
                           style={
-                            isEdit
+                            isReadOnly
                               ? {
                                   backgroundColor: "#f5f5f5",
                                   cursor: "not-allowed",
@@ -422,9 +431,9 @@ export function CreateDepartmentWithSiteModal({
                         placeholder={
                           isEdit ? "留空则不修改密码" : "请输入至少6位密码"
                         }
-                        readOnly={isEdit}
+                        readOnly={isReadOnly}
                         style={
-                          isEdit
+                          isReadOnly
                             ? {
                                 backgroundColor: "#f5f5f5",
                                 cursor: "not-allowed",
@@ -450,9 +459,9 @@ export function CreateDepartmentWithSiteModal({
                       <FormControl>
                         <Input
                           placeholder="13800000000"
-                          readOnly={isEdit}
+                          readOnly={isReadOnly}
                           style={
-                            isEdit
+                            isReadOnly
                               ? {
                                   backgroundColor: "#f5f5f5",
                                   cursor: "not-allowed",

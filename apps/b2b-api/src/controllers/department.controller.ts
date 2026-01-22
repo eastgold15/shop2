@@ -83,7 +83,7 @@ export const departmentController = new Elysia({ prefix: "/department" })
       },
     }
   )
-  // @generated
+
   .delete(
     "/:id",
     ({ params, user, db, currentDeptId }) =>

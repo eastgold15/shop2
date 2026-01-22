@@ -30,12 +30,11 @@ export const deptCategoryEnum = p.pgEnum("dept_category", ["group", "factory"]);
 export const siteTypeEnum = p.pgEnum("site_type", ["group", "factory"]);
 
 // 角色数据权限范围
-// 1=全部数据, 2=本部门及下级, 3=本部门, 4=仅本人
+// 1=全部数据, 2=本部门及下级, 3=本部门
 export const dataScopeEnum = p.pgEnum("data_scope", [
   "all",
-  "dept_and_child",
-  "dept_only",
-  "self",
+  "current",
+  "current_and_below"
 ]);
 
 export const adTypeEnum = p.pgEnum("ads_type", ["banner", "carousel", "list"]);
@@ -122,7 +121,7 @@ export const roleTable = p.pgTable("sys_role", {
   id: idUuid,
   name: p.text("name").notNull(),
   // 🔥 核心：数据权限范围
-  dataScope: dataScopeEnum("data_scope").default("self").notNull(),
+  dataScope: dataScopeEnum("data_scope").default("current").notNull(),
   description: p.text("description"),
 
   type: p
@@ -458,7 +457,7 @@ export const templateKeyTable = p.pgTable("template_key", {
     .uuid("template_id")
     .notNull()
     .references(() => templateTable.id),
-  key: p.varchar("key", { length: 100 }).notNull(),
+  key: p.varchar("key", { length: 300 }).notNull(),
   inputType: InputTypeEnum("input_type").default("select"),
   isRequired: p.boolean("is_required").default(true),
   isSkuSpec: p.boolean("is_sku_spec").default(true),
@@ -471,7 +470,7 @@ export const templateValueTable = p.pgTable("template_value", {
     .uuid("template_key_id")
     .notNull()
     .references(() => templateKeyTable.id),
-  value: p.varchar("value", { length: 100 }).notNull(),
+  value: p.text("value").notNull(),
   sortOrder: p.integer("sort_order").default(0),
 });
 /**

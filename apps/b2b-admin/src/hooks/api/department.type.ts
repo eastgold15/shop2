@@ -165,12 +165,15 @@ export interface DepartmentOption {
 /**
  * 部门详情响应
  */
+
+
+
 export interface DepartmentDetailResponse {
   id: string;
   createdAt: string;
   updatedAt: string;
   tenantId: string;
-  parentId?: string | null;
+  parentId: string;
   name: string;
   code: string;
   category: string;
@@ -179,14 +182,31 @@ export interface DepartmentDetailResponse {
   logo?: any;
   extensions?: any;
   isActive: boolean;
-  manager: {
-    id: string;
-    name: string;
-    email: string;
-  } | null;
-  emplyee: {
-    id: string;
-    name: string;
-    email: string;
-  } | null;
+  users: User[];
+  manager?: any;
+}
+interface User {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  name: string;
+  email: string;
+  emailVerified: boolean;
+  image?: any;
+  tenantId: string;
+  deptId: string;
+  phone: string;
+  whatsapp?: any;
+  position?: any;
+  isActive: boolean;
+  isSuperAdmin: boolean;
+  roles: Role[];
+}
+interface Role {
+  id: string;
+  name: string;
+  dataScope: string;
+  description: string;
+  type: string;
+  priority: number;
 }

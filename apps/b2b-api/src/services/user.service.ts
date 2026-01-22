@@ -11,23 +11,61 @@ import type { UserDto } from "~/middleware/auth";
 import { type ServiceContext } from "../lib/type";
 
 export class UserService {
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   public async list(query: UserContract["ListQuery"], ctx: ServiceContext) {
     const { search } = query;
+    const { currentDeptId, user } = ctx
+    const dataScope = user.roles[0].dataScope
+    let targetDeptIds: string[] = []
+
+    if (dataScope === "current_and_below") {
+      // 查询当前部门及其直接子部门
+      const dept = await ctx.db.query.departmentTable.findFirst({
+        where: {
+          id: currentDeptId
+        },
+        with: {
+          childrens: {
+            columns: {
+              id: true
+            }
+          }
+        }
+      })
+      if (!dept) {
+        throw new Error("没有")
+      }
+      targetDeptIds = [currentDeptId, ...(dept.childrens.map(c => c.id))]
+    }
+
+    else if (dataScope === "current") {
+      targetDeptIds = [currentDeptId]
+    }
+
+    // 3. 构建查询条件
+    const where: any = {
+      tenantId: ctx.user.context.tenantId!,
+      // 排除自己：通常“看下属”不包括看自己，如果需要看自己则删掉这一行
+      id: { ne: ctx.user.id },
+    };
+
+    // 如果有部门限制，则加入 in 查询
+    if (targetDeptIds.length > 0) {
+      where.deptId = { in: targetDeptIds };
+    }
+
+    // 处理搜索
+    if (search) {
+      where.name = { ilike: `%${search}%` };
+    }
 
     const res = await ctx.db.query.userTable.findMany({
-      where: {
-        tenantId: ctx.user.context.tenantId!,
-        deptId: ctx.user.context.department?.id,
-        ...(search ? { name: { ilike: `%${search}%` } } : {}),
-      },
+      where,
       with: {
-        // 获取用户的角色
         roles: true,
-        // 获取用户所属部门
         department: true,
       },
     });
+
     return res;
   }
 

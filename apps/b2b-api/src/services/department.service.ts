@@ -1,26 +1,40 @@
+import { randomBytes, scryptSync } from "node:crypto";
 import {
+  accountTable,
   type DepartmentContract,
   departmentTable,
   siteTable,
   userRoleTable,
+  userTable,
 } from "@repo/contract";
 import { eq } from "drizzle-orm";
 import { HttpError } from "elysia-http-problem-json";
 import { auth } from "~/lib/auth";
 import { type ServiceContext } from "../lib/type";
 
+function generateCompatibleHash(password: string) {
+  const salt = randomBytes(16); // 生成16字节随机盐值
+  const hash = scryptSync(password, salt, 64, {
+    N: 16_384,
+    r: 8,
+    p: 1,
+  });
+
+  // 拼接成 salt_hex : hash_hex 格式
+  return `${salt.toString("hex")}:${hash.toString("hex")}`;
+}
+
 export class DepartmentService {
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   public async create(body: DepartmentContract["Create"], ctx: ServiceContext) {
     const insertData = {
       ...body,
       // 自动注入租户信息
       ...(ctx.user
         ? {
-            tenantId: ctx.user.context.tenantId!,
-            createdBy: ctx.user.id,
-            deptId: ctx.currentDeptId,
-          }
+          tenantId: ctx.user.context.tenantId!,
+          createdBy: ctx.user.id,
+          deptId: ctx.currentDeptId,
+        }
         : {}),
     };
     const [res] = await ctx.db
@@ -35,11 +49,36 @@ export class DepartmentService {
     ctx: ServiceContext
   ) {
     const { search } = query;
-
+    const { currentDeptId, db, user } = ctx;
+    // 1. 初始化基础过滤条件（租户隔离）
+    const where: any = {};
+    //出口商业务员
+    if (user.roles[0].dataScope === "current_and_below") {
+      const dept = await ctx.db.query.departmentTable.findFirst({
+        where: {
+          id: currentDeptId,
+        },
+        with: {
+          childrens: {
+            columns: {
+              id: true,
+            },
+          },
+        },
+      });
+      if (!dept) {
+        throw new Error("不存在");
+      }
+      const childIds = (dept.childrens ?? []).map((c) => c.id);
+      where.id = { in: childIds };
+    } else if (user.roles[0].dataScope === "current") {
+      where.id = { eq: currentDeptId };
+    }
     const res = await ctx.db.query.departmentTable.findMany({
       where: {
         tenantId: ctx.user.context.tenantId!,
         ...(search ? { name: { ilike: `%${search}%` } } : {}),
+        ...where,
       },
     });
     return res;
@@ -87,17 +126,18 @@ export class DepartmentService {
 
     const manager = department.users?.find(
       (user) =>
-        user.roles.some((role) => role.name === "dept_manager") && user.isActive
+        user.roles.some((role) => role.name === "工厂管理员") && user.isActive
     );
 
     return {
       ...department,
       manager: manager
         ? {
-            id: manager.id,
-            name: manager.name,
-            email: manager.email,
-          }
+          id: manager.id,
+          name: manager.name,
+          email: manager.email,
+          phone: manager.phone,
+        }
         : null,
     };
   }
@@ -114,15 +154,16 @@ export class DepartmentService {
 
     // 使用事务执行
     return await db.transaction(async (tx) => {
-      // 1. 创建部门
+      const { id, ...deptData } = body.department;
 
+      // 1. 创建部门
       const [department] = await tx
         .insert(departmentTable)
         .values({
+          id: body.department.id || undefined, // 必须显式传入 ID，否则无法判断冲突
           tenantId: user.context.tenantId!,
           name: body.department.name,
           parentId: body.department.parentId || null,
-          // name: body.department.name,
           code: body.department.code,
           category: body.department.category as "factory" | "group",
           address: body.department.address,
@@ -131,8 +172,18 @@ export class DepartmentService {
           extensions: body.department.extensions || null,
           isActive: true,
         })
-        .returning();
+        .onConflictDoUpdate({
+          target: departmentTable.id,
+          set: {
+            ...deptData,
+          },
+        })
+        .returning(); // 无论创建还是更新，都会返回最新的记录（包含 ID）
 
+      // 3. 核心检查：确保拿到了 ID 再去创建用户
+      if (!department?.id) {
+        throw new Error("部门 ID 获取失败，无法创建关联用户");
+      }
       const departmentId = department.id;
 
       const [site] = await tx
@@ -145,31 +196,92 @@ export class DepartmentService {
           domain: body.site.domain,
           isActive: body.site.isActive ?? true,
         })
+        .onConflictDoUpdate({
+          target: siteTable.boundDeptId,
+          set: {
+            name: body.site.name,
+            domain: body.site.domain,
+            isActive: body.site.isActive ?? true,
+          },
+        })
         .returning();
 
-      const newUser = await auth.api.signUpEmail({
-        body: {
-          name: body.admin.name,
-          email: body.admin.email,
-          password: body.admin.password, // ⚠️ 生产环境应该先哈希
+      // 3. 用户 Upsert 逻辑
+      let adminUserId: string;
+
+      // 检查用户是否已存在
+      const existingUser = await tx.query.userTable.findFirst({
+        where: {
           tenantId: user.context.tenantId!,
-          deptId: departmentId,
+          email: body.admin.email,
         },
       });
+      if (existingUser) {
+        // --- 更新现有用户 ---
+        adminUserId = existingUser.id;
+        const updateData = {
+          name: body.admin.name,
+          deptId: departmentId,
+          phone: body.admin.phone,
+        };
+        // 如果传了新密码，需要加密 (这里假设你使用了 hashPassword 工具函数)
+        if (body.admin.password) {
+          // ⚠️ 注意：如果你使用 Better Auth，建议调用它的 update 方法
+          // 如果是直接操作数据库，必须手动哈希
+          const newPassword = await generateCompatibleHash(body.admin.password);
+          await tx
+            .update(accountTable)
+            .set({
+              password: newPassword,
+            })
+            .where(eq(accountTable.id, existingUser.id));
+        }
+        await tx
+          .update(userTable)
+          .set(updateData)
+          .where(eq(userTable.id, adminUserId));
+
+      } else {
+        // --- 创建新用户 ---
+        // Better Auth 的 signUpEmail 会自动处理内部的密码哈希
+        const signupRes = await auth.api.signUpEmail({
+          body: {
+            ...body.admin,
+            password: body.admin.password, // ⚠️ 生产环境应该先哈希
+            name: body.admin.name,
+            email: body.admin.email,
+            tenantId: user.context.tenantId!,
+            deptId: departmentId,
+          },
+        });
+        adminUserId = signupRes.user.id;
+      }
+
+      const newUser = await db.query.userTable.findFirst({
+        where: {
+          id: adminUserId
+        }
+      })
+
+
+      if (!newUser) {
+        throw new Error("沒有用戶")
+      }
 
       // 5. 查找或创建 "dept_manager" 角色
       const role = await tx.query.roleTable.findFirst({
         where: {
-          name: "dept_manager",
+          name: "工厂管理员",
         },
       });
-      if (!role) throw new HttpError.NotFound("角色 dept_manager 不存在");
+      if (!role) throw new HttpError.NotFound("角色 工厂管理员 不存在");
 
       // 6. 分配角色给用户
       await tx.insert(userRoleTable).values({
-        userId: newUser.user.id,
+        userId: adminUserId,
         roleId: role.id,
-      });
+      })
+        .onConflictDoNothing();
 
       return {
         department: {
@@ -182,9 +294,9 @@ export class DepartmentService {
           domain: site.domain,
         },
         admin: {
-          id: newUser.user.id,
-          name: newUser.user.name,
-          email: newUser.user.email,
+          id: newUser.id,
+          name: newUser.name,
+          email: newUser.email,
         },
       };
     });

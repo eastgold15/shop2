@@ -11,7 +11,10 @@ import {
 import { useEffect, useState } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
 import { HasRole } from "@/components/auth";
-import { CreateDepartmentWithSiteModal } from "@/components/form/CreateDepartmentWithSiteModal";
+import {
+  CreateDepartmentWithSiteModal,
+  EditDeptData,
+} from "@/components/form/CreateDepartmentWithSiteModal";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -26,7 +29,9 @@ import { useAuthStore } from "@/stores/auth-store";
 export default function UsersPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingDeptId, setEditingDeptId] = useState<string | undefined>();
-  const [editingDeptData, setEditingDeptData] = useState<any>(undefined);
+  const [editingDeptData, setEditingDeptData] = useState<
+    EditDeptData | undefined
+  >(undefined);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -38,6 +43,7 @@ export default function UsersPage() {
     isLoading: departmentsLoading,
     refetch: refetchDepartments,
   } = useDepartmentList();
+
   const currentDeptId = useAuthStore(
     (state) => state.user?.context.department.id
   );
@@ -76,9 +82,7 @@ export default function UsersPage() {
         ...prev,
         admin: detailResponse.manager
           ? {
-              id: detailResponse.manager.id,
-              name: detailResponse.manager.name,
-              email: detailResponse.manager.email,
+              ...detailResponse.manager,
             }
           : undefined,
       }));
