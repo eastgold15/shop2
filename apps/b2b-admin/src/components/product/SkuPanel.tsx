@@ -19,7 +19,7 @@ interface SkuPanelProps {
   onEdit: (sku: SkuListRes) => void;
   onDelete: (id: string, code: string) => void;
   viewMode: "global" | "my";
-  productId?: string;
+
   onManageVariantMedia?: () => void;
 }
 
@@ -28,7 +28,7 @@ export function SkuPanel({
   onEdit,
   onDelete,
   viewMode,
-  productId,
+
   onManageVariantMedia,
 }: SkuPanelProps) {
   if (skus.length === 0) {

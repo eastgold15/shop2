@@ -1,12 +1,11 @@
 
 
 
-export interface ProductVariantMediRes {
+export interface ProductVariantMediaRes {
   productId: string;
   colorAttributeKey: string;
   variantMedia: VariantMedia[];
-}
-interface VariantMedia {
+}interface VariantMedia {
   attributeValueId: string;
   attributeValue: string;
   images: Image[];

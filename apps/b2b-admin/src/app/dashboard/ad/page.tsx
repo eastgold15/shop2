@@ -10,7 +10,7 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AppSidebar } from "@/components/app-sidebar";
 import {
@@ -119,6 +119,26 @@ function AdsDialog({
       : "",
     mediaId: ad?.mediaId || "",
   });
+
+  // 🔥 监听 ad 变化，同步更新表单数据（修复编辑时数据不回显的问题）
+  useEffect(() => {
+    setFormData({
+      title: ad?.title || "",
+      description: ad?.description || "",
+      type: ad?.type || "banner",
+      position: ad?.position || "home-top",
+      link: ad?.link || "",
+      sortOrder: ad?.sortOrder || 0,
+      isActive: ad?.isActive ?? true,
+      startDate: ad?.startDate
+        ? format(new Date(ad.startDate), "yyyy-MM-dd'T'HH:mm")
+        : "",
+      endDate: ad?.endDate
+        ? format(new Date(ad.endDate), "yyyy-MM-dd'T'HH:mm")
+        : "",
+      mediaId: ad?.mediaId || "",
+    });
+  }, [ad]);
 
   const createMutation = useAdCreate();
   const updateMutation = useAdUpdate();
