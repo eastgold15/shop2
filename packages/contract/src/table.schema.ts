@@ -401,6 +401,8 @@ export const productTable = p.pgTable("product", {
   name: p.varchar("name", { length: 255 }).notNull(),
   description: p.text("description"),
   status: p.integer("status").notNull().default(1),
+  // 商品独有属性（JSON格式，简单键值对）
+  customAttributes: p.json("custom_attributes").$type<Record<string, string>>(),
   // 商品是核心资产，使用 standardCols，可在多个站点复用
   ...standardCols,
 });

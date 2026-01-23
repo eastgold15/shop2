@@ -26,6 +26,8 @@ export const ProductContract = {
     mediaIds: t.Optional(t.Array(t.String())), // 商品图片ID列表
     mainImageId: t.Optional(t.String()), // 主图ID
     videoIds: t.Optional(t.Array(t.String())), // 视频ID列表
+    // 商品独有属性（简单键值对）
+    customAttributes: t.Optional(t.Record(t.String(), t.String())),
   }),
 
   // 更新分两种
@@ -42,6 +44,8 @@ export const ProductContract = {
       mediaIds: t.Optional(t.Array(t.String())), // 商品图片ID列表
       mainImageId: t.Optional(t.String()), // 主图ID
       videoIds: t.Optional(t.Array(t.String())), // 视频ID列表
+      // 商品独有属性（简单键值对）
+      customAttributes: t.Optional(t.Record(t.String(), t.String())),
     })
   ),
 
@@ -59,6 +63,8 @@ export const ProductContract = {
       mediaIds: t.Optional(t.Array(t.String())),
       mainImageId: t.Optional(t.String()),
       videoIds: t.Optional(t.Array(t.String())),
+      // 商品独有属性（简单键值对）
+      customAttributes: t.Optional(t.Record(t.String(), t.String())),
     })
   ),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */

@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import type React from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useCreateInquiry } from "@/hooks/api/inquiry-hook";
 import {
   type ProductDetailRes,
@@ -71,9 +71,17 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
     );
   }, [skus]);
 
-  const [selectedSpecs, setSelectedSpecs] = useState<Record<string, string>>(
-    {}
-  );
+  // 默认选中第一个SKU的规格（如果存在SKU）
+  const defaultSpecs = useMemo(() => {
+    if (skus.length > 0) {
+      const firstSku = skus[0];
+      return (firstSku.specJson as Record<string, string>) || {};
+    }
+    return {};
+  }, [skus]);
+
+  const [selectedSpecs, setSelectedSpecs] =
+    useState<Record<string, string>>(defaultSpecs);
   const [originalMediaIndex, setOriginalMediaIndex] = useState(0);
   const [lastSelectedSpecs, setLastSelectedSpecs] = useState<
     Record<string, string>
@@ -105,7 +113,11 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
   // 🔥 根据选中 SKU 的 mediaIds 动态计算画廊
   const displayGallery = useMemo(() => {
     // 如果选中了 SKU 且有 mediaIds，过滤出该 SKU 的图片
-    if (selectedSku && selectedSku.mediaIds && selectedSku.mediaIds.length > 0) {
+    if (
+      selectedSku &&
+      selectedSku.mediaIds &&
+      selectedSku.mediaIds.length > 0
+    ) {
       return allMedia.filter((m) => selectedSku.mediaIds!.includes(m.id));
     }
 
@@ -117,6 +129,18 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
   useEffect(() => {
     setOriginalMediaIndex(0);
   }, []);
+
+  // 是否已经初始化过默认SKU
+  const isInitialized = useRef(false);
+
+  // 当 skus 数据加载完成后，初始化默认选中第一个SKU的规格
+  useEffect(() => {
+    if (skus.length > 0 && !isInitialized.current) {
+      const firstSku = skus[0];
+      setSelectedSpecs((firstSku.specJson as Record<string, string>) || {});
+      isInitialized.current = true;
+    }
+  }, [skus]);
 
   // 🔥 SKU 变化时重置到第一张图片
   // 由于 displayGallery 已经根据 SKU 的 mediaIds 过滤，第一张图片始终是该 SKU 的图片
@@ -220,7 +244,9 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
                     className="absolute top-1/2 left-0 z-10 -translate-y-1/2 p-4 opacity-0 transition-opacity group-hover:opacity-100"
                     onClick={() =>
                       setActiveMedia(
-                        (p) => (p - 1 + displayGallery.length) % displayGallery.length
+                        (p) =>
+                          (p - 1 + displayGallery.length) %
+                          displayGallery.length
                       )
                     }
                   >
@@ -243,7 +269,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
                     autoPlay
                     className="h-full w-full object-contain mix-blend-multiply"
                     controls
-                    key={mediaItem.id}
+                    key={`${mediaItem.id}-${selectedSku?.id || "default"}`}
                     loop
                     muted
                   >
@@ -263,7 +289,10 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
             </div>
 
             {/* Thumbnails缩略图 */}
-            <div className="no-scrollbar flex max-w-full space-x-4 overflow-x-auto pb-2">
+            <div
+              className="no-scrollbar flex max-w-full space-x-4 overflow-x-auto pb-2"
+              key={`thumbnails-${selectedSku?.id || "default"}`}
+            >
               {displayGallery.map((m, idx) => (
                 <button
                   className={cn(
@@ -272,7 +301,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
                       ? "border-black ring-1 ring-black"
                       : "border-gray-100"
                   )}
-                  key={m.id}
+                  key={`${m.id}-${selectedSku?.id || "default"}-${idx}`}
                   onClick={() => handleThumbnailClick(idx)}
                 >
                   {m.mediaType?.startsWith("video") ? (
