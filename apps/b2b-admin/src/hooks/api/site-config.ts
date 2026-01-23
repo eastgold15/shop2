@@ -9,6 +9,7 @@
 import { SiteConfigContract } from "@repo/contract";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "./api-client";
+import { SiteConfigRes } from "./site-config.type";
 
 // --- Query Keys ---
 export const siteconfigKeys = {
@@ -28,7 +29,7 @@ export function useSiteConfigList(
   return useQuery({
     queryKey: siteconfigKeys.list(params),
     queryFn: () =>
-      api.get<any, typeof SiteConfigContract.ListQuery.static>(
+      api.get<SiteConfigRes[], typeof SiteConfigContract.ListQuery.static>(
         "/api/v1/site-config",
         { params }
       ),

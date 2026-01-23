@@ -288,7 +288,7 @@ export function EditSKUModal({
                     name="marketPrice"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>市场价</FormLabel>
+                        <FormLabel>零售价</FormLabel>
                         <FormControl>
                           <Input
                             min={0}

@@ -7,6 +7,7 @@ import {
   Layers,
   type LucideIcon,
   PieChart,
+  Settings,
   Shield,
   ShoppingBag,
   SquareTerminal,
@@ -101,12 +102,12 @@ const SIDEBAR_CONFIG: NavSection[] = [
         icon: Frame,
         permission: PERMISSIONS.HERO_CARD_VIEW,
       },
-      // {
-      //   title: "站点配置",
-      //   url: "/dashboard/site-config",
-      //   icon: Settings,
-      //   permission: PERMISSIONS.SITE_CONFIG_VIEW,
-      // },
+      {
+        title: "站点配置",
+        url: "/dashboard/site-config",
+        icon: Settings,
+        permission: PERMISSIONS.SITE_CONFIG_VIEW,
+      },
     ],
   },
   {

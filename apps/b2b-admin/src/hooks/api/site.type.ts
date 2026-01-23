@@ -5,6 +5,20 @@
 
 // ==================== 列表查询 ====================
 
+export interface SiteListRes {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  name: string;
+  trueName?: string;
+  description?: string;
+  domain: string;
+  isActive: boolean;
+  tenantId: string;
+  boundDeptId: string;
+  siteType: string;
+}
+
 /**
  * 站点列表查询参数
  */
