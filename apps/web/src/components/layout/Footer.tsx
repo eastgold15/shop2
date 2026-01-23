@@ -1,7 +1,19 @@
+import { useSiteConfigList } from "@/hooks/api/site-config";
 import Link from "next/link";
 import type React from "react";
 
 const Footer: React.FC = () => {
+  const { data: site_phone } = useSiteConfigList({
+    query: {
+      key: "site_phone",
+    },
+  });
+  const { data: site_copyright } = useSiteConfigList({
+    query: {
+      key: "site_copyright",
+    },
+  });
+
   return (
     <footer className="border-gray-200 border-t bg-white pt-20 pb-10">
       <div className="mx-auto max-w-350 px-6">
@@ -114,9 +126,9 @@ const Footer: React.FC = () => {
         </div>
 
         <div className="mt-20 flex flex-col items-center justify-between border-gray-100 border-t pt-8 text-center text-gray-400 text-xs uppercase tracking-wider md:flex-row">
-          <p>&copy; {new Date().getFullYear()} DONGQIFOOTWEAR Shoes Ltd.</p>
+          <p>&copy; {`${new Date().getFullYear()} ${site_copyright?.[0]?.value || "error"}`}  </p>
           <div className="mt-4 flex space-x-4 md:mt-0">
-            <span>+86 15920611313</span>
+            <span>+86 {site_phone?.[0]?.value || "error"}</span>
           </div>
         </div>
       </div>
