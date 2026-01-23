@@ -1,3 +1,5 @@
+"use client";
+
 import { useSiteConfigList } from "@/hooks/api/site-config";
 import Link from "next/link";
 import type React from "react";
@@ -89,17 +91,11 @@ const Footer: React.FC = () => {
             </h5>
             <ul className="space-y-3 text-gray-500 text-sm">
               <li>
-                <a className="hover:text-black" href="#">
-                  Privacy Policy
-                </a>
                 <Link className="hover:text-black" href="/single/privacy">
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <a className="hover:text-black" href="#">
-                  Terms & Conditions
-                </a>
                 <Link className="hover:text-black" href="/single/terms">
                   Terms & Conditions
                 </Link>
