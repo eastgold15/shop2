@@ -6,6 +6,7 @@ import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { HasFactory } from "@/components/auth/Has";
+import { AttributeEditor } from "@/components/form/AttributeEditor";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -42,6 +43,7 @@ const formSchema = z.object({
   mediaIds: z.array(z.string()).optional(),
   mainImageId: z.string().optional(),
   videoIds: z.array(z.string()).optional(),
+  customAttributes: z.record(z.string(), z.string()).optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -82,6 +84,7 @@ export function CreateProductModal({
       videoIds: [],
       seoTitle: "",
       status: 1,
+      customAttributes: {},
     },
   });
 
@@ -100,6 +103,7 @@ export function CreateProductModal({
         mediaIds: product.mediaIds || [],
         mainImageId: product.mainImageId || undefined,
         videoIds: product.videoIds || [],
+        customAttributes: product.customAttributes || {},
       });
     } else {
       // 创建模式：重置表单
@@ -273,6 +277,23 @@ export function CreateProductModal({
                     <SiteCategoryTreeSelect
                       onChange={field.onChange}
                       placeholder="请选择站点分类"
+                      value={field.value}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* 商品独有属性 */}
+            <FormField
+              control={form.control}
+              name="customAttributes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <AttributeEditor
+                      onChange={field.onChange}
                       value={field.value}
                     />
                   </FormControl>

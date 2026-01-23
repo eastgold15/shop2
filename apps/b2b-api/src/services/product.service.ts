@@ -23,6 +23,7 @@ import {
   asc,
   eq,
   exists,
+  getColumns,
   inArray,
   isNotNull,
   isNull,
@@ -59,14 +60,13 @@ export class ProductService {
     const siteType = ctx.user.context.site.siteType || "group";
     const tenantId = ctx.user.context.tenantId;
 
+    const { tenantId: productTenantId, ...rest } = getColumns(productTable);
+
     // --- 1. 构建查询字段 (SQL层解决优先级问题) ---
     const baseQuery = ctx.db
       .select({
-        id: productTable.id,
-        spuCode: productTable.spuCode,
-        status: productTable.status,
-        createdAt: productTable.createdAt,
-        updatedAt: productTable.updatedAt,
+        ...rest,
+
         templateId: sql<string>`${productTemplateTable.templateId}`,
         site_product_id: siteProductTable.id, // 🔥 用于查询站点分类
 
@@ -74,10 +74,10 @@ export class ProductService {
         name: sql<string>`COALESCE(${siteProductTable.siteName}, ${productTable.name})`,
         description: sql<string>`COALESCE(${siteProductTable.siteDescription}, ${productTable.description})`,
 
-        // 辅助字段：保留原厂数据，用于对比和调试
+        // 🔥 保留原厂数据，用于对比和调试
         originalName: productTable.name,
         originalDescription: productTable.description,
-        isVisible: siteProductTable.isVisible,
+
         isCustomized: sql<boolean>`${siteProductTable.id} IS NOT NULL`,
       })
       .from(productTable);
@@ -224,27 +224,20 @@ export class ProductService {
 
     // =========================================================
     // 🔥 修改：查询模板属性定义 (Key) + 属性可选值 (Value)
+    // 同时查询 SKU 规格属性和公共属性
     // =========================================================
     const templateKeyMap = new Map<string, any[]>();
+    const commonAttributeMap = new Map<string, any[]>();
 
     if (templateIds.length > 0) {
-      // 1. 先查属性名 (Keys)
+      // 1. 先查属性名 (Keys) - 同时查询 SKU 规格和公共属性
+      const { ...rest } = getColumns(templateKeyTable)
       const keys = await ctx.db
         .select({
-          id: templateKeyTable.id, // 🔥 必须查 ID，用来关联 Value
-          templateId: templateKeyTable.templateId,
-          key: templateKeyTable.key,
-          inputType: templateKeyTable.inputType,
-          isSkuSpec: templateKeyTable.isSkuSpec,
-          sortOrder: templateKeyTable.sortOrder,
+          ...rest
         })
         .from(templateKeyTable)
-        .where(
-          and(
-            inArray(templateKeyTable.templateId, templateIds),
-            eq(templateKeyTable.isSkuSpec, true)
-          )
-        )
+        .where(inArray(templateKeyTable.templateId, templateIds))
         .orderBy(asc(templateKeyTable.sortOrder));
 
       // 2. 提取所有的 Key ID
@@ -274,19 +267,29 @@ export class ProductService {
         valueMap.get(v.templateKeyId)!.push(v.value);
       }
 
-      // 5. 组装 Key + Options，并按 TemplateId 分组
+      // 5. 组装 Key + Options，并按 TemplateId 和 isSkuSpec 分组
       for (const k of keys) {
-        if (!templateKeyMap.has(k.templateId)) {
-          templateKeyMap.set(k.templateId, []);
-        }
-
-        templateKeyMap.get(k.templateId)!.push({
+        const attr = {
           key: k.key,
           label: k.key,
           inputType: k.inputType,
-          // 🔥 注入选项值
           options: valueMap.get(k.id) || [],
-        });
+          isRequired: k.isRequired,
+        };
+
+        if (k.isSkuSpec) {
+          // SKU 规格属性
+          if (!templateKeyMap.has(k.templateId)) {
+            templateKeyMap.set(k.templateId, []);
+          }
+          templateKeyMap.get(k.templateId)!.push(attr);
+        } else {
+          // 公共属性
+          if (!commonAttributeMap.has(k.templateId)) {
+            commonAttributeMap.set(k.templateId, []);
+          }
+          commonAttributeMap.get(k.templateId)!.push(attr);
+        }
       }
     }
 
@@ -454,9 +457,14 @@ export class ProductService {
       const mediaIds = media.images.map((img: any) => img.id);
       const videoIds = media.videos.map((vid: any) => vid.id);
 
-      // 🔥 获取该商品的规格定义
+      // 🔥 获取该商品的规格定义（SKU规格属性）
       const specs = product.templateId
         ? templateKeyMap.get(product.templateId) || []
+        : [];
+
+      // 🔥 获取该商品的公共属性（非SKU规格属性）
+      const commonAttributes = product.templateId
+        ? commonAttributeMap.get(product.templateId) || []
         : [];
 
       return {
@@ -470,10 +478,11 @@ export class ProductService {
         // 基础属性
         spuCode: product.spuCode,
         status: product.status,
+        customAttributes: product.customAttributes,
         createdAt: product.createdAt,
         updatedAt: product.updatedAt,
 
-        isVisible: product.isVisible ?? true,
+        isVisible: product.status === 1,
         isCustomized: product.isCustomized,
 
         // 🔥 站点分类（用于回显）
@@ -489,9 +498,18 @@ export class ProductService {
         // 前端根据这个数组来渲染 SKU 列表的"表头"
         specs: specs.map((s) => ({
           key: s.key,
-          label: s.key, // 如果你有专门的 label 字段就用 label，没有就用 key
+          label: s.key,
           inputType: s.inputType,
-          options: s.options, // 🔥 加上选项值
+          options: s.options,
+        })),
+
+        // 🔥 公共属性：模板中定义的非SKU规格属性（如单位、材质等）
+        commonAttributes: commonAttributes.map((s) => ({
+          key: s.key,
+          label: s.key,
+          inputType: s.inputType,
+          options: s.options,
+          isRequired: s.isRequired,
         })),
 
         // 媒体与SKU
@@ -554,7 +572,7 @@ export class ProductService {
     };
   }
   /**
-   * 创建商品（支持站点隔离和模板绑定）只能是工厂创建
+   * 创建商品（支持站点隔离和模板绑定）只能是工厂创建 同时写入到站点商品表
    */
 
   public async create(body: ProductContract["Create"], ctx: ServiceContext) {
@@ -569,6 +587,7 @@ export class ProductService {
       mediaIds,
       mainImageId,
       videoIds,
+      customAttributes,
     } = body;
 
     // 1. 权限硬校验
@@ -619,6 +638,7 @@ export class ProductService {
           spuCode,
           description: siteDescription,
           status,
+          customAttributes,
           tenantId,
           deptId: ctx.currentDeptId,
           createdBy: ctx.user.id,
@@ -718,6 +738,7 @@ export class ProductService {
       mediaIds,
       mainImageId,
       videoIds,
+      customAttributes,
     } = body;
 
     const siteType = ctx.user.context.site.siteType || "group";
@@ -803,6 +824,7 @@ export class ProductService {
           spuCode,
           description: siteDescription,
           status,
+          customAttributes,
         })
         .where(eq(productTable.id, productId));
 
@@ -860,49 +882,7 @@ export class ProductService {
         }
       }
 
-      // 🔥 修复后的逻辑
-      // if (templateId !== undefined && templateId) {
-      //   // 1. 获取新模板的规格键
-      //   const newTemplateKeys = await tx
-      //     .select({ key: templateKeyTable.key })
-      //     .from(templateKeyTable)
-      //     .where(
-      //       and(
-      //         eq(templateKeyTable.templateId, templateId),
-      //         eq(templateKeyTable.isSkuSpec, true)
-      //       )
-      //     );
 
-      //   const newSpecKeys = newTemplateKeys.map((k) => k.key);
-
-      //   // 2. 更新已有 SKU 的 specJson
-      //   if (newSpecKeys.length === 0) {
-      //     // 如果新模板没规格，清空所有 SKU 的规格
-      //     await tx
-      //       .update(skuTable)
-      //       .set({ specJson: {}, updatedAt: new Date() })
-      //       .where(eq(skuTable.productId, productId));
-      //   } else {
-      //     await tx
-      //       .update(skuTable)
-      //       .set({
-      //         // 关键点修复：
-      //         // 1. 使用 ::jsonb 强制转换防止函数找不到
-      //         // 2. 使用 ARRAY[...] 构造数组解决 ANY 报错
-      //         // 3. 使用 sql.join 处理动态参数个数
-      //         specJson: sql`COALESCE(
-      //     (
-      //       SELECT jsonb_object_agg(key, value)
-      //       FROM jsonb_each(${skuTable.specJson}::jsonb)
-      //       WHERE key = ANY(${newSpecKeys}::text[])
-      //     ),
-      //     '{}'::jsonb
-      //   )`,
-      //         updatedAt: new Date(),
-      //       })
-      //       .where(eq(skuTable.productId, productId));
-      //   }
-      // }
 
       // 🔥 修复后的逻辑
       if (templateId !== undefined && templateId) {
@@ -1205,7 +1185,6 @@ export class ProductService {
    * 使用事务确保数据一致性
    */
   public async setVariantMedia(
-
     body: typeof ProductVariantContract.SetVariantMedia.static,
     ctx: ServiceContext
   ) {

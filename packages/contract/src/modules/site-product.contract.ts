@@ -48,6 +48,7 @@ export const SiteProductContract = {
       mediaIds: t.Optional(t.Array(t.String())), // 商品图片ID列表
       mainImageId: t.Optional(t.String()), // 主图ID
       videoIds: t.Optional(t.Array(t.String())), // 视频ID列表
+      customAttributes: t.Optional(t.Record(t.String(), t.String())),
     })
   ),
 
