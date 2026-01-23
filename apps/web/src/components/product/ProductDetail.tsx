@@ -71,6 +71,63 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
     );
   }, [skus]);
 
+  // 解析多地区尺码，按地区分组 (EU36,UK3,US5 -> EU: [36,37...], UK: [3,4...], US: [5,6...])
+  const parsedSizeOptions = useMemo(() => {
+    const sizeKey = Object.keys(specOptions).find((k) =>
+      k.toLowerCase().includes("size")
+    );
+
+    if (!sizeKey) return null;
+
+    const sizeValues = specOptions[sizeKey] || [];
+    const regionGroups: Record<string, string[]> = {
+      EU: [],
+      UK: [],
+      US: [],
+    };
+
+    sizeValues.forEach((value: string) => {
+      // 检查是否是多地区尺码格式 "EU36,UK3,US5"
+      const parts = value.split(",").map((p) => p.trim());
+      const hasMultiRegion =
+        parts.length > 1 &&
+        parts.every((p) => /^(EU|UK|US)\d+(\.\d+)?$/.test(p));
+
+      if (hasMultiRegion) {
+        // 拆分并按地区分组
+        parts.forEach((part) => {
+          const match = part.match(/^(EU|UK|US)(\d+(\.\d+)?)$/);
+          if (match) {
+            const [, region, size] = match;
+            regionGroups[region].push(size);
+          }
+        });
+      } else {
+        // 单个尺码，尝试识别地区
+        const match = value.match(/^(EU|UK|US)?(\d+(\.\d+)?)$/);
+        if (match) {
+          const region = match[1] || "INT"; // 默认国际尺码
+          const size = match[2];
+          if (regionGroups[region]) {
+            regionGroups[region].push(size);
+          }
+        }
+      }
+    });
+
+    // 去重并排序
+    Object.keys(regionGroups).forEach((region) => {
+      regionGroups[region] = [...new Set(regionGroups[region])].sort(
+        (a, b) => Number.parseFloat(a) - Number.parseFloat(b)
+      );
+    });
+
+    return {
+      sizeKey,
+      regionGroups,
+    };
+  }, [specOptions]);
+
   // 默认选中第一个SKU的规格（如果存在SKU）
   const defaultSpecs = useMemo(() => {
     if (skus.length > 0) {
@@ -86,6 +143,17 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
   const [lastSelectedSpecs, setLastSelectedSpecs] = useState<
     Record<string, string>
   >({});
+  // 多地区尺码选择器 - 当前选中的地区
+  const [activeRegion, setActiveRegion] = useState<string>(() => {
+    if (parsedSizeOptions) {
+      const { regionGroups } = parsedSizeOptions;
+      const firstRegionWithSizes = Object.keys(regionGroups).find(
+        (r) => regionGroups[r].length > 0
+      );
+      return firstRegionWithSizes || "EU";
+    }
+    return "EU";
+  });
 
   const selectedSku = useMemo(() => {
     const specKeys = Object.keys(specOptions);
@@ -98,9 +166,18 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
 
     return skus.find((sku) => {
       const specJson = (sku.specJson as Record<string, string>) || {};
-      return Object.entries(selectedSpecs).every(
-        ([key, value]) => specJson[key] === value
-      );
+      return Object.entries(selectedSpecs).every(([key, value]) => {
+        const skuValue = specJson[key];
+
+        // 检查是否是多地区尺码
+        if (key.toLowerCase().includes("size")) {
+          // 用户选择的值是 "EU36"，需要匹配 "EU36,UK3,US5" 中的对应部分
+          const skuParts = skuValue.split(",").map((p) => p.trim());
+          return skuParts.includes(value);
+        }
+
+        return skuValue === value;
+      });
     });
   }, [skus, selectedSpecs, specOptions]);
 
@@ -328,70 +405,171 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
             </div>
 
             {/* 规格选择器 */}
-            {Object.entries(specOptions).map(([key, values]) => (
-              <div className="mb-6" key={key}>
+            {/* 多地区尺码选择器 */}
+            {parsedSizeOptions ? (
+              <div className="mb-6">
                 <span className="mb-2 block font-bold text-[10px] text-gray-500 uppercase tracking-widest">
-                  {key}
+                  {parsedSizeOptions.sizeKey}
                 </span>
+
+                {/* 地区切换按钮 */}
+                <div className="mb-3 flex gap-2">
+                  {Object.entries(parsedSizeOptions.regionGroups).map(
+                    ([region, sizes]) =>
+                      sizes.length > 0 ? (
+                        <button
+                          className={cn(
+                            "border px-4 py-2 font-bold text-xs transition-colors",
+                            activeRegion === region
+                              ? "border-black bg-black text-white"
+                              : "border-gray-200 text-black hover:border-black"
+                          )}
+                          key={region}
+                          onClick={() => setActiveRegion(region)}
+                        >
+                          {region}
+                        </button>
+                      ) : null
+                  )}
+                </div>
+
+                {/* 当前地区的尺码选项 */}
                 <div className="flex flex-wrap gap-2">
-                  {values.map((val) => (
-                    <button
-                      className={cn(
-                        "border px-4 py-2 font-bold text-xs transition-colors",
-                        selectedSpecs[key] === val
-                          ? "border-black bg-black text-white"
-                          : "border-gray-200 text-black hover:border-black"
-                      )}
-                      key={val}
-                      // 规格选择器内部的 onClick
-                      onClick={() => {
-                        const wasSelected = selectedSpecs[key] === val;
+                  {(parsedSizeOptions.regionGroups[activeRegion] || []).map(
+                    (size) => {
+                      const fullValue = `${activeRegion}${size}`;
+                      const isSelected =
+                        selectedSpecs[parsedSizeOptions.sizeKey] === fullValue;
 
-                        // 1. 切换选中状态
-                        setSelectedSpecs((prev) => {
-                          const next = { ...prev };
-                          if (wasSelected) {
-                            // --- 关键修复：取消选择时 ---
-                            delete next[key];
-                            setActiveMedia(0); // 直接复原到第一张主图
-                          } else {
-                            // 选择时
-                            next[key] = val;
-                          }
-                          return next;
-                        });
-                        // 直接在这里重置，不需要等 Effect 监听
-                        setActiveMedia(0);
+                      return (
+                        <button
+                          className={cn(
+                            "border px-4 py-2 font-bold text-xs transition-colors",
+                            isSelected
+                              ? "border-black bg-black text-white"
+                              : "border-gray-200 text-black hover:border-black"
+                          )}
+                          key={size}
+                          onClick={() => {
+                            const wasSelected =
+                              selectedSpecs[parsedSizeOptions.sizeKey] ===
+                              fullValue;
 
-                        // 2. 只有在【选中】动作时才触发模糊匹配跳转
-                        if (!wasSelected) {
-                          const firstMatchingSku = skus.find((sku) => {
-                            const specJson =
-                              (sku.specJson as Record<string, string>) || {};
-                            return specJson[key] === val;
-                          });
+                            setSelectedSpecs((prev) => {
+                              const next = { ...prev };
+                              if (wasSelected) {
+                                delete next[parsedSizeOptions.sizeKey];
+                                setActiveMedia(0);
+                              } else {
+                                next[parsedSizeOptions.sizeKey] = fullValue;
+                              }
+                              return next;
+                            });
+                            setActiveMedia(0);
 
-                          if (
-                            firstMatchingSku &&
-                            firstMatchingSku?.mediaIds?.length > 0
-                          ) {
-                            const targetId = firstMatchingSku.mediaIds[0];
-                            const mediaIndex = allMedia.findIndex(
-                              (m) => m.id === targetId
-                            );
-                            if (mediaIndex !== -1) {
-                              setActiveMedia(mediaIndex);
+                            if (!wasSelected) {
+                              const firstMatchingSku = skus.find((sku) => {
+                                const specJson =
+                                  (sku.specJson as Record<string, string>) ||
+                                  {};
+                                const skuValue =
+                                  specJson[parsedSizeOptions.sizeKey];
+                                if (skuValue) {
+                                  const skuParts = skuValue
+                                    .split(",")
+                                    .map((p) => p.trim());
+                                  return skuParts.includes(fullValue);
+                                }
+                                return false;
+                              });
+
+                              if (
+                                firstMatchingSku &&
+                                firstMatchingSku?.mediaIds?.length > 0
+                              ) {
+                                const targetId = firstMatchingSku.mediaIds[0];
+                                const mediaIndex = allMedia.findIndex(
+                                  (m) => m.id === targetId
+                                );
+                                if (mediaIndex !== -1) {
+                                  setActiveMedia(mediaIndex);
+                                }
+                              }
                             }
-                          }
-                        }
-                      }}
-                    >
-                      {val}
-                    </button>
-                  ))}
+                          }}
+                        >
+                          {size}
+                        </button>
+                      );
+                    }
+                  )}
                 </div>
               </div>
-            ))}
+            ) : null}
+
+            {/* 其他规格选择器（非多地区尺码） */}
+            {Object.entries(specOptions)
+              .filter(([key]) =>
+                parsedSizeOptions ? key !== parsedSizeOptions.sizeKey : true
+              )
+              .map(([key, values]) => (
+                <div className="mb-6" key={key}>
+                  <span className="mb-2 block font-bold text-[10px] text-gray-500 uppercase tracking-widest">
+                    {key}
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {values.map((val) => (
+                      <button
+                        className={cn(
+                          "border px-4 py-2 font-bold text-xs transition-colors",
+                          selectedSpecs[key] === val
+                            ? "border-black bg-black text-white"
+                            : "border-gray-200 text-black hover:border-black"
+                        )}
+                        key={val}
+                        onClick={() => {
+                          const wasSelected = selectedSpecs[key] === val;
+
+                          setSelectedSpecs((prev) => {
+                            const next = { ...prev };
+                            if (wasSelected) {
+                              delete next[key];
+                              setActiveMedia(0);
+                            } else {
+                              next[key] = val;
+                            }
+                            return next;
+                          });
+                          setActiveMedia(0);
+
+                          if (!wasSelected) {
+                            const firstMatchingSku = skus.find((sku) => {
+                              const specJson =
+                                (sku.specJson as Record<string, string>) || {};
+                              return specJson[key] === val;
+                            });
+
+                            if (
+                              firstMatchingSku &&
+                              firstMatchingSku?.mediaIds?.length > 0
+                            ) {
+                              const targetId = firstMatchingSku.mediaIds[0];
+                              const mediaIndex = allMedia.findIndex(
+                                (m) => m.id === targetId
+                              );
+                              if (mediaIndex !== -1) {
+                                setActiveMedia(mediaIndex);
+                              }
+                            }
+                          }
+                        }}
+                      >
+                        {val}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
 
             {/* 数量与支付方式 */}
             <div className="mb-8 space-y-6">

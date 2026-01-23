@@ -240,4 +240,30 @@ export class MediaService {
 
     return { count: files.length };
   }
+
+  /**
+   * 获取所有媒体分类及数量
+   */
+  async getCategories(ctx: ServiceContext) {
+    const whereConditions: any[] = [];
+    if (ctx.user?.context.tenantId)
+      whereConditions.push(eq(mediaTable.tenantId, ctx.user.context.tenantId!));
+    if (ctx.currentDeptId)
+      whereConditions.push(eq(mediaTable.deptId, ctx.currentDeptId));
+
+    // 使用 SQL 聚合查询获取分类统计
+    const categories = await ctx.db
+      .select({
+        name: mediaTable.category,
+        count: sql<number>`count(*)`.mapWith(Number),
+      })
+      .from(mediaTable)
+      .where(and(...whereConditions))
+      .groupBy(mediaTable.category)
+      .orderBy(sql`count(*) desc`);
+
+    return {
+      categories,
+    };
+  }
 }

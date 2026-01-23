@@ -150,3 +150,17 @@ export function useBatchDeleteMedia() {
     },
   });
 }
+
+// --- 6. 获取分类列表 (GET) ---
+// TRes = typeof MediaContract.CategoriesResponse.static
+export function useMediaCategories(enabled = true) {
+  return useQuery({
+    queryKey: [...mediaKeys.all, "categories"],
+    queryFn: () =>
+      api.get<typeof MediaContract.CategoriesResponse.static>(
+        "/api/v1/media/categories"
+      ),
+    enabled,
+    staleTime: 5 * 60 * 1000, // 5分钟缓存
+  });
+}

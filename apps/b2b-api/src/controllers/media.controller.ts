@@ -124,4 +124,19 @@ export const mediaController = new Elysia({ prefix: "/media" })
         tags: ["Media"],
       },
     }
+  )
+  .get(
+    "/categories",
+    ({ user, db, currentDeptId }) =>
+      mediaService.getCategories({ db, user, currentDeptId }),
+    {
+      requireDept: true,
+      allPermissions: ["MEDIA_VIEW"],
+      detail: {
+        summary: "获取媒体分类列表",
+        description: "获取所有媒体分类及其数量统计",
+        tags: ["Media"],
+      },
+      response: MediaContract.CategoriesResponse,
+    }
   );

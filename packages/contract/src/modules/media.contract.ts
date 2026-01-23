@@ -63,6 +63,15 @@ export const MediaContract = {
     data: t.Array(t.Object({ ...MediaFields })),
     total: t.Number(),
   }),
+  // 分类相关
+  CategoriesResponse: t.Object({
+    categories: t.Array(
+      t.Object({
+        name: t.String(),
+        count: t.Number(),
+      })
+    ),
+  }),
 } as const;
 
 export type MediaContract = InferDTO<typeof MediaContract>;
