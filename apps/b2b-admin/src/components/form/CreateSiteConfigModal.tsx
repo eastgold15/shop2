@@ -25,6 +25,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { SiteSelect } from "@/components/ui/site-select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
@@ -179,16 +186,24 @@ export function CreateSiteConfigModal({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>配置键 *</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="例如: company.name, contact.email"
-                      {...field}
-                      disabled={isEdit}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    配置项的唯一标识符，建议使用点号分隔的命名格式
-                  </FormDescription>
+                  <Select
+                    disabled={isEdit}
+                    onValueChange={field.onChange}
+                    value={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="请选择配置类型" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="site_name">网站名</SelectItem>
+                      <SelectItem value="site_copyright">版权</SelectItem>
+                      <SelectItem value="site_phone">电话</SelectItem>
+                      <SelectItem value="site_email">邮箱</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>选择配置项的类型</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -208,7 +223,7 @@ export function CreateSiteConfigModal({
                     />
                   </FormControl>
                   <FormDescription>
-                    配置项的实际值，支持文本、JSON 等格式
+                    你所需要修改的内容，支持文本、JSON 等格式
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -220,7 +235,7 @@ export function CreateSiteConfigModal({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>描述</FormLabel>
+                  <FormLabel>描述（选填）</FormLabel>
                   <FormControl>
                     <Input placeholder="配置项的说明" {...field} />
                   </FormControl>
@@ -255,7 +270,7 @@ export function CreateSiteConfigModal({
               name="url"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>关联 URL</FormLabel>
+                  <FormLabel>图片的URL</FormLabel>
                   <FormControl>
                     <Input placeholder="https://example.com" {...field} />
                   </FormControl>
