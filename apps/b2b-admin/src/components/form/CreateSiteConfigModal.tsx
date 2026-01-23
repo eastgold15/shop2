@@ -64,7 +64,7 @@ export function CreateSiteConfigModal({
 
   const isEdit = !!editingConfig;
 
-  const form = useForm<FormData>({
+  const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       key: "1",

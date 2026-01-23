@@ -320,6 +320,7 @@ function generateHookCode(
   entityName: string
 ) {
   // 处理 URL 模板: /api/v1/user/:id -> `/api/v1/user/${id}`
+  // biome-ignore lint/suspicious/noTemplateCurlyInString: <explanation>
   const urlTemplate = route.path.replace(/:([a-zA-Z0-9_]+)/g, "${$1}");
   const isTemplate = urlTemplate.includes("${");
   const urlStr = isTemplate ? `\`${urlTemplate}\`` : `"${route.path}"`;

@@ -103,7 +103,7 @@ export function CreateSKUModal({
   const [batchMarketPrice, setBatchMarketPrice] = useState<number | null>(null);
   const [batchCostPrice, setBatchCostPrice] = useState<number | null>(null);
 
-  const form = useForm<FormData>({
+  const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       productId: productId || "",

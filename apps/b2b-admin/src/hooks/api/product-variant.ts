@@ -8,7 +8,7 @@ export function useProductVariantMedia(productId: string | undefined) {
   return useQuery({
     queryKey: ["product-variant-media", productId],
     queryFn: async () => {
-      const response = await api.get<ProductVariantMediRes>(
+      const response = await api.get<ProductVariantMediaRes>(
         `/api/v1/product-variant/${productId}`
       );
       return response;
@@ -21,7 +21,7 @@ export function useProductVariantMedia(productId: string | undefined) {
  * 保存商品变体媒体配置
  */
 import { ProductVariantContract } from "@repo/contract";
-import { ProductVariantMediRes } from "./product-variant.type";
+import { ProductVariantMediaRes } from "./product-variant.type";
 
 type SetVariantMediaBody = ProductVariantContract["SetVariantMedia"];
 export function useSetProductVariantMedia() {
