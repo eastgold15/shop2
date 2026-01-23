@@ -12,6 +12,7 @@ import { inquiryController } from "./_custom/inquiry.controller";
 import { mediaController } from "./_custom/media.controller";
 import { siteProductsController } from "./_custom/site-products.controller";
 import { sitecategoriesController } from "./_custom/sitecategories.controller";
+import { siteConfigController } from "./_custom/site-config.controller";
 
 export const appRouter = new Elysia({ name: "appRouter" })
   .use(adsController)
@@ -19,4 +20,5 @@ export const appRouter = new Elysia({ name: "appRouter" })
   .use(herocardsController)
   .use(mediaController)
   .use(sitecategoriesController)
-  .use(inquiryController);
+  .use(inquiryController)
+  .use(siteConfigController);
