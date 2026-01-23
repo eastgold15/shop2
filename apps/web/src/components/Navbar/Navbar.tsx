@@ -2,6 +2,7 @@
 import { Heart, Menu, ShoppingBag, User, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useSiteConfigList } from "@/hooks/api/site-config";
 import { useCategoryNavigation } from "@/hooks/useCategoryNavigation";
 import { DesktopMenu } from "./DesktopMenu";
 import { useNavAction } from "./hook/useNavAction";
@@ -59,6 +60,12 @@ const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  const { data: site_name } = useSiteConfigList({
+    query: {
+      key: "site_name",
+    },
+  });
+
   // 获取分类数据 (这里假设 hook 返回 { categories, loading })
   const { categories } = useCategoryNavigation();
   const { handleNavigate } = useNavAction();
@@ -106,7 +113,7 @@ const Navbar = () => {
               className="pt-2 font-serif text-4xl tracking-widest md:text-5xl"
               href="/"
             >
-              GINA
+              {site_name?.[0]?.value || "error"}
             </Link>
           </div>
 
