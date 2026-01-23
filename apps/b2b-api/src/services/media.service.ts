@@ -41,7 +41,9 @@ export class MediaService {
           originalName: file.name,
           mimeType: file.type,
           // 根据文件类型自动判断 mediaType
-          mediaType: file.type?.startsWith("video/") ? "video" : "image" as MediaContract['MediaType'],
+          mediaType: file.type?.startsWith("video/")
+            ? "video"
+            : ("image" as MediaContract["MediaType"]),
           category,
           isPublic: true,
           status: true,
@@ -50,7 +52,7 @@ export class MediaService {
           siteId: ctx.user.context.site.id,
           deptId: ctx.currentDeptId!,
           createdBy: ctx.user.id,
-        }
+        };
 
         const [res] = await ctx.db
           .insert(mediaTable)
@@ -63,17 +65,16 @@ export class MediaService {
     return results;
   }
 
-
   public async create(body: MediaContract["Create"], ctx: ServiceContext) {
     const insertData = {
       ...body,
       // 自动注入租户信息
       ...(ctx.user
         ? {
-          tenantId: ctx.user.context.tenantId!,
-          createdBy: ctx.user.id,
-          deptId: ctx.currentDeptId,
-        }
+            tenantId: ctx.user.context.tenantId!,
+            createdBy: ctx.user.id,
+            deptId: ctx.currentDeptId,
+          }
         : {}),
     };
     const [res] = await ctx.db
@@ -91,10 +92,10 @@ export class MediaService {
         deptId: ctx.currentDeptId,
         ...(ids
           ? {
-            id: {
-              in: ids,
-            },
-          }
+              id: {
+                in: ids,
+              },
+            }
           : {}),
         ...(category ? { category } : {}),
         ...(search ? { originalName: { ilike: `%${search}%` } } : {}),

@@ -1,11 +1,12 @@
 "use client";
 
+import type { SiteConfigContract } from "@repo/contract";
 import { Edit, Plus, Search, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { AppSidebar } from "@/components/app-sidebar";
-import { CreateSiteConfigModal } from "@/components/form/CreateSiteConfigModal";
 import { Has } from "@/components/auth";
+import { CreateSiteConfigModal } from "@/components/form/CreateSiteConfigModal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,7 +32,6 @@ import {
   useDeleteSiteConfig,
   useSiteConfigList,
 } from "@/hooks/api/site-config";
-import type { SiteConfigContract } from "@repo/contract";
 
 export default function SiteConfigPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -42,7 +42,11 @@ export default function SiteConfigPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
   // 获取站点配置列表
-  const { data: configListData, isLoading, refetch } = useSiteConfigList({
+  const {
+    data: configListData,
+    isLoading,
+    refetch,
+  } = useSiteConfigList({
     limit: 100,
     page: 1,
   });
@@ -89,12 +93,12 @@ export default function SiteConfigPage() {
 
   // 获取所有分类
   const categories: string[] = Array.from(
-    new Set<string>(
-      [
-        "all",
-        ...(configListData || []).map((config: any) => config.category || "general")
-      ]
-    )
+    new Set<string>([
+      "all",
+      ...(configListData || []).map(
+        (config: any) => config.category || "general"
+      ),
+    ])
   );
 
   // 按分类分组
@@ -145,12 +149,12 @@ export default function SiteConfigPage() {
               <CardContent>
                 <div className="flex gap-4">
                   <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       className="pl-10"
+                      onChange={(e) => setSearchTerm(e.target.value)}
                       placeholder="搜索配置键、值或描述..."
                       value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
                     />
                   </div>
                   <div className="flex gap-2">
@@ -173,7 +177,9 @@ export default function SiteConfigPage() {
             {/* 配置列表 */}
             {isLoading ? (
               <Card>
-                <CardContent className="py-8 text-center">加载中...</CardContent>
+                <CardContent className="py-8 text-center">
+                  加载中...
+                </CardContent>
               </Card>
             ) : Object.keys(groupedConfigs).length === 0 ? (
               <Card>
@@ -274,10 +280,7 @@ export default function SiteConfigPage() {
                                     <Has permission="SITE_CONFIG_DELETE">
                                       <AlertDialog>
                                         <AlertDialogTrigger asChild>
-                                          <Button
-                                            size="sm"
-                                            variant="outline"
-                                          >
+                                          <Button size="sm" variant="outline">
                                             <Trash2 className="h-4 w-4" />
                                           </Button>
                                         </AlertDialogTrigger>
@@ -287,8 +290,8 @@ export default function SiteConfigPage() {
                                               确认删除
                                             </AlertDialogTitle>
                                             <AlertDialogDescription>
-                                              确定要删除配置项 "
-                                              {config.key}" 吗？此操作不可撤销。
+                                              确定要删除配置项 "{config.key}"
+                                              吗？此操作不可撤销。
                                             </AlertDialogDescription>
                                           </AlertDialogHeader>
                                           <AlertDialogFooter>

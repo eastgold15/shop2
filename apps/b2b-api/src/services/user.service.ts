@@ -13,32 +13,30 @@ import { type ServiceContext } from "../lib/type";
 export class UserService {
   public async list(query: UserContract["ListQuery"], ctx: ServiceContext) {
     const { search } = query;
-    const { currentDeptId, user } = ctx
-    const dataScope = user.roles[0].dataScope
-    let targetDeptIds: string[] = []
+    const { currentDeptId, user } = ctx;
+    const dataScope = user.roles[0].dataScope;
+    let targetDeptIds: string[] = [];
 
     if (dataScope === "current_and_below") {
       // 查询当前部门及其直接子部门
       const dept = await ctx.db.query.departmentTable.findFirst({
         where: {
-          id: currentDeptId
+          id: currentDeptId,
         },
         with: {
           childrens: {
             columns: {
-              id: true
-            }
-          }
-        }
-      })
+              id: true,
+            },
+          },
+        },
+      });
       if (!dept) {
-        throw new Error("没有")
+        throw new Error("没有");
       }
-      targetDeptIds = [currentDeptId, ...(dept.childrens.map(c => c.id))]
-    }
-
-    else if (dataScope === "current") {
-      targetDeptIds = [currentDeptId]
+      targetDeptIds = [currentDeptId, ...dept.childrens.map((c) => c.id)];
+    } else if (dataScope === "current") {
+      targetDeptIds = [currentDeptId];
     }
 
     // 3. 构建查询条件

@@ -34,9 +34,12 @@ export function useRoleList(
   return useQuery({
     queryKey: roleKeys.list(params),
     queryFn: () =>
-      api.get<RoleListRes[], typeof RoleContract.ListQuery.static>("/api/v1/role", {
-        params,
-      }),
+      api.get<RoleListRes[], typeof RoleContract.ListQuery.static>(
+        "/api/v1/role",
+        {
+          params,
+        }
+      ),
     enabled,
   });
 }

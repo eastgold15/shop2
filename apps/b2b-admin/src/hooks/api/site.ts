@@ -18,7 +18,8 @@ export const siteKeys = {
   details: () => [...siteKeys.all, "detail"] as const,
   detail: (id: string) => [...siteKeys.details(), id] as const,
 };
-import { SiteListRes } from './site.type'
+
+import { SiteListRes } from "./site.type";
 // --- 1. 列表查询 (GET) ---
 // TRes = any, TQuery = typeof SiteContract.ListQuery.static
 export function useSiteList(
@@ -28,9 +29,12 @@ export function useSiteList(
   return useQuery({
     queryKey: siteKeys.list(params),
     queryFn: () =>
-      api.get<SiteListRes[], typeof SiteContract.ListQuery.static>("/api/v1/site", {
-        params,
-      }),
+      api.get<SiteListRes[], typeof SiteContract.ListQuery.static>(
+        "/api/v1/site",
+        {
+          params,
+        }
+      ),
     enabled,
   });
 }

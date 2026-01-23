@@ -166,8 +166,6 @@ export interface DepartmentOption {
  * 部门详情响应
  */
 
-
-
 export interface DepartmentDetailResponse {
   id: string;
   createdAt: string;

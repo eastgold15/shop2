@@ -113,11 +113,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
   // 🔥 根据选中 SKU 的 mediaIds 动态计算画廊
   const displayGallery = useMemo(() => {
     // 如果选中了 SKU 且有 mediaIds，过滤出该 SKU 的图片
-    if (
-      selectedSku &&
-      selectedSku.mediaIds &&
-      selectedSku.mediaIds.length > 0
-    ) {
+    if (selectedSku?.mediaIds && selectedSku.mediaIds.length > 0) {
       return allMedia.filter((m) => selectedSku.mediaIds!.includes(m.id));
     }
 
@@ -141,12 +137,6 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
       isInitialized.current = true;
     }
   }, [skus]);
-
-  // 🔥 SKU 变化时重置到第一张图片
-  // 由于 displayGallery 已经根据 SKU 的 mediaIds 过滤，第一张图片始终是该 SKU 的图片
-  useEffect(() => {
-    setActiveMedia(0);
-  }, [selectedSku]);
 
   // 5. 表单提交逻辑
   const [quantity, setQuantity] = useState(1);
@@ -353,49 +343,6 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
                           : "border-gray-200 text-black hover:border-black"
                       )}
                       key={val}
-                      // onClick={() => {
-                      //   const wasSelected = selectedSpecs[key] === val;
-
-                      //   // 1. 切换选中状态（支持反选）
-                      //   setSelectedSpecs((prev) => {
-                      //     const next = { ...prev };
-
-                      //     if (wasSelected) {
-                      //       // 取消选择：恢复到原始图片
-                      //       delete next[key];
-                      //       setActiveMedia(originalMediaIndex);
-                      //     } else {
-                      //       // 选择：保存当前图片状态，然后跳转到新图片
-                      //       setOriginalMediaIndex(activeMedia);
-                      //       next[key] = val;
-                      //     }
-
-                      //     return next;
-                      //   });
-
-                      //   // 2. 只有在选择时才触发图片联动
-                      //   if (!wasSelected) {
-                      //     const firstMatchingSku = skus.find((sku) => {
-                      //       const specJson =
-                      //         (sku.specJson as Record<string, string>) || {};
-                      //       return specJson[key] === val;
-                      //     });
-
-                      //     if (
-                      //       firstMatchingSku &&
-                      //       firstMatchingSku.mediaIds?.length > 0
-                      //     ) {
-                      //       const targetId = firstMatchingSku.mediaIds[0];
-                      //       const mediaIndex = allMedia.findIndex(
-                      //         (m) => m.id === targetId
-                      //       );
-                      //       if (mediaIndex !== -1) {
-                      //         setActiveMedia(mediaIndex);
-                      //       }
-                      //     }
-                      //   }
-                      // }}
-
                       // 规格选择器内部的 onClick
                       onClick={() => {
                         const wasSelected = selectedSpecs[key] === val;
@@ -413,6 +360,8 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
                           }
                           return next;
                         });
+                        // 直接在这里重置，不需要等 Effect 监听
+                        setActiveMedia(0);
 
                         // 2. 只有在【选中】动作时才触发模糊匹配跳转
                         if (!wasSelected) {

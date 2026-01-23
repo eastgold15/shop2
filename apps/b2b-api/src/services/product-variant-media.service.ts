@@ -8,7 +8,6 @@ import { and, eq, sql } from "drizzle-orm";
 import { HttpError } from "elysia-http-problem-json";
 import type { ServiceContext } from "~/lib/type";
 
-
 export class ProductVariantMediaService {
   /**
    * 1. 为产品+属性值（如颜色）批量关联图片
@@ -32,11 +31,7 @@ export class ProductVariantMediaService {
       const [product] = await tx
         .select({ id: productVariantMediaTable.id })
         .from(productVariantMediaTable)
-        .where(
-          and(
-            eq(productVariantMediaTable.productId, productId),
-          )
-        )
+        .where(and(eq(productVariantMediaTable.productId, productId)))
         .limit(1);
 
       if (!product) {
@@ -174,7 +169,7 @@ export class ProductVariantMediaService {
       .where(
         and(
           eq(productVariantMediaTable.productId, productId),
-          eq(productVariantMediaTable.attributeValueId, attributeValueId),
+          eq(productVariantMediaTable.attributeValueId, attributeValueId)
         )
       )
       .returning({ id: productVariantMediaTable.id });
@@ -203,8 +198,7 @@ export class ProductVariantMediaService {
       sortOrder = "desc",
     } = query;
     const tenantId = ctx.user.context.tenantId!;
-    const baseConditions: any[] = [
-    ];
+    const baseConditions: any[] = [];
 
     // 产品筛选
     if (productId) {

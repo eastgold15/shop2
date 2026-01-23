@@ -24,20 +24,17 @@ const api = new Elysia({ name: "api", prefix: "/api" })
         },
         tags: [],
       },
-      references: fromTypes(
-        "src/server.ts",
-        {
-          // 关键：指定项目根目录，以便编译器能找到 tsconfig.json 和其他文件
-          // 这里使用 import.meta.dir (Bun) 或 process.cwd()
-          projectRoot: process.cwd(),
-          // 如果你的 tsconfig 在根目录
-          tsconfigPath: "tsconfig.json",
-          debug: process.env.NODE_ENV !== "production",
-        }
-      ),
+      references: fromTypes("src/server.ts", {
+        // 关键：指定项目根目录，以便编译器能找到 tsconfig.json 和其他文件
+        // 这里使用 import.meta.dir (Bun) 或 process.cwd()
+        projectRoot: process.cwd(),
+        // 如果你的 tsconfig 在根目录
+        tsconfigPath: "tsconfig.json",
+        debug: process.env.NODE_ENV !== "production",
+      }),
     })
   )
-  .group("/v1", (app) => app.use(authGuardMid).use(appRouter))
+  .group("/v1", (app) => app.use(authGuardMid).use(appRouter));
 
 export const server = new Elysia({ name: "server" })
   .use(

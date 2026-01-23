@@ -152,7 +152,7 @@ async function migrateProductMediaToVariant() {
     console.error("迁移过程出错:", error);
     throw error;
   } finally {
-    console.log("11")
+    console.log("11");
   }
 }
 

@@ -115,7 +115,7 @@ export const ${queryKeyVar} = {
   list: (params: any) => [...${queryKeyVar}.lists(), params] as const,
   pagelist: (params: any) => [...${queryKeyVar}.lists(), "pagelist", params] as const,
   details: () => [...${queryKeyVar}.all, "detail"] as const,
-  detail: (id: string) => [...${queryKeyVar}.details(), id] as const,${customKeys ? "\n  " + customKeys : ""}
+  detail: (id: string) => [...${queryKeyVar}.details(), id] as const,${customKeys ? `\n  ${customKeys}` : ""}
 };`;
 
     file.addStatements(queryKeysCode);

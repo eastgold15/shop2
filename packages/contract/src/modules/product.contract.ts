@@ -5,7 +5,6 @@ import { productTable } from "../table.schema";
 import { ProductTemplateFields } from "./product-template.contract";
 import { SiteProductInsertFields } from "./site-product.contract";
 
-
 export const ProductInsertFields = spread(productTable, "insert");
 
 export const ProductFields = spread(productTable, "select");
@@ -75,7 +74,6 @@ export const ProductContract = {
     search: t.Optional(t.String()),
     categoryId: t.Optional(t.String()),
   }),
-
 } as const;
 
 export type ProductContract = InferDTO<typeof ProductContract>;

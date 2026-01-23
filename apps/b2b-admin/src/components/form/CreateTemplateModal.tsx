@@ -255,7 +255,7 @@ export function CreateTemplateModal({
                         <FormMessage />
                       </FormItem>
                     )}
-                  />  
+                  />
                 </div>
               </div>
 

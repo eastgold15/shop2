@@ -13,6 +13,7 @@ import {
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AppSidebar } from "@/components/app-sidebar";
+import { Has } from "@/components/auth/Has";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -60,7 +61,6 @@ import {
   useAdToggleStatus,
   useAdUpdate,
 } from "@/hooks/api/ad";
-import { Has } from "@/components/auth/Has";
 
 // 广告类型
 interface Ad {
@@ -530,10 +530,6 @@ export default function AdsPage() {
                 </DialogTrigger>
               </Dialog>
             </div>
-
-
-
-
           </div>
 
           {/* 广告列表 */}
@@ -681,19 +677,15 @@ export default function AdsPage() {
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>取消</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDelete(ad)}>
+                              <AlertDialogAction
+                                onClick={() => handleDelete(ad)}
+                              >
                                 删除
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
                       </Has>
-
-
-                      
-
-
-
                     </div>
                   </div>
                 ))}

@@ -1,4 +1,3 @@
-
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { api } from "./api-client";
 
@@ -9,7 +8,9 @@ export function useProductVariantMedia(productId: string | undefined) {
   return useQuery({
     queryKey: ["product-variant-media", productId],
     queryFn: async () => {
-      const response = await api.get<ProductVariantMediRes>(`/api/v1/product-variant/${productId}`)
+      const response = await api.get<ProductVariantMediRes>(
+        `/api/v1/product-variant/${productId}`
+      );
       return response;
     },
     enabled: !!productId,
@@ -19,12 +20,10 @@ export function useProductVariantMedia(productId: string | undefined) {
 /**
  * 保存商品变体媒体配置
  */
-import { ProductVariantContract } from '@repo/contract'
+import { ProductVariantContract } from "@repo/contract";
 import { ProductVariantMediRes } from "./product-variant.type";
 
-
-
-type SetVariantMediaBody = ProductVariantContract["SetVariantMedia"]
+type SetVariantMediaBody = ProductVariantContract["SetVariantMedia"];
 export function useSetProductVariantMedia() {
   return useMutation({
     mutationFn: async (data: {
@@ -35,7 +34,10 @@ export function useSetProductVariantMedia() {
         mainImageId?: string;
       }>;
     }) => {
-      const response = await api.post<any, SetVariantMediaBody>('/api/v1/product-variant', data);
+      const response = await api.post<any, SetVariantMediaBody>(
+        "/api/v1/product-variant",
+        data
+      );
       return response;
     },
   });

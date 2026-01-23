@@ -3,7 +3,6 @@ import { eq } from "drizzle-orm";
 import { type ServiceContext } from "../lib/type";
 
 export class SiteConfigService {
-  
   public async create(body: SiteConfigContract["Create"], ctx: ServiceContext) {
     const insertData = {
       ...body,
@@ -36,7 +35,6 @@ export class SiteConfigService {
     });
     return res;
   }
-
 
   public async update(
     id: string,

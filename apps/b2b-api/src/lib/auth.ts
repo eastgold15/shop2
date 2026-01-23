@@ -18,7 +18,6 @@ const URL_REPLACE_REGEX = /^(\w+:\/\/[^/]+)(\/.*)$/;
  * 结合了 Drizzle ORM、邮箱验证、GitHub 社交登录以及自定义用户字段
  */
 export const auth = betterAuth({
-
   // 服务端基础 URL，用于生成认证链接（邮件链接等）
   baseURL: envConfig.BETTER_AUTH_BASE_URL,
   // 用于加密会话和令牌的密钥，必须严格保密
@@ -52,9 +51,9 @@ export const auth = betterAuth({
     namePrefix: "better-auth", // 或者保持默认
     attributes: {
       sameSite: "none", // 必须是小写的 "none"
-      secure: true,     // SameSite=None 时必须为 true
+      secure: true, // SameSite=None 时必须为 true
       httpOnly: true,
-    }
+    },
   },
 
   // 策略：常规邮箱密码登录

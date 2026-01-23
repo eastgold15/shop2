@@ -9,6 +9,7 @@
     "build:admin": "bun --filter b2b-admin build",
     "prestart:admin": "echo '--- [Admin Check] ---' && pwd && ls -F apps/",
     "start:admin": "cd apps/b2b-admin && bun run start",
+    "fix": "bun x ultracite fix",
     "build:web": "bun --filter web build",
     "prestart:web": "echo '--- [Web Check] ---' && pwd && ls -F apps/",
     "start:web": "cd apps/web && bun run start",

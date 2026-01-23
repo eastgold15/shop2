@@ -34,7 +34,7 @@ export const siteTypeEnum = p.pgEnum("site_type", ["group", "factory"]);
 export const dataScopeEnum = p.pgEnum("data_scope", [
   "all",
   "current",
-  "current_and_below"
+  "current_and_below",
 ]);
 
 export const adTypeEnum = p.pgEnum("ads_type", ["banner", "carousel", "list"]);
@@ -529,38 +529,41 @@ export const skuMediaTable = p.pgTable(
   (t) => [p.primaryKey({ columns: [t.skuId, t.mediaId] })]
 );
 
-
 // [变体媒体关联表]：实现图片与属性值（如颜色）的绑定
-export const productVariantMediaTable = p.pgTable("product_variant_media", {
-  ...Audit,
+export const productVariantMediaTable = p.pgTable(
+  "product_variant_media",
+  {
+    ...Audit,
 
-  // 1. 关联产品 (SPU)
-  productId: p
-    .uuid("product_id")
-    .notNull()
-    .references(() => productTable.id, { onDelete: "cascade" }),
+    // 1. 关联产品 (SPU)
+    productId: p
+      .uuid("product_id")
+      .notNull()
+      .references(() => productTable.id, { onDelete: "cascade" }),
 
-  // 2. 关联具体的属性值 (例如：template_value 中 "黑色" 的 ID)
-  // 这样无论多少个尺码，只要是“黑色”，都共用这几张图
-  attributeValueId: p
-    .uuid("attribute_value_id")
-    .notNull()
-    .references(() => templateValueTable.id, { onDelete: "cascade" }),
+    // 2. 关联具体的属性值 (例如：template_value 中 "黑色" 的 ID)
+    // 这样无论多少个尺码，只要是“黑色”，都共用这几张图
+    attributeValueId: p
+      .uuid("attribute_value_id")
+      .notNull()
+      .references(() => templateValueTable.id, { onDelete: "cascade" }),
 
-  // 3. 关联媒体文件
-  mediaId: p
-    .uuid("media_id")
-    .notNull()
-    .references(() => mediaTable.id, { onDelete: "restrict" }),
+    // 3. 关联媒体文件
+    mediaId: p
+      .uuid("media_id")
+      .notNull()
+      .references(() => mediaTable.id, { onDelete: "restrict" }),
 
-  isMain: p.boolean("is_main").default(false),
-  sortOrder: p.integer("sort_order").default(0),
-}, (t) => [
-  // 建立复合索引，提升查询某个颜色下图片的速度
-  p.index("idx_variant_media").on(t.productId, t.attributeValueId),
-]);
-
-
+    isMain: p.boolean("is_main").default(false),
+    sortOrder: p.integer("sort_order").default(0),
+  },
+  (t) => [
+    // 建立复合索引，提升查询某个颜色下图片的速度
+    p
+      .index("idx_variant_media")
+      .on(t.productId, t.attributeValueId),
+  ]
+);
 
 export const customerTable = p.pgTable("customer", {
   ...Audit,
@@ -791,7 +794,9 @@ export const inquiryTable = p.pgTable("inquiry", {
   customerRequirements: p.text("customer_requirements"),
 
   // 增加负责人字段
-  ownerId: p.uuid("owner_id").references(() => userTable.id, { onDelete: "set null" }),
+  ownerId: p
+    .uuid("owner_id")
+    .references(() => userTable.id, { onDelete: "set null" }),
   // 增加主分类字段（用于匹配分配逻辑）
   masterCategoryId: p
     .uuid("master_category_id")

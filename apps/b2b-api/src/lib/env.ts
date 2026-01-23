@@ -34,10 +34,7 @@ export const envConfig = {
   },
 
   // 图片域名（用于拼接图片URL）
-  IMGDOMAIN: env
-    .get("IMGDOMAIN")
-    .required()
-    .asString(),
+  IMGDOMAIN: env.get("IMGDOMAIN").required().asString(),
 };
 // import { createEnv } from "@t3-oss/env-core";
 

@@ -32,8 +32,7 @@ export const productVariantMediaController = new Elysia({
       query: ProductVariantMediaContract.ListQuery,
       detail: {
         summary: "获取变体媒体列表",
-        description:
-          "分页查询产品变体媒体关联数据，支持按产品和属性值筛选",
+        description: "分页查询产品变体媒体关联数据，支持按产品和属性值筛选",
       },
     }
   )

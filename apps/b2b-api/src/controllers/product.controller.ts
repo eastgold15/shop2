@@ -131,8 +131,6 @@ export const productController = new Elysia({
     }
   );
 
-
-
 /**
  * 变体媒体管理路由
  * 用于按颜色属性值绑定图片，避免为每个 SKU 重复上传

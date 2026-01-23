@@ -31,10 +31,10 @@ export class DepartmentService {
       // 自动注入租户信息
       ...(ctx.user
         ? {
-          tenantId: ctx.user.context.tenantId!,
-          createdBy: ctx.user.id,
-          deptId: ctx.currentDeptId,
-        }
+            tenantId: ctx.user.context.tenantId!,
+            createdBy: ctx.user.id,
+            deptId: ctx.currentDeptId,
+          }
         : {}),
     };
     const [res] = await ctx.db
@@ -133,11 +133,11 @@ export class DepartmentService {
       ...department,
       manager: manager
         ? {
-          id: manager.id,
-          name: manager.name,
-          email: manager.email,
-          phone: manager.phone,
-        }
+            id: manager.id,
+            name: manager.name,
+            email: manager.email,
+            phone: manager.phone,
+          }
         : null,
     };
   }
@@ -240,7 +240,6 @@ export class DepartmentService {
           .update(userTable)
           .set(updateData)
           .where(eq(userTable.id, adminUserId));
-
       } else {
         // --- 创建新用户 ---
         // Better Auth 的 signUpEmail 会自动处理内部的密码哈希
@@ -259,13 +258,12 @@ export class DepartmentService {
 
       const newUser = await db.query.userTable.findFirst({
         where: {
-          id: adminUserId
-        }
-      })
-
+          id: adminUserId,
+        },
+      });
 
       if (!newUser) {
-        throw new Error("沒有用戶")
+        throw new Error("沒有用戶");
       }
 
       // 5. 查找或创建 "dept_manager" 角色
@@ -277,10 +275,12 @@ export class DepartmentService {
       if (!role) throw new HttpError.NotFound("角色 工厂管理员 不存在");
 
       // 6. 分配角色给用户
-      await tx.insert(userRoleTable).values({
-        userId: adminUserId,
-        roleId: role.id,
-      })
+      await tx
+        .insert(userRoleTable)
+        .values({
+          userId: adminUserId,
+          roleId: role.id,
+        })
         .onConflictDoNothing();
 
       return {

@@ -137,16 +137,13 @@ export function CreateSiteConfigModal({
     onOpenChange(isOpen);
   };
 
-  const isLoading =
-    createSiteConfig.isPending || updateSiteConfig.isPending;
+  const isLoading = createSiteConfig.isPending || updateSiteConfig.isPending;
 
   return (
     <Dialog onOpenChange={handleOpenChange} open={open}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>
-            {isEdit ? "编辑站点配置" : "创建站点配置"}
-          </DialogTitle>
+          <DialogTitle>{isEdit ? "编辑站点配置" : "创建站点配置"}</DialogTitle>
           <DialogDescription>
             {isEdit
               ? "修改站点配置信息"
@@ -164,15 +161,13 @@ export function CreateSiteConfigModal({
                   <FormLabel>所属站点 *</FormLabel>
                   <FormControl>
                     <SiteSelect
+                      disabled={isEdit}
                       onChange={field.onChange}
                       placeholder="请选择站点"
                       value={field.value}
-                      disabled={isEdit}
                     />
                   </FormControl>
-                  <FormDescription>
-                    选择此配置项所属的站点
-                  </FormDescription>
+                  <FormDescription>选择此配置项所属的站点</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -207,8 +202,8 @@ export function CreateSiteConfigModal({
                   <FormLabel>配置值 *</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="请输入配置值"
                       className="min-h-[80px]"
+                      placeholder="请输入配置值"
                       {...field}
                     />
                   </FormControl>
@@ -229,9 +224,7 @@ export function CreateSiteConfigModal({
                   <FormControl>
                     <Input placeholder="配置项的说明" {...field} />
                   </FormControl>
-                  <FormDescription>
-                    简要描述此配置项的用途
-                  </FormDescription>
+                  <FormDescription>简要描述此配置项的用途</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -266,9 +259,7 @@ export function CreateSiteConfigModal({
                   <FormControl>
                     <Input placeholder="https://example.com" {...field} />
                   </FormControl>
-                  <FormDescription>
-                    可选的关联链接地址
-                  </FormDescription>
+                  <FormDescription>可选的关联链接地址</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -287,9 +278,7 @@ export function CreateSiteConfigModal({
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>
-                    <FormDescription>
-                      是否支持多语言翻译
-                    </FormDescription>
+                    <FormDescription>是否支持多语言翻译</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -307,9 +296,7 @@ export function CreateSiteConfigModal({
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>
-                    <FormDescription>
-                      是否在前端展示
-                    </FormDescription>
+                    <FormDescription>是否在前端展示</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

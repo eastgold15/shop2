@@ -120,11 +120,11 @@ export class HeroCardService {
         tenantId: ctx.user.context.tenantId!,
         ...(search
           ? {
-            OR: [
-              { title: { ilike: `%${search}%` } },
-              { description: { ilike: `%${search}%` } },
-            ],
-          }
+              OR: [
+                { title: { ilike: `%${search}%` } },
+                { description: { ilike: `%${search}%` } },
+              ],
+            }
           : {}),
       },
       with: {
@@ -248,6 +248,9 @@ export class HeroCardService {
     // 批量删除
     await ctx.db.delete(heroCardTable).where(and(...whereConditions));
 
-    return { count: cards.length, message: `成功删除 ${cards.length} 个首页展示卡片` };
+    return {
+      count: cards.length,
+      message: `成功删除 ${cards.length} 个首页展示卡片`,
+    };
   }
 }

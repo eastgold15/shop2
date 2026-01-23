@@ -9,11 +9,9 @@ const autoFields = ["id", "createdAt", "updatedAt", "siteId"];
 
 export const SiteProductInsertFields = spread(siteProductTable, "insert");
 
-
 export const SiteProductFields = spread(siteProductTable, "select");
 const ProductFields = spread(productTable, "select");
 export const SiteProductContract = {
-
   Response: t.Object({
     ...SiteProductFields,
   }),

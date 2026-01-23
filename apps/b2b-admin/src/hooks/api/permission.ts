@@ -27,7 +27,6 @@ type usePermissionsListOptions = Omit<
   "queryKey" | "queryFn"
 >;
 
-
 export function usePermissionsList(
   query?: typeof PermissionContract.ListQuery.static,
   options?: usePermissionsListOptions

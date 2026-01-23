@@ -231,10 +231,10 @@ export class ProductService {
 
     if (templateIds.length > 0) {
       // 1. 先查属性名 (Keys) - 同时查询 SKU 规格和公共属性
-      const { ...rest } = getColumns(templateKeyTable)
+      const { ...rest } = getColumns(templateKeyTable);
       const keys = await ctx.db
         .select({
-          ...rest
+          ...rest,
         })
         .from(templateKeyTable)
         .where(inArray(templateKeyTable.templateId, templateIds))
@@ -881,8 +881,6 @@ export class ProductService {
           }
         }
       }
-
-
 
       // 🔥 修复后的逻辑
       if (templateId !== undefined && templateId) {

@@ -13,7 +13,6 @@ export interface RoleListRes {
   priority: number;
 }
 
-
 export interface RoleDetailRes {
   id: string;
   name: string;

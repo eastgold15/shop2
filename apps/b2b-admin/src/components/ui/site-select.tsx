@@ -24,23 +24,23 @@ export function SiteSelect({
 }: SiteSelectProps) {
   const { data: sitesData, isLoading } = useSiteList({
     limit: 100,
-    page: 0
+    page: 0,
   });
 
   const sites = sitesData || [];
 
   return (
-    <Select value={value} onValueChange={onChange} disabled={disabled}>
+    <Select disabled={disabled} onValueChange={onChange} value={value}>
       <SelectTrigger className="w-full">
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
         {isLoading ? (
-          <div className="px-2 py-1.5 text-sm text-muted-foreground">
+          <div className="px-2 py-1.5 text-muted-foreground text-sm">
             加载中...
           </div>
         ) : sites.length === 0 ? (
-          <div className="px-2 py-1.5 text-sm text-muted-foreground">
+          <div className="px-2 py-1.5 text-muted-foreground text-sm">
             暂无站点数据
           </div>
         ) : (
