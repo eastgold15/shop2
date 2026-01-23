@@ -10,7 +10,9 @@ export class HeroCardService {
         isActive: true,
         siteId: ctx.site.id,
       },
-      limit: 3,
+      orderBy: {
+        sortOrder: "asc",
+      },
     });
 
     return res;

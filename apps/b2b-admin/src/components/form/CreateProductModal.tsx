@@ -311,7 +311,9 @@ export function CreateProductModal({
                     <FormControl>
                       <MediaSelect
                         availableMediaIds={form.watch("mediaIds")}
-                        onChange={(ids) => field.onChange(ids[0] || undefined)}
+                        onChange={(ids) =>
+                          field.onChange(ids.length > 0 ? ids[0] : undefined)
+                        }
                         placeholder="选择商品主图（从已选图片中选择）"
                         value={field.value ? [field.value] : []}
                       />

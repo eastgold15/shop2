@@ -81,8 +81,8 @@ const Ad: React.FC<{ className?: string }> = ({ className }) => {
                 className={cn(
                   "h-1.5 rounded-full shadow-sm transition-all duration-300",
                   index === currentIndex
-                    ? "w-8 bg-white"
-                    : "w-2 bg-white/50 hover:bg-white/80"
+                    ? "w-8 bg-black"
+                    : "w-2 bg-black/50 hover:bg-black/80"
                 )}
                 key={index}
                 onClick={(e) => {

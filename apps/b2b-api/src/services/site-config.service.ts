@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { type ServiceContext } from "../lib/type";
 
 export class SiteConfigService {
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+  
   public async create(body: SiteConfigContract["Create"], ctx: ServiceContext) {
     const insertData = {
       ...body,
@@ -37,7 +37,7 @@ export class SiteConfigService {
     return res;
   }
 
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+
   public async update(
     id: string,
     body: SiteConfigContract["Update"],

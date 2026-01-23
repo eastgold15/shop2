@@ -5,9 +5,7 @@ import { SiteConfigContract } from "../../../../packages/contract/src/modules/si
 import { SiteConfigService } from "../services/site-config.service";
 
 const siteConfigService = new SiteConfigService();
-/**
- * @generated
- */
+
 export const siteConfigController = new Elysia({ prefix: "/site-config" })
   .use(dbPlugin)
   .use(authGuardMid)
