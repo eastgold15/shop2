@@ -14,6 +14,7 @@
     "prestart:web": "echo '--- [Web Check] ---' && pwd && ls -F apps/",
     "start:web": "cd apps/web && bun run start",
     "dev": "turbo run dev",
+    "build": "turbo run build",
     "check": "npx ultracite check",
     "type-check": "turbo run type-check",
     "clean": "rm -rf dist .turbo logs bun.lock",
