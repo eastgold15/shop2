@@ -9,7 +9,6 @@ export class SiteConfigService {
     ctx: ServiceContext
   ) {
     const { search, category, key } = query;
-
     const res = await ctx.db.query.siteConfigTable.findMany({
       where: {
         siteId: ctx.site.id,

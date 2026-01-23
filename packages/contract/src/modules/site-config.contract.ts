@@ -31,11 +31,9 @@ export const SiteConfigContract = {
       ]).properties,
     })
   ),
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+
   ListQuery: t.Object({
     ...t.Partial(t.Object(SiteConfigInsertFields)).properties,
-    ...PaginationParams.properties,
-    ...SortParams.properties,
     search: t.Optional(t.String()),
   }),
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
