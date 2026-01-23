@@ -13,4 +13,5 @@ interface Image {
   url: string;
   isMain: boolean;
   sortOrder: number;
+  mediaType: string;
 }

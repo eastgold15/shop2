@@ -1143,6 +1143,7 @@ export class ProductService {
         sortOrder: productVariantMediaTable.sortOrder,
         mediaUrl: mediaTable.url,
         mediaOriginalName: mediaTable.originalName,
+        mediaType: mediaTable.mediaType,
       })
       .from(productVariantMediaTable)
       .innerJoin(
@@ -1163,6 +1164,7 @@ export class ProductService {
         url: vm.mediaUrl,
         isMain: vm.isMain,
         sortOrder: vm.sortOrder,
+        mediaType: vm.mediaType,
       });
     });
 

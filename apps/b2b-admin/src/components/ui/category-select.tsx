@@ -1,6 +1,6 @@
 "use client";
 
-import { Clock, Flame, Plus, Search, X } from "lucide-react";
+import { Flame, Plus, Search, X } from "lucide-react";
 import * as React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,15 +18,19 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  getAvailableCategories,
-  getPopularCategories,
-  getPresetCategories,
-  getRecentCategories,
-  recordCategoryUsage,
-  searchCategories,
-} from "@/lib/media-category-storage";
+import { useMediaCategories } from "@/hooks/api/media";
 import { cn } from "@/lib/utils";
+
+// 预设分类（作为兜底选项）
+const PRESET_CATEGORIES = [
+  "general",
+  "product",
+  "banner",
+  "avatar",
+  "document",
+  "video",
+  "thumbnail",
+];
 
 interface CategorySelectProps {
   value?: string;
@@ -47,13 +51,42 @@ export function CategorySelect({
   const [inputValue, setInputValue] = React.useState("");
   const [searchResults, setSearchResults] = React.useState<string[]>([]);
 
-  const popularCategories = React.useMemo(() => getPopularCategories(5), []);
-  const recentCategories = React.useMemo(() => getRecentCategories(5), []);
-  const presetCategories = React.useMemo(() => getPresetCategories(), []);
+  // 从数据库获取分类列表
+  const { data: categoriesData, isLoading } = useMediaCategories(!disabled);
+
+  // 提取分类名称和计数
+  const categoryMap = React.useMemo(() => {
+    const map = new Map<string, number>();
+    if (categoriesData?.categories) {
+      categoriesData.categories.forEach((cat) => {
+        map.set(cat.name, cat.count);
+      });
+    }
+    // 添加预设分类
+    PRESET_CATEGORIES.forEach((cat) => {
+      if (!map.has(cat)) {
+        map.set(cat, 0);
+      }
+    });
+    return map;
+  }, [categoriesData]);
+
+  // 热门分类（按数量排序）
+  const popularCategories = React.useMemo(() => {
+    return Array.from(categoryMap.entries())
+      .filter(([, count]) => count > 0)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([name, count]) => ({ name, count }));
+  }, [categoryMap]);
+
+  // 所有可用分类
+  const allCategories = React.useMemo(() => {
+    return Array.from(categoryMap.keys()).sort();
+  }, [categoryMap]);
 
   const handleSelect = (selectedValue: string) => {
     onChange(selectedValue);
-    recordCategoryUsage(selectedValue);
     setInputValue("");
     setOpen(false);
   };
@@ -66,8 +99,10 @@ export function CategorySelect({
   const handleInputValueChange = (newValue: string) => {
     setInputValue(newValue);
     if (newValue.trim()) {
-      const results = searchCategories(newValue);
-      setSearchResults(results.map((cat) => cat.name));
+      const results = allCategories.filter((cat) =>
+        cat.toLowerCase().includes(newValue.toLowerCase().trim())
+      );
+      setSearchResults(results);
     } else {
       setSearchResults([]);
     }
@@ -80,12 +115,9 @@ export function CategorySelect({
     }
   };
 
-  const displayCategories = inputValue.trim()
-    ? searchResults
-    : [...new Set([...presetCategories, ...getAvailableCategories()])];
+  const displayCategories = inputValue.trim() ? searchResults : allCategories;
 
   const hasPopular = popularCategories.length > 0;
-  const hasRecent = recentCategories.length > 0;
 
   return (
     <div className="flex flex-col gap-2">
@@ -115,20 +147,37 @@ export function CategorySelect({
                   <X className="size-3" />
                 </button>
               )}
-              <Search className="size-4 opacity-50" />
+              {isLoading ? (
+                <div className="size-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              ) : (
+                <Search className="size-4 opacity-50" />
+              )}
             </div>
           </Button>
         </PopoverTrigger>
-        <PopoverContent align="start" className="w-80 p-0">
-          <Command>
+        <PopoverContent
+          align="start"
+          className="w-80 p-0"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
+          <Command shouldFilter={false}>
             <CommandInput
               onKeyDown={handleKeyDown}
               onValueChange={handleInputValueChange}
               placeholder={placeholder}
               value={inputValue}
             />
-            <CommandList>
-              {displayCategories.length === 0 ? (
+            <CommandList
+              className="max-h-90 overflow-y-auto"
+              onWheel={(e) => e.stopPropagation()}
+            >
+              {isLoading ? (
+                <CommandEmpty>
+                  <div className="flex items-center justify-center py-4">
+                    <div className="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  </div>
+                </CommandEmpty>
+              ) : displayCategories.length === 0 ? (
                 <CommandEmpty>
                   <div className="flex flex-col items-center gap-2 py-4">
                     <p className="text-muted-foreground text-sm">
@@ -182,47 +231,16 @@ export function CategorySelect({
                     </>
                   )}
 
-                  {!inputValue.trim() && hasRecent && (
-                    <>
-                      <CommandGroup heading="最近使用">
-                        {recentCategories.map((cat) => {
-                          const isSelected = value === cat.name;
-                          return (
-                            <CommandItem
-                              key={cat.name}
-                              onSelect={() => handleSelect(cat.name)}
-                            >
-                              <div
-                                className={cn(
-                                  "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                                  isSelected
-                                    ? "bg-primary text-primary-foreground"
-                                    : "opacity-50 [&_svg]:invisible"
-                                )}
-                              >
-                                <Clock className="h-3 w-3" />
-                              </div>
-                              <span className="flex-1">{cat.name}</span>
-                            </CommandItem>
-                          );
-                        })}
-                      </CommandGroup>
-                      <CommandSeparator />
-                    </>
-                  )}
-
                   <CommandGroup>
                     {displayCategories.map((categoryName) => {
                       const isSelected = value === categoryName;
-                      const isPreset = presetCategories.includes(
+                      const isPreset = PRESET_CATEGORIES.includes(
                         categoryName as any
                       );
                       const popularCat = popularCategories.find(
                         (c) => c.name === categoryName
                       );
-                      const recentCat = recentCategories.find(
-                        (c) => c.name === categoryName
-                      );
+                      const count = categoryMap.get(categoryName) || 0;
 
                       return (
                         <CommandItem
@@ -240,21 +258,19 @@ export function CategorySelect({
                           >
                             {popularCat ? (
                               <Flame className="h-3 w-3" />
-                            ) : recentCat ? (
-                              <Clock className="h-3 w-3" />
                             ) : (
                               <Plus className="h-3 w-3" />
                             )}
                           </div>
                           <span className="flex-1">{categoryName}</span>
-                          {isPreset && (
+                          {isPreset && count === 0 && (
                             <Badge className="text-xs" variant="outline">
                               预设
                             </Badge>
                           )}
-                          {!isPreset && popularCat && (
+                          {count > 0 && (
                             <Badge className="text-xs" variant="secondary">
-                              {popularCat.count}
+                              {count}
                             </Badge>
                           )}
                         </CommandItem>
@@ -268,12 +284,8 @@ export function CategorySelect({
         </PopoverContent>
       </Popover>
 
-      <div className="flex items-center justify-between text-muted-foreground text-xs">
-        <span className="flex items-center gap-1">
-          <Clock className="size-3" />
-          <span>最近使用会自动保存</span>
-        </span>
-        {value && (
+      {value && (
+        <div className="flex items-center justify-end text-muted-foreground text-xs">
           <Button
             className="h-6 text-xs"
             onClick={handleClear}
@@ -284,8 +296,8 @@ export function CategorySelect({
             <X className="mr-1 size-3" />
             清除
           </Button>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -188,11 +188,26 @@ export function VariantMediaModal({
                                 className="relative h-20 w-20 overflow-hidden rounded-md border"
                                 key={mediaId}
                               >
-                                <img
-                                  alt={vm.attributeValue}
-                                  className="h-full w-full object-cover"
-                                  src={media.url}
-                                />
+                                {/* 根据 mediaType 渲染 */}
+                                {media.mediaType?.startsWith("video") ? (
+                                  <video
+                                    className="h-full w-full object-cover"
+                                    src={media.url}
+                                  />
+                                ) : (
+                                  <img
+                                    alt={vm.attributeValue}
+                                    className="h-full w-full object-cover"
+                                    src={media.url}
+                                  />
+                                )}
+                                {/* 媒体类型标签 */}
+                                {media.mediaType?.startsWith("video") && (
+                                  <span className="absolute top-0 left-0 rounded-br bg-blue-600 px-1 text-[10px] text-white">
+                                    视频
+                                  </span>
+                                )}
+                                {/* 主图标签 */}
                                 {form.watch(
                                   `variantMedia.${index}.mainImageId`
                                 ) === mediaId && (

@@ -98,6 +98,7 @@ export class ProductVariantMediaService {
         thumbnailUrl: mediaTable.thumbnailUrl,
         isMain: productVariantMediaTable.isMain,
         sortOrder: productVariantMediaTable.sortOrder,
+        mediaType: mediaTable.mediaType,
       })
       .from(productVariantMediaTable)
       .innerJoin(
@@ -133,6 +134,7 @@ export class ProductVariantMediaService {
         thumbnailUrl: mediaTable.thumbnailUrl,
         isMain: productVariantMediaTable.isMain,
         sortOrder: productVariantMediaTable.sortOrder,
+        mediaType: mediaTable.mediaType,
       })
       .from(productVariantMediaTable)
       .innerJoin(
@@ -286,6 +288,7 @@ export class ProductVariantMediaService {
         thumbnailUrl: mediaTable.thumbnailUrl,
         isMain: productVariantMediaTable.isMain,
         sortOrder: productVariantMediaTable.sortOrder,
+        mediaType: mediaTable.mediaType,
       })
       .from(productVariantMediaTable)
       .innerJoin(

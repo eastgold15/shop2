@@ -23,6 +23,8 @@ const VariantMediaResponse = t.Object({
           id: t.String(),
           url: t.String(),
           isMain: t.Boolean(),
+          mediaType: t.String(),
+          sortOrder: t.Number(),
         })
       ),
     })
