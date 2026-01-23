@@ -42,14 +42,7 @@ export default function SiteConfigPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
   // 获取站点配置列表
-  const {
-    data: configListData,
-    isLoading,
-    refetch,
-  } = useSiteConfigList({
-    limit: 100,
-    page: 1,
-  });
+  const { data: configListData, isLoading, refetch } = useSiteConfigList();
 
   // 删除站点配置
   const deleteMutation = useDeleteSiteConfig();
