@@ -82,7 +82,8 @@ export function CreateDepartmentWithSiteModal({
   const user = useAuthStore((state) => state.user);
   const isSuperAdmin = user?.isSuperAdmin;
 
-  const isReadOnly = !isSuperAdmin && isEdit;
+  const isGroup = user?.context.department.category === "group";
+  const isReadOnly = !(isSuperAdmin || isGroup) && isEdit;
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {

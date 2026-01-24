@@ -231,9 +231,7 @@ export default function UsersPage() {
                   管理您团队中的所有人员，分配角色和权限
                 </p>
               </div>
-              <HasRole
-                role={["super_admin", "exporter_admin", "factory_admin"]}
-              >
+              <HasRole role={["super_admin", "出口商管理员", "工厂管理员"]}>
                 <Button onClick={handleCreate}>
                   <Plus className="mr-2" size={18} />
                   添加人员
@@ -255,9 +253,7 @@ export default function UsersPage() {
                 <p className="mb-4 text-center text-slate-500">
                   您还没有创建任何人员。点击下方按钮开始创建您的第一个人员。
                 </p>
-                <HasRole
-                  role={["super_admin", "exporter_admin", "factory_admin"]}
-                >
+                <HasRole role={["super_admin", "出口商管理员", "工厂管理员"]}>
                   <Button onClick={handleCreate}>
                     <Plus className="mr-2" size={18} />
                     添加第一个人员
