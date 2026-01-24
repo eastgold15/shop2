@@ -1,23 +1,21 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 interface BaseImageProps {
   imageUrl: string | null | undefined;
   alt?: string;
-  className?: string; // 作用于 Image 标签，处理 object-fit 等
-  containerClassName?: string; // 作用于最外层容器，处理背景、宽高、圆角
+  className?: string;
+  containerClassName?: string;
   defaultImage?: string;
-  priority?: boolean; // 是否优先加载（首屏图片需设为 true）
+  priority?: boolean;
   sizes?: string;
+  unoptimized?: boolean; // 新增：允许手动控制优化
 }
 
-/**
- * 强化版 Product 图片组件
- */
 export const BaseImage: React.FC<BaseImageProps> = ({
   imageUrl,
   className,
@@ -26,43 +24,68 @@ export const BaseImage: React.FC<BaseImageProps> = ({
   defaultImage,
   priority = false,
   sizes = "(max-width: 768px) 50vw, 33vw",
+  // 默认为 true，解决之前的 504 超时问题，直接让浏览器加载原图
+  unoptimized = true,
 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [error, setError] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
+  // 1. 关键修复：当传入的图片 URL 变化时，必须重置加载状态！
+  // 否则切换图片时不会出现骨架屏
+  useEffect(() => {
+    setIsLoaded(false);
+    setHasError(false);
+  }, [imageUrl]);
+
+  // 兜底图片逻辑
   const fallbackUrl =
     defaultImage ||
     "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?q=80&w=2080&auto=format&fit=crop";
 
-  // 最终显示的图片源
-  const finalSrc = error || !imageUrl ? fallbackUrl : imageUrl;
+  // 计算最终显示的 Src
+  // 如果没有 imageUrl 或者已经报错，就用兜底图；否则用原图
+  const finalSrc = hasError || !imageUrl ? fallbackUrl : imageUrl;
 
   return (
     <div
       className={cn(
-        "relative h-full w-full overflow-hidden bg-white", // 默认背景和溢出隐藏
+        "relative h-full w-full overflow-hidden bg-gray-50", // 给个淡灰色背景，比纯白更自然
         containerClassName
       )}
     >
-      {/* 加载状态控制：只有未加载完成且没有出错时显示 Skeleton */}
+      {/* 2. 骨架屏逻辑：只要没加载完 (isLoaded 为 false)，就一直盖在上面 */}
       {!isLoaded && (
-        <Skeleton className="absolute inset-0 z-10 h-full w-full" />
+        <Skeleton className="absolute inset-0 z-20 h-full w-full animate-pulse bg-gray-200" />
       )}
 
+      {/* 3. 图片组件 */}
       <Image
         alt={alt}
         className={cn(
-          "transition-all duration-500 ease-in-out",
-          // 默认使用 object-cover 以占满容器，除非外部传入 object-contain
-          className || "object-cover",
+          "object-cover transition-all duration-500 ease-in-out",
+          className,
+          // 加载完成前：透明 + 稍微放大 (scale-105)
+          // 加载完成后：不透明 + 恢复原大小 (scale-100)
           isLoaded ? "scale-100 opacity-100" : "scale-105 opacity-0"
         )}
         fill
-        onError={() => setError(true)}
-        onLoad={() => setIsLoaded(true)}
+        onError={() => {
+          // 图片加载失败，触发重新渲染使用 fallbackUrl
+          setHasError(true);
+          // 注意：如果 fallback 图也加载很快，我们可能需要保持 isLoaded 为 false 直到 fallback 加载完
+          // 但为了防止死循环，通常这里先不做复杂处理，直接认为“处理完毕”
+          // 或者让 fallbackUrl 触发下一次 onLoad
+          setIsLoaded(false); // 重置为未加载，让 Image 组件去加载 fallbackUrl 并触发新的 onLoad
+        }}
+        onLoad={() => {
+          // 图片加载成功，隐藏骨架屏
+          setIsLoaded(true);
+        }}
+        // 关键：绕过 Next.js 服务器优化，直接由浏览器请求图片，解决加载卡顿/超时
         priority={priority}
         sizes={sizes}
         src={finalSrc}
+        unoptimized={unoptimized}
       />
     </div>
   );

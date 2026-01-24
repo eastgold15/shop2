@@ -37,3 +37,31 @@ AFTER DELETE ON sku
 FOR EACH ROW  
 EXECUTE FUNCTION auto_offline_product_if_no_sku();
 ```
+
+
+
+
+```sql
+-- 1. 创建触发器函数  
+CREATE OR REPLACE FUNCTION sync_product_status_to_site()  
+RETURNS TRIGGER AS $$  
+BEGIN  
+    -- 如果商品状态变为 0 (下架/禁用)  
+    IF NEW.status = 0 THEN  
+        -- 将该商品在所有站点中设为不可见  
+        UPDATE site_product  
+        SET is_visible = false  
+        WHERE product_id = NEW.id;  
+    END IF;  
+    RETURN NEW;  
+END;  
+$$ LANGUAGE plpgsql;  
+  
+-- 2. 创建触发器  
+CREATE TRIGGER trg_auto_hide_site_product  
+AFTER UPDATE ON product  
+FOR EACH ROW  
+-- 只有当状态发生改变，且新状态为 0 时才触发（性能优化）  
+WHEN (OLD.status IS DISTINCT FROM NEW.status AND NEW.status = 0)  
+EXECUTE FUNCTION sync_product_status_to_site();
+```

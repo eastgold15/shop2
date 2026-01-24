@@ -80,7 +80,8 @@ export class SiteCategoryService {
       .where(
         and(
           eq(siteProductSiteCategoryTable.siteCategoryId, id),
-          eq(siteProductTable.siteId, ctx.site.id)
+          eq(siteProductTable.siteId, ctx.site.id),
+          eq(siteProductTable.isVisible, true)
         )
       )
       .groupBy(siteProductTable.id, productTable.id)

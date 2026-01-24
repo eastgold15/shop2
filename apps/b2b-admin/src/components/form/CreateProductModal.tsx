@@ -344,7 +344,7 @@ export function CreateProductModal({
                 )}
               />
 
-              <FormField
+              {/* <FormField
                 control={form.control}
                 name="videoIds"
                 render={({ field }) => (
@@ -362,7 +362,7 @@ export function CreateProductModal({
                     <FormMessage />
                   </FormItem>
                 )}
-              />
+              /> */}
             </HasFactory>
 
             <DialogFooter>

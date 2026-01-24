@@ -48,6 +48,7 @@ const Shop: React.FC<ShopProps> = ({ onProductSelect }) => {
               alt={product.displayName}
               className="h-full w-full object-contain"
               imageUrl={product.mainMedia}
+              key={product.mainMedia}
             />
           </div>
           <div className="text-center">

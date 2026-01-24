@@ -382,7 +382,10 @@ export class SiteProductService {
       isVisible: result.isVisible,
       createdAt: result.createdAt,
 
-      // 4. 规格列表 (包含变体媒体继承逻辑)
+      // 4. customAttributes
+      customAttributes: result.product?.customAttributes || {},
+
+      // 5. 规格列表 (包含变体媒体继承逻辑)
       skus: result.siteSkus.map((ss) => {
         const pSku = ss.sku;
         const specs = pSku.specJson as Record<string, string>;

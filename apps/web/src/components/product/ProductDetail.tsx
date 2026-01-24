@@ -143,6 +143,59 @@ const parseSizeVariants = (specOptions: Record<string, string[]>) => {
 };
 
 // ----------------------------------------------------------------------
+// 自定义属性展示组件
+// 特殊处理 detail 字段（分号分割）
+// ----------------------------------------------------------------------
+const CustomAttributesSection = ({
+  customAttributes,
+}: {
+  customAttributes?: Record<string, string>;
+}) => {
+  if (!customAttributes || Object.keys(customAttributes).length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="space-y-4">
+      {Object.entries(customAttributes).map(([key, value]) => {
+        // 特殊处理 detail 字段：分号分割成列表
+        if (key.toLowerCase() === "details" && value.includes(";")) {
+          const detailItems = value
+            .split(";")
+            .map((item) => item.trim())
+            .filter(Boolean);
+          console.log("detailItems:", detailItems);
+          return (
+            <div key={key}>
+              {/* <span className="mr-4 font-bold font-sans text-[10px] uppercase">
+                {key}
+              </span> */}
+              <ul className="ml-6 list-disc space-y-1">
+                {detailItems.map((item, idx) => (
+                  <li className="font-serif text-gray-600" key={idx}>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        }
+
+        // 普通字段：直接显示 key-value
+        return (
+          <p key={key}>
+            <span className="mr-4 font-bold font-sans text-[10px] uppercase">
+              {key}
+            </span>
+            <span className="font-serif text-gray-600">{value}</span>
+          </p>
+        );
+      })}
+    </div>
+  );
+};
+
+// ----------------------------------------------------------------------
 // 2. 主组件
 // ----------------------------------------------------------------------
 
@@ -623,19 +676,35 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
                 {siteProduct.description}
               </div>
             ) : (
-              <div className="space-y-4">
-                <p>
-                  <span className="mr-4 font-bold font-sans text-[10px] uppercase">
-                    SPU Code
-                  </span>{" "}
-                  {siteProduct.spuCode}
-                </p>
-                <p>
-                  <span className="mr-4 font-bold font-sans text-[10px] uppercase">
-                    Categories
-                  </span>
-                  {siteProduct.categories?.map((c) => c.name).join(", ")}
-                </p>
+              <div className="space-y-6">
+                {/* 基础信息 */}
+                <div className="space-y-4">
+                  {/* <p>
+                    <span className="mr-4 font-bold font-sans text-[10px] uppercase">
+                      SPU Code
+                    </span>{" "}
+                    {siteProduct.spuCode}
+                  </p> */}
+                  <p>
+                    <span className="mr-4 font-bold font-sans text-[10px] uppercase">
+                      Categories
+                    </span>
+                    {siteProduct.categories?.map((c) => c.name).join(", ")}
+                  </p>
+                </div>
+
+                {/* 自定义属性 */}
+                {siteProduct.customAttributes &&
+                  Object.keys(siteProduct.customAttributes).length > 0 && (
+                    <div className="border-gray-100 border-t pt-6">
+                      <h4 className="mb-4 font-bold text-gray-900 text-sm uppercase tracking-wider">
+                        Attributes
+                      </h4>
+                      <CustomAttributesSection
+                        customAttributes={siteProduct.customAttributes}
+                      />
+                    </div>
+                  )}
               </div>
             )}
           </div>
