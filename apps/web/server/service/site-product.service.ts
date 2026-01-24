@@ -11,6 +11,7 @@ import {
   productMediaTable,
   productTable,
   productTemplateTable,
+  productVariantMediaTable,
   siteProductSiteCategoryTable,
   siteProductTable,
   siteSkuTable,
@@ -61,14 +62,46 @@ export class SiteProductService {
         )`.as("min_price"),
 
         // --- 聚合：主图 ---
-        mainMedia: sql<string>`(
-          SELECT ${mediaTable.url}
-          FROM ${productMediaTable}
-          INNER JOIN ${mediaTable} ON ${mediaTable.id} = ${productMediaTable.mediaId}
-          WHERE ${productMediaTable.productId} = ${productTable.id}
-          ORDER BY ${productMediaTable.isMain} DESC, ${productMediaTable.sortOrder} ASC
-          LIMIT 1
-        )`,
+        // 优先级：商品主图 → 变体主图 → 第一张变体图 → 第一张商品图
+        mainMedia: sql<string>`COALESCE(
+          -- 1. 优先：商品级主图
+          (
+            SELECT ${mediaTable.url}
+            FROM ${productMediaTable}
+            INNER JOIN ${mediaTable} ON ${mediaTable.id} = ${productMediaTable.mediaId}
+            WHERE ${productMediaTable.productId} = ${productTable.id}
+              AND ${productMediaTable.isMain} = true
+            LIMIT 1
+          ),
+          -- 2. 其次：变体级主图
+          (
+            SELECT ${mediaTable.url}
+            FROM ${productVariantMediaTable}
+            INNER JOIN ${mediaTable} ON ${mediaTable.id} = ${productVariantMediaTable.mediaId}
+            WHERE ${productVariantMediaTable.productId} = ${productTable.id}
+              AND ${productVariantMediaTable.isMain} = true
+            ORDER BY ${productVariantMediaTable.sortOrder} ASC
+            LIMIT 1
+          ),
+          -- 3. 再次：第一张变体图
+          (
+            SELECT ${mediaTable.url}
+            FROM ${productVariantMediaTable}
+            INNER JOIN ${mediaTable} ON ${mediaTable.id} = ${productVariantMediaTable.mediaId}
+            WHERE ${productVariantMediaTable.productId} = ${productTable.id}
+            ORDER BY ${productVariantMediaTable.sortOrder} ASC
+            LIMIT 1
+          ),
+          -- 4. 最后：第一张商品图
+          (
+            SELECT ${mediaTable.url}
+            FROM ${productMediaTable}
+            INNER JOIN ${mediaTable} ON ${mediaTable.id} = ${productMediaTable.mediaId}
+            WHERE ${productMediaTable.productId} = ${productTable.id}
+            ORDER BY ${productMediaTable.sortOrder} ASC
+            LIMIT 1
+          )
+        )`.as("main_media"),
       })
       .from(siteProductTable)
       // 必须关联物理产品表拿基础字段
@@ -80,7 +113,10 @@ export class SiteProductService {
       );
 
     // 2. 注入过滤条件 (站点隔离是必须的)
-    const filters = [eq(siteProductTable.siteId, ctx.site.id)];
+    const filters = [
+      eq(siteProductTable.siteId, ctx.site.id),
+      eq(productTable.status, 1), // 只返回启用的商品
+    ];
     if (categoryId) {
       filters.push(eq(siteProductSiteCategoryTable.siteCategoryId, categoryId));
     }
@@ -100,6 +136,7 @@ export class SiteProductService {
     const [{ count }] = await ctx.db
       .select({ count: sql<number>`count(distinct ${siteProductTable.id})` })
       .from(siteProductTable)
+      .innerJoin(productTable, eq(siteProductTable.productId, productTable.id))
       .leftJoin(
         siteProductSiteCategoryTable,
         eq(siteProductTable.id, siteProductSiteCategoryTable.siteProductId)
@@ -227,11 +264,17 @@ export class SiteProductService {
       where: {
         id,
         siteId: ctx.site.id,
+        RAW: (table) => sql`EXISTS (
+          SELECT 1
+          FROM ${productTable}
+          WHERE ${productTable.id} = ${table.productId}
+          AND ${productTable.status} = 1
+        )`,
       },
       with: {
         product: {
           with: {
-            media: true,
+
             // 🔥 新增：查询变体媒体
             variantMedia: {
               with: {
@@ -292,7 +335,7 @@ export class SiteProductService {
       });
     }
 
-    // --- 统一媒体处理逻辑 (包含你要求的排序) ---
+    // --- 媒体处理逻辑：不包含商品级图片，只包含变体和 SKU 图片 ---
     const processMedia = (mediaArr: any[], offset = 0, isVideoLast = true) => {
       return mediaArr.map((m) => {
         let weight = (m.sortOrder ?? 0) + offset;
@@ -308,10 +351,7 @@ export class SiteProductService {
       });
     };
 
-    // 聚合所有媒体 (SPU: 0, Variant: 1000, SKU: 2000)
-    const spuMedia = processMedia(result.product.media, 0);
-
-    // 🔥 变体媒体权重 1000
+    // 🔥 聚合媒体：变体媒体 (权重 1000) + SKU 媒体 (权重 2000)
     const variantMedia =
       result.product.variantMedia?.flatMap((vm) =>
         processMedia([vm.media], 1000)
@@ -321,7 +361,7 @@ export class SiteProductService {
       processMedia(ss.sku.media, 2000)
     );
 
-    const gallery = [...spuMedia, ...variantMedia, ...skuMedia].sort(
+    const gallery = [...variantMedia, ...skuMedia].sort(
       (a, b) => a.sortOrder - b.sortOrder
     );
 
@@ -354,7 +394,7 @@ export class SiteProductService {
         // 2. 变体级媒体 (按颜色继承)
         let inheritedMediaIds: string[] = [];
         if (colorAttr && colorValueToIdMap.size > 0) {
-          const colorValue = specs[colorAttr.key] || specs["颜色"];
+          const colorValue = specs[colorAttr.key] || specs.颜色;
           if (colorValue) {
             const attributeValueId = colorValueToIdMap.get(colorValue);
             if (attributeValueId) {
@@ -374,7 +414,6 @@ export class SiteProductService {
         return {
           id: ss.id, // siteSkuId
           skuCode: pSku.skuCode,
-          // ⚠️ 修复：站点价格覆盖逻辑
           price: ss.price || pSku.price,
           stock: pSku.stock,
           specJson: specs,
@@ -384,7 +423,7 @@ export class SiteProductService {
         };
       }),
 
-      // 5. 媒体库 (已排好序：SPU图 > 变体图 > SKU图 > 视频)
+      // 5. 媒体库 (只包含变体和 SKU 图片)
       gallery,
 
       // 6. 分类
