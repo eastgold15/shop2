@@ -1,7 +1,6 @@
 ---
 url: 'https://elysiajs.com/eden/treaty/overview.md'
 ---
-
 # Eden Treaty
 
 Eden Treaty is an object representation to interact with a server and features type safety, auto-completion, and error handling.
@@ -88,6 +87,7 @@ Combined with the HTTP method, we can interact with the Elysia server.
 | /hi          | GET    | .hi.get()           |
 | /deep/nested | GET    | .deep.nested.get()  |
 | /deep/nested | POST   | .deep.nested.post() |
+|              |        |                     |
 
 ## Dynamic path
 

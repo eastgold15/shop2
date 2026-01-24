@@ -9,7 +9,7 @@ Here's a common patterns for writing validation types using `Elysia.t`.
 ## Primitive Type
 
 The TypeBox API is designed around and is similar to TypeScript types.
-
+QW
 There are many familiar names and behaviors that intersect with TypeScript counterparts, such as **String**, **Number**, **Boolean**, and **Object**, as well as more advanced features like **Intersect**, **KeyOf**, and **Tuple** for versatility.
 
 If you are familiar with TypeScript, creating a TypeBox schema behaves the same as writing a TypeScript type, except it provides actual type validation at runtime.
