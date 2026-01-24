@@ -81,16 +81,17 @@ const ContentBlock: React.FC<ContentBlockProps> = ({
  */
 export const HeroShowComponent: React.FC = () => {
   const { data: heroCards, isLoading, error } = useCurrentHeroCardsList();
-  // 使用封装的 Skeleton
+
+  // 1. 修改：骨架屏数量增加到 7 个
   if (isLoading) {
     return (
       <section
         className="min-h-screen w-full"
-        style={{ height: "calc(100vh - var(--navbar-height))" }}
+        // 注意：如果你这部分内容会超过屏幕高度，这里建议移除 strict height calculation 或者改为 min-height
+        // style={{ height: "calc(100vh - var(--navbar-height))" }}
       >
         <div className="grid grid-cols-1 md:grid-cols-2">
-          {/* 这里高度应该与 ContentBlock 的 [500+200]px 对应 */}
-          {Array.from({ length: 4 }).map((_, i) => (
+          {Array.from({ length: 7 }).map((_, i) => (
             <div className="flex flex-col" key={i}>
               <Skeleton className="h-125 md:h-150" variant="rectangle" />
               <div className="flex h-50 flex-col justify-center space-y-4 p-8 md:h-62.5">
@@ -104,12 +105,13 @@ export const HeroShowComponent: React.FC = () => {
       </section>
     );
   }
-  // 错误或无数据
+
   if (error || !heroCards) return null;
 
-  // 1221 颜色配置表，解耦样式逻辑
+  // 1221 颜色配置表
   const colorConfigs = [
     {
+      // 配置 0: 浅色背景
       bgColor: "bg-[#e0e0e0]",
       titleColor: "text-black",
       subtitleColor: "text-black",
@@ -118,6 +120,7 @@ export const HeroShowComponent: React.FC = () => {
       buttonHover: "hover:bg-black",
     },
     {
+      // 配置 1: 深色背景
       bgColor: "bg-[#4a4a4a]",
       titleColor: "text-white",
       subtitleColor: "text-gray-200",
@@ -130,9 +133,15 @@ export const HeroShowComponent: React.FC = () => {
   return (
     <section className={cn("min-h-screen w-full")}>
       <div className="grid grid-cols-1 gap-0 md:grid-cols-2">
-        {[{ type: "shop" }, ...heroCards.slice(0, 3)].map((item, index) => {
-          // 核心逻辑：index 0和3用配置0，1和2用配置1 (即 1-2-2-1 模式)
-          const config = colorConfigs[index === 0 || index === 3 ? 0 : 1];
+        {/* 2. 修改：slice 取 6 个 API 数据，加上 1 个 Shop，共 7 个 */}
+        {[{ type: "shop" }, ...heroCards.slice(0, 6)].map((item, index) => {
+          // 3. 修改：样式逻辑升级
+          // 原逻辑: index 0,3 是浅色 -> A B B A
+          // 新逻辑: 使用取模运算 (% 4) 让这个模式无限循环 -> A B B A A B B ...
+          // 0(A), 1(B), 2(B), 3(A), 4(A), 5(B), 6(B)
+          const remainder = index % 4;
+          const config =
+            colorConfigs[remainder === 0 || remainder === 3 ? 0 : 1];
 
           if ("type" in item && item.type === "shop") {
             return (
