@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils"; // 假设你有 cn 工具，没有可用 clsx 
 // 统一的样式常量
 export const NAV_STYLES = {
   desktopLink:
-    "flex items-center gap-1 font-medium text-[10px] lg:text-[11px] uppercase tracking-[0.15em] transition-colors hover:text-gray-500",
+    "flex items-center gap-1 font-medium text-20xl lg:text-20xl uppercase tracking-[0.15em] transition-colors hover:text-gray-500",
   mobileLink: "block w-full py-3 text-left font-serif text-lg text-black",
   mobileSubLink:
     "block w-full py-2 text-left font-sans text-md text-gray-600 pl-4",
