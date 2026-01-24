@@ -1,8 +1,7 @@
-"use client";
-
-import { useSiteConfigList } from "@/hooks/api/site-config";
+import { Facebook, Instagram, Twitter } from "lucide-react";
 import Link from "next/link";
 import type React from "react";
+import { useSiteConfigList } from "@/hooks/api/site-config";
 
 const Footer: React.FC = () => {
   const { data: site_phone } = useSiteConfigList({
@@ -103,7 +102,7 @@ const Footer: React.FC = () => {
             </ul>
           </div>
 
-          {/* <div>
+          <div>
             <h5 className="mb-6 font-bold text-xs uppercase tracking-widest">
               Follow Us
             </h5>
@@ -118,11 +117,14 @@ const Footer: React.FC = () => {
                 <Twitter className="h-5 w-5" />
               </a>
             </div>
-          </div> */}
+          </div>
         </div>
 
         <div className="mt-20 flex flex-col items-center justify-between border-gray-100 border-t pt-8 text-center text-gray-400 text-xs uppercase tracking-wider md:flex-row">
-          <p>&copy; {`${new Date().getFullYear()} ${site_copyright?.[0]?.value || "error"}`}  </p>
+          <p>
+            &copy;{" "}
+            {`${new Date().getFullYear()} ${site_copyright?.[0]?.value || "error"}`}{" "}
+          </p>
           <div className="mt-4 flex space-x-4 md:mt-0">
             <span>+86 {site_phone?.[0]?.value || "error"}</span>
           </div>

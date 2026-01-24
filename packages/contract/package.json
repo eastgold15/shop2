@@ -22,7 +22,9 @@
     "db:push:prod": "bun x drizzle-kit push --config drizzle.config.prod.ts",
     "db:studio": "bun x drizzle-kit studio",
     "seed": "bun run seed-complete.ts",
-    "seed:reset": "bun run reset-database.ts"
+    "seed:reset": "bun run reset-database.ts",
+    "db:dump2": "./sync-db.bat",
+    "db:bakup": "./backup.bat"
   },
   "dependencies": {
     "drizzle-orm": "catalog:",
