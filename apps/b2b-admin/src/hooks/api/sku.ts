@@ -99,6 +99,23 @@ export function useDeleteSku() {
 }
 
 /**
+ * 批量删除 SKU
+ */
+export function useBatchDeleteSku() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (ids: string[]) =>
+      api.delete<any, typeof SkuContract.BatchDelete.static>(
+        "/api/v1/sku/batch",
+        { ids }
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: skuKeys.lists() });
+    },
+  });
+}
+
+/**
  * 获取所有SKU（用于SKU管理页面，返回站点所有SKU及关联商品信息）
  */
 export function useAllSkusForManagement(productId: string, enabled = true) {

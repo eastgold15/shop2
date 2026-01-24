@@ -77,6 +77,12 @@ export const SkuContract = {
     sort: t.Optional(t.String()),
     sortOrder: t.Optional(t.String()),
   }),
+
+  // BatchDelete 批量删除
+  BatchDelete: t.Object({
+    ids: t.Array(t.String()), // SKU ID 数组
+  }),
+
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   ListResponse: t.Object({
     data: t.Array(t.Object({ ...SkuFields })),

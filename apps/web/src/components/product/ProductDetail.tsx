@@ -13,17 +13,14 @@ import Image from "next/image";
 import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useCreateInquiry } from "@/hooks/api/inquiry-hook";
-import {
-  type ProductDetailRes,
-  useProductList,
-} from "@/hooks/api/product-hook";
+import { type ProductDetailRes } from "@/hooks/api/product-hook";
 import { cn } from "@/lib/utils";
 import { InquiryForm, type InquiryFormValues } from "./InquiryForm";
 import { SuccessView } from "./SuccessView";
 
-interface ProductDetailProps {
-  siteProduct: ProductDetailRes; // 确保这个 Type 已经根据后端新结构更新
-}
+// ----------------------------------------------------------------------
+// 1. 常量与工具函数 (移出组件外部，避免重复创建)
+// ----------------------------------------------------------------------
 
 const PAYMENT_METHODS = [
   "Cash on Delivery",
@@ -31,32 +28,155 @@ const PAYMENT_METHODS = [
   "L/C at 30 days sight",
 ];
 
+const VIDEO_EXTENSIONS = [".mp4", ".mov", ".webm", ".avi", ".mkv"];
+
+const isVideoUrl = (url: string): boolean => {
+  if (!url) return false;
+  return VIDEO_EXTENSIONS.some((ext) => url.toLowerCase().endsWith(ext));
+};
+
+const getActualMediaType = (media: {
+  mediaType?: string;
+  url: string;
+}): "video" | "image" => {
+  if (isVideoUrl(media.url)) return "video";
+  return (media.mediaType as "video" | "image") || "image";
+};
+
+/**
+ * 核心逻辑：媒体排序与过滤
+ * 规则：优先显示 SKU 图片 -> 其次 SPU 图片 -> 视频放最后
+ */
+const filterAndSortMedia = (
+  allMedia: any[],
+  skus: any[],
+  colorKey: string | undefined,
+  selectedColor: string | undefined
+) => {
+  let targetMedia = allMedia;
+
+  // 如果选择了颜色，尝试过滤该颜色的专属图片
+  if (colorKey && selectedColor) {
+    // 1. 找到该颜色对应的所有 SKU
+    const matchingSkus = skus.filter((sku) => {
+      const specJson = (sku.specJson as Record<string, string>) || {};
+      return specJson[colorKey] === selectedColor;
+    });
+
+    // 2. 收集这些 SKU 的 mediaIds
+    const mediaIds = new Set<string>();
+    matchingSkus.forEach((sku) => {
+      sku.mediaIds?.forEach((id: string) => mediaIds.add(id));
+    });
+
+    // 3. 只有当该颜色确实有配置图片时才过滤，否则回退到显示所有图
+    if (mediaIds.size > 0) {
+      targetMedia = allMedia.filter((m) => mediaIds.has(m.id));
+    }
+  }
+
+  // 排序：SPU主图优先(sortOrder < 1000) -> 图片在前 -> 视频在后 -> 按 sortOrder
+  return [...targetMedia].sort((a, b) => {
+    // 优先显示 SPU 级的基础图 (通常 sortOrder 很小)
+    const isASpuBase = (a.sortOrder ?? 0) < 1000;
+    const isBSpuBase = (b.sortOrder ?? 0) < 1000;
+    // 如果策略需要可以在这里调整，目前保留原逻辑结构，主要优化 Video 排序
+
+    const aIsVideo = getActualMediaType(a) === "video";
+    const bIsVideo = getActualMediaType(b) === "video";
+
+    if (aIsVideo && !bIsVideo) return 1; // 视频排后
+    if (!aIsVideo && bIsVideo) return -1; // 视频排后
+    return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
+  });
+};
+
+/**
+ * 核心逻辑：解析多地区尺码
+ */
+const parseSizeVariants = (specOptions: Record<string, string[]>) => {
+  const sizeKey = Object.keys(specOptions).find((k) =>
+    k.toLowerCase().includes("size")
+  );
+
+  if (!sizeKey) return null;
+
+  const sizeValues = specOptions[sizeKey] || [];
+  const regionGroups: Record<string, string[]> = { EU: [], UK: [], US: [] };
+
+  sizeValues.forEach((value) => {
+    // 格式检查: "EU36,UK3,US5"
+    const parts = value.split(",").map((p) => p.trim());
+    const hasMultiRegion =
+      parts.length > 1 && parts.every((p) => /^(EU|UK|US)\d+(\.\d+)?$/.test(p));
+
+    if (hasMultiRegion) {
+      parts.forEach((part) => {
+        const match = part.match(/^(EU|UK|US)(\d+(\.\d+)?)$/);
+        if (match) regionGroups[match[1]].push(match[2]);
+      });
+    } else {
+      // 兼容单格式: "36" 或 "EU36"
+      const match = value.match(/^(EU|UK|US)?(\d+(\.\d+)?)$/);
+      if (match) {
+        const region = match[1] || "EU"; // 默认归为 EU 或 INT
+        const size = match[2];
+        if (!regionGroups[region]) regionGroups[region] = [];
+        regionGroups[region].push(size);
+      }
+    }
+  });
+
+  // 去重并排序
+  Object.keys(regionGroups).forEach((region) => {
+    regionGroups[region] = [...new Set(regionGroups[region])].sort(
+      (a, b) => Number.parseFloat(a) - Number.parseFloat(b)
+    );
+  });
+
+  // 过滤掉空数组
+  const activeRegions = Object.fromEntries(
+    Object.entries(regionGroups).filter(([_, v]) => v.length > 0)
+  );
+
+  return { sizeKey, regionGroups: activeRegions };
+};
+
+// ----------------------------------------------------------------------
+// 2. 主组件
+// ----------------------------------------------------------------------
+
+interface ProductDetailProps {
+  siteProduct: ProductDetailRes;
+}
+
 const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
-  const [activeMedia, setActiveMedia] = useState(0);
+  // --- 基础状态 ---
+  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
   const [activeTab, setActiveTab] = useState<"description" | "details">(
     "description"
   );
+  const [quantity, setQuantity] = useState(1);
+  const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHODS[1]);
 
-  // 1. 猜你喜欢逻辑适配
-  const categoryId = siteProduct.categories?.[0]?.id;
-  const { data: productList } = useProductList(
-    { categoryId, limit: 4 },
-    { enabled: !!categoryId }
+  // --- 询盘状态 ---
+  const [showInquiryForm, setShowInquiryForm] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+
+  // --- 规格选择状态 ---
+  const [selectedSpecs, setSelectedSpecs] = useState<Record<string, string>>(
+    {}
   );
+  // 这里专门独立一个 activeRegion 状态给尺码选择器用
+  const [activeSizeRegion, setActiveSizeRegion] = useState<string>("EU");
 
-  const relatedProducts = useMemo(
-    () =>
-      productList?.items
-        ?.filter((item) => item.siteProductId !== siteProduct.id)
-        .slice(0, 3) || [],
-    [productList, siteProduct.id]
-  );
+  const inquiryMutation = useCreateInquiry();
 
-  // 2. 媒体库：后端的 gallery (后端已排好序：SPU图片 > 变体图 > SKU图片 > 视频)
-  const allMedia = siteProduct.gallery || [];
+  // 1. 拆解基础数据
+  const skus = useMemo(() => siteProduct.skus || [], [siteProduct]);
+  const allMedia = useMemo(() => siteProduct.gallery || [], [siteProduct]);
 
-  // 3. SKU & 规格逻辑
-  const skus = siteProduct.skus || [];
+  // 2. 计算 Spec 选项 Map (Key -> Set<Value>)
   const specOptions = useMemo(() => {
     const options: Record<string, Set<string>> = {};
     skus.forEach((sku) => {
@@ -71,96 +191,45 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
     );
   }, [skus]);
 
-  // 解析多地区尺码，按地区分组 (EU36,UK3,US5 -> EU: [36,37...], UK: [3,4...], US: [5,6...])
-  const parsedSizeOptions = useMemo(() => {
-    const sizeKey = Object.keys(specOptions).find((k) =>
-      k.toLowerCase().includes("size")
-    );
+  // 3. 识别特殊的 Key (Color, Size)
+  const colorKey = useMemo(
+    () => Object.keys(specOptions).find((k) => /color|colour/i.test(k)),
+    [specOptions]
+  );
 
-    if (!sizeKey) return null;
+  const parsedSizeData = useMemo(
+    () => parseSizeVariants(specOptions),
+    [specOptions]
+  );
 
-    const sizeValues = specOptions[sizeKey] || [];
-    const regionGroups: Record<string, string[]> = {
-      EU: [],
-      UK: [],
-      US: [],
-    };
-
-    sizeValues.forEach((value: string) => {
-      // 检查是否是多地区尺码格式 "EU36,UK3,US5"
-      const parts = value.split(",").map((p) => p.trim());
-      const hasMultiRegion =
-        parts.length > 1 &&
-        parts.every((p) => /^(EU|UK|US)\d+(\.\d+)?$/.test(p));
-
-      if (hasMultiRegion) {
-        // 拆分并按地区分组
-        parts.forEach((part) => {
-          const match = part.match(/^(EU|UK|US)(\d+(\.\d+)?)$/);
-          if (match) {
-            const [, region, size] = match;
-            regionGroups[region].push(size);
-          }
-        });
-      } else {
-        // 单个尺码，尝试识别地区
-        const match = value.match(/^(EU|UK|US)?(\d+(\.\d+)?)$/);
-        if (match) {
-          const region = match[1] || "INT"; // 默认国际尺码
-          const size = match[2];
-          if (regionGroups[region]) {
-            regionGroups[region].push(size);
-          }
-        }
+  // 4. 初始化逻辑：默认选中第一个颜色，默认尺码地区
+  const isInitialized = useRef(false);
+  useEffect(() => {
+    if (!isInitialized.current) {
+      // 初始化尺码地区
+      if (parsedSizeData) {
+        const firstRegion = Object.keys(parsedSizeData.regionGroups)[0] || "EU";
+        setActiveSizeRegion(firstRegion);
       }
-    });
-
-    // 去重并排序
-    Object.keys(regionGroups).forEach((region) => {
-      regionGroups[region] = [...new Set(regionGroups[region])].sort(
-        (a, b) => Number.parseFloat(a) - Number.parseFloat(b)
-      );
-    });
-
-    return {
-      sizeKey,
-      regionGroups,
-    };
-  }, [specOptions]);
-
-  // 默认选中第一个SKU的规格（如果存在SKU）
-  const defaultSpecs = useMemo(() => {
-    if (skus.length > 0) {
-      const firstSku = skus[0];
-      return (firstSku.specJson as Record<string, string>) || {};
+      // 初始化颜色 (如果有)
+      if (colorKey && specOptions[colorKey]?.length > 0) {
+        setSelectedSpecs((prev) => ({
+          ...prev,
+          [colorKey]: specOptions[colorKey][0],
+        }));
+      }
+      isInitialized.current = true;
     }
-    return {};
-  }, [skus]);
+  }, [colorKey, specOptions, parsedSizeData]);
 
-  const [selectedSpecs, setSelectedSpecs] =
-    useState<Record<string, string>>(defaultSpecs);
-  const [originalMediaIndex, setOriginalMediaIndex] = useState(0);
-  const [lastSelectedSpecs, setLastSelectedSpecs] = useState<
-    Record<string, string>
-  >({});
-  // 多地区尺码选择器 - 当前选中的地区
-  const [activeRegion, setActiveRegion] = useState<string>(() => {
-    if (parsedSizeOptions) {
-      const { regionGroups } = parsedSizeOptions;
-      const firstRegionWithSizes = Object.keys(regionGroups).find(
-        (r) => regionGroups[r].length > 0
-      );
-      return firstRegionWithSizes || "EU";
-    }
-    return "EU";
-  });
-
+  // 5. 计算当前选中的 SKU
   const selectedSku = useMemo(() => {
     const specKeys = Object.keys(specOptions);
-    const selectedKeys = Object.keys(selectedSpecs);
-
-    // 只有当用户选择的规格数量等于规格总类数时，才认为匹配到了具体 SKU
-    if (specKeys.length === 0 || selectedKeys.length < specKeys.length) {
+    // 简单校验：必须选满所有规格
+    if (
+      specKeys.length === 0 ||
+      Object.keys(selectedSpecs).length < specKeys.length
+    ) {
       return undefined;
     }
 
@@ -168,96 +237,89 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
       const specJson = (sku.specJson as Record<string, string>) || {};
       return Object.entries(selectedSpecs).every(([key, value]) => {
         const skuValue = specJson[key];
-
-        // 检查是否是多地区尺码
-        if (key.toLowerCase().includes("size")) {
-          // 用户选择的值是 "EU36"，需要匹配 "EU36,UK3,US5" 中的对应部分
-          const skuParts = skuValue.split(",").map((p) => p.trim());
-          return skuParts.includes(value);
+        // 针对尺码的特殊匹配逻辑 (EU36 匹配 "EU36,UK3...")
+        if (key === parsedSizeData?.sizeKey) {
+          return skuValue
+            .split(",")
+            .map((p) => p.trim())
+            .includes(value);
         }
-
         return skuValue === value;
       });
     });
-  }, [skus, selectedSpecs, specOptions]);
+  }, [skus, selectedSpecs, specOptions, parsedSizeData]);
 
+  // 6. 计算展示价格
   const displayPrice = useMemo(() => {
     if (selectedSku) return Number(selectedSku.price);
     if (skus.length === 0) return 0;
     return Math.min(...skus.map((s) => Number(s.price)));
   }, [selectedSku, skus]);
 
-  // 🔥 根据选中 SKU 的 mediaIds 动态计算画廊
+  // 7. 计算展示的媒体列表 (根据颜色筛选 + 排序)
   const displayGallery = useMemo(() => {
-    // 如果选中了 SKU 且有 mediaIds，过滤出该 SKU 的图片
-    if (selectedSku?.mediaIds && selectedSku.mediaIds.length > 0) {
-      return allMedia.filter((m) => selectedSku.mediaIds!.includes(m.id));
-    }
+    const selectedColor = colorKey ? selectedSpecs[colorKey] : undefined;
+    return filterAndSortMedia(allMedia, skus, colorKey, selectedColor);
+  }, [allMedia, skus, colorKey, selectedSpecs]);
 
-    // 未选中 SKU 时，只显示 SPU 级图片（sortOrder < 1000）
-    return allMedia.filter((m) => (m.sortOrder ?? 0) < 1000);
-  }, [selectedSku, allMedia]);
-
-  // 4. 核心联动修复：选中规格时，通过 mediaIds 定位 gallery 中的图片
+  // 媒体切换时的防越界保护
   useEffect(() => {
-    setOriginalMediaIndex(0);
-  }, []);
-
-  // 是否已经初始化过默认SKU
-  const isInitialized = useRef(false);
-
-  // 当 skus 数据加载完成后，初始化默认选中第一个SKU的规格
-  useEffect(() => {
-    if (skus.length > 0 && !isInitialized.current) {
-      const firstSku = skus[0];
-      setSelectedSpecs((firstSku.specJson as Record<string, string>) || {});
-      isInitialized.current = true;
+    // 只有当当前索引超出新画廊的范围时才重置（防止从由多图的颜色切换到少图的颜色时崩溃）
+    // 同时这也保留了 handleSpecChange 中可能设定的特定索引跳转（只要该索引在有效范围内）
+    if (activeMediaIndex >= displayGallery.length) {
+      setActiveMediaIndex(0);
     }
-  }, [skus]);
+  }, [displayGallery, activeMediaIndex]);
+  // --- Handlers ---
 
-  // 5. 表单提交逻辑
-  const [quantity, setQuantity] = useState(1);
-  const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHODS[1]);
-  const [showInquiryForm, setShowInquiryForm] = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
-  const inquiryMutation = useCreateInquiry();
+  const handleSpecChange = (key: string, value: string) => {
+    const isDeselect = selectedSpecs[key] === value;
 
-  const handleThumbnailClick = (idx: number) => {
-    setActiveMedia(idx);
+    // 更新规格状态
+    setSelectedSpecs((prev) => {
+      if (isDeselect) {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      }
+      return { ...prev, [key]: value };
+    });
 
-    const targetMedia = displayGallery[idx]; // 🔥 使用 displayGallery
-    if (!targetMedia) return;
+    // 尝试寻找关联的图片并跳转 (仅在选择非取消操作时)
+    if (!isDeselect) {
+      const matchedSku = skus.find((s) => {
+        const sJson = s.specJson as Record<string, string>;
+        // 尺码特殊处理
+        if (key === parsedSizeData?.sizeKey) {
+          return sJson[key]?.includes(value);
+        }
+        return sJson[key] === value;
+      });
 
-    // 反向查找：寻找包含此图片 ID 的第一个 SKU
-    const matchedSku = skus.find((sku) =>
-      sku.mediaIds?.includes(targetMedia.id)
-    );
-
-    // 如果找到了对应的 SKU，同步更新规格选择
-    if (matchedSku?.specJson) {
-      setSelectedSpecs(matchedSku.specJson as Record<string, string>);
-    } else {
-      // 如果这个图片不属于任何 SKU（它是 SPU 通用图），则清空规格选择
-      setSelectedSpecs({});
+      if (matchedSku?.mediaIds?.[0]) {
+        const targetIdx = allMedia.findIndex(
+          (m) => m.id === matchedSku.mediaIds[0]
+        );
+        // 注意：这里需要计算的是在 displayGallery 中的索引，还是切换回全局？
+        // 简化逻辑：如果在当前 displayGallery 找得到就切，找不到就切回 0
+        const idxInDisplay = displayGallery.findIndex(
+          (m) => m.id === matchedSku.mediaIds[0]
+        );
+        if (idxInDisplay !== -1) setActiveMediaIndex(idxInDisplay);
+      }
     }
-    // 清除可能存在的临时记录
-    setLastSelectedSpecs({});
   };
 
   const handleInquirySubmit = async (values: InquiryFormValues) => {
+    if (!selectedSku) return alert("Please select all product options first.");
     try {
-      if (!selectedSku) return alert("Please select a product variant first");
-
       const { remarks, ...contactInfo } = values;
       localStorage.setItem("gina_user_info", JSON.stringify(contactInfo));
-
-      // 直接使用 selectedSku 的 mediaId
-      const finalSkuMediaId = selectedSku.mediaIds?.[0] || "";
 
       await inquiryMutation.mutateAsync({
         siteProductId: siteProduct.id,
         siteSkuId: selectedSku.id,
-        skuMediaId: finalSkuMediaId,
+        skuMediaId: selectedSku.mediaIds?.[0] || "",
         productName: siteProduct.name,
         productDesc: siteProduct.description || "",
         paymentMethod,
@@ -268,7 +330,6 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
         customerPhone: values.phone || "",
         customerWhatsapp: values.whatsapp || "",
       });
-
       setSubmitSuccess(true);
       setTimeout(() => {
         setSubmitSuccess(false);
@@ -279,38 +340,23 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
     }
   };
 
-  const getSavedValues = () => {
-    if (typeof window === "undefined") return {};
-    const saved = localStorage.getItem("gina_user_info");
-    return saved ? JSON.parse(saved) : {};
-  };
-
-  const handleOpenInquiry = () => {
-    if (Object.keys(specOptions).length > 0) {
-      const missing = Object.keys(specOptions).filter((k) => !selectedSpecs[k]);
-      if (missing.length > 0)
-        return alert(`Please select: ${missing.join(", ")}`);
-    }
-    if (skus.length > 0 && !selectedSku)
-      return alert("Invalid combination selected");
-    setShowInquiryForm(true);
-  };
-
-  const mediaItem = displayGallery[activeMedia];
+  // --- 渲染部分变量 ---
+  const currentMedia = displayGallery[activeMediaIndex];
 
   return (
     <div className="min-h-screen bg-white pt-16 pb-16">
       <div className="mx-auto max-w-325 px-6">
         <div className="mb-24 grid grid-cols-1 gap-12 lg:grid-cols-12">
-          {/* --- LEFT: GALLERY --- */}
+          {/* --- 左侧：画廊区域 --- */}
           <div className="flex flex-col items-center lg:col-span-7">
+            {/* 主图 */}
             <div className="group relative mb-8 aspect-4/3 w-full overflow-hidden bg-gray-50">
               {displayGallery.length > 1 && (
                 <>
                   <button
                     className="absolute top-1/2 left-0 z-10 -translate-y-1/2 p-4 opacity-0 transition-opacity group-hover:opacity-100"
                     onClick={() =>
-                      setActiveMedia(
+                      setActiveMediaIndex(
                         (p) =>
                           (p - 1 + displayGallery.length) %
                           displayGallery.length
@@ -322,7 +368,9 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
                   <button
                     className="absolute top-1/2 right-0 z-10 -translate-y-1/2 p-4 opacity-0 transition-opacity group-hover:opacity-100"
                     onClick={() =>
-                      setActiveMedia((p) => (p + 1) % displayGallery.length)
+                      setActiveMediaIndex(
+                        (p) => (p + 1) % displayGallery.length
+                      )
                     }
                   >
                     <ChevronRight className="h-8 w-8 text-gray-400 hover:text-black" />
@@ -330,18 +378,17 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
                 </>
               )}
 
-              {mediaItem ? (
-                mediaItem.mediaType?.startsWith("video") ? (
+              {currentMedia &&
+                (getActualMediaType(currentMedia) === "video" ? (
                   <video
                     autoPlay
                     className="h-full w-full object-contain mix-blend-multiply"
                     controls
-                    key={`${mediaItem.id}-${selectedSku?.id || "default"}`}
+                    key={currentMedia.url}
                     loop
                     muted
-                  >
-                    <source src={mediaItem.url} />
-                  </video>
+                    src={currentMedia.url} // Key change forces reload
+                  />
                 ) : (
                   <Image
                     alt={siteProduct.name}
@@ -349,41 +396,45 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
                     fill
                     priority
                     sizes="(max-width: 1024px) 100vw, 60vw"
-                    src={mediaItem.url}
+                    src={currentMedia.url}
                   />
-                )
-              ) : null}
+                ))}
             </div>
 
-            {/* Thumbnails缩略图 */}
-            <div
-              className="no-scrollbar flex max-w-full space-x-4 overflow-x-auto pb-2"
-              key={`thumbnails-${selectedSku?.id || "default"}`}
-            >
-              {displayGallery.map((m, idx) => (
-                <button
-                  className={cn(
-                    "relative h-20 w-20 shrink-0 border transition-all",
-                    activeMedia === idx
-                      ? "border-black ring-1 ring-black"
-                      : "border-gray-100"
-                  )}
-                  key={`${m.id}-${selectedSku?.id || "default"}-${idx}`}
-                  onClick={() => handleThumbnailClick(idx)}
-                >
-                  {m.mediaType?.startsWith("video") ? (
-                    <div className="flex h-full w-full items-center justify-center bg-gray-100">
-                      <Play className="h-6 w-6 text-gray-400" />
-                    </div>
-                  ) : (
-                    <Image alt="" className="object-cover" fill src={m.url} />
-                  )}
-                </button>
-              ))}
+            {/* 缩略图列表 */}
+            <div className="no-scrollbar flex max-w-full space-x-4 overflow-x-auto pb-2">
+              {displayGallery.map((media, idx) => {
+                const isVideo = getActualMediaType(media) === "video";
+                return (
+                  <button
+                    className={cn(
+                      "relative h-20 w-20 shrink-0 overflow-hidden rounded border-2 transition-all",
+                      activeMediaIndex === idx
+                        ? "border-black shadow-lg"
+                        : "border-gray-200 hover:border-gray-400"
+                    )}
+                    key={`${media.id}-${idx}`}
+                    onClick={() => setActiveMediaIndex(idx)}
+                  >
+                    {isVideo ? (
+                      <div className="flex h-full w-full items-center justify-center bg-gray-100">
+                        <Play className="h-6 w-6 text-gray-400" />
+                      </div>
+                    ) : (
+                      <Image
+                        alt=""
+                        className="object-cover"
+                        fill
+                        src={media.url}
+                      />
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          {/* --- RIGHT: INFO --- */}
+          {/* --- 右侧：信息与交互区域 --- */}
           <div className="pt-8 pl-4 lg:col-span-5">
             <h1 className="mb-2 font-serif text-5xl text-black italic leading-tight">
               {siteProduct.name}
@@ -404,113 +455,65 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
               </span>
             </div>
 
-            {/* 规格选择器 */}
-            {/* 多地区尺码选择器 */}
-            {parsedSizeOptions ? (
+            {/* A. 特殊渲染：尺码选择器 (Tab + Select) */}
+            {parsedSizeData && (
               <div className="mb-6">
                 <span className="mb-2 block font-bold text-[10px] text-gray-500 uppercase tracking-widest">
-                  {parsedSizeOptions.sizeKey}
+                  {parsedSizeData.sizeKey}
                 </span>
-
-                {/* 地区切换按钮 */}
+                {/* 地区 Tabs */}
                 <div className="mb-3 flex gap-2">
-                  {Object.entries(parsedSizeOptions.regionGroups).map(
-                    ([region, sizes]) =>
-                      sizes.length > 0 ? (
-                        <button
-                          className={cn(
-                            "border px-4 py-2 font-bold text-xs transition-colors",
-                            activeRegion === region
-                              ? "border-black bg-black text-white"
-                              : "border-gray-200 text-black hover:border-black"
-                          )}
-                          key={region}
-                          onClick={() => setActiveRegion(region)}
-                        >
-                          {region}
-                        </button>
-                      ) : null
-                  )}
+                  {Object.keys(parsedSizeData.regionGroups).map((region) => (
+                    <button
+                      className={cn(
+                        "border px-4 py-2 font-bold text-xs transition-colors",
+                        activeSizeRegion === region
+                          ? "border-black bg-black text-white"
+                          : "border-gray-200 text-black hover:border-black"
+                      )}
+                      key={region}
+                      onClick={() => {
+                        setActiveSizeRegion(region);
+                        // 切换地区时，清除当前选中的尺码，防止不匹配
+                        handleSpecChange(parsedSizeData.sizeKey, "");
+                      }}
+                    >
+                      {region}
+                    </button>
+                  ))}
                 </div>
-
-                {/* 当前地区的尺码选项 */}
-                <div className="flex flex-wrap gap-2">
-                  {(parsedSizeOptions.regionGroups[activeRegion] || []).map(
-                    (size) => {
-                      const fullValue = `${activeRegion}${size}`;
-                      const isSelected =
-                        selectedSpecs[parsedSizeOptions.sizeKey] === fullValue;
-
-                      return (
-                        <button
-                          className={cn(
-                            "border px-4 py-2 font-bold text-xs transition-colors",
-                            isSelected
-                              ? "border-black bg-black text-white"
-                              : "border-gray-200 text-black hover:border-black"
-                          )}
-                          key={size}
-                          onClick={() => {
-                            const wasSelected =
-                              selectedSpecs[parsedSizeOptions.sizeKey] ===
-                              fullValue;
-
-                            setSelectedSpecs((prev) => {
-                              const next = { ...prev };
-                              if (wasSelected) {
-                                delete next[parsedSizeOptions.sizeKey];
-                                setActiveMedia(0);
-                              } else {
-                                next[parsedSizeOptions.sizeKey] = fullValue;
-                              }
-                              return next;
-                            });
-                            setActiveMedia(0);
-
-                            if (!wasSelected) {
-                              const firstMatchingSku = skus.find((sku) => {
-                                const specJson =
-                                  (sku.specJson as Record<string, string>) ||
-                                  {};
-                                const skuValue =
-                                  specJson[parsedSizeOptions.sizeKey];
-                                if (skuValue) {
-                                  const skuParts = skuValue
-                                    .split(",")
-                                    .map((p) => p.trim());
-                                  return skuParts.includes(fullValue);
-                                }
-                                return false;
-                              });
-
-                              if (
-                                firstMatchingSku &&
-                                firstMatchingSku?.mediaIds?.length > 0
-                              ) {
-                                const targetId = firstMatchingSku.mediaIds[0];
-                                const mediaIndex = allMedia.findIndex(
-                                  (m) => m.id === targetId
-                                );
-                                if (mediaIndex !== -1) {
-                                  setActiveMedia(mediaIndex);
-                                }
-                              }
-                            }
-                          }}
-                        >
-                          {size}
-                        </button>
-                      );
-                    }
-                  )}
+                {/* 尺码下拉框 */}
+                <div className="relative w-full">
+                  <select
+                    className="w-full appearance-none border border-gray-200 bg-white px-4 py-3 pr-10 font-bold text-xs focus:border-black focus:outline-none"
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val) handleSpecChange(parsedSizeData.sizeKey, val);
+                    }}
+                    value={selectedSpecs[parsedSizeData.sizeKey] || ""}
+                  >
+                    <option value="">Select Size</option>
+                    {(parsedSizeData.regionGroups[activeSizeRegion] || []).map(
+                      (sizeNum) => {
+                        // 构造组合值: "EU36"
+                        const val = `${activeSizeRegion}${sizeNum}`;
+                        return (
+                          <option key={sizeNum} value={val}>
+                            {sizeNum}
+                          </option>
+                        );
+                      }
+                    )}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 text-gray-500" />
                 </div>
               </div>
-            ) : null}
+            )}
 
-            {/* 其他规格选择器（非多地区尺码） */}
+            {/* B. 通用渲染：其他规格 (颜色等) */}
             {Object.entries(specOptions)
               .filter(([key]) =>
-                parsedSizeOptions ? key !== parsedSizeOptions.sizeKey : true
+                parsedSizeData ? key !== parsedSizeData.sizeKey : true
               )
               .map(([key, values]) => (
                 <div className="mb-6" key={key}>
@@ -527,42 +530,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
                             : "border-gray-200 text-black hover:border-black"
                         )}
                         key={val}
-                        onClick={() => {
-                          const wasSelected = selectedSpecs[key] === val;
-
-                          setSelectedSpecs((prev) => {
-                            const next = { ...prev };
-                            if (wasSelected) {
-                              delete next[key];
-                              setActiveMedia(0);
-                            } else {
-                              next[key] = val;
-                            }
-                            return next;
-                          });
-                          setActiveMedia(0);
-
-                          if (!wasSelected) {
-                            const firstMatchingSku = skus.find((sku) => {
-                              const specJson =
-                                (sku.specJson as Record<string, string>) || {};
-                              return specJson[key] === val;
-                            });
-
-                            if (
-                              firstMatchingSku &&
-                              firstMatchingSku?.mediaIds?.length > 0
-                            ) {
-                              const targetId = firstMatchingSku.mediaIds[0];
-                              const mediaIndex = allMedia.findIndex(
-                                (m) => m.id === targetId
-                              );
-                              if (mediaIndex !== -1) {
-                                setActiveMedia(mediaIndex);
-                              }
-                            }
-                          }
-                        }}
+                        onClick={() => handleSpecChange(key, val)}
                       >
                         {val}
                       </button>
@@ -573,6 +541,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
 
             {/* 数量与支付方式 */}
             <div className="mb-8 space-y-6">
+              {/* Quantity */}
               <div>
                 <span className="mb-2 block font-bold text-[10px] text-gray-500 uppercase tracking-widest">
                   Quantity
@@ -595,6 +564,8 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
                   </button>
                 </div>
               </div>
+
+              {/* Payment */}
               <div className="relative">
                 <span className="mb-2 block font-bold text-[10px] text-gray-500 uppercase tracking-widest">
                   Payment Terms
@@ -615,15 +586,20 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
             </div>
 
             <button
-              className="w-full bg-black py-4 font-bold text-[11px] text-white uppercase tracking-[0.2em] transition-colors hover:bg-gray-800"
-              onClick={handleOpenInquiry}
+              className="w-full bg-black py-4 font-bold text-[11px] text-white uppercase tracking-[0.2em] transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-300"
+              onClick={() => {
+                if (!selectedSku) return alert("Please select all options");
+                setShowInquiryForm(true);
+              }}
+              // 也可以选择在这里禁用按钮，或者允许点击后弹出提示
+              // disabled={!selectedSku}
             >
               Request Availability
             </button>
           </div>
         </div>
 
-        {/* 详情 Tabs */}
+        {/* --- 底部：详情 Tabs --- */}
         <div className="border-gray-200 border-t pt-12">
           <div className="mb-8 flex space-x-8 border-gray-100 border-b">
             {["description", "details"].map((tab) => (
@@ -657,7 +633,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
                 <p>
                   <span className="mr-4 font-bold font-sans text-[10px] uppercase">
                     Categories
-                  </span>{" "}
+                  </span>
                   {siteProduct.categories?.map((c) => c.name).join(", ")}
                 </p>
               </div>
@@ -666,7 +642,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
         </div>
       </div>
 
-      {/* 询盘 Modal */}
+      {/* --- Modal: 询盘表单 --- */}
       {showInquiryForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
           <div className="no-scrollbar relative max-h-[90vh] w-full max-w-md overflow-y-auto bg-white p-8 shadow-2xl">
@@ -694,7 +670,11 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ siteProduct }) => {
               <SuccessView />
             ) : (
               <InquiryForm
-                defaultValues={getSavedValues()}
+                defaultValues={
+                  typeof window !== "undefined"
+                    ? JSON.parse(localStorage.getItem("gina_user_info") || "{}")
+                    : {}
+                }
                 onSubmit={handleInquirySubmit}
               />
             )}

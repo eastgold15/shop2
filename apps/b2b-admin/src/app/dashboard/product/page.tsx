@@ -16,7 +16,7 @@ import {
   useProductPageList,
 } from "@/hooks/api/product";
 import { Product } from "@/hooks/api/product.type";
-import { useDeleteSku } from "@/hooks/api/sku";
+import { useBatchDeleteSku, useDeleteSku } from "@/hooks/api/sku";
 import { SkuListRes } from "@/hooks/api/sku.type";
 
 export default function ProductsPage() {
@@ -27,12 +27,14 @@ export default function ProductsPage() {
     isListed: viewMode === "my",
   });
   const deleteSkuMutation = useDeleteSku();
+  const batchDeleteSkuMutation = useBatchDeleteSku();
   const deleteProductMutation = useBatchDeleteProduct();
   const deleteSingleProductMutation = useDeleteProduct();
 
   // --- 2. 状态 ---
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selectedSkuIds, setSelectedSkuIds] = useState<Set<string>>(new Set());
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
   // 弹窗控制
@@ -91,6 +93,38 @@ export default function ProductsPage() {
     refetch();
   };
 
+  // 批量删除 SKU
+  const handleBatchDeleteSku = async () => {
+    if (selectedSkuIds.size === 0) return;
+    if (!confirm(`确认删除 ${selectedSkuIds.size} 个 SKU?`)) return;
+    await batchDeleteSkuMutation.mutateAsync(Array.from(selectedSkuIds));
+    setSelectedSkuIds(new Set());
+    toast.success("批量删除 SKU 成功");
+    refetch();
+  };
+
+  // 切换 SKU 选中
+  const handleSelectSku = (id: string, checked: boolean) => {
+    setSelectedSkuIds((prev) => {
+      const next = new Set(prev);
+      checked ? next.add(id) : next.delete(id);
+      return next;
+    });
+  };
+
+  // 批量切换 SKU 选中状态（用于全选/取消全选）
+  const handleToggleAllSkus = (ids: string[], checked: boolean) => {
+    setSelectedSkuIds((prev) => {
+      const next = new Set(prev);
+      if (checked) {
+        ids.forEach((id) => next.add(id));
+      } else {
+        ids.forEach((id) => next.delete(id));
+      }
+      return next;
+    });
+  };
+
   if (isLoading) return null;
 
   return (
@@ -113,6 +147,7 @@ export default function ProductsPage() {
         <div className="flex-1 overflow-y-auto">
           <ProductList
             expandedIds={expandedIds}
+            onBatchDeleteSku={handleBatchDeleteSku}
             onCreateSku={(id) => setSkuCreateId(id)}
             onDelete={handleDeleteProduct}
             onDeleteSku={handleDeleteSku}
@@ -120,9 +155,13 @@ export default function ProductsPage() {
             onEditSku={(sku) => setSkuEditData(sku)}
             onManageVariantMedia={setVariantMediaProductId}
             onSelect={handleSelect}
+            onSelectSku={handleSelectSku}
+            onToggleAllSkus={handleToggleAllSkus}
             onToggleExpand={handleToggleExpand}
+            // SKU 批量选择和删除
             products={filteredProducts}
             selectedIds={selectedIds}
+            selectedSkuIds={selectedSkuIds}
             viewMode={viewMode}
           />
         </div>

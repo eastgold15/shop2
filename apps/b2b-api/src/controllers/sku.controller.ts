@@ -85,6 +85,23 @@ export const skuController = new Elysia({ prefix: "/sku", tags: ["SKU"] })
     }
   )
   /**
+   * 批量删除 SKU
+   */
+  .delete(
+    "/batch",
+    ({ body, user, db, currentDeptId }) =>
+      skuService.batchDelete({ db, user, currentDeptId }, body.ids),
+    {
+      body: SkuContract.BatchDelete,
+      allPermissions: ["SKU_DELETE"],
+      requireDept: true,
+      detail: {
+        summary: "批量删除SKU",
+        description: "根据ID数组批量删除SKU记录",
+      },
+    }
+  )
+  /**
    * 删除单个 SKU
    */
   .delete(

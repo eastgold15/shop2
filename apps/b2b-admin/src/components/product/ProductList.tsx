@@ -37,6 +37,11 @@ interface ProductListProps {
   onEditSku: (sku: SkuListRes) => void;
   onDeleteSku: (id: string, code: string) => void;
   onManageVariantMedia?: (productId: string) => void;
+  // SKU 批量选择和删除
+  selectedSkuIds: Set<string>;
+  onSelectSku: (id: string, checked: boolean) => void;
+  onToggleAllSkus: (ids: string[], checked: boolean) => void;
+  onBatchDeleteSku: () => void;
 }
 
 export function ProductList({
@@ -52,6 +57,10 @@ export function ProductList({
   onEditSku,
   onDeleteSku,
   onManageVariantMedia,
+  selectedSkuIds,
+  onSelectSku,
+  onToggleAllSkus,
+  onBatchDeleteSku,
 }: ProductListProps) {
   if (products.length === 0) {
     return (
@@ -192,6 +201,11 @@ export function ProductList({
                 productId={product.id}
                 skus={product.skus}
                 viewMode={viewMode}
+                // SKU 批量选择和删除
+                selectedSkuIds={selectedSkuIds}
+                onSelectSku={onSelectSku}
+                onToggleAllSkus={onToggleAllSkus}
+                onBatchDeleteSku={onBatchDeleteSku}
               />
             </CollapsibleContent>
           </Collapsible>

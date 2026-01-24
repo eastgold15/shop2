@@ -265,7 +265,38 @@ export class SkuService {
   }
 
   /**
-   * 3. 单个 SKU 删除
+   * 3. 批量 SKU 删除
+   */
+  public async batchDelete(ctx: ServiceContext, ids: string[]) {
+    if (!ids || ids.length === 0) {
+      throw new HttpError.BadRequest("SKU ID 列表不能为空");
+    }
+
+    // 执行批量删除（依赖数据库的 Cascade Delete 删除 skuMediaTable）
+    const deleted = await ctx.db
+      .delete(skuTable)
+      .where(
+        and(
+          inArray(skuTable.id, ids),
+          eq(skuTable.tenantId, ctx.user.context.tenantId!), // 安全校验：租户隔离
+          eq(skuTable.deptId, ctx.currentDeptId) // 安全校验：部门隔离
+        )
+      )
+      .returning({ id: skuTable.id });
+
+    if (deleted.length === 0) {
+      throw new HttpError.NotFound("SKU 不存在或无权删除");
+    }
+
+    return {
+      success: true,
+      count: deleted.length,
+      ids: deleted.map((d) => d.id),
+    };
+  }
+
+  /**
+   * 4. 单个 SKU 删除
    */
   public async delete(ctx: ServiceContext, id: string) {
     // 这里依赖数据库的 Cascade Delete 删除 skuMediaTable
