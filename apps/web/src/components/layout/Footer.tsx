@@ -51,25 +51,16 @@ const Footer: React.FC = () => {
             </h5>
             <ul className="space-y-3 text-gray-500 text-sm">
               <li>
-                <a className="hover:text-black" href="#">
-                  Contact Us
-                </a>
                 <Link className="hover:text-black" href="/single/contact">
                   Contact Us
                 </Link>
               </li>
               <li>
-                <a className="hover:text-black" href="#">
-                  Shipping & Returns
-                </a>
                 <Link className="hover:text-black" href="/single/ship">
                   Shipping & Returns
                 </Link>
               </li>
               <li>
-                <a className="hover:text-black" href="#">
-                  Size Guide
-                </a>
                 <Link className="hover:text-black" href="/single/size">
                   Size Guide
                 </Link>
