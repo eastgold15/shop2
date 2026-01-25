@@ -94,7 +94,10 @@ export function SkuPanel({
                   }
                   onCheckedChange={(checked) => {
                     // 全选/取消全选：使用批量处理函数
-                    onToggleAllSkus(skus.map((sku) => sku.id), !!checked);
+                    onToggleAllSkus(
+                      skus.map((sku) => sku.id),
+                      !!checked
+                    );
                   }}
                 />
               </TableHead>

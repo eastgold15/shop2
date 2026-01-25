@@ -1,7 +1,6 @@
 // Note: bug in nodejs cant import env into middleware.ts
 export const SERVER_URL_KEY = "x-url";
 
-
 export const SITE_CONFIG = {
   SITE_CONFIG_KEYS: {
     site_name: "site_name",
@@ -17,5 +16,5 @@ export const SITE_CONFIG = {
     ship: "page_ship_content", // 运输与退货
     size: "page_size_content", // 尺码指南
     terms: "page_terms_content", // 服务条款
-  }
+  },
 };

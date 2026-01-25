@@ -103,11 +103,15 @@ export const departmentController = new Elysia({ prefix: "/department" })
   .post(
     "/with-site-and-admin",
     async ({ body, user, db, currentDeptId, headers }) =>
-      departmentService.createDepartmentWithSiteAndAdmin(body, {
-        db,
-        user,
-        currentDeptId,
-      }, headers),
+      departmentService.createDepartmentWithSiteAndAdmin(
+        body,
+        {
+          db,
+          user,
+          currentDeptId,
+        },
+        headers
+      ),
     {
       body: DepartmentContract.CreateDepartmentWithSiteAndAdmin,
       allPermissions: ["DEPARTMENT_CREATE"],

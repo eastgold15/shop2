@@ -30,10 +30,10 @@ export class DepartmentService {
       // 自动注入租户信息
       ...(ctx.user
         ? {
-          tenantId: ctx.user.context.tenantId!,
-          createdBy: ctx.user.id,
-          deptId: ctx.currentDeptId,
-        }
+            tenantId: ctx.user.context.tenantId!,
+            createdBy: ctx.user.id,
+            deptId: ctx.currentDeptId,
+          }
         : {}),
     };
     const [res] = await ctx.db
@@ -132,11 +132,11 @@ export class DepartmentService {
       ...department,
       manager: manager
         ? {
-          id: manager.id,
-          name: manager.name,
-          email: manager.email,
-          phone: manager.phone,
-        }
+            id: manager.id,
+            name: manager.name,
+            email: manager.email,
+            phone: manager.phone,
+          }
         : null,
     };
   }
@@ -179,7 +179,9 @@ export class DepartmentService {
         .returning();
 
       if (!department?.id) {
-        throw new HttpError.InternalServerError("部门ID获取失败，无法继续创建关联数据");
+        throw new HttpError.InternalServerError(
+          "部门ID获取失败，无法继续创建关联数据"
+        );
       }
       const departmentId = department.id;
 

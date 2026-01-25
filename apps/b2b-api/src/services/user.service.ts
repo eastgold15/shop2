@@ -91,8 +91,6 @@ export class UserService {
           // This endpoint requires session cookies.
           headers,
         });
-
-
       }
 
       if (roleId) {

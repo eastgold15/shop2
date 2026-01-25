@@ -1,5 +1,4 @@
 import { t } from "elysia";
-import { PaginationParams, SortParams } from "../helper/query-types.model";
 import { type InferDTO, spread } from "../helper/utils";
 import { siteConfigTable } from "../table.schema";
 

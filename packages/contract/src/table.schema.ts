@@ -148,9 +148,7 @@ export const userTable = p.pgTable("sys_user", {
     .notNull()
     .references(() => departmentTable.id),
 
-
-  role: p
-    .varchar("role", { length: 50 }),
+  role: p.varchar("role", { length: 50 }),
   banned: p.boolean("banned").default(false),
   banReason: p.text("ban_reason"),
   banExpires: p.timestamp("ban_expire_at", { withTimezone: true }),

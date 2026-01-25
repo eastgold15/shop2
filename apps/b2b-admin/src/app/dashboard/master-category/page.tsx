@@ -232,9 +232,7 @@ export default function MasterCategoryManager() {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="text-center">
-          <h2 className="mb-2 font-bold text-2xl text-slate-900">
-            权限不足
-          </h2>
+          <h2 className="mb-2 font-bold text-2xl text-slate-900">权限不足</h2>
           <p className="text-slate-500">只有超级管理员才能访问主分类管理</p>
         </div>
       </div>
@@ -338,144 +336,144 @@ export default function MasterCategoryManager() {
       </header>
 
       <div className="flex flex-1 flex-col gap-6 p-4 pt-0">
-          {/* 页面头部 */}
-          <div className="flex flex-col gap-4">
-            <div>
-              <h1 className="font-bold text-3xl text-slate-900">主分类管理</h1>
-              <p className="mt-2 text-slate-600">
-                管理全局主分类体系，这是所有站点分类的标准参考。出口商的站点分类通过映射关系关联到主分类。
+        {/* 页面头部 */}
+        <div className="flex flex-col gap-4">
+          <div>
+            <h1 className="font-bold text-3xl text-slate-900">主分类管理</h1>
+            <p className="mt-2 text-slate-600">
+              管理全局主分类体系，这是所有站点分类的标准参考。出口商的站点分类通过映射关系关联到主分类。
+            </p>
+          </div>
+
+          {/* 搜索和操作栏 */}
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-1 items-center gap-4">
+              <div className="relative max-w-md flex-1">
+                <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <Input
+                  className="pl-10"
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="搜索主分类名称或标识..."
+                  type="text"
+                  value={searchTerm}
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Label htmlFor="showHidden">显示隐藏分类</Label>
+                <Switch
+                  checked={showHidden}
+                  id="showHidden"
+                  onCheckedChange={setShowHidden}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              {selectedIds.size > 0 && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button size="sm" variant="destructive">
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      批量删除 ({selectedIds.size})
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>确认批量删除</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        确定要删除选中的 {selectedIds.size}{" "}
+                        个主分类吗？此操作不可撤销。
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>取消</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleBatchDelete}>
+                        删除
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+
+              <Button
+                className="bg-indigo-600 text-white hover:bg-indigo-700"
+                onClick={() => {
+                  setEditingCategory(undefined);
+                  setIsCreateModalOpen(true);
+                }}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                添加主分类
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* 分类列表 */}
+        <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
+          {hasCategories && (
+            <div className="border-slate-200 border-b bg-slate-50 px-4 py-3">
+              <label className="flex items-center gap-2 font-medium text-slate-700 text-sm">
+                <input
+                  checked={
+                    selectedIds.size > 0 && filteredCategories
+                      ? selectedIds.size === filteredCategories.length
+                      : false
+                  }
+                  className="rounded border-slate-300 text-slate-600 focus:ring-2 focus:ring-indigo-500"
+                  onChange={(e) => handleSelectAll(e.target.checked)}
+                  type="checkbox"
+                />
+                全选
+                <span className="text-slate-500">
+                  ({selectedIds.size}/{filteredCategories.length})
+                </span>
+              </label>
+            </div>
+          )}
+
+          {hasCategories ? (
+            <div className="max-h-[calc(100vh-300px)] overflow-y-auto">
+              {filteredCategories.map((category) => (
+                <MasterCategoryTreeNode
+                  allCategories={filteredCategories}
+                  category={category}
+                  key={category.id}
+                  level={0}
+                  onDelete={handleDelete}
+                  onEdit={handleEdit}
+                  onSelect={handleSelect}
+                  selectedIds={selectedIds}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="px-8 py-12 text-center">
+              <div className="mb-6">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
+                  <Plus className="h-8 w-8 text-slate-400" />
+                </div>
+              </div>
+              <h3 className="mb-2 font-semibold text-slate-900 text-xl">
+                暂无主分类
+              </h3>
+              <p className="mx-auto mb-6 max-w-md text-slate-500">
+                创建第一个主分类来开始构建全局分类体系
               </p>
+              <Button
+                className="bg-indigo-600 text-white hover:bg-indigo-700"
+                onClick={() => {
+                  setEditingCategory(undefined);
+                  setIsCreateModalOpen(true);
+                }}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                创建主分类
+              </Button>
             </div>
-
-            {/* 搜索和操作栏 */}
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex flex-1 items-center gap-4">
-                <div className="relative max-w-md flex-1">
-                  <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                  <Input
-                    className="pl-10"
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="搜索主分类名称或标识..."
-                    type="text"
-                    value={searchTerm}
-                  />
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Label htmlFor="showHidden">显示隐藏分类</Label>
-                  <Switch
-                    checked={showHidden}
-                    id="showHidden"
-                    onCheckedChange={setShowHidden}
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                {selectedIds.size > 0 && (
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button size="sm" variant="destructive">
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        批量删除 ({selectedIds.size})
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>确认批量删除</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          确定要删除选中的 {selectedIds.size}{" "}
-                          个主分类吗？此操作不可撤销。
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>取消</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleBatchDelete}>
-                          删除
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                )}
-
-                <Button
-                  className="bg-indigo-600 text-white hover:bg-indigo-700"
-                  onClick={() => {
-                    setEditingCategory(undefined);
-                    setIsCreateModalOpen(true);
-                  }}
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  添加主分类
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* 分类列表 */}
-          <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
-            {hasCategories && (
-              <div className="border-slate-200 border-b bg-slate-50 px-4 py-3">
-                <label className="flex items-center gap-2 font-medium text-slate-700 text-sm">
-                  <input
-                    checked={
-                      selectedIds.size > 0 && filteredCategories
-                        ? selectedIds.size === filteredCategories.length
-                        : false
-                    }
-                    className="rounded border-slate-300 text-slate-600 focus:ring-2 focus:ring-indigo-500"
-                    onChange={(e) => handleSelectAll(e.target.checked)}
-                    type="checkbox"
-                  />
-                  全选
-                  <span className="text-slate-500">
-                    ({selectedIds.size}/{filteredCategories.length})
-                  </span>
-                </label>
-              </div>
-            )}
-
-            {hasCategories ? (
-              <div className="max-h-[calc(100vh-300px)] overflow-y-auto">
-                {filteredCategories.map((category) => (
-                  <MasterCategoryTreeNode
-                    allCategories={filteredCategories}
-                    category={category}
-                    key={category.id}
-                    level={0}
-                    onDelete={handleDelete}
-                    onEdit={handleEdit}
-                    onSelect={handleSelect}
-                    selectedIds={selectedIds}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="px-8 py-12 text-center">
-                <div className="mb-6">
-                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
-                    <Plus className="h-8 w-8 text-slate-400" />
-                  </div>
-                </div>
-                <h3 className="mb-2 font-semibold text-slate-900 text-xl">
-                  暂无主分类
-                </h3>
-                <p className="mx-auto mb-6 max-w-md text-slate-500">
-                  创建第一个主分类来开始构建全局分类体系
-                </p>
-                <Button
-                  className="bg-indigo-600 text-white hover:bg-indigo-700"
-                  onClick={() => {
-                    setEditingCategory(undefined);
-                    setIsCreateModalOpen(true);
-                  }}
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  创建主分类
-                </Button>
-              </div>
-            )}
-          </div>
+          )}
+        </div>
       </div>
 
       {/* 创建/编辑主分类对话框 */}

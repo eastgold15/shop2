@@ -7,7 +7,6 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { SITE_CONFIG_KEY_OPTIONS } from "@/lib/utils/constants";
 import {
   Dialog,
   DialogContent,
@@ -40,6 +39,7 @@ import {
   useCreateSiteConfig,
   useUpdateSiteConfig,
 } from "@/hooks/api/site-config";
+import { SITE_CONFIG_KEY_OPTIONS } from "@/lib/utils/constants";
 
 const formSchema = z.object({
   key: z.string().min(1, "配置键不能为空"),
@@ -175,7 +175,7 @@ export function CreateSiteConfigModal({
                       value={field.value}
                     />
                   </FormControl>
-                  <FormDescription>选择此配置项所属                      的站点</FormDescription>
+                  <FormDescription>选择此配置项所属 的站点</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -192,7 +192,7 @@ export function CreateSiteConfigModal({
                     onValueChange={field.onChange}
                     value={field.value}
                   >
-                    <FormControl>                                  
+                    <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="请选择配置类型" />
                       </SelectTrigger>

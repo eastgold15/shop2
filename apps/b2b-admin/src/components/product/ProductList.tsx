@@ -191,6 +191,7 @@ export function ProductList({
 
             <CollapsibleContent>
               <SkuPanel
+                onBatchDeleteSku={onBatchDeleteSku}
                 onDelete={onDeleteSku}
                 onEdit={onEditSku}
                 onManageVariantMedia={
@@ -198,14 +199,13 @@ export function ProductList({
                     ? () => onManageVariantMedia(product.id)
                     : undefined
                 }
-                productId={product.id}
-                skus={product.skus}
-                viewMode={viewMode}
-                // SKU 批量选择和删除
-                selectedSkuIds={selectedSkuIds}
                 onSelectSku={onSelectSku}
                 onToggleAllSkus={onToggleAllSkus}
-                onBatchDeleteSku={onBatchDeleteSku}
+                // SKU 批量选择和删除
+                productId={product.id}
+                selectedSkuIds={selectedSkuIds}
+                skus={product.skus}
+                viewMode={viewMode}
               />
             </CollapsibleContent>
           </Collapsible>

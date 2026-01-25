@@ -1,9 +1,8 @@
 import { SiteConfigContract } from "@repo/contract";
-import Elysia, { t } from "elysia";
+import Elysia from "elysia";
 import { dbPlugin } from "~/db/connection";
 import { siteMiddleware } from "~/middleware/site";
 import { SiteConfigService } from "~/service/site-config.service";
-
 
 const siteConfigService = new SiteConfigService();
 
@@ -12,8 +11,7 @@ export const siteConfigController = new Elysia({ prefix: "/site-config" })
   .use(siteMiddleware)
   .get(
     "/",
-    ({ query, db,site }) =>
-      siteConfigService.list(query, { db,site }),
+    ({ query, db, site }) => siteConfigService.list(query, { db, site }),
     {
       query: SiteConfigContract.ListQuery,
 
@@ -23,4 +21,4 @@ export const siteConfigController = new Elysia({ prefix: "/site-config" })
         tags: ["SiteConfig"],
       },
     }
-  )
+  );

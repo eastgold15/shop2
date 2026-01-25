@@ -1,14 +1,8 @@
 {
   "last_synced_commit": "xxxxx",
   "knowledge_map": {
-    "auth": [
-      "src/services/auth.ts",
-      "docs/modules/auth.md"
-    ],
-    "db_schema": [
-      "src/db/schema.ts",
-      "docs/technical/data-model.md"
-    ]
+    "auth": ["src/services/auth.ts", "docs/modules/auth.md"],
+    "db_schema": ["src/db/schema.ts", "docs/technical/data-model.md"]
   },
   "pending_tasks": []
 }

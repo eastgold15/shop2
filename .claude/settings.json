@@ -13,8 +13,6 @@
     ]
   },
   "permissions": {
-    "allow": [
-      "Bash(test:*)"
-    ]
+    "allow": ["Bash(test:*)"]
   }
 }

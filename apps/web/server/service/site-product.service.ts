@@ -274,7 +274,6 @@ export class SiteProductService {
       with: {
         product: {
           with: {
-
             // 🔥 新增：查询变体媒体
             variantMedia: {
               with: {

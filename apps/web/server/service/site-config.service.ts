@@ -1,9 +1,7 @@
-import { SiteConfigContract, siteConfigTable } from "@repo/contract";
+import { SiteConfigContract } from "@repo/contract";
 import { ServiceContext } from "~/middleware/site";
 
-
 export class SiteConfigService {
-
   public async list(
     query: SiteConfigContract["ListQuery"],
     ctx: ServiceContext
@@ -20,6 +18,4 @@ export class SiteConfigService {
     });
     return res;
   }
-
-
 }

@@ -30,7 +30,6 @@ const adminRole = ac.newRole({
   ...adminAc.statements,
 });
 
-
 /**
  * Better-Auth 核心配置
  * 结合了 Drizzle ORM、邮箱验证、GitHub 社交登录以及自定义用户字段
@@ -49,7 +48,6 @@ export const auth = betterAuth({
       roles: {
         admin: adminRole, // 显式定义 admin 角色
         super_admin, // 显式定义 super_admin 角色
-
       },
       defaultRole: "user",
       adminRoles: ["admin", "super_admin"],
