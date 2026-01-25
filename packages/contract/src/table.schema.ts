@@ -616,6 +616,7 @@ export const siteCategoryTable = p.pgTable("site_category", {
   masterCategoryId: p
     .uuid("master_category_id")
     .references(() => masterCategoryTable.id, { onDelete: "set null" }),
+  url: p.varchar("url", { length: 500 }).optional(), // 外部链接 URL
 });
 // 站点商品分裂
 export const siteProductSiteCategoryTable = p.pgTable(

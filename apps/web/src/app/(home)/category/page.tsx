@@ -1,14 +1,10 @@
 import { Suspense } from "react";
 import CategoryClient from "@/components/CategoryClient";
-import Footer from "@/components/layout/Footer";
-import Navbar from "@/components/Navbar/Navbar";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function CategoryPage() {
   return (
-    <div className="relative min-h-screen bg-white font-sans text-black selection:bg-black selection:text-white">
-      <Navbar />
-      <Suspense
+    <Suspense
         fallback={
           <div className="mx-auto max-w-480 px-4 pt-32 md:px-8 lg:px-12">
             <div className="mb-12 text-center">
@@ -28,7 +24,5 @@ export default function CategoryPage() {
       >
         <CategoryClient />
       </Suspense>
-      <Footer />
-    </div>
   );
 }

@@ -2,8 +2,6 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import Footer from "@/components/layout/Footer";
-import Navbar from "@/components/Navbar/Navbar";
 import ProductDetail from "@/components/product/ProductDetail";
 import { Skeleton } from "@/components/ui/skeleton"; // 假设你已经有这个组件
 import { useProductDetail } from "@/hooks/api/product-hook";
@@ -16,10 +14,8 @@ export default function ProductPage() {
 
   if (isLoading) {
     return (
-      <main className="min-h-screen bg-white">
-        <Navbar />
+      <>
         {/* 使用骨架屏模拟详情页布局，防止布局抖动 (CLS) */}
-        [Image of skeleton screen layout for product detail page]
         <div className="mx-auto max-w-325 px-6 py-32">
           <div className="grid grid-cols-1 gap-12 lg:grid-cols-12">
             {/* 左侧：图片骨架 */}
@@ -51,16 +47,13 @@ export default function ProductPage() {
             </div>
           </div>
         </div>
-        <Footer />
-      </main>
+      </>
     );
   }
 
   if (error || !data) {
     return (
-      <main className="flex min-h-screen flex-col bg-white">
-        <Navbar />
-        <div className="flex min-h-[60vh] flex-1 flex-col items-center justify-center px-4 text-center">
+      <div className="flex min-h-[60vh] flex-1 flex-col items-center justify-center px-4 text-center">
           <h1 className="mb-4 font-serif text-4xl italic">Product not found</h1>
           <p className="mb-8 text-gray-500">
             The product you're looking for doesn't exist or has been removed.
@@ -71,16 +64,13 @@ export default function ProductPage() {
             </button>
           </Link>
         </div>
-        <Footer />
-      </main>
+      </>
     );
   }
 
   return (
-    <main className="min-h-screen bg-white">
-      <Navbar />
+    <>
       <ProductDetail siteProduct={data} />
-      <Footer />
-    </main>
+    </>
   );
 }
