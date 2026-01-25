@@ -9,7 +9,7 @@ export type CategoryWithChildren = Omit<
   "children"
 > & {
   children?: CategoryWithChildren[];
-  url?: string; // 添加 url 字段
+  url?: string | null; // 添加 url 字段，匹配数据库返回类型
 };
 
 // 判断是否为外部链接

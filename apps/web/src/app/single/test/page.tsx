@@ -13,7 +13,7 @@ const components = {
 };
 
 // 模拟从远程获取 MDX 内容（后续替换为真实 API）
-function getRemoteMdxContent(): Promise<string> {
+async function getRemoteMdxContent(): Promise<string> {
   // TODO: 替换为真实的远程数据源
   // const res = await fetch('https://your-api.com/content/mdx')
   // return await res.text()

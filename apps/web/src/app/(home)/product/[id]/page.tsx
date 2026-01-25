@@ -54,23 +54,20 @@ export default function ProductPage() {
   if (error || !data) {
     return (
       <div className="flex min-h-[60vh] flex-1 flex-col items-center justify-center px-4 text-center">
-          <h1 className="mb-4 font-serif text-4xl italic">Product not found</h1>
-          <p className="mb-8 text-gray-500">
-            The product you're looking for doesn't exist or has been removed.
-          </p>
-          <Link href="/shop">
-            <button className="bg-black px-8 py-3 font-bold text-white text-xs uppercase tracking-widest transition-colors hover:bg-gray-800">
-              Back to Shop
-            </button>
-          </Link>
-        </div>
-      </>
+        <h1 className="mb-4 font-serif text-4xl italic">Product not found</h1>
+        <p className="mb-8 text-gray-500">
+          The product you're looking for doesn't exist or has been removed.
+        </p>
+        <Link href="/shop">
+          <button className="bg-black px-8 py-3 font-bold text-white text-xs uppercase tracking-widest transition-colors hover:bg-gray-800">
+            Back to Shop
+          </button>
+        </Link>
+      </div>
     );
   }
 
   return (
-    <>
-      <ProductDetail siteProduct={data} />
-    </>
+    <ProductDetail siteProduct={data} />
   );
 }

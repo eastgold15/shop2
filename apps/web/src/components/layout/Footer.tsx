@@ -4,26 +4,28 @@ import Image from "next/image";
 import Link from "next/link";
 import type React from "react";
 import { useSiteConfigList } from "@/hooks/api/site-config";
+import { SITE_CONFIG } from "@/lib/utils/constants";
 
+const { SITE_CONFIG_KEYS } = SITE_CONFIG;
 const Footer: React.FC = () => {
   const { data: site_phone } = useSiteConfigList({
     query: {
-      key: "site_phone",
+      key: SITE_CONFIG_KEYS.site_phone,
     },
   });
   const { data: site_copyright } = useSiteConfigList({
     query: {
-      key: "site_copyright",
+      key: SITE_CONFIG_KEYS.site_copyright,
     },
   });
   const { data: site_email } = useSiteConfigList({
     query: {
-      key: "site_email",
+      key: SITE_CONFIG_KEYS.site_email,
     },
   });
   const { data: site_erweima } = useSiteConfigList({
     query: {
-      key: "site_erweima",
+      key: SITE_CONFIG_KEYS.site_erweima,
     },
   });
 
