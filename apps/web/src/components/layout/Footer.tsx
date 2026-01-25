@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import type React from "react";
 import { useSiteConfigList } from "@/hooks/api/site-config";
@@ -20,31 +21,16 @@ const Footer: React.FC = () => {
       key: "site_email",
     },
   });
+  const { data: site_erweima } = useSiteConfigList({
+    query: {
+      key: "site_erweima",
+    },
+  });
 
   return (
     <footer className="border-gray-200 border-t bg-white pt-20 pb-10">
       <div className="mx-auto max-w-350 px-6">
-        {/* Newsletter */}
-        <div className="mx-auto mb-20 max-w-xl text-center">
-          <h4 className="mb-4 font-serif text-2xl">
-            Join the World of DONGQIFOOTWEAR
-          </h4>
-          <p className="mb-8 text-gray-500 text-sm">
-            Be the first to know about new collections and exclusive events.
-          </p>
-          <div className="flex border-black border-b pb-2">
-            <input
-              className="flex-1 bg-transparent text-sm placeholder-gray-400 focus:outline-none"
-              placeholder="E-mail Address"
-              type="email"
-            />
-            <button className="font-bold text-xs uppercase tracking-widest hover:text-gray-600">
-              Subscribe
-            </button>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-12 text-center md:grid-cols-4 md:text-left">
+        <div className="grid grid-cols-2 text-center md:grid-cols-5 md:text-left">
           <div>
             <h5 className="mb-6 font-bold text-xs uppercase tracking-widest">
               Customer Care
@@ -99,22 +85,41 @@ const Footer: React.FC = () => {
             </ul>
           </div>
 
-          {/* <div>
+          <div>
             <h5 className="mb-6 font-bold text-xs uppercase tracking-widest">
               Follow Us
             </h5>
             <div className="flex justify-center space-x-6 text-gray-900 md:justify-start">
-              <a className="hover:text-gray-500" href="#">
-                <Instagram className="h-5 w-5" />
-              </a>
-              <a className="hover:text-gray-500" href="#">
-                <Facebook className="h-5 w-5" />
-              </a>
-              <a className="hover:text-gray-500" href="#">
-                <Twitter className="h-5 w-5" />
-              </a>
+              <div className="icon-[ic--baseline-whatsapp] text-2xl text-green-500" />
+
+              {site_erweima?.[0]?.value ? (
+                <Image
+                  alt="erweima"
+                  height={64}
+                  src={site_erweima?.[0]?.value}
+                  width={64}
+                />
+              ) : (
+                "No QR Code"
+              )}
             </div>
-          </div> */}
+          </div>
+
+          {/* Newsletter */}
+          <div className="mx-auto mb-20 max-w-xl text-center">
+            <h4 className="\text-sm mb-4 text-left font-serif">NEWSLETTER</h4>
+
+            <div className="flex border-black border-b pb-2">
+              <input
+                className="flex-1 bg-transparent text-sm placeholder-gray-400 focus:outline-none"
+                placeholder="E-mail Address"
+                type="email"
+              />
+              <button className="font-bold text-xs uppercase tracking-widest hover:text-gray-600">
+                Subscribe
+              </button>
+            </div>
+          </div>
         </div>
 
         <div className="mt-20 flex flex-col items-center justify-between border-gray-100 border-t pt-8 text-center text-gray-400 text-xs uppercase tracking-wider md:flex-row">
