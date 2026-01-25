@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
+import { SITE_CONFIG_KEY_OPTIONS } from "@/lib/utils/constants";
 import {
   Dialog,
   DialogContent,
@@ -174,7 +175,7 @@ export function CreateSiteConfigModal({
                       value={field.value}
                     />
                   </FormControl>
-                  <FormDescription>选择此配置项所属的站点</FormDescription>
+                  <FormDescription>选择此配置项所属                      的站点</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -191,16 +192,17 @@ export function CreateSiteConfigModal({
                     onValueChange={field.onChange}
                     value={field.value}
                   >
-                    <FormControl>
+                    <FormControl>                                  
                       <SelectTrigger>
                         <SelectValue placeholder="请选择配置类型" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="site_name">网站名</SelectItem>
-                      <SelectItem value="site_copyright">版权</SelectItem>
-                      <SelectItem value="site_phone">电话</SelectItem>
-                      <SelectItem value="site_email">邮箱</SelectItem>
+                      {SITE_CONFIG_KEY_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormDescription>选择配置项的类型</FormDescription>
