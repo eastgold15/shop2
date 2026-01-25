@@ -10,20 +10,25 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { HasRole } from "@/components/auth";
+import { CreateDepartmentModal } from "@/components/form/CreateDepartmentModal";
 import {
-  CreateDepartmentWithSiteModal,
+  EditDepartmentModal,
   EditDeptData,
-} from "@/components/form/CreateDepartmentWithSiteModal";
+} from "@/components/form/EditDepartmentModal";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { useDepartmentDetail, useDepartmentList } from "@/hooks/api/department";
+import {
+  useDeleteDepartment,
+  useDepartmentDetail,
+  useDepartmentList,
+} from "@/hooks/api/department";
 import { DeptListRes } from "@/hooks/api/department.type";
 import { useAuthStore } from "@/stores/auth-store";
 
 export default function UsersPage() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingDeptId, setEditingDeptId] = useState<string | undefined>();
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingDeptData, setEditingDeptData] = useState<
     EditDeptData | undefined
   >(undefined);
@@ -43,7 +48,9 @@ export default function UsersPage() {
     (state) => state.user?.context.department.id
   );
 
-  const { data: detailResponse, error } = useDepartmentDetail(
+  const editingDeptId = editingDeptData?.department.id;
+
+  const { data: detailResponse } = useDepartmentDetail(
     editingDeptId,
     !!editingDeptId
   );
@@ -52,13 +59,13 @@ export default function UsersPage() {
     departmentsResponse?.filter((item) => item.id !== currentDeptId) || [];
 
   const handleEdit = (dept: Partial<DeptListRes>) => {
-    setEditingDeptId(dept.id);
     setEditingDeptData({
       department: {
         id: dept.id,
         name: dept.name,
         code: dept.code,
         category: dept.category,
+        parentId: dept.parentId,
         address: dept.address,
         contactPhone: dept.contactPhone,
       },
@@ -68,55 +75,60 @@ export default function UsersPage() {
         domain: dept.name,
       },
     });
-    setIsModalOpen(true);
+    setIsEditModalOpen(true);
   };
 
   useEffect(() => {
     if (detailResponse && editingDeptId) {
-      setEditingDeptData((prev: any) => ({
-        ...prev,
-        admin: detailResponse.manager
-          ? {
-              ...detailResponse.manager,
-            }
-          : undefined,
-      }));
+      setEditingDeptData((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          admin: detailResponse.manager
+            ? {
+                ...detailResponse.manager,
+              }
+            : undefined,
+        };
+      });
     }
   }, [detailResponse, editingDeptId]);
 
   const handleCreate = () => {
-    setEditingDeptId(undefined);
-    setEditingDeptData(undefined);
-    setIsModalOpen(true);
+    setIsCreateModalOpen(true);
   };
 
-  const handleModalClose = () => {
-    setEditingDeptId(undefined);
-    setEditingDeptData(undefined);
-    setIsModalOpen(false);
+  const handleCreateModalClose = () => {
+    setIsCreateModalOpen(false);
   };
 
-  const handleModalSuccess = () => {
-    setEditingDeptId(undefined);
-    setEditingDeptData(undefined);
-    setIsModalOpen(false);
+  const handleCreateModalSuccess = () => {
+    setIsCreateModalOpen(false);
     refetchDepartments();
   };
 
+  const handleEditModalClose = () => {
+    setEditingDeptData(undefined);
+    setIsEditModalOpen(false);
+  };
+
+  const handleEditModalSuccess = () => {
+    setEditingDeptData(undefined);
+    setIsEditModalOpen(false);
+    refetchDepartments();
+  };
+
+  const deleteDepartment = useDeleteDepartment();
+
   const handleDelete = async (id: string, name: string) => {
-    const message = `确定要删除部门 "${name}" 吗？\n\n注意：这将同时删除：\n1. 该部门的所有下级部门\n2. 关联的站点\n3. 该部门的所有用户\n\n此操作不可恢复！`;
+    const message = `确定要删除部门 "${name}" 吗？\n\n注意：这将同时删除：\n1. 该部门的所有用户\n2. 关联的站点及其所有数据（分类、配置、广告、轮播图等）\n\n此操作不可恢复！`;
     if (!confirm(message)) {
       return;
     }
     try {
-      await fetch(`/api/v1/department/${id}`, {
-        method: "DELETE",
-      });
-      alert("部门删除成功");
-      refetchDepartments();
+      await deleteDepartment.mutateAsync(id);
     } catch (error) {
-      console.error("删除失败:", error);
-      alert("删除失败，请稍后重试");
+      // 错误已在 hook 中处理
     }
   };
 
@@ -155,7 +167,7 @@ export default function UsersPage() {
                 管理您的组织架构，创建部门和站点
               </p>
             </div>
-            <HasRole role={["super_admin", "exporter_admin", "factory_admin"]}>
+            <HasRole role={["super_admin", "出口商管理员", "工厂管理员"]}>
               <Button onClick={handleCreate}>
                 <Plus className="mr-2" size={18} />
                 创建部门
@@ -177,9 +189,7 @@ export default function UsersPage() {
               <p className="mb-4 text-center text-slate-500">
                 您还没有创建任何部门。点击下方按钮开始创建您的第一个部门。
               </p>
-              <HasRole
-                role={["super_admin", "exporter_admin", "factory_admin"]}
-              >
+              <HasRole role={["super_admin", "出口商管理员", "工厂管理员"]}>
                 <Button onClick={handleCreate}>
                   <Plus className="mr-2" size={18} />
                   创建第一个部门
@@ -278,12 +288,16 @@ export default function UsersPage() {
         </div>
       </div>
 
-      <CreateDepartmentWithSiteModal
+      <CreateDepartmentModal
+        onOpenChange={handleCreateModalClose}
+        onSuccess={handleCreateModalSuccess}
+        open={isCreateModalOpen}
+      />
+      <EditDepartmentModal
         initialData={editingDeptData}
-        mode={editingDeptId ? "edit" : "create"}
-        onOpenChange={handleModalClose}
-        onSuccess={handleModalSuccess}
-        open={isModalOpen}
+        onOpenChange={handleEditModalClose}
+        onSuccess={handleEditModalSuccess}
+        open={isEditModalOpen}
       />
     </>
   );

@@ -16,7 +16,6 @@ export const DepartmentFields = spread(departmentTable, "select");
 const CreateDepartmentWithSiteAndAdmin = t.Object({
   // 部门信息
   department: t.Object({
-    id: t.Optional(t.String()),
     name: t.String({ minLength: 2 }),
     code: t.String({ minLength: 2 }),
     category: t.Union([t.Literal("group"), t.Literal("factory")]),
@@ -44,6 +43,40 @@ const CreateDepartmentWithSiteAndAdmin = t.Object({
   }),
 });
 
+// 更新部门+站点+管理员的请求体（管理员信息可选）
+const UpdateDepartmentWithSiteAndAdmin = t.Object({
+  // 部门信息（必填，id必填）
+  department: t.Object({
+    id: t.String(),
+    name: t.String({ minLength: 2 }),
+    code: t.String({ minLength: 2 }),
+    category: t.Union([t.Literal("group"), t.Literal("factory")]),
+    parentId: t.Optional(t.String()),
+    address: t.Optional(t.String()),
+    contactPhone: t.Optional(t.String()),
+    logo: t.Optional(t.String()),
+    extensions: t.Optional(t.Any()),
+  }),
+
+  // 站点信息
+  site: t.Object({
+    name: t.String({ minLength: 2 }),
+    domain: t.String({ minLength: 2 }),
+    isActive: t.Optional(t.Boolean()),
+  }),
+
+  // 管理员用户信息（可选）
+  admin: t.Optional(
+    t.Object({
+      name: t.String({ minLength: 2 }),
+      email: t.String({ format: "email" }),
+      password: t.Optional(t.String({ minLength: 6 })), // 密码可选，留空不修改
+      phone: t.Optional(t.String()),
+      position: t.Optional(t.String()),
+    })
+  ),
+});
+
 // 响应体
 const CreateDepartmentWithSiteAndAdminResponse = t.Object({
   department: t.Object({
@@ -68,6 +101,7 @@ export const DepartmentContract = {
     ...DepartmentFields,
   }),
   CreateDepartmentWithSiteAndAdmin,
+  UpdateDepartmentWithSiteAndAdmin,
   CreateDepartmentWithSiteAndAdminResponse,
   /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Create: t.Object({

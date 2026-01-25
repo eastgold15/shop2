@@ -2,11 +2,12 @@ import { randomBytes, scryptSync } from "node:crypto";
 import {
   type DepartmentContract,
   departmentTable,
+  salesResponsibilityTable,
   siteTable,
   userRoleTable,
   userTable,
 } from "@repo/contract";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { HttpError } from "elysia-http-problem-json";
 import { auth } from "~/lib/auth";
 import { type ServiceContext } from "../lib/type";
@@ -30,10 +31,10 @@ export class DepartmentService {
       // 自动注入租户信息
       ...(ctx.user
         ? {
-            tenantId: ctx.user.context.tenantId!,
-            createdBy: ctx.user.id,
-            deptId: ctx.currentDeptId,
-          }
+          tenantId: ctx.user.context.tenantId!,
+          createdBy: ctx.user.id,
+          deptId: ctx.currentDeptId,
+        }
         : {}),
     };
     const [res] = await ctx.db
@@ -79,8 +80,61 @@ export class DepartmentService {
         ...(search ? { name: { ilike: `%${search}%` } } : {}),
         ...where,
       },
+      with: {
+        // 只加载必要的管理员信息，用于列表显示
+        users: {
+          columns: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            updatedAt: true,
+          },
+          with: {
+            roles: {
+              columns: {
+                name: true,
+              },
+            },
+          },
+        },
+      },
     });
-    return res;
+
+    // 为每个部门添加管理员信息
+    const result = res.map((dept) => {
+      const managers =
+        dept.users?.filter((u) =>
+          u.roles?.some((r) => r.name === "工厂管理员")
+        ) || [];
+      const manager =
+        managers.length > 0
+          ? managers.sort(
+            (a, b) =>
+              new Date(b.updatedAt).getTime() -
+              new Date(a.updatedAt).getTime()
+          )[0]
+          : null;
+
+      const { users, ...deptWithoutUsers } = dept;
+      return {
+        ...deptWithoutUsers,
+        manager: manager
+          ? {
+            id: manager.id,
+            name: manager.name,
+            email: manager.email,
+            phone: manager.phone,
+          }
+          : null,
+      };
+    });
+
+    console.log("=== Department List Debug ===");
+    console.log("返回部门数量:", result.length);
+    console.log("部门列表:", JSON.stringify(result, null, 2));
+
+    return result;
   }
 
   public async update(
@@ -98,14 +152,63 @@ export class DepartmentService {
   }
 
   public async delete(id: string, ctx: ServiceContext) {
-    const [res] = await ctx.db
-      .delete(departmentTable)
-      .where(eq(departmentTable.id, id))
-      .returning();
-    return res;
+    return await ctx.db.transaction(async (tx) => {
+      // 1. 检查部门是否存在
+      const dept = await tx.query.departmentTable.findFirst({
+        where: { id },
+      });
+      if (!dept) {
+        throw new HttpError.NotFound("部门不存在");
+      }
+
+      // 2. 检查是否有子部门
+      const children = await tx.query.departmentTable.findMany({
+        where: { parentId: id },
+      });
+      if (children.length > 0) {
+        throw new HttpError.BadRequest("请先删除子部门");
+      }
+
+      // 3. 删除该部门的所有用户（及用户角色关联）
+      const users = await tx.query.userTable.findMany({
+        where: { deptId: id },
+        columns: { id: true },
+      });
+      const userIds = users.map((u) => u.id);
+      if (userIds.length > 0) {
+        // 先删除用户角色关联
+        await tx
+          .delete(userRoleTable)
+          .where(inArray(userRoleTable.userId, userIds));
+
+        // 删除用户
+        await tx.delete(userTable).where(eq(userTable.deptId, id));
+      }
+
+      // 4. 删除绑定到该部门的站点
+      // 站点的关联数据会通过数据库 CASCADE 自动删除：
+      // - site_category, site_config, site_product, site_sku
+      // - ad, hero_card
+      // 但 sales_responsibility 没有 CASCADE，需要手动删除
+      await tx
+        .delete(salesResponsibilityTable)
+        .where(eq(salesResponsibilityTable.siteId, id));
+      await tx.delete(siteTable).where(eq(siteTable.boundDeptId, id));
+
+      // 5. 删除部门
+      const [deleted] = await tx
+        .delete(departmentTable)
+        .where(eq(departmentTable.id, id))
+        .returning();
+
+      return deleted;
+    });
   }
 
   public async detail(id: string, ctx: ServiceContext) {
+    console.log("=== Department Detail Debug ===");
+    console.log("查询部门 ID:", id);
+
     const department = await ctx.db.query.departmentTable.findFirst({
       where: {
         id,
@@ -123,27 +226,46 @@ export class DepartmentService {
       throw new HttpError.NotFound("部门不存在");
     }
 
-    const manager = department.users?.find(
-      (user) =>
-        user.roles.some((role) => role.name === "工厂管理员") && user.isActive
-    );
+    console.log("部门用户数量:", department.users?.length || 0);
+    console.log("所有用户:", JSON.stringify(department.users, null, 2));
 
-    return {
+    // 选择最新创建/更新的管理员，而不是第一个
+    const managers =
+      department.users?.filter(
+        (user) =>
+          user.roles.some((role) => role.name === "工厂管理员") && user.isActive
+      ) || [];
+
+    // 按 updatedAt 降序排序，选择最新的
+    const manager =
+      managers.length > 0
+        ? managers.sort(
+          (a, b) =>
+            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        )[0]
+        : null;
+
+    console.log("找到的管理员:", JSON.stringify(manager, null, 2));
+
+    const result = {
       ...department,
       manager: manager
         ? {
-            id: manager.id,
-            name: manager.name,
-            email: manager.email,
-            phone: manager.phone,
-          }
+          id: manager.id,
+          name: manager.name,
+          email: manager.email,
+          phone: manager.phone,
+        }
         : null,
     };
+
+    console.log("返回的部门详情:", JSON.stringify(result, null, 2));
+    return result;
   }
 
   /**
    * 创建部门+站点+管理员
-   * 使用事务确保数据一致性
+   * 注意：用户创建必须在事务外部使用 better auth
    */
   async createDepartmentWithSiteAndAdmin(
     body: typeof DepartmentContract.CreateDepartmentWithSiteAndAdmin.static,
@@ -151,19 +273,25 @@ export class DepartmentService {
     headers: any
   ) {
     const { db, user } = ctx;
+    const tenantId = user.context.tenantId!;
 
-    // 使用事务执行
-    return await db.transaction(async (tx) => {
-      const { id, ...deptData } = body.department;
+    if (!tenantId) {
+      throw new HttpError.BadRequest("租户ID不能为空");
+    }
 
+    // 步骤1：使用事务创建部门和站点
+    const { dept, newSite } = await db.transaction(async (tx) => {
       // 1. 创建部门
-      const [department] = await tx
+      // 注意：使用用户原始部门ID作为父级，而不是切换后的 currentDeptId
+      // 因为无论用户切换到哪个部门，新创建的部门都应该挂在用户的原始部门下
+      const parentDeptId = user.context.department.id;
+
+      const [dept] = await tx
         .insert(departmentTable)
         .values({
-          id, // 必须显式传入 ID，否则无法判断冲突
-          tenantId: user.context.tenantId!,
+          tenantId,
           name: body.department.name,
-          parentId: body.department.parentId || null,
+          parentId: parentDeptId || null,
           code: body.department.code,
           category: body.department.category as "factory" | "group",
           address: body.department.address,
@@ -172,24 +300,161 @@ export class DepartmentService {
           extensions: body.department.extensions || null,
           isActive: true,
         })
-        .onConflictDoUpdate({
-          target: departmentTable.id,
-          set: deptData,
-        })
         .returning();
 
-      if (!department?.id) {
+      if (!dept?.id) {
         throw new HttpError.InternalServerError(
           "部门ID获取失败，无法继续创建关联数据"
         );
       }
-      const departmentId = department.id;
 
-      // 2. 创建/更新站点（绑定部门ID）
-      const [site] = await tx
+      console.log("departmentId:", dept.id);
+
+      // 2. 创建站点
+      const [newSite] = await tx
         .insert(siteTable)
         .values({
-          tenantId: user.context.tenantId!,
+          tenantId,
+          boundDeptId: dept.id,
+          siteType: "factory",
+          name: body.site.name,
+          domain: body.site.domain,
+          isActive: body.site.isActive ?? true,
+        })
+        .returning();
+
+      if (!newSite?.id) {
+        throw new HttpError.InternalServerError("站点创建失败，无法获取站点ID");
+      }
+
+      return { dept, newSite };
+    });
+
+    // 事务已提交，部门和站点已在数据库中
+
+    // 步骤2：使用 better auth 创建管理员用户（必须在事务外部）
+    const departmentId = dept.id;
+    const newUserResponse = await auth.api.createUser({
+      body: {
+        email: body.admin.email,
+        password: body.admin.password,
+        name: body.admin.name,
+        role: "admin",
+        data: {
+          deptId: departmentId,
+          tenantId,
+          phone: body.admin.phone,
+        },
+      },
+    });
+
+    const adminUserId = newUserResponse.user.id;
+    const adminUserEmail = newUserResponse.user.email;
+    const adminUserName = newUserResponse.user.name;
+
+    console.log("新管理员创建完成，userId:", adminUserId);
+
+    // 步骤3：分配角色给用户
+    const role = await db.query.roleTable.findFirst({
+      where: {
+        name: "工厂管理员",
+      },
+    });
+
+    if (role) {
+      await db
+        .insert(userRoleTable)
+        .values({
+          userId: adminUserId,
+          roleId: role.id,
+        })
+        .onConflictDoNothing();
+    }
+
+    // 构造返回结果
+    const result = {
+      department: {
+        id: dept.id,
+        name: dept.name,
+        code: dept.code,
+        category: dept.category,
+      },
+      site: {
+        id: newSite.id,
+        name: newSite.name,
+        domain: newSite.domain,
+        siteType: newSite.siteType,
+      },
+      admin: {
+        id: adminUserId,
+        name: adminUserName,
+        email: adminUserEmail,
+      },
+    };
+
+    console.log("=== 创建完成 ===");
+    console.log(JSON.stringify(result, null, 2));
+
+    return result;
+  }
+
+  /**
+   * 更新部门+站点+管理员
+   * 管理员信息可选
+   * 注意：用户创建/更新必须在事务外部使用 better auth
+   */
+  async updateDepartmentWithSiteAndAdmin(
+    body: typeof DepartmentContract.UpdateDepartmentWithSiteAndAdmin.static,
+    ctx: ServiceContext,
+    headers: any
+  ) {
+    const { db, user } = ctx;
+    const tenantId = user.context.tenantId!;
+    const departmentId = body.department.id;
+
+    if (!tenantId) {
+      throw new HttpError.BadRequest("租户ID不能为空");
+    }
+
+    // 步骤1：使用事务更新部门和站点
+    const { dept, newSite } = await db.transaction(async (tx) => {
+      // 1. 检查部门是否存在
+      const existingDept = await tx.query.departmentTable.findFirst({
+        where: { id: departmentId },
+      });
+
+      if (!existingDept) {
+        throw new HttpError.NotFound("部门不存在");
+      }
+
+      // 2. 更新部门
+      const [dept] = await tx
+        .update(departmentTable)
+        .set({
+          name: body.department.name,
+          parentId: body.department.parentId || null,
+          code: body.department.code,
+          category: body.department.category as "factory" | "group",
+          address: body.department.address,
+          contactPhone: body.department.contactPhone,
+          logo: body.department.logo,
+          extensions: body.department.extensions || null,
+          updatedAt: new Date(),
+        })
+        .where(eq(departmentTable.id, departmentId))
+        .returning();
+
+      if (!dept?.id) {
+        throw new HttpError.InternalServerError("部门更新失败");
+      }
+
+      console.log("departmentId:", departmentId);
+
+      // 3. 更新站点（使用 Upsert）
+      const [newSite] = await tx
+        .insert(siteTable)
+        .values({
+          tenantId,
           boundDeptId: departmentId,
           siteType: "factory",
           name: body.site.name,
@@ -202,102 +467,132 @@ export class DepartmentService {
             name: body.site.name,
             domain: body.site.domain,
             isActive: body.site.isActive ?? true,
+            updatedAt: new Date(),
           },
         })
         .returning();
 
-      // 3. 用户 Upsert 逻辑
-      let adminUserId: string;
+      if (!newSite?.id) {
+        throw new HttpError.InternalServerError("站点更新失败");
+      }
 
-      // 检查用户是否已存在
-      const existingUser = await tx.query.userTable.findFirst({
-        where: {
-          tenantId: user.context.tenantId!,
-          email: body.admin.email,
-        },
+      return { dept, newSite };
+    });
+
+    // 事务已提交
+
+    // 步骤2：如果提供了管理员信息，则创建/更新用户（必须在事务外部）
+    let adminInfo: { id: string; name: string; email: string } | undefined;
+
+    if (body.admin) {
+      const existingUser = await db.query.userTable.findFirst({
+        where: { email: body.admin.email },
       });
+
       if (existingUser) {
-        // --- 更新现有用户 ---
-        adminUserId = existingUser.id;
-        const updateData = {
-          name: body.admin.name,
-          deptId: departmentId,
-          phone: body.admin.phone,
+        // 用户已存在，更新用户信息
+        adminInfo = {
+          id: existingUser.id,
+          name: existingUser.name,
+          email: existingUser.email,
         };
-        // 如果传了新密码，需要加密 (这里假设你使用了 hashPassword 工具函数)
+
+        // 如果提供了密码，则更新密码
         if (body.admin.password) {
-          // ⚠️ 注意：如果你使用 Better Auth，建议调用它的 update 方法
-          const data = await auth.api.setUserPassword({
+          await auth.api.setUserPassword({
             body: {
-              newPassword: body.admin.password,
               userId: existingUser.id,
+              newPassword: body.admin.password,
             },
             headers,
           });
         }
-        await tx
+
+        // 更新用户信息
+        await db
           .update(userTable)
-          .set(updateData)
-          .where(eq(userTable.id, adminUserId));
-      } else {
-        // --- 创建新用户 ---
-        // Better Auth 的 signUpEmail 会自动处理内部的密码哈希
-        const signupRes = await auth.api.signUpEmail({
-          body: {
-            ...body.admin,
-            password: body.admin.password,
+          .set({
             name: body.admin.name,
+            phone: body.admin.phone || null,
+            position: body.admin.position || null,
+            updatedAt: new Date(),
+          })
+          .where(eq(userTable.id, existingUser.id));
+
+        console.log("管理员用户已更新:", {
+          id: existingUser.id,
+          name: body.admin.name,
+          email: existingUser.email,
+        });
+      } else {
+        // 用户不存在，创建新用户
+        const newUserResponse = await auth.api.createUser({
+          body: {
             email: body.admin.email,
-            tenantId: user.context.tenantId!,
-            deptId: departmentId,
+            password: body.admin.password || "123456", // 默认密码
+            name: body.admin.name,
+            role: "admin",
+            data: {
+              deptId: departmentId,
+              tenantId,
+              phone: body.admin.phone,
+            },
           },
         });
-        adminUserId = signupRes.user.id;
+
+        adminInfo = {
+          id: newUserResponse.user.id,
+          name: newUserResponse.user.name,
+          email: newUserResponse.user.email,
+        };
+
+        console.log("新管理员创建完成，userId:", adminInfo.id);
       }
 
-      const newUser = await db.query.userTable.findFirst({
-        where: {
-          id: adminUserId,
-        },
-      });
-
-      if (!newUser) {
-        throw new Error("沒有用戶");
-      }
-
-      // 5. 查找或创建 "dept_manager" 角色
-      const role = await tx.query.roleTable.findFirst({
+      // 步骤3：分配角色给用户
+      const role = await db.query.roleTable.findFirst({
         where: {
           name: "工厂管理员",
         },
       });
-      if (!role) throw new HttpError.NotFound("角色 工厂管理员 不存在");
 
-      // 6. 分配角色给用户
-      await tx
-        .insert(userRoleTable)
-        .values({
-          userId: adminUserId,
-          roleId: role.id,
-        })
-        .onConflictDoNothing();
+      if (role) {
+        await db
+          .insert(userRoleTable)
+          .values({
+            userId: adminInfo.id,
+            roleId: role.id,
+          })
+          .onConflictDoNothing();
+      }
+    }
 
-      return {
-        department: {
-          id: department.id,
-          name: department.name,
-        },
-        site: {
-          id: site.id,
-          name: site.name,
-          domain: site.domain,
-        },
+    // 构造返回结果
+    const result = {
+      department: {
+        id: dept.id,
+        name: dept.name,
+        code: dept.code,
+        category: dept.category,
+      },
+      site: {
+        id: newSite.id,
+        name: newSite.name,
+        domain: newSite.domain,
+        siteType: newSite.siteType,
+      },
+      ...(adminInfo && {
         admin: {
-          id: newUser.id,
-          name: newUser.name,
-          email: newUser.email,
+          id: adminInfo.id,
+          name: adminInfo.name,
+          email: adminInfo.email,
         },
-      };
-    });
+      }),
+    };
+
+    console.log("=== 更新完成 ===");
+    console.log(JSON.stringify(result, null, 2));
+
+    return result;
   }
 }

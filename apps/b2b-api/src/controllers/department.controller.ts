@@ -123,4 +123,29 @@ export const departmentController = new Elysia({ prefix: "/department" })
         tags: ["Department"],
       },
     }
+  )
+  // 自定义端点：更新部门+站点+管理员
+  .put(
+    "/with-site-and-admin",
+    async ({ body, user, db, currentDeptId, headers }) =>
+      departmentService.updateDepartmentWithSiteAndAdmin(
+        body,
+        {
+          db,
+          user,
+          currentDeptId,
+        },
+        headers
+      ),
+    {
+      body: DepartmentContract.UpdateDepartmentWithSiteAndAdmin,
+      allPermissions: ["DEPARTMENT_EDIT"],
+      requireDept: true,
+      detail: {
+        summary: "更新部门、站点和管理员",
+        description:
+          "更新部门、站点信息，管理员信息为可选（留空则不修改管理员）",
+        tags: ["Department"],
+      },
+    }
   );

@@ -146,7 +146,7 @@ export const userTable = p.pgTable("sys_user", {
   deptId: p
     .uuid("dept_id")
     .notNull()
-    .references(() => departmentTable.id),
+    .references(() => departmentTable.id, { onDelete: "cascade" }),
 
   role: p.varchar("role", { length: 50 }),
   banned: p.boolean("banned").default(false),
@@ -162,7 +162,7 @@ export const userTable = p.pgTable("sys_user", {
   isSuperAdmin: p.boolean("is_super_admin").default(false),
 });
 
-// @skipGen  [用户-角色关联表]
+
 export const userRoleTable = p.pgTable(
   "sys_user_role",
   {
@@ -170,11 +170,11 @@ export const userRoleTable = p.pgTable(
       .uuid("user_id")
       .notNull()
       .unique()
-      .references(() => userTable.id, { onDelete: "cascade" }),
+      .references(() => userTable.id, { onDelete: "set null" }),
     roleId: p
       .uuid("role_id")
       .notNull()
-      .references(() => roleTable.id, { onDelete: "cascade" }),
+      .references(() => roleTable.id, { onDelete: "restrict" }),
   },
   (t) => [p.primaryKey({ columns: [t.userId, t.roleId] })]
 );
@@ -195,7 +195,7 @@ export const salesResponsibilityTable = p.pgTable(
       .uuid("master_category_id")
       .notNull()
       .references(() => masterCategoryTable.id, { onDelete: "cascade" }),
-    siteId: p.uuid("site_id").references(() => siteTable.id),
+    siteId: p.uuid("site_id").references(() => siteTable.id, { onDelete: "cascade" }),
     // 3. 冗余 tenantId 以便快速过滤和鉴权
     tenantId: p
       .uuid("tenant_id")
@@ -279,9 +279,7 @@ export const trackingCols = {
 
 // --- 5. Business Tables (业务表 - 已应用 tenantCols) ---
 
-/**
- * @onlyGen contract
- */
+
 export const accountTable = p.pgTable("sys_account", {
   ...Audit,
   accountId: p.text("account_id").notNull(),
@@ -528,7 +526,7 @@ export const skuMediaTable = p.pgTable(
     mediaId: p
       .uuid("media_id")
       .notNull()
-      .references(() => mediaTable.id, { onDelete: "restrict" }),
+      .references(() => mediaTable.id, { onDelete: "cascade" }),
     isMain: p.boolean("is_main").default(false),
     sortOrder: p.integer("sort_order").default(0),
   },
@@ -842,7 +840,7 @@ export const quotationTable = p.pgTable("quotation", {
   productionDeptId: p
     .uuid("production_dept_id")
     .notNull()
-    .references(() => departmentTable.id),
+    .references(() => departmentTable.id, { onDelete: "set null" }),
   unitPriceUsd: p
     .decimal("unit_price_usd", { precision: 10, scale: 2 })
     .notNull(),
