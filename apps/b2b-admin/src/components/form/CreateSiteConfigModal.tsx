@@ -148,7 +148,7 @@ export function CreateSiteConfigModal({
 
   return (
     <Dialog onOpenChange={handleOpenChange} open={open}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-150">
         <DialogHeader>
           <DialogTitle>{isEdit ? "编辑站点配置" : "创建站点配置"}</DialogTitle>
           <DialogDescription>
