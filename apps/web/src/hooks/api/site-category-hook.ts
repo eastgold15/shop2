@@ -36,6 +36,7 @@ export interface SiteCategoryDetailRes {
   siteId: string;
   description?: string;
   masterCategoryId?: string;
+  url?: string;
 }
 export function useSiteCategoryDetail(
   id: string,

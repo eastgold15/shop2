@@ -36,6 +36,7 @@ export const SiteCategoryContract = {
       "deptId",
       "siteId",
     ]).properties,
+    url: t.Optional(t.String()), // 手动添加 url 字段
   }),
 
   Update: t.Partial(
@@ -45,6 +46,7 @@ export const SiteCategoryContract = {
         "updatedAt",
         "siteId",
       ]).properties,
+      url: t.Optional(t.String()), // 手动添加 url 字段
     })
   ),
   // Patch 请求 (部分更新)
@@ -55,6 +57,7 @@ export const SiteCategoryContract = {
         "updatedAt",
         "siteId",
       ]).properties,
+      url: t.Optional(t.String()), // 手动添加 url 字段
     })
   ),
 

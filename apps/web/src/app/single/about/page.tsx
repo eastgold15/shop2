@@ -22,10 +22,10 @@ function AboutPage() {
           </h2>
           <p className="mb-6 text-base text-gray-700 leading-relaxed md:text-lg">
             Founded in 2010, DONGQIFOOTWEAR has grown from a small local
-            workshop to a recognized name in the global footwear industry.
-            Based in Guangzhou, China, we have spent over a decade perfecting
-            the art of shoe manufacturing, combining traditional craftsmanship
-            with modern technology.
+            workshop to a recognized name in the global footwear industry. Based
+            in Guangzhou, China, we have spent over a decade perfecting the art
+            of shoe manufacturing, combining traditional craftsmanship with
+            modern technology.
           </p>
           <p className="mb-6 text-base text-gray-700 leading-relaxed md:text-lg">
             Our journey began with a simple mission: to create high-quality,
@@ -35,10 +35,10 @@ function AboutPage() {
             quality and design.
           </p>
           <p className="text-base text-gray-700 leading-relaxed md:text-lg">
-            With state-of-the-art manufacturing facilities and a team of
-            skilled artisans, we produce over 1 million pairs of shoes
-            annually, serving customers in more than 50 countries across
-            Europe, North America, Asia, and beyond.
+            With state-of-the-art manufacturing facilities and a team of skilled
+            artisans, we produce over 1 million pairs of shoes annually, serving
+            customers in more than 50 countries across Europe, North America,
+            Asia, and beyond.
           </p>
         </section>
 
@@ -50,10 +50,9 @@ function AboutPage() {
           <div className="rounded-lg bg-gray-50 p-8">
             <p className="text-center text-base text-gray-700 leading-relaxed md:text-lg">
               To provide exceptional footwear that combines quality, comfort,
-              and style while building lasting relationships with our
-              customers and partners. We are committed to sustainable
-              manufacturing practices and continuous innovation in design and
-              production.
+              and style while building lasting relationships with our customers
+              and partners. We are committed to sustainable manufacturing
+              practices and continuous innovation in design and production.
             </p>
           </div>
         </section>
@@ -86,16 +85,16 @@ function AboutPage() {
             <div className="rounded-lg border border-gray-200 bg-white p-6">
               <h3 className="mb-3 font-semibold text-xl">Integrity</h3>
               <p className="text-gray-700 leading-relaxed">
-                We conduct business with honesty and transparency. Trust is
-                the foundation of our relationships with clients and partners.
+                We conduct business with honesty and transparency. Trust is the
+                foundation of our relationships with clients and partners.
               </p>
             </div>
 
             <div className="rounded-lg border border-gray-200 bg-white p-6">
               <h3 className="mb-3 font-semibold text-xl">Innovation</h3>
               <p className="text-gray-700 leading-relaxed">
-                We continuously improve our processes and designs, embracing
-                new technologies and sustainable practices.
+                We continuously improve our processes and designs, embracing new
+                technologies and sustainable practices.
               </p>
             </div>
           </div>
@@ -134,9 +133,7 @@ function AboutPage() {
                 </li>
                 <li className="flex items-start">
                   <span className="mr-2">•</span>
-                  <span>
-                    Private label manufacturing for brands worldwide
-                  </span>
+                  <span>Private label manufacturing for brands worldwide</span>
                 </li>
               </ul>
             </div>
@@ -149,9 +146,8 @@ function AboutPage() {
                 <div className="rounded-lg bg-gray-50 p-5">
                   <h4 className="mb-2 font-semibold">Custom Design</h4>
                   <p className="text-gray-700 text-sm">
-                    Bring your vision to life with our design team. From
-                    concept to production, we support you every step of the
-                    way.
+                    Bring your vision to life with our design team. From concept
+                    to production, we support you every step of the way.
                   </p>
                 </div>
 
@@ -189,9 +185,8 @@ function AboutPage() {
             Sustainability Commitment
           </h2>
           <p className="mb-6 text-base text-gray-700 leading-relaxed md:text-lg">
-            We recognize our responsibility to the environment and are
-            committed to sustainable manufacturing practices. Our initiatives
-            include:
+            We recognize our responsibility to the environment and are committed
+            to sustainable manufacturing practices. Our initiatives include:
           </p>
           <ul className="mb-6 space-y-3 text-gray-700">
             <li className="flex items-start">

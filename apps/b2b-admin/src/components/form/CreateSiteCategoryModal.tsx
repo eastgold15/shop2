@@ -18,6 +18,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -36,6 +37,7 @@ const formSchema = z.object({
   parentId: z.string().optional(),
   sortOrder: z.number().optional(),
   masterCategoryId: z.string().optional(),
+  url: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -65,6 +67,7 @@ export function CreateSiteCategoryModal({
       parentId: undefined,
       sortOrder: 0,
       masterCategoryId: undefined,
+      url: "",
     },
   });
 
@@ -76,6 +79,7 @@ export function CreateSiteCategoryModal({
         parentId: editingCategory.parentId || undefined,
         // sortOrder: editingCategory.sortOrder,
         masterCategoryId: editingCategory.masterCategoryId || undefined,
+        url: editingCategory.url || "",
       });
     } else {
       form.reset({
@@ -83,6 +87,7 @@ export function CreateSiteCategoryModal({
         parentId: undefined,
         sortOrder: 0,
         masterCategoryId: undefined,
+        url: "",
       });
     }
   }, [editingCategory, form]);
@@ -124,7 +129,7 @@ export function CreateSiteCategoryModal({
 
   return (
     <Dialog onOpenChange={handleOpenChange} open={open}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-150">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FolderPlus className="h-5 w-5" />
@@ -203,6 +208,23 @@ export function CreateSiteCategoryModal({
                         field.onChange(e.target.valueAsNumber || 0)
                       }
                     />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="url"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>外部链接 URL（可选）</FormLabel>
+                  <FormDescription>
+                    如果设置此项，导航将跳转到此 URL 而非分类页面
+                  </FormDescription>
+                  <FormControl>
+                    <Input placeholder="https://example.com" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

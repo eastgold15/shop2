@@ -9,6 +9,12 @@ export type CategoryWithChildren = Omit<
   "children"
 > & {
   children?: CategoryWithChildren[];
+  url?: string; // 添加 url 字段
+};
+
+// 判断是否为外部链接
+const isExternalUrl = (url: string) => {
+  return url.startsWith("http://") || url.startsWith("https://");
 };
 
 // 单个菜单项组件（递归核心）
@@ -18,7 +24,9 @@ const MenuItem = ({ category }: { category: CategoryWithChildren }) => {
   const { getCategoryHref, handleNavigate } = useNavAction();
 
   const hasChildren = category.children && category.children.length > 0;
-  const href = getCategoryHref(category.id);
+  // 如果有 url 则使用 url，否则使用分类链接
+  const href = category.url || getCategoryHref(category.id);
+  const isExternal = category.url ? isExternalUrl(category.url) : false;
 
   // 鼠标交互逻辑优化
   const onMouseEnter = () => {
@@ -30,7 +38,21 @@ const MenuItem = ({ category }: { category: CategoryWithChildren }) => {
     timeoutRef.current = setTimeout(() => setIsOpen(false), 150);
   };
 
+  // 无子分类的情况
   if (!hasChildren) {
+    // 如果是外部链接，使用原生 a 标签
+    if (isExternal) {
+      return (
+        <a
+          className={NAV_STYLES.desktopLink}
+          href={href}
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          {category.name}
+        </a>
+      );
+    }
     return (
       <NavLink
         className={NAV_STYLES.desktopLink}
@@ -42,21 +64,18 @@ const MenuItem = ({ category }: { category: CategoryWithChildren }) => {
     );
   }
 
+  // 有子分类的情况 - 父级不可点击
   return (
     <div
-      className="relative flex h-full items-center"
+      className="relative flex h-full cursor-pointer items-center"
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
-      {/* 父级菜单标题 */}
-      <NavLink
-        className={NAV_STYLES.desktopLink}
-        href={href}
-        onClick={() => handleNavigate(href)}
-      >
+      {/* 父级菜单标题 - 不使用链接，只是视觉展示 */}
+      <span className={NAV_STYLES.desktopLink}>
         {category.name}
         <DropdownIndicator isOpen={isOpen} />
-      </NavLink>
+      </span>
 
       {/* 递归下拉面板 */}
       {isOpen && (
@@ -73,7 +92,23 @@ const MenuItem = ({ category }: { category: CategoryWithChildren }) => {
 // 下拉菜单项（显示子分类）
 const DropdownItem = ({ category }: { category: CategoryWithChildren }) => {
   const { getCategoryHref, handleNavigate } = useNavAction();
-  const href = getCategoryHref(category.id);
+  // 如果有 url 则使用 url，否则使用分类链接
+  const href = category.url || getCategoryHref(category.id);
+  const isExternal = category.url ? isExternalUrl(category.url) : false;
+
+  // 如果是外部链接，使用原生 a 标签
+  if (isExternal) {
+    return (
+      <a
+        className={NAV_STYLES.dropdownItem}
+        href={href}
+        rel="noopener noreferrer"
+        target="_blank"
+      >
+        {category.name}
+      </a>
+    );
+  }
 
   return (
     <NavLink

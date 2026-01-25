@@ -8,6 +8,11 @@ interface MobileMenuProps {
   onClose: () => void;
 }
 
+// 判断是否为外部链接
+const isExternalUrl = (url: string) => {
+  return url.startsWith("http://") || url.startsWith("https://");
+};
+
 // 递归渲染移动端列表
 const MobileCategoryItem = ({
   category,
@@ -19,8 +24,10 @@ const MobileCategoryItem = ({
   depth?: number;
 }) => {
   const { getCategoryHref, handleNavigate } = useNavAction();
-  const href = getCategoryHref(category.id);
+  // 如果有 url 则使用 url，否则使用分类链接
+  const href = category.url || getCategoryHref(category.id);
   const hasChildren = category.children && category.children.length > 0;
+  const isExternal = category.url ? isExternalUrl(category.url) : false;
 
   // 根据深度选择样式
   const linkClass =
@@ -28,13 +35,29 @@ const MobileCategoryItem = ({
 
   return (
     <div className={depth === 0 ? "border-gray-100 border-b" : ""}>
-      <NavLink
-        className={linkClass}
-        href={href}
-        onClick={() => handleNavigate(href, onClose)}
-      >
-        {category.name}
-      </NavLink>
+      {/* 有子分类的父级不可点击，只展示名称 */}
+      {hasChildren ? (
+        <span className={linkClass}>{category.name}</span>
+      ) : // 如果是外部链接，使用原生 a 标签
+      isExternal ? (
+        <a
+          className={linkClass}
+          href={href}
+          onClick={() => onClose()}
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          {category.name}
+        </a>
+      ) : (
+        <NavLink
+          className={linkClass}
+          href={href}
+          onClick={() => handleNavigate(href, onClose)}
+        >
+          {category.name}
+        </NavLink>
+      )}
 
       {/* 递归渲染子级 */}
       {hasChildren && (
