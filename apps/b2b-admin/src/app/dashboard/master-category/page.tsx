@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { AppSidebar } from "@/components/app-sidebar";
 import { CreateMasterCategoryModal } from "@/components/form/CreateMasterCategoryModal";
 import {
   AlertDialog,
@@ -29,11 +28,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import {
   useDeleteMasterCategory,
   useMasterCategoryBatchDelete,
@@ -235,19 +230,14 @@ export default function MasterCategoryManager() {
   // 权限检查：只有超级管理员才能访问
   if (!isSuperAdmin) {
     return (
-      <SidebarProvider>
-        <AppSidebar />
-        <SidebarInset>
-          <div className="flex h-full items-center justify-center">
-            <div className="text-center">
-              <h2 className="mb-2 font-bold text-2xl text-slate-900">
-                权限不足
-              </h2>
-              <p className="text-slate-500">只有超级管理员才能访问主分类管理</p>
-            </div>
-          </div>
-        </SidebarInset>
-      </SidebarProvider>
+      <div className="flex h-full items-center justify-center">
+        <div className="text-center">
+          <h2 className="mb-2 font-bold text-2xl text-slate-900">
+            权限不足
+          </h2>
+          <p className="text-slate-500">只有超级管理员才能访问主分类管理</p>
+        </div>
+      </div>
     );
   }
 
@@ -326,35 +316,28 @@ export default function MasterCategoryManager() {
 
   if (isLoading) {
     return (
-      <SidebarProvider>
-        <AppSidebar />
-        <SidebarInset>
-          <div className="flex h-full items-center justify-center">
-            <div className="text-center">
-              <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-indigo-600" />
-              <p className="mt-2 text-slate-500">加载中...</p>
-            </div>
-          </div>
-        </SidebarInset>
-      </SidebarProvider>
+      <div className="flex h-full items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-indigo-600" />
+          <p className="mt-2 text-slate-500">加载中...</p>
+        </div>
+      </div>
     );
   }
 
   const hasCategories = filteredCategories && filteredCategories.length > 0;
 
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-          <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
-            <Separator className="mr-2 h-4" orientation="vertical" />
-            <nav className="font-medium text-sm">主分类管理</nav>
-          </div>
-        </header>
+    <>
+      <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+        <div className="flex items-center gap-2 px-4">
+          <SidebarTrigger className="-ml-1" />
+          <Separator className="mr-2 h-4" orientation="vertical" />
+          <nav className="font-medium text-sm">主分类管理</nav>
+        </div>
+      </header>
 
-        <div className="flex flex-1 flex-col gap-6 p-4 pt-0">
+      <div className="flex flex-1 flex-col gap-6 p-4 pt-0">
           {/* 页面头部 */}
           <div className="flex flex-col gap-4">
             <div>
@@ -493,8 +476,7 @@ export default function MasterCategoryManager() {
               </div>
             )}
           </div>
-        </div>
-      </SidebarInset>
+      </div>
 
       {/* 创建/编辑主分类对话框 */}
       <CreateMasterCategoryModal
@@ -510,6 +492,6 @@ export default function MasterCategoryManager() {
         }}
         open={isCreateModalOpen}
       />
-    </SidebarProvider>
+    </>
   );
 }

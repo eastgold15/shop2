@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { AppSidebar } from "@/components/app-sidebar";
 import { Has } from "@/components/auth/Has";
 import {
   AlertDialog,
@@ -46,11 +45,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -455,17 +450,12 @@ export default function AdsPage() {
 
   if (isLoading) {
     return (
-      <SidebarProvider>
-        <AppSidebar />
-        <SidebarInset>
-          <div className="flex h-full items-center justify-center">
-            <div className="text-center">
-              <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-indigo-600" />
-              <p className="mt-2 text-slate-500">加载中...</p>
-            </div>
-          </div>
-        </SidebarInset>
-      </SidebarProvider>
+      <div className="flex h-full items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-indigo-600" />
+          <p className="mt-2 text-slate-500">加载中...</p>
+        </div>
+      </div>
     );
   }
 
@@ -473,248 +463,243 @@ export default function AdsPage() {
   const hasAds = ads.length > 0;
 
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-          <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
-            <Separator className="mr-2 h-4" orientation="vertical" />
-            <nav className="font-medium text-sm">广告管理</nav>
+    <>
+      <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+        <div className="flex items-center gap-2 px-4">
+          <SidebarTrigger className="-ml-1" />
+          <Separator className="mr-2 h-4" orientation="vertical" />
+          <nav className="font-medium text-sm">广告管理</nav>
+        </div>
+      </header>
+
+      <div className="flex flex-1 flex-col gap-6 p-4 pt-0">
+        {/* 页面头部 */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="font-bold text-3xl text-slate-900">广告管理</h1>
+            <p className="mt-2 text-slate-600">
+              管理站点的广告内容，支持横幅、轮播图和列表广告。
+            </p>
           </div>
-        </header>
 
-        <div className="flex flex-1 flex-col gap-6 p-4 pt-0">
-          {/* 页面头部 */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="font-bold text-3xl text-slate-900">广告管理</h1>
-              <p className="mt-2 text-slate-600">
-                管理站点的广告内容，支持横幅、轮播图和列表广告。
-              </p>
-            </div>
-
-            <div className="flex items-center gap-3">
-              {selectedIds.size > 0 && (
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button size="sm" variant="destructive">
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      批量删除 ({selectedIds.size})
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>确认批量删除</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        确定要删除选中的 {selectedIds.size}{" "}
-                        个广告吗？此操作不可撤销。
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>取消</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleBatchDelete}>
-                        删除
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              )}
-
-              <Dialog onOpenChange={setIsDialogOpen} open={isDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="bg-indigo-600 text-white hover:bg-indigo-700">
-                    <Plus className="mr-2 h-4 w-4" />
-                    添加广告
+          <div className="flex items-center gap-3">
+            {selectedIds.size > 0 && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button size="sm" variant="destructive">
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    批量删除 ({selectedIds.size})
                   </Button>
-                </DialogTrigger>
-              </Dialog>
-            </div>
-          </div>
-
-          {/* 广告列表 */}
-          <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
-            {hasAds && (
-              <div className="border-slate-200 border-b bg-slate-50 px-4 py-3">
-                <label className="flex items-center gap-2 font-medium text-slate-700 text-sm">
-                  <input
-                    checked={selectedIds.size === ads.length}
-                    className="rounded border-slate-300 text-slate-600 focus:ring-2 focus:ring-indigo-500"
-                    onChange={(e) => handleSelectAll(e.target.checked)}
-                    type="checkbox"
-                  />
-                  全选
-                  <span className="text-slate-500">
-                    ({selectedIds.size}/{ads.length})
-                  </span>
-                </label>
-              </div>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>确认批量删除</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      确定要删除选中的 {selectedIds.size}{" "}
+                      个广告吗？此操作不可撤销。
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>取消</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleBatchDelete}>
+                      删除
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             )}
 
-            {hasAds ? (
-              <div className="divide-y divide-slate-200">
-                {ads.map((ad) => (
-                  <div
-                    className="group flex items-center gap-4 px-4 py-4 transition-colors hover:bg-slate-50"
-                    key={ad.id}
-                  >
-                    <input
-                      checked={selectedIds.has(ad.id)}
-                      className="rounded border-slate-300 text-slate-600 focus:ring-2 focus:ring-indigo-500"
-                      onChange={(e) => handleSelect(ad.id, e.target.checked)}
-                      type="checkbox"
-                    />
-
-                    {ad.mediaUrl ? (
-                      <div>
-                        <ImageGallery
-                          images={[
-                            {
-                              id: ad.id,
-                              url: ad.mediaUrl,
-                              isMain: true,
-                              originalName: ad.title,
-                            },
-                          ]}
-                          size="md"
-                        />
-                      </div>
-                    ) : (
-                      <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-slate-100">
-                        <ImageIcon className="h-6 w-6 text-slate-400" />
-                      </div>
-                    )}
-
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="truncate font-medium text-slate-900">
-                          {ad.title}
-                        </h3>
-                        <Badge variant={ad.isActive ? "default" : "secondary"}>
-                          {ad.isActive ? "启用" : "禁用"}
-                        </Badge>
-                        <Badge variant="outline">
-                          {Object.hasOwn(AD_TYPE_LABELS, ad.type)
-                            ? AD_TYPE_LABELS[
-                                ad.type as keyof typeof AD_TYPE_LABELS
-                              ]
-                            : ad.type}
-                        </Badge>
-                      </div>
-                      {ad.description && (
-                        <p className="mt-1 truncate text-slate-500 text-sm">
-                          {ad.description}
-                        </p>
-                      )}
-                      <div className="mt-1 flex items-center gap-4 text-slate-400 text-xs">
-                        <span>
-                          位置:
-                          {Object.hasOwn(
-                            AD_POSITION_LABELS,
-                            ad.position || "home-top"
-                          )
-                            ? AD_POSITION_LABELS[
-                                ad.position as keyof typeof AD_POSITION_LABELS
-                              ]
-                            : ad.position || "home-top"}
-                        </span>
-                        <span>排序: {ad.sortOrder}</span>
-                        <span>
-                          有效期:{" "}
-                          {format(new Date(ad.startDate), "MM/dd", {
-                            locale: zhCN,
-                          })}{" "}
-                          -{" "}
-                          {format(new Date(ad.endDate), "MM/dd", {
-                            locale: zhCN,
-                          })}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 opacity-0 transition-opacity group-hover:opacity-100">
-                      <Button
-                        className={
-                          ad.isActive
-                            ? "text-orange-600 hover:text-orange-700"
-                            : "text-green-600 hover:text-green-700"
-                        }
-                        onClick={() => handleToggleActive(ad)}
-                        size="sm"
-                        variant="ghost"
-                      >
-                        {ad.isActive ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </Button>
-
-                      <Button
-                        onClick={() => handleEdit(ad)}
-                        size="sm"
-                        variant="ghost"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Has permission="AD_VIEW">
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              className="text-red-600 hover:text-red-700"
-                              size="sm"
-                              variant="ghost"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>确认删除</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                确定要删除广告 "{ad.title}" 吗？此操作不可撤销。
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>取消</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => handleDelete(ad)}
-                              >
-                                删除
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </Has>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="px-8 py-12 text-center">
-                <div className="mb-6">
-                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
-                    <ImageIcon className="h-8 w-8 text-slate-400" />
-                  </div>
-                </div>
-                <h3 className="mb-2 font-semibold text-slate-900 text-xl">
-                  暂无广告
-                </h3>
-                <p className="mx-auto mb-6 max-w-md text-slate-500">
-                  创建第一个广告来开始推广您的内容
-                </p>
-                <Button
-                  className="bg-indigo-600 text-white hover:bg-indigo-700"
-                  onClick={() => setIsDialogOpen(true)}
-                >
+            <Dialog onOpenChange={setIsDialogOpen} open={isDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-indigo-600 text-white hover:bg-indigo-700">
                   <Plus className="mr-2 h-4 w-4" />
-                  创建广告
+                  添加广告
                 </Button>
-              </div>
-            )}
+              </DialogTrigger>
+            </Dialog>
           </div>
         </div>
-      </SidebarInset>
+
+        {/* 广告列表 */}
+        <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
+          {hasAds && (
+            <div className="border-slate-200 border-b bg-slate-50 px-4 py-3">
+              <label className="flex items-center gap-2 font-medium text-slate-700 text-sm">
+                <input
+                  checked={selectedIds.size === ads.length}
+                  className="rounded border-slate-300 text-slate-600 focus:ring-2 focus:ring-indigo-500"
+                  onChange={(e) => handleSelectAll(e.target.checked)}
+                  type="checkbox"
+                />
+                全选
+                <span className="text-slate-500">
+                  ({selectedIds.size}/{ads.length})
+                </span>
+              </label>
+            </div>
+          )}
+
+          {hasAds ? (
+            <div className="divide-y divide-slate-200">
+              {ads.map((ad) => (
+                <div
+                  className="group flex items-center gap-4 px-4 py-4 transition-colors hover:bg-slate-50"
+                  key={ad.id}
+                >
+                  <input
+                    checked={selectedIds.has(ad.id)}
+                    className="rounded border-slate-300 text-slate-600 focus:ring-2 focus:ring-indigo-500"
+                    onChange={(e) => handleSelect(ad.id, e.target.checked)}
+                    type="checkbox"
+                  />
+
+                  {ad.mediaUrl ? (
+                    <div>
+                      <ImageGallery
+                        images={[
+                          {
+                            id: ad.id,
+                            url: ad.mediaUrl,
+                            isMain: true,
+                            originalName: ad.title,
+                          },
+                        ]}
+                        size="md"
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-slate-100">
+                      <ImageIcon className="h-6 w-6 text-slate-400" />
+                    </div>
+                  )}
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="truncate font-medium text-slate-900">
+                        {ad.title}
+                      </h3>
+                      <Badge variant={ad.isActive ? "default" : "secondary"}>
+                        {ad.isActive ? "启用" : "禁用"}
+                      </Badge>
+                      <Badge variant="outline">
+                        {Object.hasOwn(AD_TYPE_LABELS, ad.type)
+                          ? AD_TYPE_LABELS[
+                              ad.type as keyof typeof AD_TYPE_LABELS
+                            ]
+                          : ad.type}
+                      </Badge>
+                    </div>
+                    {ad.description && (
+                      <p className="mt-1 truncate text-slate-500 text-sm">
+                        {ad.description}
+                      </p>
+                    )}
+                    <div className="mt-1 flex items-center gap-4 text-slate-400 text-xs">
+                      <span>
+                        位置:
+                        {Object.hasOwn(
+                          AD_POSITION_LABELS,
+                          ad.position || "home-top"
+                        )
+                          ? AD_POSITION_LABELS[
+                              ad.position as keyof typeof AD_POSITION_LABELS
+                            ]
+                          : ad.position || "home-top"}
+                      </span>
+                      <span>排序: {ad.sortOrder}</span>
+                      <span>
+                        有效期:{" "}
+                        {format(new Date(ad.startDate), "MM/dd", {
+                          locale: zhCN,
+                        })}{" "}
+                        -{" "}
+                        {format(new Date(ad.endDate), "MM/dd", {
+                          locale: zhCN,
+                        })}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+                    <Button
+                      className={
+                        ad.isActive
+                          ? "text-orange-600 hover:text-orange-700"
+                          : "text-green-600 hover:text-green-700"
+                      }
+                      onClick={() => handleToggleActive(ad)}
+                      size="sm"
+                      variant="ghost"
+                    >
+                      {ad.isActive ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
+
+                    <Button
+                      onClick={() => handleEdit(ad)}
+                      size="sm"
+                      variant="ghost"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Has permission="AD_VIEW">
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            className="text-red-600 hover:text-red-700"
+                            size="sm"
+                            variant="ghost"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>确认删除</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              确定要删除广告 "{ad.title}" 吗？此操作不可撤销。
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>取消</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDelete(ad)}>
+                              删除
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </Has>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="px-8 py-12 text-center">
+              <div className="mb-6">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
+                  <ImageIcon className="h-8 w-8 text-slate-400" />
+                </div>
+              </div>
+              <h3 className="mb-2 font-semibold text-slate-900 text-xl">
+                暂无广告
+              </h3>
+              <p className="mx-auto mb-6 max-w-md text-slate-500">
+                创建第一个广告来开始推广您的内容
+              </p>
+              <Button
+                className="bg-indigo-600 text-white hover:bg-indigo-700"
+                onClick={() => setIsDialogOpen(true)}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                创建广告
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* 创建/编辑广告对话框 */}
       <AdsDialog
@@ -725,6 +710,6 @@ export default function AdsPage() {
           setEditingAd(undefined);
         }}
       />
-    </SidebarProvider>
+    </>
   );
 }

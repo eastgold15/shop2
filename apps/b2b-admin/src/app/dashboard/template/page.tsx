@@ -2,16 +2,11 @@
 
 import { Edit2, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
-import { AppSidebar } from "@/components/app-sidebar";
 import { Has } from "@/components/auth";
 import { CreateTemplateModal } from "@/components/form/CreateTemplateModal";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useDeleteTemplate, useTemplateList } from "@/hooks/api/template";
 import { useMasterCategoryStore } from "@/stores/master-categories-store";
 import { PERMISSIONS } from "@/types/permission";
@@ -65,111 +60,108 @@ export default function TemplateManager() {
   };
 
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <header className="flex h-16 items-center justify-between border-b bg-white px-6">
-          <div className="flex items-center gap-2">
-            <SidebarTrigger />
-            <Separator className="mx-2 h-4" orientation="vertical" />
-            <h1 className="font-bold text-lg text-slate-800">商品模版管理</h1>
-          </div>
-        </header>
+    <>
+      <header className="flex h-16 items-center justify-between border-b bg-white px-6">
+        <div className="flex items-center gap-2">
+          <SidebarTrigger />
+          <Separator className="mx-2 h-4" orientation="vertical" />
+          <h1 className="font-bold text-lg text-slate-800">商品模版管理</h1>
+        </div>
+      </header>
 
-        <main className="p-6">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-20">
-              <div className="text-center">
-                <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-indigo-600" />
-                <p className="mt-4 text-slate-500">加载中...</p>
-              </div>
+      <main className="p-6">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-indigo-600" />
+              <p className="mt-4 text-slate-500">加载中...</p>
             </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex justify-end">
-                <Has permission={PERMISSIONS.TEMPLATE_CREATE}>
-                  <Button
-                    className="flex items-center gap-2"
-                    onClick={handleCreate}
-                  >
-                    <Plus size={16} /> 创建新模版
-                  </Button>
-                </Has>
-              </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="flex justify-end">
+              <Has permission={PERMISSIONS.TEMPLATE_CREATE}>
+                <Button
+                  className="flex items-center gap-2"
+                  onClick={handleCreate}
+                >
+                  <Plus size={16} /> 创建新模版
+                </Button>
+              </Has>
+            </div>
 
-              <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-slate-50 font-bold text-[11px] text-slate-500 uppercase">
+            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-slate-50 font-bold text-[11px] text-slate-500 uppercase">
+                  <tr>
+                    <th className="px-6 py-4">名称</th>
+                    <th className="px-6 py-4">主分类</th>
+                    <th className="px-6 py-4">结构</th>
+                    <th className="px-6 py-4 text-right">操作</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {templates.length === 0 ? (
                     <tr>
-                      <th className="px-6 py-4">名称</th>
-                      <th className="px-6 py-4">主分类</th>
-                      <th className="px-6 py-4">结构</th>
-                      <th className="px-6 py-4 text-right">操作</th>
+                      <td
+                        className="px-6 py-8 text-center text-slate-400"
+                        colSpan={4}
+                      >
+                        暂无模版数据
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {templates.length === 0 ? (
-                      <tr>
-                        <td
-                          className="px-6 py-8 text-center text-slate-400"
-                          colSpan={4}
-                        >
-                          暂无模版数据
+                  ) : (
+                    templates.map((t: any) => (
+                      <tr
+                        className="transition-colors hover:bg-slate-50/50"
+                        key={t.id}
+                      >
+                        <td className="px-6 py-4 font-semibold text-slate-900">
+                          {t.name}
+                        </td>
+                        <td className="px-6 py-4 text-slate-500">
+                          {(() => {
+                            const category = getCategoryById(
+                              t.masterCategoryId
+                            );
+                            return category?.name || "未分配";
+                          })()}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 font-medium text-[11px] text-indigo-600">
+                            {t.fields?.length || 0} 个字段
+                          </span>
+                        </td>
+                        <td className="space-x-1 px-6 py-4 text-right">
+                          <Has permission={PERMISSIONS.TEMPLATE_EDIT}>
+                            <Button
+                              onClick={() => handleEdit(t)}
+                              size="sm"
+                              variant="ghost"
+                            >
+                              <Edit2 size={16} />
+                            </Button>
+                          </Has>
+                          <Has permission={PERMISSIONS.TEMPLATE_DELETE}>
+                            <Button
+                              className="text-red-500 hover:text-red-600"
+                              onClick={() => handleDelete(t.id)}
+                              size="sm"
+                              variant="ghost"
+                            >
+                              <Trash2 size={16} />
+                            </Button>
+                          </Has>
                         </td>
                       </tr>
-                    ) : (
-                      templates.map((t: any) => (
-                        <tr
-                          className="transition-colors hover:bg-slate-50/50"
-                          key={t.id}
-                        >
-                          <td className="px-6 py-4 font-semibold text-slate-900">
-                            {t.name}
-                          </td>
-                          <td className="px-6 py-4 text-slate-500">
-                            {(() => {
-                              const category = getCategoryById(
-                                t.masterCategoryId
-                              );
-                              return category?.name || "未分配";
-                            })()}
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 font-medium text-[11px] text-indigo-600">
-                              {t.fields?.length || 0} 个字段
-                            </span>
-                          </td>
-                          <td className="space-x-1 px-6 py-4 text-right">
-                            <Has permission={PERMISSIONS.TEMPLATE_EDIT}>
-                              <Button
-                                onClick={() => handleEdit(t)}
-                                size="sm"
-                                variant="ghost"
-                              >
-                                <Edit2 size={16} />
-                              </Button>
-                            </Has>
-                            <Has permission={PERMISSIONS.TEMPLATE_DELETE}>
-                              <Button
-                                className="text-red-500 hover:text-red-600"
-                                onClick={() => handleDelete(t.id)}
-                                size="sm"
-                                variant="ghost"
-                              >
-                                <Trash2 size={16} />
-                              </Button>
-                            </Has>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
-          )}
-        </main>
-      </SidebarInset>
+          </div>
+        )}
+      </main>
 
       <CreateTemplateModal
         editingTemplate={editingTemplate}
@@ -177,6 +169,6 @@ export default function TemplateManager() {
         onSuccess={handleModalSuccess}
         open={isModalOpen}
       />
-    </SidebarProvider>
+    </>
   );
 }

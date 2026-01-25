@@ -2,14 +2,12 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { AppSidebar } from "@/components/app-sidebar";
 import { CreateProductModal } from "@/components/form/CreateProductModal";
 import { CreateSKUModal } from "@/components/form/CreateSKUModal";
 import { EditSKUModal } from "@/components/form/EditSKUModal";
 import { VariantMediaModal } from "@/components/form/VariantMediaModal";
 import { HeaderToolbar } from "@/components/product/HeaderToolbar";
 import { ProductList } from "@/components/product/ProductList";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import {
   useBatchDeleteProduct,
   useDeleteProduct,
@@ -128,9 +126,9 @@ export default function ProductsPage() {
   if (isLoading) return null;
 
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset className="flex flex-col overflow-hidden bg-slate-50/50">
+    <>
+      {/* SidebarInset 被 layout.tsx 替代，这里直接渲染内容 */}
+      <div className="flex flex-col overflow-hidden bg-slate-50/50">
         {/* 模块 1: 头部与工具栏 */}
         <HeaderToolbar
           onAdd={() => setProductModal({ open: true })}
@@ -197,7 +195,7 @@ export default function ProductsPage() {
           open={!!variantMediaProductId}
           productId={variantMediaProductId || ""}
         />
-      </SidebarInset>
-    </SidebarProvider>
+      </div>
+    </>
   );
 }

@@ -16,7 +16,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useDebounce } from "use-debounce"; // 建议安装: bun add use-debounce
 
-import { AppSidebar } from "@/components/app-sidebar";
 import { Can } from "@/components/auth";
 import { MediaUpload } from "@/components/MediaUpload";
 import { Button } from "@/components/ui/button";
@@ -30,11 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ImageGallery } from "@/components/ui/image-gallery";
 import { Separator } from "@/components/ui/separator";
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useBatchDeleteMedia, useMediaPageList } from "@/hooks/api";
 import { cn } from "@/lib/utils";
 
@@ -115,203 +110,196 @@ export default function MediaLibrary() {
   };
 
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b px-4">
-          <div className="flex items-center gap-2">
-            <SidebarTrigger className="-ml-1" />
-            <Separator className="mr-2 h-4" orientation="vertical" />
-            <nav className="font-medium text-sm">Media Library</nav>
-          </div>
-        </header>
+    <>
+      <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b px-4">
+        <div className="flex items-center gap-2">
+          <SidebarTrigger className="-ml-1" />
+          <Separator className="mr-2 h-4" orientation="vertical" />
+          <nav className="font-medium text-sm">Media Library</nav>
+        </div>
+      </header>
 
-        <div className="flex flex-1 flex-col gap-6 p-6">
-          {/* 标题与操作区 */}
-          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-            <div>
-              <h1 className="font-bold text-2xl text-slate-900 tracking-tight">
-                媒体库
-              </h1>
-              <p className="text-slate-500 text-sm">
-                管理站点范围内的所有数字资产
-              </p>
-            </div>
-
-            <div className="flex items-center gap-3">
-              {selectedItems.length > 0 && (
-                <Can permission="MEDIA_DELETE">
-                  <Button
-                    disabled={deleteMediaMutation.isPending}
-                    onClick={() => handleDelete(selectedItems)}
-                    variant="destructive"
-                  >
-                    <Trash2 className="mr-2 size-4" />
-                    批量删除 ({selectedItems.length})
-                  </Button>
-                </Can>
-              )}
-
-              <MediaUpload onUploadComplete={() => refetch()}>
-                <Button className="bg-indigo-600 shadow-sm transition-all hover:bg-indigo-700 active:scale-95">
-                  <Upload className="mr-2 size-4" />
-                  上传文件
-                </Button>
-              </MediaUpload>
-            </div>
+      <div className="flex flex-1 flex-col gap-6 p-6">
+        {/* 标题与操作区 */}
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div>
+            <h1 className="font-bold text-2xl text-slate-900 tracking-tight">
+              媒体库
+            </h1>
+            <p className="text-slate-500 text-sm">
+              管理站点范围内的所有数字资产
+            </p>
           </div>
 
-          <div className="flex flex-col gap-4 rounded-xl border bg-white p-4 shadow-sm sm:flex-row">
-            <div className="relative flex-1">
-              <div className="relative">
-                <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-400" />
-                <input
-                  className="w-full rounded-lg border border-slate-200 py-2 pr-4 pl-10 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="搜索文件名..."
-                  value={searchTerm}
-                />
-              </div>
-              {searchTerm && (
-                <button
-                  className="absolute top-1/2 right-3 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                  onClick={() => setSearchTerm("")}
+          <div className="flex items-center gap-3">
+            {selectedItems.length > 0 && (
+              <Can permission="MEDIA_DELETE">
+                <Button
+                  disabled={deleteMediaMutation.isPending}
+                  onClick={() => handleDelete(selectedItems)}
+                  variant="destructive"
                 >
-                  <X size={14} />
-                </button>
-              )}
-            </div>
-            <div className="w-64">
-              <CategorySelect
-                allowClear={true}
-                onChange={setCategory}
-                placeholder="筛选分类..."
-                value={category}
+                  <Trash2 className="mr-2 size-4" />
+                  批量删除 ({selectedItems.length})
+                </Button>
+              </Can>
+            )}
+
+            <MediaUpload onUploadComplete={() => refetch()}>
+              <Button className="bg-indigo-600 shadow-sm transition-all hover:bg-indigo-700 active:scale-95">
+                <Upload className="mr-2 size-4" />
+                上传文件
+              </Button>
+            </MediaUpload>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-4 rounded-xl border bg-white p-4 shadow-sm sm:flex-row">
+          <div className="relative flex-1">
+            <div className="relative">
+              <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-400" />
+              <input
+                className="w-full rounded-lg border border-slate-200 py-2 pr-4 pl-10 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="搜索文件名..."
+                value={searchTerm}
               />
             </div>
-          </div>
-
-          {/* 全选控制条 */}
-          {mediaItems.length > 0 && (
-            <div className="flex items-center justify-between px-1">
-              <label className="flex cursor-pointer items-center gap-2 font-medium text-slate-600 text-sm">
-                <input
-                  checked={
-                    selectedItems.length === mediaItems.length &&
-                    mediaItems.length > 0
-                  }
-                  className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                  onChange={handleSelectAll}
-                  type="checkbox"
-                />
-                全选 ({selectedItems.length} / {mediaItems.length})
-              </label>
-            </div>
-          )}
-
-          {/* 媒体网格展示层 */}
-          <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-            {isLoading ? (
-              <div className="col-span-full flex flex-col items-center justify-center py-20">
-                <Loader2 className="size-8 animate-spin text-indigo-600" />
-                <p className="mt-4 text-slate-500 text-sm">
-                  正在检索媒体文件...
-                </p>
-              </div>
-            ) : mediaItems.length === 0 ? (
-              <div className="col-span-full flex flex-col items-center justify-center rounded-2xl border-2 border-slate-200 border-dashed bg-slate-50 py-20">
-                <div className="rounded-full bg-white p-4 shadow-sm">
-                  <FileIcon className="size-8 text-slate-400" />
-                </div>
-                <h3 className="mt-4 font-semibold text-slate-900">
-                  未找到文件
-                </h3>
-                <p className="text-slate-500 text-sm">
-                  尝试更换搜索词或上传新文件
-                </p>
-              </div>
-            ) : (
-              mediaItems.map((asset: UseMediaList) => (
-                <MediaCard
-                  asset={asset}
-                  isSelected={selectedItems.includes(asset.id)}
-                  key={asset.id}
-                  onDelete={() => handleDelete([asset.id])}
-                  onSelect={() => {
-                    setSelectedItems((prev) =>
-                      prev.includes(asset.id)
-                        ? prev.filter((i) => i !== asset.id)
-                        : [...prev, asset.id]
-                    );
-                  }}
-                />
-              ))
+            {searchTerm && (
+              <button
+                className="absolute top-1/2 right-3 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                onClick={() => setSearchTerm("")}
+              >
+                <X size={14} />
+              </button>
             )}
           </div>
+          <div className="w-64">
+            <CategorySelect
+              allowClear={true}
+              onChange={setCategory}
+              placeholder="筛选分类..."
+              value={category}
+            />
+          </div>
+        </div>
 
-          {/* 分页控件 */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between border-t pt-4">
-              <div className="text-slate-600 text-sm">
-                共 {total} 个文件，第 {page} / {totalPages} 页
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  disabled={page === 1 || isLoading}
-                  onClick={() => handlePageChange(page - 1)}
-                  size="sm"
-                  variant="outline"
-                >
-                  <ChevronLeft className="mr-1 size-4" />
-                  上一页
-                </Button>
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    let pageNum;
-                    if (totalPages <= 5) {
-                      pageNum = i + 1;
-                    } else if (page <= 3) {
-                      pageNum = i + 1;
-                    } else if (page >= totalPages - 2) {
-                      pageNum = totalPages - 4 + i;
-                    } else {
-                      pageNum = page - 2 + i;
-                    }
+        {/* 全选控制条 */}
+        {mediaItems.length > 0 && (
+          <div className="flex items-center justify-between px-1">
+            <label className="flex cursor-pointer items-center gap-2 font-medium text-slate-600 text-sm">
+              <input
+                checked={
+                  selectedItems.length === mediaItems.length &&
+                  mediaItems.length > 0
+                }
+                className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                onChange={handleSelectAll}
+                type="checkbox"
+              />
+              全选 ({selectedItems.length} / {mediaItems.length})
+            </label>
+          </div>
+        )}
 
-                    return (
-                      <Button
-                        className={cn(
-                          "size-10 p-0",
-                          page === pageNum
-                            ? "bg-indigo-600 text-white hover:bg-indigo-700"
-                            : "bg-white"
-                        )}
-                        disabled={isLoading}
-                        key={pageNum}
-                        onClick={() => handlePageChange(pageNum)}
-                        size="sm"
-                        variant={page === pageNum ? "default" : "outline"}
-                      >
-                        {pageNum}
-                      </Button>
-                    );
-                  })}
-                </div>
-                <Button
-                  disabled={page === totalPages || isLoading}
-                  onClick={() => handlePageChange(page + 1)}
-                  size="sm"
-                  variant="outline"
-                >
-                  下一页
-                  <ChevronRight className="ml-1 size-4" />
-                </Button>
-              </div>
+        {/* 媒体网格展示层 */}
+        <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          {isLoading ? (
+            <div className="col-span-full flex flex-col items-center justify-center py-20">
+              <Loader2 className="size-8 animate-spin text-indigo-600" />
+              <p className="mt-4 text-slate-500 text-sm">正在检索媒体文件...</p>
             </div>
+          ) : mediaItems.length === 0 ? (
+            <div className="col-span-full flex flex-col items-center justify-center rounded-2xl border-2 border-slate-200 border-dashed bg-slate-50 py-20">
+              <div className="rounded-full bg-white p-4 shadow-sm">
+                <FileIcon className="size-8 text-slate-400" />
+              </div>
+              <h3 className="mt-4 font-semibold text-slate-900">未找到文件</h3>
+              <p className="text-slate-500 text-sm">
+                尝试更换搜索词或上传新文件
+              </p>
+            </div>
+          ) : (
+            mediaItems.map((asset: UseMediaList) => (
+              <MediaCard
+                asset={asset}
+                isSelected={selectedItems.includes(asset.id)}
+                key={asset.id}
+                onDelete={() => handleDelete([asset.id])}
+                onSelect={() => {
+                  setSelectedItems((prev) =>
+                    prev.includes(asset.id)
+                      ? prev.filter((i) => i !== asset.id)
+                      : [...prev, asset.id]
+                  );
+                }}
+              />
+            ))
           )}
         </div>
-      </SidebarInset>
-    </SidebarProvider>
+
+        {/* 分页控件 */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between border-t pt-4">
+            <div className="text-slate-600 text-sm">
+              共 {total} 个文件，第 {page} / {totalPages} 页
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                disabled={page === 1 || isLoading}
+                onClick={() => handlePageChange(page - 1)}
+                size="sm"
+                variant="outline"
+              >
+                <ChevronLeft className="mr-1 size-4" />
+                上一页
+              </Button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (page <= 3) {
+                    pageNum = i + 1;
+                  } else if (page >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = page - 2 + i;
+                  }
+
+                  return (
+                    <Button
+                      className={cn(
+                        "size-10 p-0",
+                        page === pageNum
+                          ? "bg-indigo-600 text-white hover:bg-indigo-700"
+                          : "bg-white"
+                      )}
+                      disabled={isLoading}
+                      key={pageNum}
+                      onClick={() => handlePageChange(pageNum)}
+                      size="sm"
+                      variant={page === pageNum ? "default" : "outline"}
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
+              </div>
+              <Button
+                disabled={page === totalPages || isLoading}
+                onClick={() => handlePageChange(page + 1)}
+                size="sm"
+                variant="outline"
+              >
+                下一页
+                <ChevronRight className="ml-1 size-4" />
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+    </>
   );
 }
 

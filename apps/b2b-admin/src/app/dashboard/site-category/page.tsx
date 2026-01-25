@@ -4,7 +4,6 @@ import { SiteCategoryContract } from "@repo/contract";
 import { ChevronDown, ChevronRight, Edit, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { AppSidebar } from "@/components/app-sidebar";
 import { CreateSiteCategoryModal } from "@/components/form/CreateSiteCategoryModal";
 import {
   AlertDialog,
@@ -19,11 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import {
   useDeleteSiteCategory,
   useSiteCategoryTree,
@@ -270,73 +265,128 @@ export default function SiteCategoryManager() {
 
   if (isLoading) {
     return (
-      <SidebarProvider>
-        <AppSidebar />
-        <SidebarInset>
-          <div className="flex h-full items-center justify-center">
-            <div className="text-center">
-              <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-indigo-600" />
-              <p className="mt-2 text-slate-500">加载中...</p>
-            </div>
-          </div>
-        </SidebarInset>
-      </SidebarProvider>
+      <div className="flex h-full items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-indigo-600" />
+          <p className="mt-2 text-slate-500">加载中...</p>
+        </div>
+      </div>
     );
   }
 
   const hasCategories = categoryTree && categoryTree.length > 0;
 
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-          <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
-            <Separator className="mr-2 h-4" orientation="vertical" />
-            <nav className="font-medium text-sm">站点分类管理</nav>
+    <>
+      <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+        <div className="flex items-center gap-2 px-4">
+          <SidebarTrigger className="-ml-1" />
+          <Separator className="mr-2 h-4" orientation="vertical" />
+          <nav className="font-medium text-sm">站点分类管理</nav>
+        </div>
+      </header>
+
+      <div className="flex flex-1 flex-col gap-6 p-4 pt-0">
+        {/* 页面头部 */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="font-bold text-3xl text-slate-900">站点分类管理</h1>
+            <p className="mt-2 text-slate-600">
+              管理当前站点的商品分类，支持多级分类结构。
+            </p>
           </div>
-        </header>
 
-        <div className="flex flex-1 flex-col gap-6 p-4 pt-0">
-          {/* 页面头部 */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="font-bold text-3xl text-slate-900">
-                站点分类管理
-              </h1>
-              <p className="mt-2 text-slate-600">
-                管理当前站点的商品分类，支持多级分类结构。
-              </p>
+          <div className="flex items-center gap-3">
+            {selectedIds.size > 0 && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button size="sm" variant="destructive">
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    批量删除 ({selectedIds.size})
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>确认批量删除</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      确定要删除选中的 {selectedIds.size}{" "}
+                      个分类吗？此操作不可撤销。
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>取消</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleBatchDelete}>
+                      删除
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+
+            <Button
+              className="bg-indigo-600 text-white hover:bg-indigo-700"
+              onClick={() => {
+                setEditingCategory(undefined);
+                setIsCreateModalOpen(true);
+              }}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              添加分类
+            </Button>
+          </div>
+        </div>
+
+        {/* 分类列表 */}
+        <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
+          {hasCategories && (
+            <div className="border-slate-200 border-b bg-slate-50 px-4 py-3">
+              <label className="flex items-center gap-2 font-medium text-slate-700 text-sm">
+                <input
+                  checked={
+                    selectedIds.size > 0 && categoryTree
+                      ? selectedIds.size === categoryTree.length
+                      : false
+                  }
+                  className="rounded border-slate-300 text-slate-600 focus:ring-2 focus:ring-indigo-500"
+                  onChange={(e) => handleSelectAll(e.target.checked)}
+                  type="checkbox"
+                />
+                全选
+                <span className="text-slate-500">
+                  ({selectedIds.size}/{categoryTree.length})
+                </span>
+              </label>
             </div>
+          )}
 
-            <div className="flex items-center gap-3">
-              {selectedIds.size > 0 && (
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button size="sm" variant="destructive">
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      批量删除 ({selectedIds.size})
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>确认批量删除</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        确定要删除选中的 {selectedIds.size}{" "}
-                        个分类吗？此操作不可撤销。
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>取消</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleBatchDelete}>
-                        删除
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              )}
-
+          {hasCategories ? (
+            <div className="max-h-[calc(100vh-300px)] overflow-y-auto">
+              {categoryTree.map((category) => (
+                <CategoryTreeNode
+                  allCategories={categoryTree}
+                  category={category}
+                  key={category.id}
+                  level={0}
+                  onDelete={handleDelete}
+                  onEdit={handleEdit}
+                  onSelect={handleSelect}
+                  selectedIds={selectedIds}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="px-8 py-12 text-center">
+              <div className="mb-6">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
+                  <Plus className="h-8 w-8 text-slate-400" />
+                </div>
+              </div>
+              <h3 className="mb-2 font-semibold text-slate-900 text-xl">
+                暂无分类
+              </h3>
+              <p className="mx-auto mb-6 max-w-md text-slate-500">
+                创建第一个分类来开始管理您的商品
+              </p>
               <Button
                 className="bg-indigo-600 text-white hover:bg-indigo-700"
                 onClick={() => {
@@ -345,77 +395,12 @@ export default function SiteCategoryManager() {
                 }}
               >
                 <Plus className="mr-2 h-4 w-4" />
-                添加分类
+                创建分类
               </Button>
             </div>
-          </div>
-
-          {/* 分类列表 */}
-          <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
-            {hasCategories && (
-              <div className="border-slate-200 border-b bg-slate-50 px-4 py-3">
-                <label className="flex items-center gap-2 font-medium text-slate-700 text-sm">
-                  <input
-                    checked={
-                      selectedIds.size > 0 && categoryTree
-                        ? selectedIds.size === categoryTree.length
-                        : false
-                    }
-                    className="rounded border-slate-300 text-slate-600 focus:ring-2 focus:ring-indigo-500"
-                    onChange={(e) => handleSelectAll(e.target.checked)}
-                    type="checkbox"
-                  />
-                  全选
-                  <span className="text-slate-500">
-                    ({selectedIds.size}/{categoryTree.length})
-                  </span>
-                </label>
-              </div>
-            )}
-
-            {hasCategories ? (
-              <div className="max-h-[calc(100vh-300px)] overflow-y-auto">
-                {categoryTree.map((category) => (
-                  <CategoryTreeNode
-                    allCategories={categoryTree}
-                    category={category}
-                    key={category.id}
-                    level={0}
-                    onDelete={handleDelete}
-                    onEdit={handleEdit}
-                    onSelect={handleSelect}
-                    selectedIds={selectedIds}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="px-8 py-12 text-center">
-                <div className="mb-6">
-                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
-                    <Plus className="h-8 w-8 text-slate-400" />
-                  </div>
-                </div>
-                <h3 className="mb-2 font-semibold text-slate-900 text-xl">
-                  暂无分类
-                </h3>
-                <p className="mx-auto mb-6 max-w-md text-slate-500">
-                  创建第一个分类来开始管理您的商品
-                </p>
-                <Button
-                  className="bg-indigo-600 text-white hover:bg-indigo-700"
-                  onClick={() => {
-                    setEditingCategory(undefined);
-                    setIsCreateModalOpen(true);
-                  }}
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  创建分类
-                </Button>
-              </div>
-            )}
-          </div>
+          )}
         </div>
-      </SidebarInset>
+      </div>
 
       {/* 创建/编辑分类对话框 */}
       <CreateSiteCategoryModal
@@ -431,6 +416,6 @@ export default function SiteCategoryManager() {
         }}
         open={isCreateModalOpen}
       />
-    </SidebarProvider>
+    </>
   );
 }
