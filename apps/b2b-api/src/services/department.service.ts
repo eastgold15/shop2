@@ -1,6 +1,5 @@
 import { randomBytes, scryptSync } from "node:crypto";
 import {
-  accountTable,
   type DepartmentContract,
   departmentTable,
   siteTable,
@@ -31,10 +30,10 @@ export class DepartmentService {
       // 自动注入租户信息
       ...(ctx.user
         ? {
-            tenantId: ctx.user.context.tenantId!,
-            createdBy: ctx.user.id,
-            deptId: ctx.currentDeptId,
-          }
+          tenantId: ctx.user.context.tenantId!,
+          createdBy: ctx.user.id,
+          deptId: ctx.currentDeptId,
+        }
         : {}),
     };
     const [res] = await ctx.db
@@ -133,11 +132,11 @@ export class DepartmentService {
       ...department,
       manager: manager
         ? {
-            id: manager.id,
-            name: manager.name,
-            email: manager.email,
-            phone: manager.phone,
-          }
+          id: manager.id,
+          name: manager.name,
+          email: manager.email,
+          phone: manager.phone,
+        }
         : null,
     };
   }
@@ -148,7 +147,8 @@ export class DepartmentService {
    */
   async createDepartmentWithSiteAndAdmin(
     body: typeof DepartmentContract.CreateDepartmentWithSiteAndAdmin.static,
-    ctx: ServiceContext
+    ctx: ServiceContext,
+    headers: any
   ) {
     const { db, user } = ctx;
 
@@ -160,7 +160,7 @@ export class DepartmentService {
       const [department] = await tx
         .insert(departmentTable)
         .values({
-          id: body.department.id || undefined, // 必须显式传入 ID，否则无法判断冲突
+          id, // 必须显式传入 ID，否则无法判断冲突
           tenantId: user.context.tenantId!,
           name: body.department.name,
           parentId: body.department.parentId || null,
@@ -174,18 +174,16 @@ export class DepartmentService {
         })
         .onConflictDoUpdate({
           target: departmentTable.id,
-          set: {
-            ...deptData,
-          },
+          set: deptData,
         })
-        .returning(); // 无论创建还是更新，都会返回最新的记录（包含 ID）
+        .returning();
 
-      // 3. 核心检查：确保拿到了 ID 再去创建用户
       if (!department?.id) {
-        throw new Error("部门 ID 获取失败，无法创建关联用户");
+        throw new HttpError.InternalServerError("部门ID获取失败，无法继续创建关联数据");
       }
       const departmentId = department.id;
 
+      // 2. 创建/更新站点（绑定部门ID）
       const [site] = await tx
         .insert(siteTable)
         .values({
@@ -227,14 +225,13 @@ export class DepartmentService {
         // 如果传了新密码，需要加密 (这里假设你使用了 hashPassword 工具函数)
         if (body.admin.password) {
           // ⚠️ 注意：如果你使用 Better Auth，建议调用它的 update 方法
-          // 如果是直接操作数据库，必须手动哈希
-          const newPassword = await generateCompatibleHash(body.admin.password);
-          await tx
-            .update(accountTable)
-            .set({
-              password: newPassword,
-            })
-            .where(eq(accountTable.id, existingUser.id));
+          const data = await auth.api.setUserPassword({
+            body: {
+              newPassword: body.admin.password,
+              userId: existingUser.id,
+            },
+            headers,
+          });
         }
         await tx
           .update(userTable)
@@ -246,7 +243,7 @@ export class DepartmentService {
         const signupRes = await auth.api.signUpEmail({
           body: {
             ...body.admin,
-            password: body.admin.password, // ⚠️ 生产环境应该先哈希
+            password: body.admin.password,
             name: body.admin.name,
             email: body.admin.email,
             tenantId: user.context.tenantId!,

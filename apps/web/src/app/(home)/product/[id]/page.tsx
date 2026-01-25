@@ -67,7 +67,5 @@ export default function ProductPage() {
     );
   }
 
-  return (
-    <ProductDetail siteProduct={data} />
-  );
+  return <ProductDetail siteProduct={data} />;
 }

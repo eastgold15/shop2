@@ -6,13 +6,31 @@ import {
 } from "@repo/contract";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { openAPI } from "better-auth/plugins";
+import { admin, createAccessControl, openAPI } from "better-auth/plugins";
+import {
+  adminAc,
+  defaultStatements,
+} from "better-auth/plugins/organization/access";
 import { envConfig } from "~/lib/env";
 import { db } from "../db/connection";
 import { sendPasswordResetEmail, sendVerificationEmail } from "./email/email";
 
 // 将正则表达式移到顶层以提高性能
 const URL_REPLACE_REGEX = /^(\w+:\/\/[^/]+)(\/.*)$/;
+
+// 1. 先创建权限控制器（基于默认规则）
+const ac = createAccessControl(defaultStatements);
+// 2. 定义 super_admin 角色（继承默认 admin 的所有权限）
+const super_admin = ac.newRole({
+  ...adminAc.statements, // 继承默认 admin 的权限
+});
+
+// 3. 定义 admin 角色（默认管理员）
+const adminRole = ac.newRole({
+  ...adminAc.statements,
+});
+
+
 /**
  * Better-Auth 核心配置
  * 结合了 Drizzle ORM、邮箱验证、GitHub 社交登录以及自定义用户字段
@@ -24,7 +42,24 @@ export const auth = betterAuth({
   secret: envConfig.BETTER_AUTH_SECRET,
 
   // 插件配置：自动生成 OpenAPI (Swagger) 文档接口
-  plugins: [openAPI()],
+  plugins: [
+    openAPI(),
+    admin({
+      ac, // 传入权限控制器
+      roles: {
+        admin: adminRole, // 显式定义 admin 角色
+        super_admin, // 显式定义 super_admin 角色
+
+      },
+      defaultRole: "user",
+      adminRoles: ["admin", "super_admin"],
+      adminUserIds: [
+        "019b82f7-76b7-7084-9695-feb1725ac664",
+        "0c6fcb6c-d027-4b9c-94e8-f4f6b24f7ae4",
+        "f60102ab-205a-42b5-b2e6-1e9ab47fd2c9",
+      ],
+    }),
+  ],
 
   // 数据库适配器：连接 Drizzle ORM
   database: drizzleAdapter(db, {

@@ -83,15 +83,16 @@ export class UserService {
         .returning();
 
       if (password) {
-        const data = await auth.api.changePassword({
+        const data = await auth.api.setUserPassword({
           body: {
             newPassword: password, // required
-            currentPassword: "12345678", // required
-            revokeOtherSessions: true,
+            userId: updatedUser.id, // required
           },
           // This endpoint requires session cookies.
           headers,
         });
+
+
       }
 
       if (roleId) {

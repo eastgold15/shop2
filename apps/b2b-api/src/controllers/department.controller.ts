@@ -102,12 +102,12 @@ export const departmentController = new Elysia({ prefix: "/department" })
   // 自定义端点：创建部门+站点+管理员
   .post(
     "/with-site-and-admin",
-    async ({ body, user, db, currentDeptId }) =>
+    async ({ body, user, db, currentDeptId, headers }) =>
       departmentService.createDepartmentWithSiteAndAdmin(body, {
         db,
         user,
         currentDeptId,
-      }),
+      }, headers),
     {
       body: DepartmentContract.CreateDepartmentWithSiteAndAdmin,
       allPermissions: ["DEPARTMENT_CREATE"],

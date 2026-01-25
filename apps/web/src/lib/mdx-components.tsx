@@ -3,7 +3,13 @@ import type { MDXComponents } from "next-mdx-remote-client/rsc";
 /**
  * 自定义 Alert 组件
  */
-function Alert({ type = "info", children }: { type?: "success" | "info" | "warning" | "error"; children: React.ReactNode }) {
+function Alert({
+  type = "info",
+  children,
+}: {
+  type?: "success" | "info" | "warning" | "error";
+  children: React.ReactNode;
+}) {
   const baseClass = "my-4 rounded p-4";
   const typeClass =
     type === "success"
@@ -14,11 +20,7 @@ function Alert({ type = "info", children }: { type?: "success" | "info" | "warni
           ? "bg-red-100 text-red-800"
           : "bg-blue-100 text-blue-800";
 
-  return (
-    <div className={`${baseClass} ${typeClass}`}>
-      {children}
-    </div>
-  );
+  return <div className={`${baseClass} ${typeClass}`}>{children}</div>;
 }
 
 /**
