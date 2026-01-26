@@ -1,3 +1,4 @@
+import { QueryClient } from "@tanstack/react-query";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -17,6 +18,8 @@ interface AuthState {
   clearAuth: () => void;
   /** 切换部门：更新部门 ID 并触发刷新 */
   switchDept: (deptId: string) => void;
+  /** 清除所有缓存（包括 React Query 和 Zustand 持久化） */
+  clearAllCaches: (queryClient?: QueryClient) => void;
 
   // Getters (Computed)
   /** 获取当前用户的权限列表 */
@@ -58,6 +61,28 @@ export const useAuthStore = create<AuthState>()(
           currentDeptId: null,
           switchableDepts: null,
         });
+      },
+
+      clearAllCaches: (queryClient) => {
+        // 1. 清除 Zustand store 状态
+        set({
+          user: null,
+          currentDept: null,
+          currentDeptId: null,
+          switchableDepts: null,
+        });
+
+        // 2. 清除 React Query 缓存（如果提供了 QueryClient）
+        if (queryClient) {
+          queryClient.clear();
+          queryClient.resetQueries();
+        }
+
+        // 3. 清除 localStorage（完全清理，包括持久化数据）
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("auth-storage");
+          sessionStorage.clear();
+        }
       },
 
       switchDept: (deptId) => {

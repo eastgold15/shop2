@@ -5,6 +5,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/stores/auth-store";
 
 // 定义表单验证 Schema
 const loginFormSchema = z.object({
@@ -44,6 +46,8 @@ export function LoginForm({
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
+  const { clearAllCaches } = useAuthStore();
   const message = searchParams.get("message");
 
   // 初始化 react-hook-form
@@ -60,8 +64,10 @@ export function LoginForm({
     setIsLoading(true);
 
     try {
-      // 调用登录 API
+      // 🔥 关键修复：登录前清除旧账号的所有缓存
+      clearAllCaches(queryClient);
 
+      // 调用登录 API
       const { data, error } = await authClient.signIn.email({
         email: values.email,
         password: values.password,

@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -33,9 +34,10 @@ import { useAuthStore } from "@/stores/auth-store";
 export function NavUser() {
   const router = useRouter();
   const { isMobile } = useSidebar();
+  const queryClient = useQueryClient();
 
   // 1. 从合并后的 Store 中获取状态
-  const { user, clearAuth } = useAuthStore();
+  const { user, clearAllCaches } = useAuthStore();
 
   // 2. 使用 useMemo 计算缩写，避免重复渲染计算
   const initials = useMemo(() => {
@@ -48,13 +50,13 @@ export function NavUser() {
       .slice(0, 2);
   }, [user?.name]);
 
-  // 3. 处理登出逻辑
+  // 3. 处理登出逻辑 - 清除所有缓存
   const handleLogout = async () => {
     try {
       await authClient.signOut();
     } finally {
-      // 无论后端成功与否，前端必须清理状态并跳转
-      clearAuth();
+      // 无论后端成功与否，前端必须清理所有缓存并跳转
+      clearAllCaches(queryClient);
       router.push("/login");
       router.refresh(); // 强制刷新路由缓存
     }
