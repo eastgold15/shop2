@@ -1,4 +1,5 @@
 import {
+  productVariantMediaTable,
   type TemplateContract,
   templateKeyTable,
   templateTable,
@@ -270,7 +271,7 @@ export class TemplateService {
   }
 
   /**
-   * 内部清理方法：删除模板关联的所有属性和属性值
+   * 内部清理方法：删除模板关联的所有属性、属性值和相关的商品变体媒体记录
    * 抽离出来供 delete 和 update 复用
    */
   private async clearTemplateRelations(templateId: string, tx: Transaction) {
@@ -292,6 +293,22 @@ export class TemplateService {
       await tx
         .delete(templateKeyTable)
         .where(eq(templateKeyTable.templateId, templateId));
+    }
+
+    // c. 🔥 新增：清理相关的商品变体媒体记录
+    // 当模板被更新时，相关的变体媒体配置也应该被清理
+    // 因为变体媒体记录关联的是 templateValueTable 的 ID
+    const oldValues = await tx
+      .select()
+      .from(templateValueTable)
+      .where(inArray(templateValueTable.templateKeyId, oldAttributeIds));
+
+    const oldValueIds = oldValues.map((v) => v.id);
+
+    if (oldValueIds.length > 0) {
+      await tx
+        .delete(productVariantMediaTable)
+        .where(inArray(productVariantMediaTable.attributeValueId, oldValueIds));
     }
   }
 }

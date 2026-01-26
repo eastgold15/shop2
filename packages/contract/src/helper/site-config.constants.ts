@@ -40,5 +40,5 @@ export const SITE_CONFIG_KEY_OPTIONS = [
 
 // ===== 类型定义 =====
 export type SiteConfigKey =
-  typeof SITE_CONFIG_KEY_ENUM[keyof typeof SITE_CONFIG_KEY_ENUM];
-export type SiteConfigKeyOption = typeof SITE_CONFIG_KEY_OPTIONS[number];
+  (typeof SITE_CONFIG_KEY_ENUM)[keyof typeof SITE_CONFIG_KEY_ENUM];
+export type SiteConfigKeyOption = (typeof SITE_CONFIG_KEY_OPTIONS)[number];

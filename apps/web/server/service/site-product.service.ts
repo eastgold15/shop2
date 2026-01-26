@@ -128,8 +128,8 @@ export class SiteProductService {
       .offset((page - 1) * limit)
       .orderBy(
         sortOrder === "desc"
-          ? desc(siteProductTable.createdAt)
-          : asc(siteProductTable.createdAt)
+          ? desc(siteProductTable.sortOrder)
+          : asc(siteProductTable.sortOrder)
       );
 
     // 4. 计算总数

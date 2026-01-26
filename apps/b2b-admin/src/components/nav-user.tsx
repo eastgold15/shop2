@@ -1,5 +1,6 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import {
   BadgeCheck,
   Bell,
@@ -10,7 +11,6 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,

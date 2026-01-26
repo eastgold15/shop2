@@ -74,6 +74,6 @@ export const STATISTICS_TYPES = {
   TRAFFIC_SESSION: "traffic_session", // 会话数
 } as const;
 
+export * from "./site-category.constants";
 // 站点配置相关常量
 export * from "./site-config.constants";
-export * from "./site-category.constants";

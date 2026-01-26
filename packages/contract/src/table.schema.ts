@@ -162,7 +162,6 @@ export const userTable = p.pgTable("sys_user", {
   isSuperAdmin: p.boolean("is_super_admin").default(false),
 });
 
-
 export const userRoleTable = p.pgTable(
   "sys_user_role",
   {
@@ -195,7 +194,9 @@ export const salesResponsibilityTable = p.pgTable(
       .uuid("master_category_id")
       .notNull()
       .references(() => masterCategoryTable.id, { onDelete: "cascade" }),
-    siteId: p.uuid("site_id").references(() => siteTable.id, { onDelete: "cascade" }),
+    siteId: p
+      .uuid("site_id")
+      .references(() => siteTable.id, { onDelete: "cascade" }),
     // 3. 冗余 tenantId 以便快速过滤和鉴权
     tenantId: p
       .uuid("tenant_id")
@@ -278,7 +279,6 @@ export const trackingCols = {
 };
 
 // --- 5. Business Tables (业务表 - 已应用 tenantCols) ---
-
 
 export const accountTable = p.pgTable("sys_account", {
   ...Audit,

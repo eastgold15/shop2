@@ -35,7 +35,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
       // 🔥 关键修复：检测账号切换
       // 如果当前用户 ID 与上一次不同，说明用户切换了账号
-      if (previousUserIdRef.current && previousUserIdRef.current !== currentUserId) {
+      if (
+        previousUserIdRef.current &&
+        previousUserIdRef.current !== currentUserId
+      ) {
         // 账号已切换，强制刷新页面以清除所有缓存
         window.location.reload();
         return;

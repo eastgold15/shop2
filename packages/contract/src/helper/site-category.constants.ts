@@ -107,5 +107,5 @@ export const SITE_CATEGORY_OPTIONS = [
 
 // ===== 类型定义 =====
 export type SiteCategory =
-  typeof SITE_CATEGORY_ENUM[keyof typeof SITE_CATEGORY_ENUM];
-export type SiteCategoryOption = typeof SITE_CATEGORY_OPTIONS[number];
+  (typeof SITE_CATEGORY_ENUM)[keyof typeof SITE_CATEGORY_ENUM];
+export type SiteCategoryOption = (typeof SITE_CATEGORY_OPTIONS)[number];
