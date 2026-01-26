@@ -42,6 +42,14 @@ export function TeamSwitcher() {
     [switchableDepts, currentDept?.id]
   );
 
+  // 2. 权限检查：只有超级管理员或出口商（总部级别）才能看到可切换部门
+  const canSwitchDepts = useMemo(() => {
+    const isSuperAdmin = user?.isSuperAdmin || user?.permissions?.includes("*");
+    // category === "group" 表示总部级别（直接隶属于出口商/租户）
+    const isExporterLevel = currentDept?.category === "group";
+    return isSuperAdmin || isExporterLevel;
+  }, [user, currentDept]);
+
   // 3. 加载中状态
   if (!(getCurrentSite() && user)) {
     return (
@@ -123,7 +131,7 @@ export function TeamSwitcher() {
               <Check className="size-4 text-primary" />
             </DropdownMenuItem>
 
-            {otherDepts.length > 0 && (
+            {canSwitchDepts && otherDepts.length > 0 && (
               <>
                 <DropdownMenuSeparator />
                 <DropdownMenuLabel className="text-muted-foreground text-xs">
