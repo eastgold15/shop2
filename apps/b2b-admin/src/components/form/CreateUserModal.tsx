@@ -429,7 +429,7 @@ export function CreateUserModal({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {departments.map((dept: any) => (
+                          {departments.map((dept) => (
                             <SelectItem key={dept.id} value={dept.id}>
                               {dept.name}
                             </SelectItem>

@@ -69,8 +69,12 @@ export class DepartmentService {
       if (!dept) {
         throw new Error("不存在");
       }
-      const childIds = (dept.childrens ?? []).map((c) => c.id);
-      where.id = { in: childIds };
+      const allRelatedIds = [
+        currentDeptId, // 包含自己
+        ...(dept.childrens ?? []).map((c) => c.id) // 包含下级
+      ];
+
+      where.id = { in: allRelatedIds };
     } else if (user.roles[0].dataScope === "current") {
       where.id = { eq: currentDeptId };
     }
