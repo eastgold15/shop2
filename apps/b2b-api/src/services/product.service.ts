@@ -61,7 +61,8 @@ export class ProductService {
     const siteType = ctx.user.context.site.siteType || "group";
     const tenantId = ctx.user.context.tenantId;
 
-    const { tenantId: productTenantId, ...rest } = getColumns(productTable);
+    // 从 productTable 中排除 tenantId, name, description，因为这些会被特殊处理
+    const { tenantId: productTenantId, name, description, ...rest } = getColumns(productTable);
 
     // --- 1. 构建查询字段 (SQL层解决优先级问题) ---
     const baseQuery = ctx.db
