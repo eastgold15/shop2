@@ -32,13 +32,28 @@ import {
   useUpdateSiteCategory,
 } from "@/hooks/api/site-category";
 
-const formSchema = z.object({
-  name: z.string().min(1, "分类名称不能为空"),
-  parentId: z.string().optional(),
-  sortOrder: z.number().optional(),
-  masterCategoryId: z.string().optional(),
-  url: z.string().optional(),
-});
+const formSchema = z
+  .object({
+    id: z.string().optional(),
+    name: z.string().min(1, "分类名称不能为空"),
+    parentId: z.string().optional(),
+    sortOrder: z.number().optional(),
+    masterCategoryId: z.string().optional(),
+    url: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      // 防止将自己设置为父级分类
+      if (data.id && data.parentId && data.id === data.parentId) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: "不能将自己设置为父级分类",
+      path: ["parentId"],
+    }
+  );
 
 type FormData = z.infer<typeof formSchema>;
 
@@ -75,6 +90,7 @@ export function CreateSiteCategoryModal({
   useEffect(() => {
     if (editingCategory) {
       form.reset({
+        id: editingCategory.id,
         name: editingCategory.name,
         parentId: editingCategory.parentId || undefined,
         // sortOrder: editingCategory.sortOrder,
@@ -83,6 +99,7 @@ export function CreateSiteCategoryModal({
       });
     } else {
       form.reset({
+        id: undefined,
         name: "",
         parentId: undefined,
         sortOrder: 0,
@@ -164,6 +181,7 @@ export function CreateSiteCategoryModal({
                   <FormLabel>父级分类</FormLabel>
                   <FormControl>
                     <SiteCategoryTreeSelect
+                      excludeId={editingCategory?.id}
                       onChange={field.onChange}
                       placeholder="选择父级分类（可选）"
                       value={field.value}
