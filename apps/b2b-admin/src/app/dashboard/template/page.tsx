@@ -10,10 +10,11 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useDeleteTemplate, useTemplateList } from "@/hooks/api/template";
 import { useMasterCategoryStore } from "@/stores/master-categories-store";
 import { PERMISSIONS } from "@/types/permission";
+import { type Template } from "@/types/template";
 
 export default function TemplateManager() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingTemplate, setEditingTemplate] = useState<any>(null);
+  const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
 
   const {
     data: templatesData,
@@ -34,7 +35,7 @@ export default function TemplateManager() {
     setIsModalOpen(true);
   };
 
-  const handleEdit = (template: any) => {
+  const handleEdit = (template: Template) => {
     setEditingTemplate(template);
     setIsModalOpen(true);
   };
@@ -111,7 +112,7 @@ export default function TemplateManager() {
                       </td>
                     </tr>
                   ) : (
-                    templates.map((t: any) => (
+                    templates.map((t: Template) => (
                       <tr
                         className="transition-colors hover:bg-slate-50/50"
                         key={t.id}

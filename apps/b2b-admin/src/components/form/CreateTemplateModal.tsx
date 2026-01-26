@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useCreateTemplate, useUpdateTemplate } from "@/hooks/api/template";
+import { type Template } from "@/types/template";
 import { TemplateFieldRow } from "./TemplateFieldRow/TemplateFieldRow";
 
 // 辅助函数
@@ -89,7 +90,7 @@ interface CreateTemplateModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
-  editingTemplate?: any;
+  editingTemplate?: Template | null;
 }
 
 export function CreateTemplateModal({
