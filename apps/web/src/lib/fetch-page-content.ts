@@ -1,7 +1,5 @@
+import { SITE_CONFIG_KEY_ENUM } from "@repo/contract";
 import { rpc } from "@/lib/rpc";
-import { SITE_CONFIG } from "@/lib/utils/constants";
-
-const { PAGE_CONTENT_KEYS } = SITE_CONFIG;
 
 /**
  * 从 site_config 获取页面 MDX 内容
@@ -37,22 +35,20 @@ export async function fetchPageContent(key: string): Promise<string> {
  */
 function getDefaultContent(key: string): string {
   const defaults: Record<string, string> = {
-    [PAGE_CONTENT_KEYS.about]: `# About Us
+    [SITE_CONFIG_KEY_ENUM.PAGE_ABOUT_CONTENT]: `# About Us
 
 Content not found. Please configure the page content in site settings.`,
-    [PAGE_CONTENT_KEYS.contact]: `# Contact Us
+    [SITE_CONFIG_KEY_ENUM.PAGE_CONTACT_CONTENT]: `# Contact Us
 
 Content not found. Please configure the page content in site settings.`,
-    [PAGE_CONTENT_KEYS.privacy]: `# Privacy Policy
+    [SITE_CONFIG_KEY_ENUM.PAGE_PRIVACY_CONTENT]: `# Privacy Policy
+
 
 Content not found. Please configure the page content in site settings.`,
-    [PAGE_CONTENT_KEYS.ship]: `# Shipping & Returns
+    [SITE_CONFIG_KEY_ENUM.PAGE_SIZE_CONTENT]: `# Size Guide
 
 Content not found. Please configure the page content in site settings.`,
-    [PAGE_CONTENT_KEYS.size]: `# Size Guide
-
-Content not found. Please configure the page content in site settings.`,
-    [PAGE_CONTENT_KEYS.terms]: `# Terms of Service
+    [SITE_CONFIG_KEY_ENUM.PAGE_TERMS_CONTENT]: `# Terms of Service
 
 Content not found. Please configure the page content in site settings.`,
   };

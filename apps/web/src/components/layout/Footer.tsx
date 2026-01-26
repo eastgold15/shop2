@@ -1,31 +1,30 @@
 "use client";
 
+import { SITE_CONFIG_KEY_ENUM } from "@repo/contract";
 import Image from "next/image";
 import Link from "next/link";
 import type React from "react";
 import { useSiteConfigList } from "@/hooks/api/site-config";
-import { SITE_CONFIG } from "@/lib/utils/constants";
 
-const { SITE_CONFIG_KEYS } = SITE_CONFIG;
 const Footer: React.FC = () => {
   const { data: site_phone } = useSiteConfigList({
     query: {
-      key: SITE_CONFIG_KEYS.site_phone,
+      key: SITE_CONFIG_KEY_ENUM.SITE_PHONE,
     },
   });
   const { data: site_copyright } = useSiteConfigList({
     query: {
-      key: SITE_CONFIG_KEYS.site_copyright,
+      key: SITE_CONFIG_KEY_ENUM.SITE_COPYRIGHT,
     },
   });
   const { data: site_email } = useSiteConfigList({
     query: {
-      key: SITE_CONFIG_KEYS.site_email,
+      key: SITE_CONFIG_KEY_ENUM.SITE_EMAIL,
     },
   });
   const { data: site_erweima } = useSiteConfigList({
     query: {
-      key: SITE_CONFIG_KEYS.site_erweima,
+      key: SITE_CONFIG_KEY_ENUM.SITE_ERWEIMA,
     },
   });
 

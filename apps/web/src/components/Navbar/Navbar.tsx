@@ -1,13 +1,10 @@
 "use client";
+import { SITE_CONFIG_KEY_ENUM } from "@repo/contract";
 import { Heart, Menu, ShoppingBag, User, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSiteConfigList } from "@/hooks/api/site-config";
 import { useCategoryNavigation } from "@/hooks/useCategoryNavigation";
-import { SITE_CONFIG } from "@/lib/utils/constants";
-
-const { SITE_CONFIG_KEYS } = SITE_CONFIG;
-
 import { DesktopMenu } from "./DesktopMenu";
 import { useNavAction } from "./hook/useNavAction";
 import { MobileMenu } from "./MobileMenu";
@@ -66,7 +63,7 @@ const Navbar = () => {
 
   const { data: site_name } = useSiteConfigList({
     query: {
-      key: SITE_CONFIG_KEYS.site_name,
+      key: SITE_CONFIG_KEY_ENUM.SITE_NAME,
     },
   });
 

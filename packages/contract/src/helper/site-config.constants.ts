@@ -16,6 +16,7 @@ export const SITE_CONFIG_KEY_ENUM = {
   PAGE_ABOUT_CONTENT: "page_about_content",
   PAGE_CONTACT_CONTENT: "page_contact_content",
   PAGE_PRIVACY_CONTENT: "page_privacy_content",
+  PAGE_SHIP_CONTENT: "page_ship_content",
   PAGE_SIZE_CONTENT: "page_size_content",
   PAGE_TERMS_CONTENT: "page_terms_content",
 } as const;
