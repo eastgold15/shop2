@@ -73,3 +73,7 @@ export const STATISTICS_TYPES = {
   TRAFFIC_UV: "traffic_uv", // 独立访客
   TRAFFIC_SESSION: "traffic_session", // 会话数
 } as const;
+
+// 站点配置相关常量
+export * from "./site-config.constants";
+export * from "./site-category.constants";

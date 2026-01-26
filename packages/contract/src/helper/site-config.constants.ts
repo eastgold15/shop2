@@ -1,0 +1,43 @@
+/**
+ * 站点配置键定义
+ * 统一管理所有站点配置项的键值,确保前后端类型一致
+ */
+
+// ===== 配置键枚举 =====
+export const SITE_CONFIG_KEY_ENUM = {
+  // 站点基础配置
+  SITE_NAME: "site_name",
+  SITE_COPYRIGHT: "site_copyright",
+  SITE_PHONE: "site_phone",
+  SITE_EMAIL: "site_email",
+  SITE_ERWEIMA: "site_erweima",
+
+  // 页面内容配置
+  PAGE_ABOUT_CONTENT: "page_about_content",
+  PAGE_CONTACT_CONTENT: "page_contact_content",
+  PAGE_PRIVACY_CONTENT: "page_privacy_content",
+  PAGE_SIZE_CONTENT: "page_size_content",
+  PAGE_TERMS_CONTENT: "page_terms_content",
+} as const;
+
+// ===== 对象格式 (用于 apps/web) =====
+export const SITE_CONFIG_KEYS = SITE_CONFIG_KEY_ENUM;
+
+// ===== 数组格式 (用于 apps/b2b-admin 下拉选择) =====
+export const SITE_CONFIG_KEY_OPTIONS = [
+  { value: SITE_CONFIG_KEY_ENUM.SITE_NAME, label: "网站名" },
+  { value: SITE_CONFIG_KEY_ENUM.SITE_COPYRIGHT, label: "版权" },
+  { value: SITE_CONFIG_KEY_ENUM.SITE_PHONE, label: "电话" },
+  { value: SITE_CONFIG_KEY_ENUM.SITE_EMAIL, label: "邮箱" },
+  { value: SITE_CONFIG_KEY_ENUM.SITE_ERWEIMA, label: "二维码" },
+  { value: SITE_CONFIG_KEY_ENUM.PAGE_ABOUT_CONTENT, label: "关于我们" },
+  { value: SITE_CONFIG_KEY_ENUM.PAGE_CONTACT_CONTENT, label: "联系我们" },
+  { value: SITE_CONFIG_KEY_ENUM.PAGE_PRIVACY_CONTENT, label: "隐私政策" },
+  { value: SITE_CONFIG_KEY_ENUM.PAGE_SIZE_CONTENT, label: "尺码指南" },
+  { value: SITE_CONFIG_KEY_ENUM.PAGE_TERMS_CONTENT, label: "服务条款" },
+] as const;
+
+// ===== 类型定义 =====
+export type SiteConfigKey =
+  typeof SITE_CONFIG_KEY_ENUM[keyof typeof SITE_CONFIG_KEY_ENUM];
+export type SiteConfigKeyOption = typeof SITE_CONFIG_KEY_OPTIONS[number];

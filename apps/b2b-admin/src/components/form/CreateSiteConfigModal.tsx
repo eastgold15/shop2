@@ -2,6 +2,11 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { SiteConfigContract } from "@repo/contract";
+import {
+  SITE_CATEGORY_ENUM,
+  SITE_CATEGORY_OPTIONS,
+  SITE_CONFIG_KEY_OPTIONS,
+} from "@repo/contract";
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -39,7 +44,6 @@ import {
   useCreateSiteConfig,
   useUpdateSiteConfig,
 } from "@/hooks/api/site-config";
-import { SITE_CONFIG_KEY_OPTIONS } from "@/lib/utils/constants";
 
 const formSchema = z.object({
   key: z.string().min(1, "配置键不能为空"),
@@ -75,14 +79,14 @@ export function CreateSiteConfigModal({
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      key: "1",
-      value: "1",
-      description: "1",
-      category: "general",
-      url: "1",
+      key: "",
+      value: "",
+      description: "",
+      category: SITE_CATEGORY_ENUM.FUSHI,
+      url: "",
       translatable: true,
       visible: false,
-      siteId: "1",
+      siteId: "",
     },
   });
 
@@ -253,14 +257,22 @@ export function CreateSiteConfigModal({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>分类</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="例如: general, seo, contact"
-                      {...field}
-                    />
-                  </FormControl>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="请选择工厂/公司分类" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {SITE_CATEGORY_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormDescription>
-                    配置项的分类，便于管理和分组
+                    选择配置项所属的工厂/公司分类
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
