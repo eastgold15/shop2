@@ -42,7 +42,11 @@ export const TemplateContract = {
             isRequired: TemplateKeyInsertFields.isRequired,
             isSkuSpec: TemplateKeyInsertFields.isSkuSpec,
             value: TemplateValueInsertFields.value, // 可选：text/number 类型使用
-            options: t.Optional(t.Array(t.String())), // 可选：select/multiselect 类型使用
+            options: t.Optional(
+              t.Array(
+                t.Object({ id: t.Optional(t.String()), value: t.String() })
+              )
+            ), // 可选：select/multiselect 类型使用
           })
         )
       ),

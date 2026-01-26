@@ -1,7 +1,26 @@
 // components/product/product-list.tsx
 "use client";
 
-import { ChevronDown, MoreHorizontal, Plus } from "lucide-react";
+import {
+  closestCenter,
+  DndContext,
+  DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { ChevronDown, GripVertical, MoreHorizontal, Plus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Can } from "@/components/auth/Can";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,6 +38,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ImageGallery } from "@/components/ui/image-gallery";
 import { Product } from "@/hooks/api/product.type";
+import { useBatchUpdateSortOrder } from "@/hooks/api/site-product";
 import { SkuListRes } from "@/hooks/api/sku.type";
 import { cn } from "@/lib/utils";
 import { SkuPanel } from "./SkuPanel";
@@ -42,6 +62,196 @@ interface ProductListProps {
   onSelectSku: (id: string, checked: boolean) => void;
   onToggleAllSkus: (ids: string[], checked: boolean) => void;
   onBatchDeleteSku: () => void;
+  // 排序更新回调
+  onProductsChange?: (products: Product[]) => void;
+}
+
+// 可排序的商品项组件
+interface SortableProductItemProps {
+  product: Product;
+  isExpanded: boolean;
+  isSelected: boolean;
+  onSelect: (id: string, checked: boolean) => void;
+  onToggleExpand: (id: string) => void;
+  onEdit: (p: Product) => void;
+  onDelete: (p: Product) => void;
+  onCreateSku: (id: string) => void;
+  onEditSku: (sku: SkuListRes) => void;
+  onDeleteSku: (id: string, code: string) => void;
+  onManageVariantMedia?: (productId: string) => void;
+  selectedSkuIds: Set<string>;
+  onSelectSku: (id: string, checked: boolean) => void;
+  onToggleAllSkus: (ids: string[], checked: boolean) => void;
+  onBatchDeleteSku: () => void;
+  viewMode: "global" | "my";
+}
+
+function SortableProductItem({
+  product,
+  isExpanded,
+  isSelected,
+  onSelect,
+  onToggleExpand,
+  onEdit,
+  onDelete,
+  onCreateSku,
+  onEditSku,
+  onDeleteSku,
+  onManageVariantMedia,
+  selectedSkuIds,
+  onSelectSku,
+  onToggleAllSkus,
+  onBatchDeleteSku,
+  viewMode,
+}: SortableProductItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: product.siteProductId });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <Collapsible
+        className={cn(
+          "overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm transition-all",
+          isSelected && "border-indigo-500 ring-1 ring-indigo-500"
+        )}
+        onOpenChange={() => onToggleExpand(product.id)}
+        open={isExpanded}
+      >
+        <div className="flex items-center gap-4 p-4">
+          {/* 拖拽手柄 */}
+          <button
+            className="cursor-grab text-muted-foreground hover:text-foreground active:cursor-grabbing"
+            {...attributes}
+            {...listeners}
+          >
+            <GripVertical className="h-5 w-5" />
+          </button>
+
+          <Checkbox
+            checked={isSelected}
+            onCheckedChange={(c) => onSelect(product.id, !!c)}
+          />
+
+          {product.mainImage ? (
+            <div className="h-16 w-16 shrink-0 overflow-hidden rounded-md">
+              {" "}
+              {/* 添加一个包装层固定大小 */}
+              <ImageGallery
+                images={[
+                  {
+                    id: product.mainImageId || product.id,
+                    url: product.mainImage,
+                    isMain: true,
+                    originalName: product.name,
+                  },
+                ]}
+                size="md"
+              />
+            </div>
+          ) : (
+            <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-slate-100 text-muted-foreground text-xs">
+              No Img
+            </div>
+          )}
+
+          <div className="flex flex-1 flex-col gap-1">
+            <div className="flex min-w-0 items-center gap-2">
+              <h3 className="truncate font-semibold leading-none">
+                {product.name}
+              </h3>
+              <Badge
+                className="h-5 shrink-0 px-1.5 text-[10px]"
+                variant={product.status === 1 ? "default" : "secondary"}
+              >
+                {product.status === 1 ? "发布" : "草稿"}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-8 text-muted-foreground text-sm sm:gap-4">
+              <span className="truncate">编码: {product.spuCode}</span>
+              <span className="shrink-0">SKU: {product.skuCount}</span>
+            </div>
+          </div>
+
+          <div className="hidden text-right sm:block">
+            <div className="font-medium">¥{product.sitePrice || "0.00"}</div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <CollapsibleTrigger asChild>
+              <Button className="h-8 gap-1 text-xs" size="sm" variant="ghost">
+                {isExpanded ? "收起" : "展开 SKU"}
+                <ChevronDown
+                  className={cn(
+                    "h-4 w-4 transition-transform",
+                    isExpanded && "rotate-180"
+                  )}
+                />
+              </Button>
+            </CollapsibleTrigger>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button className="h-8 w-8" size="icon" variant="ghost">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => onEdit(product)}>
+                  编辑商品
+                </DropdownMenuItem>
+                <Can permission="SKU_CREATE">
+                  <DropdownMenuItem onClick={() => onCreateSku(product.id)}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    添加 SKU
+                  </DropdownMenuItem>
+                </Can>
+                <Can permission="PRODUCT_DELETE">
+                  <DropdownMenuItem
+                    className="text-red-600"
+                    onClick={() => onDelete(product)}
+                  >
+                    删除商品
+                  </DropdownMenuItem>
+                </Can>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+
+        <CollapsibleContent>
+          <SkuPanel
+            onBatchDeleteSku={onBatchDeleteSku}
+            onDelete={onDeleteSku}
+            onEdit={onEditSku}
+            onManageVariantMedia={
+              onManageVariantMedia
+                ? () => onManageVariantMedia(product.id)
+                : undefined
+            }
+            onSelectSku={onSelectSku}
+            onToggleAllSkus={onToggleAllSkus}
+            // SKU 批量选择和删除
+            productId={product.id}
+            selectedSkuIds={selectedSkuIds}
+            skus={product.skus}
+            viewMode={viewMode}
+          />
+        </CollapsibleContent>
+      </Collapsible>
+    </div>
+  );
 }
 
 export function ProductList({
@@ -61,8 +271,59 @@ export function ProductList({
   onSelectSku,
   onToggleAllSkus,
   onBatchDeleteSku,
+  onProductsChange,
 }: ProductListProps) {
-  if (products.length === 0) {
+  const [localProducts, setLocalProducts] = useState<Product[]>(products);
+  const batchUpdateSortOrder = useBatchUpdateSortOrder();
+
+  // 当外部 products 变化时同步到本地状态
+  useEffect(() => {
+    setLocalProducts(products);
+  }, [products]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = localProducts.findIndex(
+        (p) => p.siteProductId === active.id
+      );
+      const newIndex = localProducts.findIndex(
+        (p) => p.siteProductId === over.id
+      );
+
+      const newProducts = arrayMove(localProducts, oldIndex, newIndex);
+      setLocalProducts(newProducts);
+
+      // 通知父组件更新
+      onProductsChange?.(newProducts);
+
+      // 调用 API 更新排序 - 使用 siteProductId
+      const items = newProducts.map((product, index) => ({
+        siteProductId: product.siteProductId,
+        sortOrder: index,
+      }));
+
+      try {
+        await batchUpdateSortOrder.mutateAsync({ items });
+        toast.success("排序已更新");
+      } catch (error) {
+        toast.error("排序更新失败");
+        // 恢复原顺序
+        setLocalProducts(products);
+        onProductsChange?.(products);
+      }
+    }
+  };
+
+  if (localProducts.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
         <div className="rounded-full bg-slate-100 p-4">
@@ -76,141 +337,44 @@ export function ProductList({
   }
 
   return (
-    <div className="space-y-4 p-4">
-      {products.map((product) => {
-        const isExpanded = expandedIds.has(product.id);
-        const isSelected = selectedIds.has(product.id);
+    <DndContext
+      collisionDetection={closestCenter}
+      onDragEnd={handleDragEnd}
+      sensors={sensors}
+    >
+      <SortableContext
+        items={localProducts.map((p) => p.siteProductId)}
+        strategy={verticalListSortingStrategy}
+      >
+        <div className="space-y-4 p-4">
+          {localProducts.map((product) => {
+            const isExpanded = expandedIds.has(product.id);
+            const isSelected = selectedIds.has(product.id);
 
-        return (
-          <Collapsible
-            className={cn(
-              "overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm transition-all",
-              isSelected && "border-indigo-500 ring-1 ring-indigo-500"
-            )}
-            key={product.id}
-            onOpenChange={() => onToggleExpand(product.id)}
-            open={isExpanded}
-          >
-            <div className="flex items-center gap-4 p-4">
-              <Checkbox
-                checked={isSelected}
-                onCheckedChange={(c) => onSelect(product.id, !!c)}
-              />
-
-              {product.mainImage ? (
-                <div className="h-16 w-16 shrink-0 overflow-hidden rounded-md">
-                  {" "}
-                  {/* 添加一个包装层固定大小 */}
-                  <ImageGallery
-                    images={[
-                      {
-                        id: product.mainImageId || product.id,
-                        url: product.mainImage,
-                        isMain: true,
-                        originalName: product.name,
-                      },
-                    ]}
-                    size="md"
-                  />
-                </div>
-              ) : (
-                <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-slate-100 text-muted-foreground text-xs">
-                  No Img
-                </div>
-              )}
-
-              <div className="flex flex-1 flex-col gap-1">
-                <div className="flex min-w-0 items-center gap-2">
-                  <h3 className="truncate font-semibold leading-none">
-                    {product.name}
-                  </h3>
-                  <Badge
-                    className="h-5 shrink-0 px-1.5 text-[10px]"
-                    variant={product.status === 1 ? "default" : "secondary"}
-                  >
-                    {product.status === 1 ? "发布" : "草稿"}
-                  </Badge>
-                </div>
-                <div className="flex items-center gap-8 text-muted-foreground text-sm sm:gap-4">
-                  <span className="truncate">编码: {product.spuCode}</span>
-                  <span className="shrink-0">SKU: {product.skuCount}</span>
-                </div>
-              </div>
-
-              <div className="hidden text-right sm:block">
-                <div className="font-medium">
-                  ¥{product.sitePrice || "0.00"}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <CollapsibleTrigger asChild>
-                  <Button
-                    className="h-8 gap-1 text-xs"
-                    size="sm"
-                    variant="ghost"
-                  >
-                    {isExpanded ? "收起" : "展开 SKU"}
-                    <ChevronDown
-                      className={cn(
-                        "h-4 w-4 transition-transform",
-                        isExpanded && "rotate-180"
-                      )}
-                    />
-                  </Button>
-                </CollapsibleTrigger>
-
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button className="h-8 w-8" size="icon" variant="ghost">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => onEdit(product)}>
-                      编辑商品
-                    </DropdownMenuItem>
-                    <Can permission="SKU_CREATE">
-                      <DropdownMenuItem onClick={() => onCreateSku(product.id)}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        添加 SKU
-                      </DropdownMenuItem>
-                    </Can>
-                    <Can permission="PRODUCT_DELETE">
-                      <DropdownMenuItem
-                        className="text-red-600"
-                        onClick={() => onDelete(product)}
-                      >
-                        删除商品
-                      </DropdownMenuItem>
-                    </Can>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
-
-            <CollapsibleContent>
-              <SkuPanel
+            return (
+              <SortableProductItem
+                isExpanded={isExpanded}
+                isSelected={isSelected}
+                key={product.id}
                 onBatchDeleteSku={onBatchDeleteSku}
-                onDelete={onDeleteSku}
-                onEdit={onEditSku}
-                onManageVariantMedia={
-                  onManageVariantMedia
-                    ? () => onManageVariantMedia(product.id)
-                    : undefined
-                }
+                onCreateSku={onCreateSku}
+                onDelete={onDelete}
+                onDeleteSku={onDeleteSku}
+                onEdit={onEdit}
+                onEditSku={onEditSku}
+                onManageVariantMedia={onManageVariantMedia}
+                onSelect={onSelect}
                 onSelectSku={onSelectSku}
                 onToggleAllSkus={onToggleAllSkus}
-                // SKU 批量选择和删除
-                productId={product.id}
+                onToggleExpand={onToggleExpand}
+                product={product}
                 selectedSkuIds={selectedSkuIds}
-                skus={product.skus}
                 viewMode={viewMode}
               />
-            </CollapsibleContent>
-          </Collapsible>
-        );
-      })}
-    </div>
+            );
+          })}
+        </div>
+      </SortableContext>
+    </DndContext>
   );
 }

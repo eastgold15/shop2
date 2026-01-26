@@ -14,6 +14,7 @@ export interface ProductPageListRes {
 }
 export interface Product {
   id: string;
+  siteProductId: string; // 🔥 site_product 表的 ID，用于排序等操作
   name: string;
   spuCode: string;
   description: string;

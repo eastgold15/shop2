@@ -21,6 +21,7 @@ import {
 import {
   and,
   asc,
+  desc,
   eq,
   exists,
   getColumns,
@@ -190,6 +191,14 @@ export class ProductService {
     // --- 5. 执行查询 ---
     const result = await queryBuilder
       .where(and(...conditions))
+      .orderBy(
+        // 优先级 1: 站点自定义排序 (nullsLast 确保未收录的商品排在后面)
+        asc(siteProductTable.sortOrder),
+        // 优先级 2: 原厂默认排序
+        asc(productTable.sortOrder),
+        // 优先级 3: 最新创建优先
+        desc(productTable.createdAt)
+      )
       .limit(Number(limit))
       .offset((page - 1) * limit);
 
@@ -470,6 +479,7 @@ export class ProductService {
       return {
         // 身份 ID
         id: product.id,
+        siteProductId: product.site_product_id, // 🔥 site_product 表的 ID，用于排序等操作
         templateId: product.templateId,
 
         // 核心展示信息 (SQL 已处理好优先级)

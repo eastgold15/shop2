@@ -1,7 +1,7 @@
+import { SiteProductContract } from "@repo/contract";
 import { Elysia, t } from "elysia";
 import { dbPlugin } from "~/db/connection";
 import { authGuardMid } from "~/middleware/auth";
-import { SiteProductContract } from "../../../../packages/contract/src/modules/site-product.contract";
 import { SiteProductService } from "../services/site-product.service";
 
 const siteProductService = new SiteProductService();
@@ -16,7 +16,7 @@ export const siteProductController = new Elysia({ prefix: "/site-product" })
     ({ query, user, db, currentDeptId }) =>
       siteProductService.list(query, { db, user, currentDeptId }),
     {
-      allPermissions: ["SITE_PRODUCT:VIEW"],
+      allPermissions: ["SITE_PRODUCT_VIEW"],
       requireDept: true,
       query: SiteProductContract.ListQuery,
       detail: {
@@ -31,7 +31,7 @@ export const siteProductController = new Elysia({ prefix: "/site-product" })
     ({ body, user, db, currentDeptId }) =>
       siteProductService.create(body, { db, user, currentDeptId }),
     {
-      allPermissions: ["SITE_PRODUCT:CREATE"],
+      allPermissions: ["SITE_PRODUCT_CREATE"],
       body: SiteProductContract.Create,
       requireDept: true,
       detail: {
@@ -48,7 +48,7 @@ export const siteProductController = new Elysia({ prefix: "/site-product" })
     {
       params: t.Object({ id: t.String() }),
       body: SiteProductContract.Update,
-      allPermissions: ["SITE_PRODUCT:EDIT"],
+      allPermissions: ["SITE_PRODUCT_EDIT"],
       requireDept: true,
       detail: {
         summary: "更新SiteProduct",
@@ -63,11 +63,36 @@ export const siteProductController = new Elysia({ prefix: "/site-product" })
       siteProductService.delete(params.id, { db, user, currentDeptId }),
     {
       params: t.Object({ id: t.String() }),
-      allPermissions: ["SITE_PRODUCT:DELETE"],
+      allPermissions: ["SITE_PRODUCT_DELETE"],
       requireDept: true,
       detail: {
         summary: "删除SiteProduct",
         description: "根据ID删除SiteProduct记录",
+        tags: ["SiteProduct"],
+      },
+    }
+  )
+  /**
+   * 批量更新商品排序
+   * 工厂站点：同时更新 product 和 siteProduct 的 sortOrder
+   * 出口商站点：只更新 siteProduct 的 sortOrder
+   */
+  .put(
+    "/batch/sort-order",
+    ({ body, user, db, currentDeptId }) =>
+      siteProductService.batchUpdateSortOrder(body, {
+        db,
+        user,
+        currentDeptId,
+      }),
+    {
+      body: SiteProductContract.BatchUpdateSortOrder,
+      allPermissions: ["SITE_PRODUCT_EDIT"],
+      requireDept: true,
+      detail: {
+        summary: "批量更新商品排序",
+        description:
+          "批量更新商品的排序值。工厂站点会同时更新源商品和站点商品的排序，出口商站点只更新站点商品的排序",
         tags: ["SiteProduct"],
       },
     }

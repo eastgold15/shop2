@@ -98,3 +98,19 @@ export function useDeleteSiteProduct() {
     },
   });
 }
+
+// --- 6. 批量更新排序 (PUT) ---
+// TRes = any, TBody = typeof SiteProductContract.BatchUpdateSortOrder.static
+export function useBatchUpdateSortOrder() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: typeof SiteProductContract.BatchUpdateSortOrder.static) =>
+      api.put<any, typeof SiteProductContract.BatchUpdateSortOrder.static>(
+        "/api/v1/site-product/batch/sort-order",
+        data
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: siteproductKeys.lists() });
+    },
+  });
+}

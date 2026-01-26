@@ -407,6 +407,7 @@ export const productTable = p.pgTable("product", {
   status: p.integer("status").notNull().default(1),
   // 商品独有属性（JSON格式，简单键值对）
   customAttributes: p.json("custom_attributes").$type<Record<string, string>>(),
+  sortOrder: p.integer("sort_order").default(0),
   // 商品是核心资产，使用 standardCols，可在多个站点复用
   ...standardCols,
 });

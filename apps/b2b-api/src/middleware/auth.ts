@@ -8,46 +8,41 @@ import type { DBtype } from "~/lib/type";
 
 // 请求头名称：用于指定当前操作的部门ID
 const CURRENT_DEPT_HEADER = "x-current-dept-id";
-
 export const authGuardMid = new Elysia({ name: "authGuard" })
   .use(dbPlugin)
-  // 1. 基础鉴权：获取 User 和 Permissions (这部分是全局必须的)
   .derive(async ({ request, db }) => {
     const headers = request.headers;
     const session = await auth.api.getSession({ headers });
     if (!session) throw new HttpError.Unauthorized("未登录");
 
-    // 检查是否有 x-current-dept-id 请求头，如果有则覆盖用户 context 中的部门信息
     const currentDeptIdFromHeader = request.headers.get(CURRENT_DEPT_HEADER);
-    console.log("currentDeptIdFromHeader:", currentDeptIdFromHeader);
 
-    let targetDept = null;
-    if (currentDeptIdFromHeader) {
-      targetDept = await db.query.departmentTable.findFirst({
-        where: {
-          id: currentDeptIdFromHeader,
-        },
-      });
-    }
-
+    // 1. 先获取用户最原始的权限和默认上下文（默认上下文包含用户所在的初始部门）
     let userRolePermission = await getUserWithRoles(
       session.user.id,
-      db,
-      targetDept?.category
+      db
+      // 注意：这里第一次调用没传 targetDept?.category，获取的是默认权限
     );
+
+    // 2. 如果用户通过 Header 切换了部门
     if (currentDeptIdFromHeader) {
       const targetDept = await db.query.departmentTable.findFirst({
         where: {
           id: currentDeptIdFromHeader,
-          tenantId: userRolePermission.context.tenantId,
+          tenantId: userRolePermission.context.tenantId, // 确保不能跨租户访问
         },
-        with: {
-          site: true,
-        },
+        with: { site: true },
       });
 
       if (targetDept) {
-        // 更新用户的 context，使用请求头指定的部门和站点
+        /**
+         * 重要注释：
+         * 此时 userRolePermission.context.department 将被更新为 targetDept。
+         * 这意味着在后续的 Service 层中：
+         * user.context.department.id === currentDeptId (来自 Header)
+         * 结论：对于使用了 requireDept 宏的接口，user.context.department 
+         * 和注入的 currentDeptId 指向的是同一个物理部门。
+         */
         userRolePermission = {
           ...userRolePermission,
           context: {
@@ -96,10 +91,12 @@ export const authGuardMid = new Elysia({ name: "authGuard" })
     }),
 
     /**
-     * 部门上下文校验宏
-     * 用法: { requireDept: true }
-     * 效果: 验证 Header 并将 currentDeptId 注入 Context
-     */
+      * 部门上下文校验宏
+      * 作用：
+      * 1. 强制要求请求头必须带上 x-current-dept-id
+      * 2. 校验该部门是否属于当前用户所在的租户
+      * 3. 将该 ID 作为一个独立变量 currentDeptId 注入到 Handler 的参数中
+      */
     requireDept: {
       resolve: async ({ request, db, user }) => {
         const currentDeptId = request.headers.get(CURRENT_DEPT_HEADER);

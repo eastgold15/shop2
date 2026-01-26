@@ -62,6 +62,16 @@ export const SiteProductContract = {
     data: t.Array(t.Object({ ...SiteProductFields })),
     total: t.Number(),
   }),
+
+  // 批量更新排序
+  BatchUpdateSortOrder: t.Object({
+    items: t.Array(
+      t.Object({
+        siteProductId: t.String(),
+        sortOrder: t.Number(),
+      })
+    ),
+  }),
 } as const;
 
 export type SiteProductContract = InferDTO<typeof SiteProductContract>;
