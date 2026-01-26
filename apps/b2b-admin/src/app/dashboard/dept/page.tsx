@@ -8,13 +8,10 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { HasRole } from "@/components/auth";
 import { CreateDepartmentModal } from "@/components/form/CreateDepartmentModal";
-import {
-  EditDepartmentModal,
-  EditDeptData,
-} from "@/components/form/EditDepartmentModal";
+import { EditDepartmentModal } from "@/components/form/EditDepartmentModal";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -23,20 +20,19 @@ import {
   useDepartmentDetail,
   useDepartmentList,
 } from "@/hooks/api/department";
-import { DeptListRes } from "@/hooks/api/department.type";
 import { useAuthStore } from "@/stores/auth-store";
 
 export default function UsersPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editingDeptData, setEditingDeptData] = useState<
-    EditDeptData | undefined
-  >(undefined);
   const [isMounted, setIsMounted] = useState(false);
-
   useEffect(() => {
     setIsMounted(true);
   }, []);
+  // ✅ 1. 统一使用这个 ID 作为编辑源
+  const [selectedDeptId, setSelectedDeptId] = useState<string | undefined>(
+    undefined
+  );
 
   const {
     data: departmentsResponse,
@@ -47,52 +43,50 @@ export default function UsersPage() {
   const currentDeptId = useAuthStore(
     (state) => state.user?.context.department.id
   );
-
-  const editingDeptId = editingDeptData?.department.id;
-
-  const { data: detailResponse } = useDepartmentDetail(
-    editingDeptId,
-    !!editingDeptId
-  );
-
   const departments =
     departmentsResponse?.filter((item) => item.id !== currentDeptId) || [];
 
-  const handleEdit = (dept: Partial<DeptListRes>) => {
-    setEditingDeptData({
+  // 2. 只有当 ID 存在且 Modal 打开时才请求详情
+  const { data: detailResponse, isLoading: isDetailLoading } =
+    useDepartmentDetail(
+      selectedDeptId,
+      !!selectedDeptId && isEditModalOpen // 仅在打开弹窗且有ID时触发
+    );
+
+  // 3. 将后端返回的详情数据 转换为 Modal 需要的 initialData 格式
+  // 使用 useMemo 避免每次渲染都重新计算
+  const formattedEditData = useMemo(() => {
+    if (!detailResponse) return undefined;
+
+    return {
       department: {
-        id: dept.id,
-        name: dept.name,
-        code: dept.code,
-        category: dept.category,
-        parentId: dept.parentId,
-        address: dept.address,
-        contactPhone: dept.contactPhone,
+        id: detailResponse.id,
+        name: detailResponse.name,
+        code: detailResponse.code,
+        category: detailResponse.category,
+        parentId: detailResponse.parentId,
+        address: detailResponse.address,
+        contactPhone: detailResponse.contactPhone,
       },
       site: {
-        id: dept.id,
-        name: dept.name,
-        domain: dept.name,
+        id: detailResponse.site.id, // 假设 siteId 和 deptId 一致，根据你后端逻辑调整
+        name: detailResponse.site.name,
+        domain: detailResponse.site.domain,
       },
-    });
+      admin: detailResponse.manager ? { ...detailResponse.manager } : undefined,
+    };
+  }, [detailResponse]);
+
+  const handleEdit = (id: string) => {
+    setSelectedDeptId(id);
     setIsEditModalOpen(true);
   };
 
-  useEffect(() => {
-    if (detailResponse && editingDeptId) {
-      setEditingDeptData((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          admin: detailResponse.manager
-            ? {
-                ...detailResponse.manager,
-              }
-            : undefined,
-        };
-      });
-    }
-  }, [detailResponse, editingDeptId]);
+  // ✅ 4. 修改关闭回调，清空 ID 防止下次打开瞬间闪现旧数据
+  const handleEditModalClose = () => {
+    setIsEditModalOpen(false);
+    setTimeout(() => setSelectedDeptId(undefined), 200); // 稍微延迟清空，等待弹窗关闭动画完成
+  };
 
   const handleCreate = () => {
     setIsCreateModalOpen(true);
@@ -107,14 +101,9 @@ export default function UsersPage() {
     refetchDepartments();
   };
 
-  const handleEditModalClose = () => {
-    setEditingDeptData(undefined);
-    setIsEditModalOpen(false);
-  };
-
   const handleEditModalSuccess = () => {
-    setEditingDeptData(undefined);
     setIsEditModalOpen(false);
+    setSelectedDeptId(undefined);
     refetchDepartments();
   };
 
@@ -261,7 +250,7 @@ export default function UsersPage() {
                         <div className="flex items-center gap-2">
                           <button
                             className="mr-1 inline font-medium text-indigo-600 text-sm hover:text-indigo-700"
-                            onClick={() => handleEdit(department)}
+                            onClick={() => handleEdit(department.id)}
                           >
                             编辑
                           </button>
@@ -293,12 +282,14 @@ export default function UsersPage() {
         onSuccess={handleCreateModalSuccess}
         open={isCreateModalOpen}
       />
-      <EditDepartmentModal
-        initialData={editingDeptData}
-        onOpenChange={handleEditModalClose}
-        onSuccess={handleEditModalSuccess}
-        open={isEditModalOpen}
-      />
+      {isEditModalOpen && (
+        <EditDepartmentModal
+          initialData={formattedEditData}
+          onOpenChange={handleEditModalClose}
+          onSuccess={handleEditModalSuccess}
+          open={isEditModalOpen}
+        />
+      )}
     </>
   );
 }

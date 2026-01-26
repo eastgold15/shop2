@@ -219,6 +219,7 @@ export class DepartmentService {
             roles: true,
           },
         },
+        site: true,
       },
     });
 
@@ -485,47 +486,82 @@ export class DepartmentService {
     let adminInfo: { id: string; name: string; email: string } | undefined;
 
     if (body.admin) {
-      const existingUser = await db.query.userTable.findFirst({
-        where: { email: body.admin.email },
-      });
+      let targetUser: any = null;
 
-      if (existingUser) {
-        // 用户已存在，更新用户信息
+      // 优先通过传入的 ID 查找（前端带过来的旧管理员 ID）
+      if ("id" in body.admin && body.admin.id) {
+        targetUser = await db.query.userTable.findFirst({
+          where: {
+            id: body.admin.id,
+          },
+        });
+      }
+
+      // 如果没传 ID，或者按 ID 没找到，则查找当前部门下是否已经有任何用户
+      if (!targetUser) {
+        targetUser = await db.query.userTable.findFirst({
+          where: {
+            deptId: departmentId,
+          },
+        });
+      }
+
+      if (targetUser) {
+        // --- 逻辑：覆盖修改现有用户 ---
+
+        // 安全性检查：如果用户想把 Email 改成一个已经被别人占用的 Email
+        if (body.admin.email !== targetUser.email) {
+          const emailConflict = await db.query.userTable.findFirst({
+            where: {
+              email: body.admin.email,
+              id: {
+                ne: targetUser.id,
+              },
+            },
+          });
+          if (emailConflict) {
+            throw new HttpError.BadRequest(
+              `邮箱 ${body.admin.email} 已被其他用户占用`
+            );
+          }
+        }
+
         adminInfo = {
-          id: existingUser.id,
-          name: existingUser.name,
-          email: existingUser.email,
+          id: targetUser.id,
+          name: body.admin.name,
+          email: body.admin.email,
         };
 
-        // 如果提供了密码，则更新密码
+        // 1. 更新身份认证系统的密码（如果有）
         if (body.admin.password) {
           await auth.api.setUserPassword({
             body: {
-              userId: existingUser.id,
+              userId: targetUser.id,
               newPassword: body.admin.password,
             },
             headers,
           });
         }
 
-        // 更新用户信息
+        // 2. 更新数据库中的用户信息（包括可能的 Email 变更）
         await db
           .update(userTable)
           .set({
             name: body.admin.name,
+            email: body.admin.email,
             phone: body.admin.phone || null,
             position: body.admin.position || null,
             updatedAt: new Date(),
           })
-          .where(eq(userTable.id, existingUser.id));
+          .where(eq(userTable.id, targetUser.id));
 
-        console.log("管理员用户已更新:", {
-          id: existingUser.id,
+        console.log("管理员用户已覆盖更新:", {
+          id: targetUser.id,
           name: body.admin.name,
-          email: existingUser.email,
+          email: body.admin.email,
         });
       } else {
-        // 用户不存在，创建新用户
+        // --- 逻辑：该部门之前确实没管理员，创建新用户 ---
         const newUserResponse = await auth.api.createUser({
           body: {
             email: body.admin.email,

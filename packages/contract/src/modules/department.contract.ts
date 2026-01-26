@@ -68,6 +68,7 @@ const UpdateDepartmentWithSiteAndAdmin = t.Object({
   // 管理员用户信息（可选）
   admin: t.Optional(
     t.Object({
+      id: t.Optional(t.String()), // 管理员 ID，用于更新现有用户
       name: t.String({ minLength: 2 }),
       email: t.String({ format: "email" }),
       password: t.Optional(t.String({ minLength: 6 })), // 密码可选，留空不修改

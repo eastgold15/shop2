@@ -170,7 +170,7 @@ export const userRoleTable = p.pgTable(
       .uuid("user_id")
       .notNull()
       .unique()
-      .references(() => userTable.id, { onDelete: "set null" }),
+      .references(() => userTable.id, { onDelete: "cascade" }),
     roleId: p
       .uuid("role_id")
       .notNull()

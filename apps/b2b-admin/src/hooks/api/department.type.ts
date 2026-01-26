@@ -181,7 +181,27 @@ export interface DepartmentDetailResponse {
   extensions?: any;
   isActive: boolean;
   users: User[];
-  manager?: any;
+  site: Site;
+  manager: Manager;
+}
+interface Manager {
+  id: string;
+  name: string;
+  email: string;
+  phone?: any;
+}
+interface Site {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  name: string;
+  trueName?: any;
+  description?: any;
+  domain: string;
+  isActive: boolean;
+  tenantId: string;
+  boundDeptId: string;
+  siteType: string;
 }
 interface User {
   id: string;
@@ -193,9 +213,13 @@ interface User {
   image?: any;
   tenantId: string;
   deptId: string;
-  phone: string;
+  role: string;
+  banned: boolean;
+  banReason?: any;
+  banExpires?: any;
+  phone?: any;
   whatsapp?: any;
-  position?: any;
+  position: string;
   isActive: boolean;
   isSuperAdmin: boolean;
   roles: Role[];

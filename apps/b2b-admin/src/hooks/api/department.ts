@@ -38,6 +38,7 @@ export function useDepartmentList(
         }
       ),
     enabled: enabled ?? true,
+
   });
 }
 
@@ -47,6 +48,9 @@ export function useDepartmentDetail(id: string | undefined, enabled?: boolean) {
     queryFn: () =>
       api.get<DepartmentDetailResponse>(`/api/v1/department/${id}`),
     enabled: enabled ?? !!id,
+    staleTime: 0,      // 数据立即过期，下次使用该 Key 时必须重新 fetch
+    gcTime: 0,         // 组件卸载后立即删除缓存
+    refetchOnMount: true, // 每次组件（Modal）挂载时强制请求
   });
 }
 /**
