@@ -48,35 +48,34 @@ export class TemplateService {
             .returning({ id: templateKeyTable.id });
 
           // 2.2 根据类型解析 value/options
-          let valuesToInsert: string[] = [];
-
           if (inputType === "select" || inputType === "multiselect") {
-            // 优先使用 options 数组（前端传递的格式）
-            if (options && Array.isArray(options) && options.length > 0) {
-              valuesToInsert = options.filter(Boolean);
+            if (options && Array.isArray(options)) {
+              // 使用新的对象格式处理选项
+              await this.upsertTemplateValues(newAttribute.id, field, tx);
             } else if (value && typeof value === "string") {
               // 兼容旧格式：逗号分隔的字符串
-              valuesToInsert = value
+              const valuesToInsert = value
                 .split(",")
                 .map((v) => v.trim())
                 .filter(Boolean);
+              const valueData = valuesToInsert.map((v, index) => ({
+                templateKeyId: newAttribute.id,
+                value: v,
+                sortOrder: index,
+              }));
+              await tx.insert(templateValueTable).values(valueData);
             }
           } else if (
             (inputType === "text" || inputType === "number") &&
             value
           ) {
             // 文本/数字类型，value 是 placeholder 或默认值
-            valuesToInsert = [String(value).trim()];
-          }
-
-          // 2.3 批量插入属性选项/预设值 (templateValueTable)
-          if (valuesToInsert.length > 0) {
-            const valueData = valuesToInsert.map((v, index) => ({
+            const valueData = {
               templateKeyId: newAttribute.id,
-              value: v,
-              sortOrder: index,
-            }));
-            await tx.insert(templateValueTable).values(valueData);
+              value: String(value).trim(),
+              sortOrder: 0,
+            };
+            await tx.insert(templateValueTable).values([valueData]);
           }
         }
       }
@@ -137,30 +136,37 @@ export class TemplateService {
         .where(inArray(templateValueTable.templateKeyId, allFieldIds))
         .orderBy(asc(templateValueTable.sortOrder));
 
-      const valuesByAttributeId = new Map<string, string[]>();
+      // 🔥 修复：存储对象数组，包含 id 和 value，确保 UUID 正确流转
+      const valuesByAttributeId = new Map<
+        string,
+        { id: string; value: string }[]
+      >();
       for (const val of allValues) {
         if (!valuesByAttributeId.has(val.templateKeyId)) {
           valuesByAttributeId.set(val.templateKeyId, []);
         }
-        valuesByAttributeId.get(val.templateKeyId)!.push(val.value);
+        valuesByAttributeId.get(val.templateKeyId)!.push({
+          id: val.id, // 真正的数据库 UUID
+          value: val.value,
+        });
       }
 
       for (const template of templateMap.values()) {
         for (const field of template.fields) {
-          const rawValues = valuesByAttributeId.get(field.id) || [];
+          const rawOptions = valuesByAttributeId.get(field.id) || [];
 
           // --- 核心逻辑：根据类型决定 value 的格式 ---
           if (
             field.inputType === "select" ||
             field.inputType === "multiselect"
           ) {
-            // 对于选择框，value 应该是逗号分隔的字符串，方便前端编辑器的 textarea 显示
-            field.value = rawValues.join(", ");
-            // 同时保留 options 数组，方便前端渲染下拉列表预览
-            field.options = rawValues;
+            // 对于选择框，value 用于前端预览（逗号分隔）
+            field.value = rawOptions.map((o) => o.value).join(", ");
+            // 🔥 返回完整的对象数组，包含 UUID
+            field.options = rawOptions;
           } else {
             // 对于 text 或 number，value 就是那唯一的一个提示/默认值字符串
-            field.value = rawValues[0] || "";
+            field.value = rawOptions[0]?.value || "";
             field.options = [];
           }
         }
@@ -218,35 +224,34 @@ export class TemplateService {
             .returning({ id: templateKeyTable.id });
 
           // 3.2 根据类型解析 value/options
-          let valuesToInsert: string[] = [];
-
           if (inputType === "select" || inputType === "multiselect") {
-            // 优先使用 options 数组（前端传递的格式）
-            if (options && Array.isArray(options) && options.length > 0) {
-              valuesToInsert = options.filter(Boolean);
+            if (options && Array.isArray(options)) {
+              // 使用新的对象格式处理选项
+              await this.upsertTemplateValues(newAttribute.id, field, tx);
             } else if (value && typeof value === "string") {
               // 兼容旧格式：逗号分隔的字符串
-              valuesToInsert = value
+              const valuesToInsert = value
                 .split(",")
                 .map((v) => v.trim())
                 .filter(Boolean);
+              const valueData = valuesToInsert.map((v, index) => ({
+                templateKeyId: newAttribute.id,
+                value: v,
+                sortOrder: index,
+              }));
+              await tx.insert(templateValueTable).values(valueData);
             }
           } else if (
             (inputType === "text" || inputType === "number") &&
             value
           ) {
             // 文本/数字类型，value 是 placeholder 或默认值
-            valuesToInsert = [String(value).trim()];
-          }
-
-          // 3.3 批量插入属性选项/预设值 (templateValueTable)
-          if (valuesToInsert.length > 0) {
-            const valueData = valuesToInsert.map((v, index) => ({
+            const valueData = {
               templateKeyId: newAttribute.id,
-              value: v,
-              sortOrder: index,
-            }));
-            await tx.insert(templateValueTable).values(valueData);
+              value: String(value).trim(),
+              sortOrder: 0,
+            };
+            await tx.insert(templateValueTable).values([valueData]);
           }
         }
       }
@@ -271,7 +276,7 @@ export class TemplateService {
   }
 
   /**
-   * 内部清理方法：删除模板关联的所有属性、属性值和相关的商品变体媒体记录
+   * 内部清理方法：删除模板关联的所有属性和属性值
    * 抽离出来供 delete 和 update 复用
    */
   private async clearTemplateRelations(templateId: string, tx: Transaction) {
@@ -294,21 +299,85 @@ export class TemplateService {
         .delete(templateKeyTable)
         .where(eq(templateKeyTable.templateId, templateId));
     }
+  }
 
-    // c. 🔥 新增：清理相关的商品变体媒体记录
-    // 当模板被更新时，相关的变体媒体配置也应该被清理
-    // 因为变体媒体记录关联的是 templateValueTable 的 ID
-    const oldValues = await tx
+  /**
+   * 增量更新模板值：更新已有、删除多余、插入新增
+   * 这是实现工业级属性管理的核心方法
+   *
+   * 🔥 兜底逻辑：即使前端没传 ID，但 value 字符串完全一致，也会自动匹配到现有的 UUID
+   */
+  private async upsertTemplateValues(
+    keyId: string,
+    field: any,
+    tx: Transaction
+  ) {
+    const incomingOptions = field.options || []; // 格式: [{id: '...', value: 'Red'}]
+
+    // 1. 获取数据库现有的 values
+    const dbValues = await tx
       .select()
       .from(templateValueTable)
-      .where(inArray(templateValueTable.templateKeyId, oldAttributeIds));
+      .where(eq(templateValueTable.templateKeyId, keyId));
+    const dbValueIds = dbValues.map((v) => v.id);
 
-    const oldValueIds = oldValues.map((v) => v.id);
+    // 🔥 创建 value -> id 的映射，用于兜底匹配
+    const dbValueMap = new Map<string, string>();
+    for (const v of dbValues) {
+      dbValueMap.set(v.value, v.id);
+    }
 
-    if (oldValueIds.length > 0) {
+    // 2. 找出需要删除的 (数据库有，但前端提交的对象里没带这个 ID)
+    const submittedIds = incomingOptions.map((o: any) => o.id).filter(Boolean);
+    const idsToDelete = dbValueIds.filter((id) => !submittedIds.includes(id));
+
+    if (idsToDelete.length > 0) {
+      // 只有被显式删除的 ID，才会触发图片清理
       await tx
         .delete(productVariantMediaTable)
-        .where(inArray(productVariantMediaTable.attributeValueId, oldValueIds));
+        .where(inArray(productVariantMediaTable.attributeValueId, idsToDelete));
+      await tx
+        .delete(templateValueTable)
+        .where(inArray(templateValueTable.id, idsToDelete));
+    }
+
+    // 3. 循环处理提交的选项
+    for (const [index, opt] of incomingOptions.entries()) {
+      if (opt.id) {
+        // 如果有 ID，执行更新文本内容 (ID 不变，图片自动保留)
+        await tx
+          .update(templateValueTable)
+          .set({
+            value: opt.value,
+            sortOrder: index,
+          })
+          .where(eq(templateValueTable.id, opt.id));
+      } else {
+        // 🔥 兜底逻辑：没有 ID 时，尝试通过 value 匹配现有记录
+        const existingId = dbValueMap.get(opt.value);
+        if (existingId) {
+          // 找到匹配的记录，更新它（保持 UUID 不变）
+          await tx
+            .update(templateValueTable)
+            .set({
+              value: opt.value,
+              sortOrder: index,
+            })
+            .where(eq(templateValueTable.id, existingId));
+          // 从待删除列表中移除（因为已经被使用了）
+          const idx = idsToDelete.indexOf(existingId);
+          if (idx > -1) {
+            idsToDelete.splice(idx, 1);
+          }
+        } else {
+          // 真的是新选项，插入新记录
+          await tx.insert(templateValueTable).values({
+            templateKeyId: keyId,
+            value: opt.value,
+            sortOrder: index,
+          });
+        }
+      }
     }
   }
 }

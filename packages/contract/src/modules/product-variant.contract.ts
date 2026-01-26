@@ -51,7 +51,6 @@ export const ProductVariantContract = {
       t.Object({
         attributeValueId: t.String(),
         mediaIds: t.Array(t.String()),
-        mainImageId: t.Optional(t.String()),
       })
     ),
   }),

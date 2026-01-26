@@ -32,9 +32,7 @@ const formSchema = z.object({
   variantMedia: z.array(
     z.object({
       attributeValueId: z.string(),
-      attributeValue: z.string(),
       mediaIds: z.array(z.string()),
-      mainImageId: z.string().optional(),
     })
   ),
 });
@@ -71,9 +69,7 @@ export function VariantMediaModal({
       form.reset({
         variantMedia: data.variantMedia.map((vm) => ({
           attributeValueId: vm.attributeValueId,
-          attributeValue: vm.attributeValue,
           mediaIds: vm.images.map((img) => img.id),
-          mainImageId: vm.images.find((img) => img.isMain)?.id,
         })),
       });
     }
@@ -94,9 +90,8 @@ export function VariantMediaModal({
   };
 
   const handleOpenChange = (isOpen: boolean) => {
-    if (!isOpen) {
-      form.reset();
-    }
+    // 🔥 移除 form.reset()，避免干扰 useEffect 的数据加载
+    // useEffect 会在 data 变化时自动处理重置
     onOpenChange(isOpen);
   };
 
@@ -135,7 +130,7 @@ export function VariantMediaModal({
                       name={`variantMedia.${index}.mediaIds`}
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>选择图片</FormLabel>
+                          <FormLabel>选择图片（第一张自动作为主图）</FormLabel>
                           <FormControl>
                             <MediaSelect
                               max={5}
@@ -144,30 +139,9 @@ export function VariantMediaModal({
                               value={field.value || []}
                             />
                           </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name={`variantMedia.${index}.mainImageId`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>主图</FormLabel>
-                          <FormControl>
-                            <MediaSelect
-                              availableMediaIds={
-                                form.watch(`variantMedia.${index}.mediaIds`) ||
-                                []
-                              }
-                              onChange={(ids) =>
-                                field.onChange(ids[0] || undefined)
-                              }
-                              placeholder="选择主图"
-                              value={field.value ? [field.value] : []}
-                            />
-                          </FormControl>
+                          <p className="text-[10px] text-slate-400">
+                            💡 第一张图片将自动作为主图显示
+                          </p>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -179,7 +153,7 @@ export function VariantMediaModal({
                       <div className="flex flex-wrap gap-2">
                         {form
                           .watch(`variantMedia.${index}.mediaIds`)
-                          ?.map((mediaId) => {
+                          ?.map((mediaId, imgIndex) => {
                             const media = vm.images.find(
                               (img) => img.id === mediaId
                             );
@@ -207,10 +181,8 @@ export function VariantMediaModal({
                                     视频
                                   </span>
                                 )}
-                                {/* 主图标签 */}
-                                {form.watch(
-                                  `variantMedia.${index}.mainImageId`
-                                ) === mediaId && (
+                                {/* 🔥 第一张图标记为主图 */}
+                                {imgIndex === 0 && (
                                   <span className="absolute top-0 right-0 rounded-bl bg-indigo-600 px-1 text-[10px] text-white">
                                     主图
                                   </span>

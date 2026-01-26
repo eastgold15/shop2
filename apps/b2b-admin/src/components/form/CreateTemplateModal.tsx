@@ -58,7 +58,14 @@ const templateFieldSchema = z.object({
   key: z.string().min(1, "显示名称不能为空"),
   inputType: z.enum(["text", "number", "select", "multiselect"]),
   value: z.string(),
-  options: z.array(z.string()).optional(),
+  options: z
+    .array(
+      z.object({
+        id: z.string().optional(),
+        value: z.string(),
+      })
+    )
+    .optional(),
   isRequired: z.boolean().default(false),
   isSkuSpec: z.boolean().default(false),
 });
@@ -121,11 +128,12 @@ export function CreateTemplateModal({
         masterCategoryId: editingTemplate.masterCategoryId || "",
         // siteCategoryId: editingTemplate.siteCategoryId || "",
         fields:
-          editingTemplate.fields?.map((f: any) => ({
+          editingTemplate.fields?.map((f) => ({
             id: f.id,
             key: f.key || "",
             inputType: f.inputType || "text",
             value: f.value || "",
+            // 🔥 直接使用后端传来的 options 对象数组（已包含 UUID）
             options: f.options || [],
             isRequired: f.isRequired ?? false,
             isSkuSpec: f.isSkuSpec ?? false,
@@ -167,7 +175,10 @@ export function CreateTemplateModal({
           isRequired: f.isRequired,
           isSkuSpec: f.isSkuSpec,
           value: f.value,
-          ...(f.options && f.options.length > 0 && { options: f.options }),
+          ...(f.options &&
+            f.options.length > 0 && {
+              options: f.options,
+            }),
         })),
       };
 
@@ -532,7 +543,8 @@ function TemplateFieldItem({
                               const newOptions = text
                                 .split("\n")
                                 .map((s) => s.trim())
-                                .filter(Boolean);
+                                .filter(Boolean)
+                                .map((opt, idx) => ({ id: opt, value: opt }));
                               optionsField.onChange(newOptions);
                             }}
                             onKeyDown={(e) => {
@@ -543,7 +555,9 @@ function TemplateFieldItem({
                             placeholder="例如：小号、中号、大号、特大号"
                             rows={4}
                             value={
-                              Array.isArray(options) ? options.join("\n") : ""
+                              Array.isArray(options)
+                                ? options.map((opt) => opt.value).join("\n")
+                                : ""
                             }
                           />
                         </FormControl>
@@ -555,12 +569,12 @@ function TemplateFieldItem({
                   />
                   {options && options.length > 0 && (
                     <div className="flex flex-wrap gap-2">
-                      {options.map((opt: string, idx: number) => (
+                      {options.map((opt: any, idx: number) => (
                         <span
                           className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-2 py-1 text-indigo-700 text-xs"
                           key={idx}
                         >
-                          {opt}
+                          {opt.value}
                         </span>
                       ))}
                     </div>

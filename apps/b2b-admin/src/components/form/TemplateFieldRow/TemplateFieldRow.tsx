@@ -152,7 +152,7 @@ export function TemplateFieldRow({
 
         {inputType === "select" || inputType === "multiselect" ? (
           // 场景 A: 下拉选择 -> 渲染 OptionsEditor
-          <OptionsEditor control={control} name={`fields.${index}.options`} />
+          <OptionsEditor name={`fields.${index}.options`} />
         ) : (
           // 场景 B: 文本/数字 -> 渲染 PlaceholderEditor
           <PlaceholderEditor

@@ -40,7 +40,7 @@ export const authGuardMid = new Elysia({ name: "authGuard" })
          * 此时 userRolePermission.context.department 将被更新为 targetDept。
          * 这意味着在后续的 Service 层中：
          * user.context.department.id === currentDeptId (来自 Header)
-         * 结论：对于使用了 requireDept 宏的接口，user.context.department 
+         * 结论：对于使用了 requireDept 宏的接口，user.context.department
          * 和注入的 currentDeptId 指向的是同一个物理部门。
          */
         userRolePermission = {
@@ -91,12 +91,12 @@ export const authGuardMid = new Elysia({ name: "authGuard" })
     }),
 
     /**
-      * 部门上下文校验宏
-      * 作用：
-      * 1. 强制要求请求头必须带上 x-current-dept-id
-      * 2. 校验该部门是否属于当前用户所在的租户
-      * 3. 将该 ID 作为一个独立变量 currentDeptId 注入到 Handler 的参数中
-      */
+     * 部门上下文校验宏
+     * 作用：
+     * 1. 强制要求请求头必须带上 x-current-dept-id
+     * 2. 校验该部门是否属于当前用户所在的租户
+     * 3. 将该 ID 作为一个独立变量 currentDeptId 注入到 Handler 的参数中
+     */
     requireDept: {
       resolve: async ({ request, db, user }) => {
         const currentDeptId = request.headers.get(CURRENT_DEPT_HEADER);

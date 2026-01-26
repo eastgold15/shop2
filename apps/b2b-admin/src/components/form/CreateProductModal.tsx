@@ -130,9 +130,8 @@ export function CreateProductModal({
   };
 
   const handleOpenChange = (isOpen: boolean) => {
-    if (!isOpen) {
-      form.reset();
-    }
+    // 🔥 移除 form.reset()，避免干扰 useEffect 的数据加载
+    // useEffect 会在 product 变化时自动处理重置
     onOpenChange(isOpen);
   };
 

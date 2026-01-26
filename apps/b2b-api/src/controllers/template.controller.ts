@@ -12,9 +12,7 @@ import { TemplateContract } from "../../../../packages/contract/src/modules/temp
 import { TemplateService } from "../services/template.service";
 
 const templateService = new TemplateService();
-/**
- * @generated
- */
+
 export const templateController = new Elysia({ prefix: "/template" })
   .use(dbPlugin)
   .use(authGuardMid)

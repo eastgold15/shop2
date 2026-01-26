@@ -1206,13 +1206,13 @@ export class ProductService {
         .delete(productVariantMediaTable)
         .where(eq(productVariantMediaTable.productId, productId));
 
-      // 2. 插入新的配置
+      // 2. 插入新的配置（参照商品主图逻辑，第一张默认为主图）
       for (const vm of variantMedia) {
         const mediaRelations = vm.mediaIds.map((mediaId, index) => ({
           productId,
           attributeValueId: vm.attributeValueId,
           mediaId,
-          isMain: mediaId === vm.mainImageId,
+          isMain: index === 0, // 🔥 第一张图默认为主图
           sortOrder: index,
         }));
 
@@ -1220,43 +1220,6 @@ export class ProductService {
           await tx.insert(productVariantMediaTable).values(mediaRelations);
         }
       }
-
-      // === 🔥 新增：自动同步主图到商品级 ===
-      // 3.1 检查商品是否已有主图
-      const existingMainMedia = await tx
-        .select()
-        .from(productMediaTable)
-        .where(
-          and(
-            eq(productMediaTable.productId, productId),
-            eq(productMediaTable.isMain, true)
-          )
-        )
-        .limit(1);
-
-      // 3.2 如果没有主图，从变体媒体中选择第一个
-      if (existingMainMedia.length === 0 && variantMedia.length > 0) {
-        // 找到第一个有图片的变体
-        const firstVariantWithMedia = variantMedia.find(
-          (vm) => vm.mediaIds.length > 0
-        );
-
-        if (firstVariantWithMedia) {
-          // 确定主图ID：优先使用指定的 mainImageId，否则使用第一张
-          const mainMediaId =
-            firstVariantWithMedia.mainImageId ||
-            firstVariantWithMedia.mediaIds[0];
-
-          // 插入到 productMediaTable
-          await tx.insert(productMediaTable).values({
-            productId,
-            mediaId: mainMediaId,
-            isMain: true,
-            sortOrder: 0,
-          });
-        }
-      }
-      // === 🔥 新增结束 ===
 
       return { success: true };
     });

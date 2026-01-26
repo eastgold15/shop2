@@ -104,7 +104,9 @@ export function useDeleteSiteProduct() {
 export function useBatchUpdateSortOrder() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: typeof SiteProductContract.BatchUpdateSortOrder.static) =>
+    mutationFn: (
+      data: typeof SiteProductContract.BatchUpdateSortOrder.static
+    ) =>
       api.put<any, typeof SiteProductContract.BatchUpdateSortOrder.static>(
         "/api/v1/site-product/batch/sort-order",
         data
