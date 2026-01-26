@@ -210,7 +210,7 @@ const roles = [
     description: "部门经理",
     type: "system" as const,
     priority: 70,
-    dataScope: "dept_and_child" as const,
+    dataScope: "current_and_below" as const,
   },
   {
     id: randomUUIDv7(),
@@ -218,7 +218,7 @@ const roles = [
     description: "业务员",
     type: "system" as const,
     priority: 50,
-    dataScope: "self" as const,
+    dataScope: "current" as const,
   },
   {
     id: randomUUIDv7(),

@@ -36,6 +36,7 @@ import { useMasterCategoryList } from "@/hooks/api";
 import { useDepartmentList } from "@/hooks/api/department";
 import { useRoleList } from "@/hooks/api/role";
 import { useCreateUser, useUpdateUser } from "@/hooks/api/user";
+import { useAuthStore } from "@/stores/auth-store";
 
 const formSchema = z.object({
   name: z.string().min(1, "姓名不能为空"),
@@ -87,6 +88,45 @@ export function CreateUserModal({
   const roles = rolesData || [];
   const departments = departmentsData || [];
   const masterCategories = masterCategoriesData || [];
+
+  // 获取当前登录用户的角色名称
+  const currentUserRoleName = useAuthStore(
+    (state) => state.user?.roles[0]?.name
+  );
+
+  // 创建过滤后的角色列表
+  const filteredRoles = roles.filter((role: any) => {
+    // 始终过滤超级管理员和当前用户角色
+    if (role.name === "super_admin" || role.name === "超级管理员") return false;
+
+    // 编辑模式：如果用户当前拥有该角色，保留显示
+    if (isEdit && initialData?.roleId) {
+      const userCurrentRoleName = roles.find(
+        (r) => r.id === initialData.roleId
+      )?.name;
+      if (role.name === userCurrentRoleName) return true;
+    }
+
+    // 过滤当前登录用户的角色
+    if (role.name === currentUserRoleName) return false;
+
+    return true;
+  });
+
+  // 判断当前角色是否被禁用
+  const isCurrentRoleDisabled =
+    isEdit &&
+    initialData?.roleId &&
+    (() => {
+      const userCurrentRoleName = roles.find(
+        (r) => r.id === initialData.roleId
+      )?.name;
+      return (
+        userCurrentRoleName === currentUserRoleName ||
+        userCurrentRoleName === "超级管理员" ||
+        userCurrentRoleName === "super_admin"
+      );
+    })();
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -346,6 +386,7 @@ export function CreateUserModal({
                     <FormItem>
                       <FormLabel>角色 *</FormLabel>
                       <Select
+                        disabled={!!isCurrentRoleDisabled}
                         onValueChange={field.onChange}
                         value={field.value}
                       >
@@ -355,13 +396,18 @@ export function CreateUserModal({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {roles.map((role: any) => (
+                          {filteredRoles.map((role: any) => (
                             <SelectItem key={role.id} value={role.id}>
                               {role.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
+                      {isCurrentRoleDisabled && (
+                        <p className="mt-1 text-slate-500 text-xs">
+                          当前角色不能修改
+                        </p>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
