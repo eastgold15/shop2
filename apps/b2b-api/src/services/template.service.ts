@@ -202,58 +202,116 @@ export class TemplateService {
 
       const templateId = templateRes.id;
 
-      // 2. 清理旧的关联数据（keys 和 values）
-      await this.clearTemplateRelations(templateId, tx);
+      // 2. 获取现有字段
+      const existingKeys = await tx
+        .select()
+        .from(templateKeyTable)
+        .where(eq(templateKeyTable.templateId, templateId));
+      const existingKeyIds = existingKeys.map((k) => k.id);
 
-      // 3. 重新创建字段列表（逻辑与 create 相同）
+      // 3. 处理字段列表（支持增量更新）
       if (fields && fields.length > 0) {
+        // 3.1 找出提交的 field IDs（有 id 的）
+        const submittedFieldIds = fields
+          .map((f) => f.id)
+          .filter((id): id is string => !!id);
+        const fieldIdsToDelete = existingKeyIds.filter(
+          (id) => !submittedFieldIds.includes(id)
+        );
+
+        // 3.2 删除不再存在的字段
+        if (fieldIdsToDelete.length > 0) {
+          await tx
+            .delete(templateValueTable)
+            .where(inArray(templateValueTable.templateKeyId, fieldIdsToDelete));
+          await tx
+            .delete(templateKeyTable)
+            .where(inArray(templateKeyTable.id, fieldIdsToDelete));
+        }
+
+        // 3.3 处理每个字段
         for (const field of fields) {
-          const { inputType, isRequired, options, value, key, isSkuSpec } =
-            field;
+          const {
+            id: fieldId,
+            inputType,
+            isRequired,
+            options,
+            value,
+            key,
+            isSkuSpec,
+          } = field;
 
-          // 3.1 插入属性定义 (templateKeyTable)
-          const [newAttribute] = await tx
-            .insert(templateKeyTable)
-            .values({
-              templateId,
-              key,
-              inputType,
-              isRequired: !!isRequired,
-              isSkuSpec: !!isSkuSpec,
-            })
-            .returning({ id: templateKeyTable.id });
+          let keyId: string;
 
-          // 3.2 根据类型解析 value/options
+          if (fieldId) {
+            // 🔥 更新现有字段
+            await tx
+              .update(templateKeyTable)
+              .set({
+                key,
+                inputType,
+                isRequired: !!isRequired,
+                isSkuSpec: !!isSkuSpec,
+              })
+              .where(eq(templateKeyTable.id, fieldId));
+            keyId = fieldId;
+          } else {
+            // 🔥 创建新字段
+            const [newAttribute] = await tx
+              .insert(templateKeyTable)
+              .values({
+                templateId,
+                key,
+                inputType,
+                isRequired: !!isRequired,
+                isSkuSpec: !!isSkuSpec,
+              })
+              .returning({ id: templateKeyTable.id });
+            keyId = newAttribute.id;
+          }
+
+          // 3.4 处理选项
           if (inputType === "select" || inputType === "multiselect") {
             if (options && Array.isArray(options)) {
-              // 使用新的对象格式处理选项
-              await this.upsertTemplateValues(newAttribute.id, field, tx);
+              // 使用新的对象格式处理选项（增量更新）
+              await this.upsertTemplateValues(keyId, field, tx);
             } else if (value && typeof value === "string") {
-              // 兼容旧格式：逗号分隔的字符串
+              // 兼容旧格式：逗号分隔的字符串（删除重建）
+              await tx
+                .delete(templateValueTable)
+                .where(eq(templateValueTable.templateKeyId, keyId));
               const valuesToInsert = value
                 .split(",")
                 .map((v) => v.trim())
                 .filter(Boolean);
               const valueData = valuesToInsert.map((v, index) => ({
-                templateKeyId: newAttribute.id,
+                templateKeyId: keyId,
                 value: v,
                 sortOrder: index,
               }));
-              await tx.insert(templateValueTable).values(valueData);
+              if (valueData.length > 0) {
+                await tx.insert(templateValueTable).values(valueData);
+              }
             }
           } else if (
             (inputType === "text" || inputType === "number") &&
             value
           ) {
-            // 文本/数字类型，value 是 placeholder 或默认值
+            // 文本/数字类型：删除后重建（只有一个值）
+            await tx
+              .delete(templateValueTable)
+              .where(eq(templateValueTable.templateKeyId, keyId));
             const valueData = {
-              templateKeyId: newAttribute.id,
+              templateKeyId: keyId,
               value: String(value).trim(),
               sortOrder: 0,
             };
             await tx.insert(templateValueTable).values([valueData]);
           }
         }
+      } else {
+        // 如果 fields 为空，删除所有字段
+        await this.clearTemplateRelations(templateId, tx);
       }
 
       return templateRes;

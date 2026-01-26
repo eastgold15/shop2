@@ -170,6 +170,7 @@ export function CreateTemplateModal({
         masterCategoryId: data.masterCategoryId,
         // ...(data.siteCategoryId && { siteCategoryId: data.siteCategoryId }),
         fields: data.fields.map((f) => ({
+          ...(f.id && { id: f.id }), // 🔥 传回 field.id，用于更新而非删除重建
           key: f.key,
           inputType: f.inputType,
           isRequired: f.isRequired,

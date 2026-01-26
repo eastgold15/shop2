@@ -5,12 +5,10 @@ import { templateTable } from "../table.schema";
 import { TemplateKeyInsertFields } from "./template-key.contract";
 import { TemplateValueInsertFields } from "./template-value.contract";
 
-
 export const TemplateInsertFields = spread(templateTable, "insert");
 
 export const TemplateFields = spread(templateTable, "select");
 export const TemplateContract = {
-
   Response: t.Object({
     ...TemplateFields,
   }),
@@ -33,12 +31,12 @@ export const TemplateContract = {
     name: TemplateInsertFields.name,
     masterCategoryId: TemplateInsertFields.masterCategoryId,
   }),
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
   Update: t.Partial(
     t.Object({
       fields: t.Optional(
         t.Array(
           t.Object({
+            id: t.Optional(t.String()), // 🔥 字段ID，用于更新而非删除重建
             key: TemplateKeyInsertFields.key,
             inputType: TemplateKeyInsertFields.inputType,
             isRequired: TemplateKeyInsertFields.isRequired,
