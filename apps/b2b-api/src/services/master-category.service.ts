@@ -29,7 +29,7 @@ export class MasterCategoryService {
     return res;
   }
 
-  public async findAll(
+  public async list(
     query: MasterCategoryContract["ListQuery"],
     ctx: ServiceContext
   ) {
@@ -238,21 +238,5 @@ export class MasterCategoryService {
 
     // 递归检查
     return await this.checkIsDescendant(ancestorId, parentId, ctx);
-  }
-
-  // [Auto-Generated] Do not edit this tag to keep updates. @generated
-  public async list(
-    query: MasterCategoryContract["ListQuery"],
-    ctx: ServiceContext
-  ) {
-    const { search } = query;
-
-    const res = await ctx.db.query.masterCategoryTable.findMany({
-      where: {
-        tenantId: ctx.user.context.tenantId!,
-        ...(search ? { originalName: { ilike: `%${search}%` } } : {}),
-      },
-    });
-    return res;
   }
 }

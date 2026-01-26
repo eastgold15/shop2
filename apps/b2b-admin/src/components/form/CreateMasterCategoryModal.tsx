@@ -32,18 +32,33 @@ import {
   useUpdateMasterCategory,
 } from "@/hooks/api/master-category";
 
-const formSchema = z.object({
-  name: z.string().min(1, "分类名称不能为空"),
-  slug: z
-    .string()
-    .min(1, "标识符不能为空")
-    .regex(/^[a-z0-9-]+$/, "标识符只能包含小写字母、数字和连字符"),
-  description: z.string().min(1, "描述不能为空"),
-  parentId: z.string().optional(),
-  sortOrder: z.number().optional().default(0),
-  isActive: z.boolean().optional().default(true),
-  icon: z.string().optional(),
-});
+const formSchema = z
+  .object({
+    id: z.string().optional(),
+    name: z.string().min(1, "分类名称不能为空"),
+    slug: z
+      .string()
+      .min(1, "标识符不能为空")
+      .regex(/^[a-z0-9-]+$/, "标识符只能包含小写字母、数字和连字符"),
+    description: z.string().min(1, "描述不能为空"),
+    parentId: z.string().optional(),
+    sortOrder: z.number().optional().default(0),
+    isActive: z.boolean().optional().default(true),
+    icon: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      // 防止将自己设置为父级分类
+      if (data.id && data.parentId && data.id === data.parentId) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: "不能将自己设置为父级分类",
+      path: ["parentId"],
+    }
+  );
 
 type FormData = z.infer<typeof formSchema>;
 type MasterCategory = MasterCategoryContract["Response"];
@@ -83,6 +98,7 @@ export function CreateMasterCategoryModal({
   useEffect(() => {
     if (editingCategory) {
       form.reset({
+        id: editingCategory.id,
         name: editingCategory.name,
         slug: editingCategory.slug,
         description: editingCategory.description || "",
@@ -93,6 +109,7 @@ export function CreateMasterCategoryModal({
       });
     } else {
       form.reset({
+        id: undefined,
         name: "",
         slug: "",
         description: "",
@@ -148,7 +165,7 @@ export function CreateMasterCategoryModal({
 
   return (
     <Dialog onOpenChange={handleOpenChange} open={open}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-150">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FolderOpen className="h-5 w-5" />
@@ -229,7 +246,7 @@ export function CreateMasterCategoryModal({
                   <FormLabel>父级分类</FormLabel>
                   <FormControl>
                     <MasterCategorySelect
-                      excludeId={field.value}
+                      excludeId={editingCategory?.id}
                       onChange={field.onChange}
                       placeholder="选择父级分类（可选）"
                       value={field.value}

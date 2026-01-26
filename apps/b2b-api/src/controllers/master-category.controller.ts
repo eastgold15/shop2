@@ -13,7 +13,7 @@ export const masterCategoryController = new Elysia({
   .get(
     "/",
     ({ query, user, db, currentDeptId }) =>
-      masterCategoryService.findAll(query, { db, user, currentDeptId }),
+      masterCategoryService.list(query, { db, user, currentDeptId }),
     {
       allPermissions: ["MASTER_CATEGORY_VIEW"],
       requireDept: true,
