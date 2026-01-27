@@ -543,6 +543,14 @@ export const relations = defineRelations(schema, (r) => ({
     }),
   },
 
+  // Newsletter 订阅表
+  newsletterSubscriptionTable: {
+    site: r.one.siteTable({
+      from: r.newsletterSubscriptionTable.siteId,
+      to: r.siteTable.id,
+    }),
+  },
+
   quotationTable: {
     tenant: r.one.tenantTable({
       from: r.quotationTable.tenantId,

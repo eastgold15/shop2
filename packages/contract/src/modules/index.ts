@@ -9,6 +9,7 @@ export * from "./hero-card.contract";
 export * from "./inquiry.contract";
 export * from "./master-category.contract";
 export * from "./media.contract";
+export * from "./_custom/newsletter.contract";
 export * from "./media-metadata.contract";
 export * from "./permission.contract";
 export * from "./product.contract";

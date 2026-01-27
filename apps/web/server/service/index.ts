@@ -16,3 +16,6 @@ export const siteCategoryService = new SiteCategoryService();
 
 import { InquiryService } from "./inquiry.service";
 export const inquiryService = new InquiryService();
+
+import { NewsletterService } from "./newsletter.service";
+export const newsletterService = new NewsletterService();
