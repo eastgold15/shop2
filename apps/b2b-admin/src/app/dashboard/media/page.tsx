@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { useDebounce } from "use-debounce"; // 建议安装: bun add use-debounce
+import { useDebounce } from "use-debounce";
 
 import { Can } from "@/components/auth";
 import { MediaUpload } from "@/components/MediaUpload";
@@ -316,6 +316,20 @@ function MediaCard({
   onDelete: () => void;
 }) {
   const isImage = asset.mimeType?.startsWith("image/");
+  const isVideo = asset.mimeType?.startsWith("video/");
+
+  const handleMouseEnter = (e: React.MouseEvent<HTMLVideoElement>) => {
+    const video = e.currentTarget;
+    video.play().catch(() => {
+      // 静默处理自动播放被阻止的情况
+    });
+  };
+
+  const handleMouseLeave = (e: React.MouseEvent<HTMLVideoElement>) => {
+    const video = e.currentTarget;
+    video.pause();
+    video.currentTime = 0;
+  };
 
   return (
     <div
@@ -358,6 +372,15 @@ function MediaCard({
               size="fill"
             />
           </div>
+        ) : isVideo ? (
+          <video
+            className="absolute inset-0 h-full w-full object-cover"
+            src={asset.url}
+            muted
+            playsInline
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+          />
         ) : (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
             <FileIcon className="size-10 text-slate-400" />
