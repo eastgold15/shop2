@@ -11,6 +11,7 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
+import Link from "next/link";
 import { Can } from "@/components/auth/Can";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNotifications, useStatistics } from "@/hooks/api/statistics";
@@ -178,31 +179,43 @@ export default function UserDashboard() {
             <h2 className="mb-6 font-bold text-slate-900 text-xl">快速操作</h2>
             <div className="flex flex-col gap-3">
               <Can permission="SITES_MANAGE">
-                <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-purple-600 px-4 py-3 font-semibold text-white transition-all hover:bg-purple-700 hover:shadow-lg active:scale-95">
+                <Link
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-purple-600 px-4 py-3 font-semibold text-white transition-all hover:bg-purple-700 hover:shadow-lg active:scale-95"
+                  href="/dashboard/site-config"
+                >
                   <Settings size={18} />
                   系统设置
-                </button>
+                </Link>
               </Can>
 
               <Can permission="PRODUCT_VIEW">
-                <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 font-semibold text-white transition-all hover:bg-blue-700 hover:shadow-lg active:scale-95">
+                <Link
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 font-semibold text-white transition-all hover:bg-blue-700 hover:shadow-lg active:scale-95"
+                  href="/dashboard/product"
+                >
                   <Package size={18} />
                   产品管理
-                </button>
+                </Link>
               </Can>
 
               <Can permission="FACTORY_VIEW">
-                <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 font-semibold text-white transition-all hover:bg-emerald-700 hover:shadow-lg active:scale-95">
+                <Link
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 font-semibold text-white transition-all hover:bg-emerald-700 hover:shadow-lg active:scale-95"
+                  href="/dashboard/dept"
+                >
                   <Building2 size={18} />
                   工厂管理
-                </button>
+                </Link>
               </Can>
 
               <Can permission="QUOTATION_VIEW">
-                <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 font-semibold text-white transition-all hover:bg-indigo-700 hover:shadow-lg active:scale-95">
+                <Link
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 font-semibold text-white transition-all hover:bg-indigo-700 hover:shadow-lg active:scale-95"
+                  href="/dashboard"
+                >
                   <ShoppingCart size={18} />
                   订单管理
-                </button>
+                </Link>
               </Can>
             </div>
           </div>
