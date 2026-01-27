@@ -5,7 +5,7 @@ import { siteMiddleware } from "~/middleware/site";
 import { siteCategoryService } from "~/service/index";
 
 export const sitecategoriesController = new Elysia({
-  prefix: "/sitecategories",
+  prefix: "/site_category",
 }) // 获取分类树形列表 - 前端用户使用
   .use(localeMiddleware)
   .use(dbPlugin)
@@ -53,7 +53,7 @@ export const sitecategoriesController = new Elysia({
     }
   )
   .get(
-    "/:id",
+    "/detail/:id",
     ({ params: { id }, db, site }) => {
       // 获取单个分类 - 前端用户使用
       return siteCategoryService.getById(id, { db, site });
@@ -68,4 +68,4 @@ export const sitecategoriesController = new Elysia({
         description: "根据分类ID获取详细信息，包括名称、描述、父子关系等",
       },
     }
-  );
+  )

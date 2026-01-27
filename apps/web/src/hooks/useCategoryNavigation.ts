@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { useSiteCategoryList } from "@/hooks/api/site-category-hook";
+import { useSiteCategoryList } from "@/hooks/api/site-category";
 
 /**
  * 统一的分类导航数据和处理逻辑 Hook

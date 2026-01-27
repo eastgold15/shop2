@@ -3,8 +3,10 @@
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import CategoryGrid from "@/components/layout/CategoryGrid";
-import { useProductList } from "@/hooks/api/product-hook";
-import { useSiteCategoryDetail } from "@/hooks/api/site-category-hook";
+import {
+  useSiteCategoryDetail,
+  useSiteCategoryProducts,
+} from "@/hooks/api/site-category";
 
 export default function CategoryClient() {
   const searchParams = useSearchParams();
@@ -23,12 +25,16 @@ export default function CategoryClient() {
     error: categoryError,
   } = useSiteCategoryDetail(id || "", { enabled: isMounted && !!id });
 
-  // 查询分类下的产品列表
+  // 查询分类下的产品列表（使用 siteCategory 接口）
   const {
-    data: productListRes,
+    data: products,
     isLoading: isProductLoading,
     error: productError,
-  } = useProductList({ categoryId: id || "" }, { enabled: isMounted && !!id });
+  } = useSiteCategoryProducts(
+    id || "",
+    { page: 1, limit: 12 },
+    { enabled: isMounted && !!id }
+  );
 
   // loading 状态聚合
   const isLoading = !isMounted || isCategoryLoading || isProductLoading;
@@ -58,15 +64,32 @@ export default function CategoryClient() {
 
   const title = categoryData?.name || "Collection";
 
+  // 转换数据格式以匹配 CategoryGrid 的期望
+  const productListRes = {
+    items:
+      products?.map((p) => ({
+        siteProductId: p.id,
+        displayName: p.displayName,
+        displayDesc: p.displayDesc,
+        productId: p.id,
+        spuCode: p.spuCode,
+        minPrice: p.minPrice,
+        mainMedia: p.mainMedia,
+        isFeatured: p.isFeatured,
+        sortOrder: null,
+      })) || [],
+    meta: {
+      total: products?.length || 0,
+      page: 1,
+      limit: 12,
+      totalPages: 1,
+    },
+  };
+
   return (
     <CategoryGrid
       description={categoryData?.description || ""}
-      productListRes={
-        productListRes || {
-          items: [],
-          meta: { total: 0, page: 1, limit: 12, totalPages: 0 },
-        }
-      }
+      productListRes={productListRes}
       title={title}
     />
   );
