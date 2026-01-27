@@ -64,7 +64,7 @@ export function MediaSelect({
   // 视频悬停播放处理
   const handleMouseEnter = (e: React.MouseEvent<HTMLVideoElement>) => {
     const video = e.currentTarget;
-    video.play().catch(() => {});
+    video.play().catch((err) => console.error("视频播放错误:", err));
   };
 
   const handleMouseLeave = (e: React.MouseEvent<HTMLVideoElement>) => {

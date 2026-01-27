@@ -170,7 +170,11 @@ export function VariantMediaModal({
                                     muted
                                     onMouseEnter={(e) => {
                                       const video = e.currentTarget;
-                                      video.play().catch(() => {});
+                                      video
+                                        .play()
+                                        .catch((err) =>
+                                          console.error("视频播放错误:", err)
+                                        );
                                     }}
                                     onMouseLeave={(e) => {
                                       const video = e.currentTarget;
