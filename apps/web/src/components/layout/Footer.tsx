@@ -256,7 +256,7 @@ const Footer: React.FC = () => {
           </div>
         </div>
 
-        <div className="mt-20 flex flex-col items-center justify-between border-gray-100 border-t pt-8 text-center text-gray-400 text-xs uppercase tracking-wider md:flex-row">
+        <div className="mt-20 flex flex-col items-center justify-between border-gray-100 border-t pt-8 text-center text-gray-400 text-xs tracking-wider md:flex-row">
           <p>
             &copy;{" "}
             {`${new Date().getFullYear()} ${site_copyright?.[0]?.value || "error"}`}{" "}
@@ -276,7 +276,7 @@ const Footer: React.FC = () => {
                   p-id="5908"
                 />
               </svg>
-              WhatsApp +86 {site_phone?.[0]?.value || "error"}
+              WhatsApp +86 {site_phone?.[0]?.value}
             </span>
 
             {site_erweima?.[0]?.value ? (
@@ -289,7 +289,7 @@ const Footer: React.FC = () => {
               />
             ) : null}
 
-            <span>{site_email?.[0]?.value || "error"}</span>
+            <span>{site_email?.[0]?.value }</span>
           </div>
         </div>
       </div>
