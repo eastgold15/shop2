@@ -4,8 +4,8 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --font-sans: "Inter", "sans-serif";
-  --font-serif: "Playfair Display", "serif";
+  --font-sans: "Arial", "sans-serif";
+  --font-serif: "Arial", "sans-serif";
 
   --color-balck: #000;
   --color-gold: #9a834c;
@@ -28,7 +28,7 @@
   }
 
   .font-serif {
-    font-family: "Playfair Display", serif;
+    font-family: "Arial", sans-serif;
   }
 
   --navbar-height: 7rem;
