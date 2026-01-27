@@ -179,7 +179,7 @@ const Footer: React.FC = () => {
               />
               <Link
                 aria-label="TikTok"
-                className="icon-[mdi--tiktok] text-2xl text-gray-700 hover:text-black transition-colors"
+                className="icon-[simple-icons--tiktok] text-2xl text-gray-700 hover:text-black transition-colors"
                 href="https://www.tiktok.com/@yourusername"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -276,7 +276,7 @@ const Footer: React.FC = () => {
                   p-id="5908"
                 />
               </svg>
-              +86 {site_phone?.[0]?.value || "error"}
+              WhatsApp +86 {site_phone?.[0]?.value || "error"}
             </span>
 
             {site_erweima?.[0]?.value ? (
