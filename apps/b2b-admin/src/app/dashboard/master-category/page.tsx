@@ -227,18 +227,6 @@ export default function MasterCategoryManager() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showHidden, setShowHidden] = useState(false);
 
-  // 权限检查：只有超级管理员才能访问
-  if (!isSuperAdmin) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <div className="text-center">
-          <h2 className="mb-2 font-bold text-2xl text-slate-900">权限不足</h2>
-          <p className="text-slate-500">只有超级管理员才能访问主分类管理</p>
-        </div>
-      </div>
-    );
-  }
-
   // 过滤分类
   const filteredCategories =
     categoriesTree?.filter((category) => {

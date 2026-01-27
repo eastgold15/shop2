@@ -236,7 +236,10 @@ export const relations = defineRelations(schema, (r) => ({
       optional: false,
     }),
 
-    siteSkus: r.many.siteSkuTable(),
+    siteSkus: r.many.siteSkuTable({
+      from: r.siteProductTable.id,
+      to: r.siteSkuTable.siteProductId,
+    }),
     siteCategories: r.many.siteCategoryTable({
       from: r.siteProductTable.id.through(
         r.siteProductSiteCategoryTable.siteProductId
