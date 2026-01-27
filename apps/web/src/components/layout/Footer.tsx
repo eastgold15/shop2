@@ -191,14 +191,14 @@ const Footer: React.FC = () => {
           <div className="mx-auto mb-20 max-w-xl text-center">
             <h4 className="mb-2 text-left font-serif text-sm">NEWSLETTER</h4>
             <p className="mb-4 text-left text-xs text-gray-500">
-              订阅我们的最新资讯和优惠活动
+          Explore the latest series
             </p>
 
             {/* 成功消息 */}
             {showSuccessMessage && (
               <div className="mb-3 flex items-center gap-2 rounded bg-green-50 px-3 py-2 text-left text-xs text-green-700">
                 <div className="icon-[mdi--check-circle] text-lg" />
-                <span>订阅成功！感谢您的订阅</span>
+                <span>Subscription successful! Thank you for your subscription</span>
               </div>
             )}
 
