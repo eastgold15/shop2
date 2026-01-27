@@ -375,11 +375,11 @@ function MediaCard({
         ) : isVideo ? (
           <video
             className="absolute inset-0 h-full w-full object-cover"
-            src={asset.url}
             muted
-            playsInline
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
+            playsInline
+            src={asset.url}
           />
         ) : (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">

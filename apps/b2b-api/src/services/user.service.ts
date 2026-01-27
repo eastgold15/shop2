@@ -159,12 +159,70 @@ export class UserService {
 
   /**
    * 获取租户下所有可切换的部门/站点列表
-   * 租户可以切换到其名下的任何工厂/部门
+   * 权限规则（基于用户的原始部门）：
+   * 1. 超级管理员 (isSuperAdmin): 返回租户下所有部门（跨越所有出口商）
+   * 2. 出口商部门用户 (原始 category === "group"): 返回原始 group + 其下所有 factory
+   * 3. 工厂部门用户 (原始 category === "factory"): 只返回原始 factory
+   *
+   * 注意：使用用户的原始部门（数据库中的 deptId）而不是当前临时切换的部门
    */
   async getSwitchableDepartments(user: UserDto) {
-    // 获取租户下的所有部门
+    // 获取用户的原始部门（从数据库查询）
+    const rawUser = await db.query.userTable.findFirst({
+      where: { id: user.id },
+      columns: { deptId: true },
+    });
+
+    const originalDeptId = rawUser?.deptId;
+    if (!originalDeptId) {
+      throw new Error("用户没有归属部门");
+    }
+
+    // 查询原始部门的信息
+    const originalDept = await db.query.departmentTable.findFirst({
+      where: { id: originalDeptId },
+      columns: { id: true, category: true },
+    });
+
+    const originalCategory = originalDept?.category;
+    let targetDeptIds: string[] = [];
+
+    // 超级管理员：返回租户下所有部门
+    if (user.isSuperAdmin) {
+      // 不设置 targetDeptIds，查询所有部门
+    }
+    // 出口商部门用户：返回原始 group 及其子部门
+    else if (originalCategory === "group") {
+      const dept = await db.query.departmentTable.findFirst({
+        where: { id: originalDeptId },
+        with: {
+          childrens: {
+            columns: { id: true },
+          },
+        },
+      });
+      if (dept) {
+        targetDeptIds = [originalDeptId, ...dept.childrens.map((c) => c.id)];
+      }
+    }
+    // 工厂部门用户：只返回原始 factory 部门
+    else if (originalCategory === "factory") {
+      targetDeptIds = [originalDeptId];
+    }
+
+    // 构建查询条件
+    const where: any = {
+      tenantId: user.context.tenantId,
+    };
+
+    // 如果有部门限制，则加入 in 查询
+    if (targetDeptIds.length > 0) {
+      where.id = { in: targetDeptIds };
+    }
+
+    // 获取可切换的部门列表
     const departments = await db.query.departmentTable.findMany({
-      where: { tenantId: user.context.tenantId },
+      where,
       columns: {
         id: true,
         name: true,
@@ -204,11 +262,11 @@ export class UserService {
         parentId: dept.parentId,
         site: dept.site
           ? {
-              id: dept.site.id,
-              name: dept.site.name,
-              domain: dept.site.domain,
-              siteType: dept.site.siteType,
-            }
+            id: dept.site.id,
+            name: dept.site.name,
+            domain: dept.site.domain,
+            siteType: dept.site.siteType,
+          }
           : null,
       })),
     };
