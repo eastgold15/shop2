@@ -27,6 +27,7 @@ import {
   useProductVariantMedia,
   useSetProductVariantMedia,
 } from "@/hooks/api/product-variant";
+import { isVideoFile } from "@/utils/media";
 
 const formSchema = z.object({
   variantMedia: z.array(
@@ -162,10 +163,21 @@ export function VariantMediaModal({
                                 className="relative h-20 w-20 overflow-hidden rounded-md border"
                                 key={mediaId}
                               >
-                                {/* 根据 mediaType 渲染 */}
-                                {media.mediaType?.startsWith("video") ? (
+                                {/* 根据文件后缀判断是视频还是图片 */}
+                                {isVideoFile(media.url) ? (
                                   <video
                                     className="h-full w-full object-cover"
+                                    muted
+                                    onMouseEnter={(e) => {
+                                      const video = e.currentTarget;
+                                      video.play().catch(() => {});
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      const video = e.currentTarget;
+                                      video.pause();
+                                      video.currentTime = 0;
+                                    }}
+                                    playsInline
                                     src={media.url}
                                   />
                                 ) : (
@@ -176,7 +188,7 @@ export function VariantMediaModal({
                                   />
                                 )}
                                 {/* 媒体类型标签 */}
-                                {media.mediaType?.startsWith("video") && (
+                                {isVideoFile(media.url) && (
                                   <span className="absolute top-0 left-0 rounded-br bg-blue-600 px-1 text-[10px] text-white">
                                     视频
                                   </span>

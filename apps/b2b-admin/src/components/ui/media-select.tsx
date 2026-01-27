@@ -4,7 +4,14 @@ import { useState } from "react";
 import { MediaSelectorDialog } from "@/components/MediaSelectorDialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useMediaList } from "@/hooks/api";
+import { isVideoFile } from "@/utils/media";
 
 interface MediaSelectProps {
   value?: string[]; // 媒体ID列表
@@ -54,86 +61,114 @@ export function MediaSelect({
   // 获取媒体信息
   const getMedia = (mediaId: string) => mediaList.find((m) => m.id === mediaId);
 
-  // 判断是否是视频
-  const isVideo = (mimeType?: string) => mimeType?.startsWith("video/");
+  // 视频悬停播放处理
+  const handleMouseEnter = (e: React.MouseEvent<HTMLVideoElement>) => {
+    const video = e.currentTarget;
+    video.play().catch(() => {});
+  };
+
+  const handleMouseLeave = (e: React.MouseEvent<HTMLVideoElement>) => {
+    const video = e.currentTarget;
+    video.pause();
+    video.currentTime = 0;
+  };
 
   return (
     <div className={className}>
-      <div className="space-y-2">
-        {/* 显示已选择的媒体 */}
-        {value.length > 0 && (
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-            {value.map((mediaId) => {
-              const media = getMedia(mediaId);
-              const video = isVideo(media?.mimeType);
+      <TooltipProvider>
+        <div className="space-y-2">
+          {/* 显示已选择的媒体 */}
+          {value.length > 0 && (
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+              {value.map((mediaId) => {
+                const media = getMedia(mediaId);
+                const video = isVideoFile(media?.url);
 
-              return (
-                <Card className="relative" key={mediaId}>
-                  <CardContent className="p-2">
-                    <div className="group relative aspect-square overflow-hidden rounded-md bg-muted">
-                      {video ? (
-                        <div className="flex h-full items-center justify-center">
-                          <Video className="h-8 w-8 text-muted-foreground" />
-                        </div>
-                      ) : (
-                        <Image
-                          alt={media?.originalName || "媒体"}
-                          className="h-full w-full object-cover"
-                          fill
-                          sizes="(max-width: 768px) 50vw, 20vw"
-                          src={media?.url || "/placeholder.png"}
-                        />
-                      )}
-                      {/* 删除按钮 */}
-                      <Button
-                        className="absolute top-1 right-1 h-6 w-6 rounded-full bg-red-500 p-0 opacity-0 transition-opacity hover:bg-red-600 group-hover:opacity-100"
-                        onClick={() => handleRemoveMedia(mediaId)}
-                        size="sm"
-                        type="button"
-                        variant="destructive"
-                      >
-                        ×
-                      </Button>
-                      {/* 视频标记 */}
-                      {video && (
-                        <div className="absolute bottom-1 left-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/50">
-                          <Video className="h-3 w-3 text-white" />
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        )}
+                return (
+                  <Tooltip key={mediaId}>
+                    <TooltipTrigger asChild>
+                      <Card className="relative cursor-pointer">
+                        <CardContent className="p-2">
+                          <div className="group relative aspect-square overflow-hidden rounded-md bg-muted">
+                            {video ? (
+                              <video
+                                className="h-full w-full object-cover"
+                                muted
+                                onMouseEnter={handleMouseEnter}
+                                onMouseLeave={handleMouseLeave}
+                                playsInline
+                                src={media?.url}
+                              />
+                            ) : (
+                              <Image
+                                alt={media?.originalName || "媒体"}
+                                className="h-full w-full object-cover"
+                                fill
+                                sizes="(max-width: 768px) 50vw, 20vw"
+                                src={media?.url || "/placeholder.png"}
+                              />
+                            )}
+                            {/* 删除按钮 */}
+                            <Button
+                              className="absolute top-1 right-1 h-6 w-6 rounded-full bg-red-500 p-0 opacity-0 transition-opacity hover:bg-red-600 group-hover:opacity-100"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveMedia(mediaId);
+                              }}
+                              size="sm"
+                              type="button"
+                              variant="destructive"
+                            >
+                              ×
+                            </Button>
+                            {/* 视频标记 */}
+                            {video && (
+                              <div className="absolute bottom-1 left-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/50">
+                                <Video className="h-3 w-3 text-white" />
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="max-w-xs break-all">
+                        {media?.originalName}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              })}
+            </div>
+          )}
 
-        {/* 添加媒体按钮 */}
-        {(!multiple && value.length === 0) ||
-        (multiple && value.length < effectiveMaxCount) ? (
-          <Button
-            className="w-full"
-            onClick={() => setDialogOpen(true)}
-            type="button"
-            variant="outline"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            {placeholder}
-          </Button>
-        ) : null}
+          {/* 添加媒体按钮 */}
+          {(!multiple && value.length === 0) ||
+          (multiple && value.length < effectiveMaxCount) ? (
+            <Button
+              className="w-full"
+              onClick={() => setDialogOpen(true)}
+              type="button"
+              variant="outline"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              {placeholder}
+            </Button>
+          ) : null}
 
-        {/* 媒体选择对话框 */}
-        <MediaSelectorDialog
-          availableMediaIds={availableMediaIds}
-          category={category}
-          initialSelected={value}
-          maxCount={effectiveMaxCount}
-          multiple={multiple}
-          onOpenChange={setDialogOpen}
-          onSelect={handleSelectMedia}
-          open={dialogOpen}
-        />
-      </div>
+          {/* 媒体选择对话框 */}
+          <MediaSelectorDialog
+            availableMediaIds={availableMediaIds}
+            category={category}
+            initialSelected={value}
+            maxCount={effectiveMaxCount}
+            multiple={multiple}
+            onOpenChange={setDialogOpen}
+            onSelect={handleSelectMedia}
+            open={dialogOpen}
+          />
+        </div>
+      </TooltipProvider>
     </div>
   );
 }

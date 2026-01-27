@@ -32,6 +32,7 @@ import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useBatchDeleteMedia, useMediaPageList } from "@/hooks/api";
 import { cn } from "@/lib/utils";
+import { isImageFile, isVideoFile } from "@/utils/media";
 
 export interface UseMediaList {
   id: string;
@@ -315,8 +316,8 @@ function MediaCard({
   onSelect: () => void;
   onDelete: () => void;
 }) {
-  const isImage = asset.mimeType?.startsWith("image/");
-  const isVideo = asset.mimeType?.startsWith("video/");
+  const isImage = isImageFile(asset.url);
+  const isVideo = isVideoFile(asset.url);
 
   const handleMouseEnter = (e: React.MouseEvent<HTMLVideoElement>) => {
     const video = e.currentTarget;
@@ -385,7 +386,7 @@ function MediaCard({
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
             <FileIcon className="size-10 text-slate-400" />
             <span className="font-bold text-[10px] text-slate-400 uppercase">
-              {asset.mimeType?.split("/")[1]}
+              {asset.url?.split(".").pop()?.toLowerCase() ?? ""}
             </span>
           </div>
         )}

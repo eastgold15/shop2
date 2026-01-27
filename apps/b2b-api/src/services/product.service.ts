@@ -1201,6 +1201,12 @@ export class ProductService {
   ) {
     const { productId, variantMedia } = body;
 
+    // Verify user has permission to modify this product
+    const siteType = ctx.user.context.site.siteType || "group";
+    if (siteType !== "factory") {
+      throw new HttpError.Forbidden("只有工厂有权限修改变体媒体");
+    }
+
     return await ctx.db.transaction(async (tx) => {
       // 1. 删除旧的变体媒体配置
       await tx
