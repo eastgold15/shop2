@@ -91,18 +91,41 @@ const Footer: React.FC = () => {
               Follow Us
             </h5>
             <div className="flex justify-center space-x-6 text-gray-900 md:justify-start">
-              <div className="icon-[ic--baseline-whatsapp] text-2xl text-green-500" />
-
-              {site_erweima?.[0]?.value ? (
-                <Image
-                  alt="erweima"
-                  height={64}
-                  src={site_erweima?.[0]?.value}
-                  width={64}
-                />
-              ) : (
-                "No QR Code"
-              )}
+              <Link
+                aria-label="Instagram"
+                className="icon-[mdi--instagram] text-2xl text-gray-700 hover:text-pink-600 transition-colors"
+                href="https://www.instagram.com/yourusername"
+                target="_blank"
+                rel="noopener noreferrer"
+              />
+              <Link
+                aria-label="LinkedIn"
+                className="icon-[mdi--linkedin] text-2xl text-gray-700 hover:text-blue-700 transition-colors"
+                href="https://www.linkedin.com/company/yourcompany"
+                target="_blank"
+                rel="noopener noreferrer"
+              />
+              <Link
+                aria-label="Twitter"
+                className="icon-[mdi--twitter] text-2xl text-gray-700 hover:text-blue-500 transition-colors"
+                href="https://twitter.com/yourusername"
+                target="_blank"
+                rel="noopener noreferrer"
+              />
+              <Link
+                aria-label="Facebook"
+                className="icon-[mdi--facebook] text-2xl text-gray-700 hover:text-blue-600 transition-colors"
+                href="https://www.facebook.com/yourpage"
+                target="_blank"
+                rel="noopener noreferrer"
+              />
+              <Link
+                aria-label="TikTok"
+                className="icon-[mdi--tiktok] text-2xl text-gray-700 hover:text-black transition-colors"
+                href="https://www.tiktok.com/@yourusername"
+                target="_blank"
+                rel="noopener noreferrer"
+              />
             </div>
           </div>
 
@@ -128,7 +151,7 @@ const Footer: React.FC = () => {
             &copy;{" "}
             {`${new Date().getFullYear()} ${site_copyright?.[0]?.value || "error"}`}{" "}
           </p>
-          <div className="mt-4 flex space-x-4 md:mt-0">
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-4 md:mt-0 md:flex-nowrap md:justify-start">
             <span className="flex items-center">
               <svg
                 className="mr-2 h-4 w-4"
@@ -145,6 +168,17 @@ const Footer: React.FC = () => {
               </svg>
               +86 {site_phone?.[0]?.value || "error"}
             </span>
+
+            {site_erweima?.[0]?.value ? (
+              <Image
+                alt="WhatsApp QR Code"
+                className="h-16 w-16"
+                height={64}
+                src={site_erweima?.[0]?.value}
+                width={64}
+              />
+            ) : null}
+
             <span>{site_email?.[0]?.value || "error"}</span>
           </div>
         </div>
