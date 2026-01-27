@@ -6,7 +6,7 @@ import { siteMiddleware } from "~/middleware/site";
 import { siteProductService } from "~/service/index";
 import { buildPageMeta } from "~/utils/services/pagination";
 
-export const siteProductsController = new Elysia({ prefix: "/products" })
+export const siteProductsController = new Elysia({ prefix: "/site_products" })
   .use(localeMiddleware)
   .use(dbPlugin)
   .use(siteMiddleware)
@@ -28,7 +28,7 @@ export const siteProductsController = new Elysia({ prefix: "/products" })
     {
       query: ProductContract.ListQuery,
       detail: {
-        tags: ["Products"],
+        tags: ["Site Products"],
         summary: "获取商品列表",
         description: "分页获取当前站点的商品列表，支持按分类、名称等条件筛选",
       },
@@ -41,7 +41,7 @@ export const siteProductsController = new Elysia({ prefix: "/products" })
     {
       params: t.Object({ id: t.String() }),
       detail: {
-        tags: ["Products"],
+        tags: ["Site Products"],
         summary: "获取商品详情",
         description: "根据商品ID获取详细的商品信息，包括价格、描述、图片等",
       },

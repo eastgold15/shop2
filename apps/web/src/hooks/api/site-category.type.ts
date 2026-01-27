@@ -25,3 +25,27 @@ export type SiteCategoryProductRes = {
   spuCode: string;
   isFeatured: boolean | null;
 }
+
+
+
+
+// 获取站点商品列表（支持搜索和分页）
+export type SiteProductListRes = {
+  items: {
+    siteProductId: string;
+    displayName: string;
+    displayDesc: string;
+    isFeatured: boolean | null;
+    sortOrder: number | null;
+    productId: string;
+    spuCode: string;
+    minPrice: string;
+    mainMedia: string;
+  }[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+};

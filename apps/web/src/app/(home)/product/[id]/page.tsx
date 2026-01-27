@@ -4,13 +4,13 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import ProductDetail from "@/components/product/ProductDetail";
 import { Skeleton } from "@/components/ui/skeleton"; // 假设你已经有这个组件
-import { useProductDetail } from "@/hooks/api/product-hook";
+import { useProductDetail } from "@/hooks/api/site-product";
 
 export default function ProductPage() {
   const { id } = useParams();
-  const productId = Array.isArray(id) ? id[0] : id;
+  const siteProductId = Array.isArray(id) ? id[0] : id;
 
-  const { data, isLoading, error } = useProductDetail(productId!);
+  const { data, isLoading, error } = useProductDetail(siteProductId!);
 
   if (isLoading) {
     return (

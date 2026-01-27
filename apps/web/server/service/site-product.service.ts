@@ -19,7 +19,7 @@ import {
   templateKeyTable,
   templateValueTable,
 } from "@repo/contract";
-import { and, asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, like, sql } from "drizzle-orm";
 import type { ServiceContext } from "~/middleware/site";
 
 export class SiteProductService {
@@ -33,6 +33,7 @@ export class SiteProductService {
       sort = "sortOrder",
       sortOrder = "asc",
       categoryId, // 站点分类 ID
+      search, // 搜索关键词
     } = query;
 
     // 1. 构建基础查询
@@ -119,6 +120,16 @@ export class SiteProductService {
     ];
     if (categoryId) {
       filters.push(eq(siteProductSiteCategoryTable.siteCategoryId, categoryId));
+    }
+    // 搜索关键词：匹配站点商品名称或物理商品名称
+    if (search) {
+      const searchTerm = `%${search}%`;
+      filters.push(
+        sql`(
+          ${siteProductTable.siteName} LIKE ${searchTerm}
+          OR ${productTable.name} LIKE ${searchTerm}
+        )`
+      );
     }
 
     // 3. 执行查询

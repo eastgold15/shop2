@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import CategoryGrid from "@/components/layout/CategoryGrid";
-import { useProductList } from "@/hooks/api/product-hook";
+import { useSiteProductList } from "@/hooks/api/site-category";
 
 interface SearchClientProps {
   query?: string;
@@ -19,7 +19,7 @@ export default function SearchClient({ query }: SearchClientProps) {
     data: productListRes,
     isLoading,
     error,
-  } = useProductList({ name: query || "" }, { enabled: isMounted && !!query });
+  } = useSiteProductList({ search: query || "" }, { enabled: isMounted && !!query });
 
   if (!isMounted || isLoading) {
     return null;

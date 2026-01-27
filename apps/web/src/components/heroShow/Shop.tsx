@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import type React from "react";
-import { useProductList } from "@/hooks/api/product-hook";
+import { useSiteProductList } from "@/hooks/api/site-category";
 import { BaseImage } from "../common/Image/baseImage";
 import { Skeleton } from "../ui/skeleton";
 
@@ -25,7 +25,7 @@ const ShopSkeleton = () => (
 
 const Shop: React.FC<ShopProps> = ({ onProductSelect }) => {
   const router = useRouter();
-  const { data, isLoading, error } = useProductList({ limit: 4 });
+  const { data, isLoading, error } = useSiteProductList({ limit: 4 });
 
   // 1. 优先处理加载
   if (isLoading) return <ShopSkeleton />;

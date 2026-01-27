@@ -3,15 +3,15 @@
 import { Search, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { useProductList } from "@/hooks/api/product-hook";
+import { useSiteProductList } from "@/hooks/api/site-category";
 import ProductCard from "../product/productCard";
 
 export const SearchDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { data: productListRes, isLoading } = useProductList(
-    { name: searchQuery, limit: 8 },
+  const { data: productListRes, isLoading } = useSiteProductList(
+    { search: searchQuery, limit: 8 },
     { enabled: searchQuery.length >= 2 }
   );
 

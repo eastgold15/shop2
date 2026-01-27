@@ -13,7 +13,7 @@ import Image from "next/image";
 import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useCreateInquiry } from "@/hooks/api/inquiry-hook";
-import { type ProductDetailRes } from "@/hooks/api/product-hook";
+import { type ProductDetailRes } from "@/hooks/api/site-product";
 import { cn } from "@/lib/utils";
 import { InquiryForm, type InquiryFormValues } from "./InquiryForm";
 import { SuccessView } from "./SuccessView";

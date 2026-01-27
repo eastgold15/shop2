@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type React from "react";
-import type { ProductListRes } from "@/hooks/api/product-hook";
+import type { ProductListRes } from "@/hooks/api/site-product";
 
 interface ProductCardProps {
   product: ProductListRes["items"][0];
