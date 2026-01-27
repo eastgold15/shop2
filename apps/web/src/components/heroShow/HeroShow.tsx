@@ -148,8 +148,8 @@ export const HeroShowComponent: React.FC = () => {
               <ContentBlock
                 key="shop-block"
                 {...config}
-                description="探索最新系列"
-                title="新品上市"
+                description="Explore the latest series"
+                title="NEW ARRIVALS"
               >
                 <Shop />
               </ContentBlock>
