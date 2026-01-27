@@ -1,5 +1,5 @@
 import type React from "react";
-import type { ProductListRes } from "@/hooks/api/site-product";
+import { ProductListRes } from "@/hooks/api/site-product.type";
 import ProductCard from "../product/productCard";
 
 interface CategoryGridProps {

@@ -56,7 +56,7 @@ export class SiteCategoryService {
       console.log('siteCategoryName?.name?.toUpperCase() === "NEW":', siteCategoryName?.name?.toUpperCase() === "NEW")
       const flatProducts = await ctx.db
         .select({
-          id: productTable.id,
+          id: siteProductTable.id,  // 返回站点商品ID，用于跳转到商品详情
           displayName: sql<string>`COALESCE(${siteProductTable.siteName}, ${productTable.name})`,
           displayDesc: sql<string>`COALESCE(${siteProductTable.siteDescription}, ${productTable.description})`,
 
@@ -104,7 +104,7 @@ export class SiteCategoryService {
     // 正常分类商品查询
     const flatProducts = await ctx.db
       .select({
-        id: productTable.id,
+        id: siteProductTable.id,  // 返回站点商品ID，用于跳转到商品详情
         displayName: sql<string>`COALESCE(${siteProductTable.siteName}, ${productTable.name})`,
         displayDesc: sql<string>`COALESCE(${siteProductTable.siteDescription}, ${productTable.description})`,
 

@@ -18,6 +18,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
   // 悬停图：优先用 additionalImages[0]，否则回退到主图
   const hoverImage = product.mainMedia || mainImage;
 
+  // 检测是否为视频文件
+  const isVideo = (url: string) => {
+    const videoExtensions = [".mp4", ".webm", ".ogg", ".mov", ".avi"];
+    return videoExtensions.some((ext) => url.toLowerCase().endsWith(ext));
+  };
+
   return (
     <Link
       className="group flex cursor-pointer flex-col items-center"
@@ -26,23 +32,44 @@ const ProductCard: React.FC<ProductCardProps> = ({
       <div
         className={`relative w-full ${aspectRatio} mb-6 overflow-hidden bg-gray-50/50`}
       >
-        {/* Main Image */}
-        <Image
-          alt={product.displayName}
-          className="absolute inset-0 h-full w-full transform object-contain opacity-100 mix-blend-multiply transition-opacity duration-700 group-hover:opacity-0"
-          fill
-          loading="lazy"
-          src={mainImage}
-        />
+        {/* Main Media - Image or Video */}
+        {isVideo(mainImage) ? (
+          <video
+            className="absolute inset-0 h-full w-full object-cover"
+            loop
+            muted
+            onMouseEnter={(e) => e.currentTarget.play()}
+            onMouseLeave={(e) => {
+              e.currentTarget.pause();
+              e.currentTarget.currentTime = 0;
+            }}
+            playsInline
+            src={mainImage}
+          />
+        ) : (
+          <>
+            <Image
+              alt={product.displayName}
+              className="absolute inset-0 h-full w-full transform object-contain opacity-100 mix-blend-multiply transition-opacity duration-700 group-hover:opacity-0"
+              fill
+              loading="lazy"
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              src={mainImage}
+            />
 
-        {/* Hover Image */}
-        <Image
-          alt={`${product.displayName} alternate`}
-          className="absolute inset-0 h-full w-full scale-105 transform object-contain opacity-0 mix-blend-multiply transition-all duration-700 group-hover:opacity-100"
-          fill
-          loading="lazy"
-          src={hoverImage}
-        />
+            {/* Hover Image */}
+            {!isVideo(hoverImage) && (
+              <Image
+                alt={`${product.displayName} alternate`}
+                className="absolute inset-0 h-full w-full scale-105 transform object-contain opacity-0 mix-blend-multiply transition-all duration-700 group-hover:opacity-100"
+                fill
+                loading="lazy"
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                src={hoverImage}
+              />
+            )}
+          </>
+        )}
 
         {/* {product.isNew && (
           <span className="absolute top-2 left-2 bg-black px-2 py-1 font-bold text-[8px] text-white uppercase tracking-widest">

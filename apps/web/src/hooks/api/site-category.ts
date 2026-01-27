@@ -63,11 +63,14 @@ export function useSiteCategoryProducts(
   return useQuery({
     queryKey: ["category-products", id, params],
     queryFn: async () => {
+      console.log("Fetching category products:", id, params);
       const { data, error } = await rpc.site_category
         .category({ id })
         .get({ query: params });
 
+      console.log("Category products response:", { data, error });
       if (error) {
+        console.error("Error fetching category products:", error);
         toast.error(error.value?.message || "获取分类商品失败");
       }
       return data! as unknown as SiteCategoryProductRes[];
@@ -75,6 +78,8 @@ export function useSiteCategoryProducts(
     enabled: options?.enabled ?? !!id,
     staleTime: 5 * 60 * 1000,
     retry: 2,
+    refetchOnMount: 'always', // 确保每次挂载时重新获取数据
+    refetchOnWindowFocus: false,
   });
 }
 
