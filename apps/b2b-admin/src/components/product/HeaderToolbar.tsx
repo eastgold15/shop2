@@ -1,5 +1,5 @@
 import { Download, Filter, Plus, Search, Trash2 } from "lucide-react";
-import { Can } from "@/components/auth/Can";
+import { Can, SiteBoundary } from "@/components/auth/Can";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -61,22 +61,26 @@ export function HeaderToolbar({
               value={searchTerm}
             />
           </div>
-          {/* 商品池类型选择 */}
+          {/* 商品池类型选择 - 语义化按钮 */}
           <HasGroup>
-            <div className="flex gap-2">
+            <div className="flex gap-1 rounded-lg bg-slate-100 p-1">
               <Button
+                className="h-7"
                 onClick={() => onViewModeChange("global")}
                 size="sm"
-                variant={viewMode === "global" ? "default" : "outline"}
+                variant={viewMode === "global" ? "default" : "ghost"}
               >
-                全局商品
+                <Search className="mr-2 h-3.5 w-3.5" />
+                商品池
               </Button>
               <Button
+                className="h-7"
                 onClick={() => onViewModeChange("my")}
                 size="sm"
-                variant={viewMode === "my" ? "default" : "outline"}
+                variant={viewMode === "my" ? "default" : "ghost"}
               >
-                我的商品
+                <Filter className="mr-2 h-3.5 w-3.5" />
+                本站商品
               </Button>
             </div>
           </HasGroup>
@@ -98,17 +102,18 @@ export function HeaderToolbar({
         </div>
 
         <div className="flex items-center gap-2">
-          <Can permission="PRODUCT_CREATE">
-            <Button
-              className="bg-indigo-600 hover:bg-indigo-700"
-              onClick={onAdd}
-              size="sm"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              新建商品
-            </Button>
-          </Can>
-
+          <SiteBoundary only={["factory"]}>
+            <Can permission="PRODUCT_CREATE">
+              <Button
+                className="bg-indigo-600 hover:bg-indigo-700"
+                onClick={onAdd}
+                size="sm"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                新建商品
+              </Button>
+            </Can>
+          </SiteBoundary>
           {selectedCount > 0 && (
             <Can permission="PRODUCT_DELETE">
               <Button onClick={onBatchDelete} size="sm" variant="destructive">
@@ -117,7 +122,6 @@ export function HeaderToolbar({
               </Button>
             </Can>
           )}
-
           <Button className="hidden sm:flex" size="sm" variant="outline">
             <Download className="mr-2 h-4 w-4" />
             导出

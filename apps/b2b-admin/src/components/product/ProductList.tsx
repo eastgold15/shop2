@@ -23,7 +23,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { ChevronDown, GripVertical, MoreHorizontal, Plus } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Can } from "@/components/auth/Can";
+import { Can, SiteBoundary } from "@/components/auth/Can";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -224,20 +224,49 @@ const SortableProductItem = memo(function SortableProductItem({
                 <DropdownMenuItem onClick={() => onEdit(product)}>
                   编辑商品
                 </DropdownMenuItem>
-                <Can permission="SKU_CREATE">
-                  <DropdownMenuItem onClick={() => onCreateSku(product.id)}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    添加 SKU
-                  </DropdownMenuItem>
-                </Can>
-                <Can permission="PRODUCT_DELETE">
-                  <DropdownMenuItem
-                    className="text-red-600"
-                    onClick={() => onDelete(product)}
-                  >
-                    删除商品
-                  </DropdownMenuItem>
-                </Can>
+
+                <SiteBoundary only={["factory"]}>
+                  <Can permission="SKU_CREATE">
+                    <DropdownMenuItem onClick={() => onCreateSku(product.id)}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      添加 SKU
+                    </DropdownMenuItem>
+                  </Can>
+                </SiteBoundary>
+                {/* 工厂模式：物理删除（无论在哪都显示） */}
+                <SiteBoundary only={["factory"]}>
+                  <Can permission="PRODUCT_DELETE">
+                    <DropdownMenuItem
+                      className="text-red-600"
+                      onClick={() => onDelete(product)}
+                    >
+                      物理删除 (危险)
+                    </DropdownMenuItem>
+                  </Can>
+                </SiteBoundary>
+                {/* 商品池模式 + 集团站：显示"上架到本站" */}
+                {viewMode === "global" && (
+                  <SiteBoundary only={["group"]}>
+                    <DropdownMenuItem
+                      className="text-indigo-600"
+                      onClick={() => onEdit(product)}
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      上架到本站
+                    </DropdownMenuItem>
+                  </SiteBoundary>
+                )}
+                {/* 我的商品模式 + 集团站：显示"从本站移除" */}
+                {viewMode === "my" && (
+                  <SiteBoundary only={["group"]}>
+                    <DropdownMenuItem
+                      className="text-orange-600"
+                      onClick={() => onDelete(product)}
+                    >
+                      从本站移除
+                    </DropdownMenuItem>
+                  </SiteBoundary>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -539,25 +568,56 @@ export function ProductList({
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => onEdit(product)}>
-                          编辑商品
-                        </DropdownMenuItem>
-                        <Can permission="SKU_CREATE">
-                          <DropdownMenuItem
-                            onClick={() => onCreateSku(product.id)}
-                          >
-                            <Plus className="mr-2 h-4 w-4" />
-                            添加 SKU
+                        <SiteBoundary only={["factory"]}>
+                          <DropdownMenuItem onClick={() => onEdit(product)}>
+                            编辑商品
                           </DropdownMenuItem>
-                        </Can>
-                        <Can permission="PRODUCT_DELETE">
-                          <DropdownMenuItem
-                            className="text-red-600"
-                            onClick={() => onDelete(product)}
-                          >
-                            删除商品
-                          </DropdownMenuItem>
-                        </Can>
+                        </SiteBoundary>
+
+                        <SiteBoundary only={["factory"]}>
+                          <Can permission="SKU_CREATE">
+                            <DropdownMenuItem
+                              onClick={() => onCreateSku(product.id)}
+                            >
+                              <Plus className="mr-2 h-4 w-4" />
+                              添加 SKU
+                            </DropdownMenuItem>
+                          </Can>
+                        </SiteBoundary>
+                        {/* 工厂模式：物理删除（无论在哪都显示） */}
+                        <SiteBoundary only={["factory"]}>
+                          <Can permission="PRODUCT_DELETE">
+                            <DropdownMenuItem
+                              className="text-red-600"
+                              onClick={() => onDelete(product)}
+                            >
+                              物理删除 (危险)
+                            </DropdownMenuItem>
+                          </Can>
+                        </SiteBoundary>
+                        {/* 商品池模式 + 集团站：显示"上架到本站" */}
+                        {viewMode === "global" && (
+                          <SiteBoundary only={["group"]}>
+                            <DropdownMenuItem
+                              className="text-indigo-600"
+                              onClick={() => onEdit(product)}
+                            >
+                              <Plus className="mr-2 h-4 w-4" />
+                              上架到本站
+                            </DropdownMenuItem>
+                          </SiteBoundary>
+                        )}
+                        {/* 我的商品模式 + 集团站：显示"从本站移除" */}
+                        {viewMode === "my" && (
+                          <SiteBoundary only={["group"]}>
+                            <DropdownMenuItem
+                              className="text-orange-600"
+                              onClick={() => onDelete(product)}
+                            >
+                              从本站移除
+                            </DropdownMenuItem>
+                          </SiteBoundary>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>

@@ -15,11 +15,11 @@ import { inquiryController } from "./inquiry.controller";
 import { masterCategoryController } from "./master-category.controller";
 import { mediaController } from "./media.controller";
 import { permissionController } from "./permission.controller";
+
 import {
-  productController,
   productVariantController,
-} from "./product.controller";
-import { productVariantMediaController } from "./product-variant-media.controller";
+  productVariantMediaController,
+} from "./product-variant-media.controller";
 import { quotationController } from "./quotation.controller";
 import { roleController } from "./role.controller";
 import { siteController } from "./site.controller";
@@ -44,7 +44,7 @@ export const appRouter = (app: Elysia) =>
     .use(masterCategoryController)
     .use(mediaController)
     .use(permissionController)
-    .use(productController)
+
     .use(productVariantMediaController)
     .use(quotationController)
     .use(roleController)

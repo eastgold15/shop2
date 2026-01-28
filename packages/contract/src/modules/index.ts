@@ -1,5 +1,6 @@
 // Auto-generated index file for all contracts
 
+export * from "./_custom/newsletter.contract";
 export * from "./account.contract";
 export * from "./ad.contract";
 export * from "./customer.contract";
@@ -9,10 +10,8 @@ export * from "./hero-card.contract";
 export * from "./inquiry.contract";
 export * from "./master-category.contract";
 export * from "./media.contract";
-export * from "./_custom/newsletter.contract";
 export * from "./media-metadata.contract";
 export * from "./permission.contract";
-export * from "./product.contract";
 export * from "./product-master-category.contract";
 export * from "./product-media.contract";
 export * from "./product-template.contract";

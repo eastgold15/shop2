@@ -41,7 +41,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useProductPageList } from "@/hooks/api/product";
+import { useSiteProductPageList } from "@/hooks/api/site-product";
 import { useBatchCreateSku } from "@/hooks/api/sku";
 import {
   calculateEstimatedCount,
@@ -85,7 +85,7 @@ export function CreateSKUModal({
   const createSKUBatch = useBatchCreateSku();
 
   // 获取商品列表
-  const { data: productsData } = useProductPageList({
+  const { data: productsData } = useSiteProductPageList({
     page: 1,
     limit: 100,
   });

@@ -20,7 +20,7 @@ interface Site {
   id: string;
   name: string;
   domain: string;
-  siteType: string;
+  siteType: "group" | "factory";
 }
 interface SwitchableDept {
   current: DeptInfo;

@@ -8,26 +8,26 @@ import { EditSKUModal } from "@/components/form/EditSKUModal";
 import { VariantMediaModal } from "@/components/form/VariantMediaModal";
 import { HeaderToolbar } from "@/components/product/HeaderToolbar";
 import { ProductList } from "@/components/product/ProductList";
-import {
-  useBatchDeleteProduct,
-  useDeleteProduct,
-  useProductPageList,
-} from "@/hooks/api/product";
 import { Product } from "@/hooks/api/product.type";
+import {
+  useBatchDeleteSiteProduct,
+  useDeleteSiteProduct,
+  useSiteProductPageList,
+} from "@/hooks/api/site-product";
 import { useBatchDeleteSku, useDeleteSku } from "@/hooks/api/sku";
 import { SkuListRes } from "@/hooks/api/sku.type";
 
 export default function ProductsPage() {
   const [viewMode, setViewMode] = useState<"global" | "my">("my");
-  const { data, isLoading, refetch } = useProductPageList({
+  const { data, isLoading, refetch } = useSiteProductPageList({
     page: 1,
     limit: 100,
     isListed: viewMode === "my",
   });
   const deleteSkuMutation = useDeleteSku();
   const batchDeleteSkuMutation = useBatchDeleteSku();
-  const deleteProductMutation = useBatchDeleteProduct();
-  const deleteSingleProductMutation = useDeleteProduct();
+  const deleteProductMutation = useBatchDeleteSiteProduct();
+  const deleteSingleProductMutation = useDeleteSiteProduct();
 
   // --- 2. 状态 ---
   const [searchTerm, setSearchTerm] = useState("");

@@ -28,7 +28,10 @@ import { Input } from "@/components/ui/input";
 import { MediaSelect } from "@/components/ui/media-select";
 import { SiteCategoryTreeSelect } from "@/components/ui/site-category-tree-select";
 import { Textarea } from "@/components/ui/textarea";
-import { useCreateProduct, useUpdateProduct } from "@/hooks/api/product";
+import {
+  useCreateSiteProduct,
+  useUpdateSiteProduct,
+} from "@/hooks/api/site-product";
 import { useTemplateList } from "@/hooks/api/template";
 
 // 表单验证 schema - 创建时必填字段与契约一致
@@ -61,8 +64,8 @@ export function CreateProductModal({
   onSuccess,
   product,
 }: CreateProductModalProps) {
-  const createProduct = useCreateProduct();
-  const updateProduct = useUpdateProduct();
+  const createProduct = useCreateSiteProduct();
+  const updateProduct = useUpdateSiteProduct();
 
   const { data: templatesData = [] } = useTemplateList({
     page: 1,

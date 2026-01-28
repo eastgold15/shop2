@@ -1,6 +1,6 @@
 // components/product/sku-panel.tsx
 import { Edit, Palette, Trash2 } from "lucide-react";
-import { Can } from "@/components/auth/Can";
+import { Can, SiteBoundary } from "@/components/auth/Can";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -162,16 +162,19 @@ export function SkuPanel({
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Can permission="SKU_DELETE">
-                      <Button
-                        className="h-8 w-8 text-red-500 hover:bg-red-50 hover:text-red-600"
-                        onClick={() => onDelete(sku.id, sku.skuCode)}
-                        size="icon"
-                        variant="ghost"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </Can>
+
+                    <SiteBoundary only={["factory"]}>
+                      <Can permission="SKU_DELETE">
+                        <Button
+                          className="h-8 w-8 text-red-500 hover:bg-red-50 hover:text-red-600"
+                          onClick={() => onDelete(sku.id, sku.skuCode)}
+                          size="icon"
+                          variant="ghost"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </Can>
+                    </SiteBoundary>
                   </div>
                 </TableCell>
               </TableRow>

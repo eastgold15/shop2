@@ -14,12 +14,10 @@ export const siteProductsController = new Elysia({ prefix: "/site_products" })
     "/",
     async ({ db, site, query }) => {
       const { page = 1, limit = 10 } = query;
-
       const { data, total } = await siteProductService.list(query, {
         db,
         site,
       });
-
       return {
         items: data,
         meta: buildPageMeta(total, page, limit),

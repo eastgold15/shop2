@@ -1,10 +1,16 @@
 import {
   mediaTable,
+  ProductVariantContract,
   ProductVariantMediaContract,
+  productMediaTable,
+  productTemplateTable,
   productVariantMediaTable,
+  skuMediaTable,
+  skuTable,
+  templateKeyTable,
   templateValueTable,
 } from "@repo/contract";
-import { and, eq, sql } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 import { HttpError } from "elysia-http-problem-json";
 import type { ServiceContext } from "~/lib/type";
 
@@ -307,5 +313,289 @@ export class ProductVariantMediaService {
       mediaIds: media.map((m) => m.mediaId),
       images: media,
     };
+  }
+
+  // =========================================================
+  // 变体媒体管理方法
+  // =========================================================
+
+  /**
+   * 自动识别商品模板中的颜色属性
+   * 匹配规则：属性名包含 "Color", "颜色", "colour"
+   */
+  private async identifyColorAttribute(
+    productId: string,
+    ctx: ServiceContext
+  ): Promise<{ key: string; keyId: string } | null> {
+    // 1. 获取商品模板
+    const [productTemplate] = await ctx.db
+      .select()
+      .from(productTemplateTable)
+      .where(eq(productTemplateTable.productId, productId));
+
+    if (!productTemplate) return null;
+
+    // 2. 查询模板的所有 SKU 规格属性
+    const keys = await ctx.db
+      .select()
+      .from(templateKeyTable)
+      .where(
+        and(
+          eq(templateKeyTable.templateId, productTemplate.templateId),
+          eq(templateKeyTable.isSkuSpec, true)
+        )
+      );
+
+    // 3. 自动识别：属性名包含 "Color", "颜色", "colour" 的属性
+    const colorKey = keys.find((k) => /color|颜色|colour/i.test(k.key));
+
+    return colorKey ? { key: colorKey.key, keyId: colorKey.id } : null;
+  }
+
+  /**
+   * 获取商品的变体媒体配置
+   * 返回按颜色属性值分组的媒体配置
+   */
+  public async getVariantMedia(productId: string, ctx: ServiceContext) {
+    // 1. 识别颜色属性
+    const colorAttr = await this.identifyColorAttribute(productId, ctx);
+    if (!colorAttr) {
+      throw new HttpError.BadRequest("商品未配置颜色属性");
+    }
+
+    // 2. 查询该颜色属性的所有可选值
+    const values = await ctx.db
+      .select({
+        id: templateValueTable.id,
+        value: templateValueTable.value,
+      })
+      .from(templateValueTable)
+      .where(eq(templateValueTable.templateKeyId, colorAttr.keyId))
+      .orderBy(asc(templateValueTable.sortOrder));
+
+    // 3. 查询已配置的变体媒体
+    const variantMediaList = await ctx.db
+      .select({
+        attributeValueId: productVariantMediaTable.attributeValueId,
+        mediaId: productVariantMediaTable.mediaId,
+        isMain: productVariantMediaTable.isMain,
+        sortOrder: productVariantMediaTable.sortOrder,
+        mediaUrl: mediaTable.url,
+        mediaOriginalName: mediaTable.originalName,
+        mediaType: mediaTable.mediaType,
+      })
+      .from(productVariantMediaTable)
+      .innerJoin(
+        mediaTable,
+        eq(productVariantMediaTable.mediaId, mediaTable.id)
+      )
+      .where(eq(productVariantMediaTable.productId, productId))
+      .orderBy(asc(productVariantMediaTable.sortOrder));
+
+    // 4. 按属性值分组
+    const mediaMap = new Map<string, any[]>();
+    variantMediaList.forEach((vm) => {
+      if (!mediaMap.has(vm.attributeValueId)) {
+        mediaMap.set(vm.attributeValueId, []);
+      }
+      mediaMap.get(vm.attributeValueId)!.push({
+        id: vm.mediaId,
+        url: vm.mediaUrl,
+        isMain: vm.isMain,
+        sortOrder: vm.sortOrder,
+        mediaType: vm.mediaType,
+      });
+    });
+
+    // 5. 组装响应
+    return {
+      productId,
+      colorAttributeKey: colorAttr.key,
+      variantMedia: values.map((v) => ({
+        attributeValueId: v.id,
+        attributeValue: v.value,
+        images: mediaMap.get(v.id) || [],
+      })),
+    };
+  }
+
+  /**
+   * 保存商品的变体媒体配置
+   * 使用事务确保数据一致性
+   * 同时将第一个变体的主图设置为商品的主图
+   */
+  public async setVariantMedia(
+    body: typeof ProductVariantContract.SetVariantMedia.static,
+    ctx: ServiceContext
+  ) {
+    const { productId, variantMedia } = body;
+
+    // Verify user has permission to modify this product
+    const siteType = ctx.user.context.site.siteType || "group";
+    if (siteType !== "factory") {
+      throw new HttpError.Forbidden("只有工厂有权限修改变体媒体");
+    }
+
+    return await ctx.db.transaction(async (tx) => {
+      // 1. 删除旧的变体媒体配置
+      await tx
+        .delete(productVariantMediaTable)
+        .where(eq(productVariantMediaTable.productId, productId));
+
+      // 2. 插入新的配置（第一张图默认为该变体的主图）
+      let firstVariantMediaId: string | undefined;
+      for (const vm of variantMedia) {
+        const mediaRelations = vm.mediaIds.map((mediaId, index) => ({
+          productId,
+          attributeValueId: vm.attributeValueId,
+          mediaId,
+          isMain: index === 0,
+          sortOrder: index,
+        }));
+
+        if (mediaRelations.length > 0) {
+          await tx.insert(productVariantMediaTable).values(mediaRelations);
+
+          // 记录第一个变体的第一张图片
+          if (!firstVariantMediaId && vm.mediaIds.length > 0) {
+            firstVariantMediaId = vm.mediaIds[0];
+          }
+        }
+      }
+
+      // 3. 将第一个变体的主图设置为商品的主图
+      if (firstVariantMediaId) {
+        // 3.1 先将商品的所有图片的主图标记设为 false
+        await tx
+          .update(productMediaTable)
+          .set({ isMain: false })
+          .where(eq(productMediaTable.productId, productId));
+
+        // 3.2 检查该图片是否已经在 product_media 表中
+        const [existingMedia] = await tx
+          .select()
+          .from(productMediaTable)
+          .where(
+            and(
+              eq(productMediaTable.productId, productId),
+              eq(productMediaTable.mediaId, firstVariantMediaId)
+            )
+          )
+          .limit(1);
+
+        if (existingMedia) {
+          // 如果已存在，更新为主图
+          await tx
+            .update(productMediaTable)
+            .set({ isMain: true })
+            .where(eq(productMediaTable.id, existingMedia.id));
+        } else {
+          // 如果不存在，插入为主图
+          await tx.insert(productMediaTable).values({
+            productId,
+            mediaId: firstVariantMediaId,
+            isMain: true,
+            sortOrder: 0,
+          });
+        }
+      }
+
+      return { success: true };
+    });
+  }
+
+  /**
+   * 获取 SKU 的媒体（三级继承逻辑）
+   * 优先级：SKU专属 > 变体级(颜色) > 商品级
+   */
+  public async getSkuMedia(skuId: string, ctx: ServiceContext) {
+    // 1. 查询 SKU 信息
+    const [sku] = await ctx.db
+      .select()
+      .from(skuTable)
+      .where(eq(skuTable.id, skuId));
+
+    if (!sku) {
+      throw new HttpError.NotFound("SKU 不存在");
+    }
+
+    // 2. 第一优先级：SKU 专属媒体
+    const skuMedia = await ctx.db
+      .select({
+        mediaId: skuMediaTable.mediaId,
+        isMain: skuMediaTable.isMain,
+        mediaUrl: mediaTable.url,
+      })
+      .from(skuMediaTable)
+      .innerJoin(mediaTable, eq(skuMediaTable.mediaId, mediaTable.id))
+      .where(eq(skuMediaTable.skuId, skuId))
+      .orderBy(asc(skuMediaTable.sortOrder));
+
+    if (skuMedia.length > 0) {
+      return { source: "sku", media: skuMedia };
+    }
+
+    // 3. 第二优先级：变体级媒体
+    // 解析 specJson 找到颜色属性值
+    const specJson =
+      typeof sku.specJson === "string"
+        ? JSON.parse(sku.specJson)
+        : sku.specJson;
+
+    const colorAttr = await this.identifyColorAttribute(sku.productId, ctx);
+    if (colorAttr) {
+      const colorValue = specJson[colorAttr.key];
+      if (colorValue) {
+        // 查询该颜色值的 templateValue.id
+        const [templateValue] = await ctx.db
+          .select()
+          .from(templateValueTable)
+          .where(
+            and(
+              eq(templateValueTable.templateKeyId, colorAttr.keyId),
+              eq(templateValueTable.value, colorValue)
+            )
+          );
+
+        if (templateValue) {
+          const variantMedia = await ctx.db
+            .select({
+              mediaId: productVariantMediaTable.mediaId,
+              isMain: productVariantMediaTable.isMain,
+              mediaUrl: mediaTable.url,
+            })
+            .from(productVariantMediaTable)
+            .innerJoin(
+              mediaTable,
+              eq(productVariantMediaTable.mediaId, mediaTable.id)
+            )
+            .where(
+              and(
+                eq(productVariantMediaTable.productId, sku.productId),
+                eq(productVariantMediaTable.attributeValueId, templateValue.id)
+              )
+            )
+            .orderBy(asc(productVariantMediaTable.sortOrder));
+
+          if (variantMedia.length > 0) {
+            return { source: "variant", media: variantMedia };
+          }
+        }
+      }
+    }
+
+    // 4. 第三优先级：商品级媒体
+    const productMedia = await ctx.db
+      .select({
+        mediaId: productMediaTable.mediaId,
+        isMain: productMediaTable.isMain,
+        mediaUrl: mediaTable.url,
+      })
+      .from(productMediaTable)
+      .innerJoin(mediaTable, eq(productMediaTable.mediaId, mediaTable.id))
+      .where(eq(productMediaTable.productId, sku.productId))
+      .orderBy(asc(productMediaTable.sortOrder));
+
+    return { source: "product", media: productMedia };
   }
 }
