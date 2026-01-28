@@ -109,3 +109,13 @@ export const SITE_CATEGORY_OPTIONS = [
 export type SiteCategory =
   (typeof SITE_CATEGORY_ENUM)[keyof typeof SITE_CATEGORY_ENUM];
 export type SiteCategoryOption = (typeof SITE_CATEGORY_OPTIONS)[number];
+
+// ===== 工具函数：将枚举值转换为显示标签 =====
+/**
+ * 根据分类枚举值获取对应的显示标签
+ * @param value - 分类枚举值（如 "shoes_dq2"）
+ * @returns 对应的显示标签（如 "东莞东祺 (DQ2)"），如果未找到则返回原值
+ */
+export function getCategoryLabel(value: string): string {
+  return SITE_CATEGORY_LABELS[value as SiteCategory] || value;
+}

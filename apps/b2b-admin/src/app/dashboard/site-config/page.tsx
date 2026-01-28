@@ -1,6 +1,7 @@
 "use client";
 
 import type { SiteConfigContract } from "@repo/contract";
+import { getCategoryLabel, getConfigKeyLabel } from "@repo/contract";
 import { Edit, Plus, Search, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -152,7 +153,7 @@ export default function SiteConfigPage() {
                         selectedCategory === category ? "default" : "outline"
                       }
                     >
-                      {category === "all" ? "全部" : category}
+                      {category === "all" ? "全部" : getCategoryLabel(category)}
                     </Button>
                   ))}
                 </div>
@@ -181,7 +182,7 @@ export default function SiteConfigPage() {
                     <Card key={category}>
                       <CardHeader>
                         <CardTitle className="flex items-center justify-between">
-                          <span className="capitalize">{category}</span>
+                          <span>{getCategoryLabel(category)}</span>
                           <Badge variant="secondary">{configs.length} 项</Badge>
                         </CardTitle>
                       </CardHeader>
@@ -196,7 +197,7 @@ export default function SiteConfigPage() {
                                 <div className="flex-1">
                                   <div className="flex items-center gap-2">
                                     <h3 className="font-semibold text-lg">
-                                      {config.key}
+                                      {config.label || getConfigKeyLabel(config.key)}
                                     </h3>
                                     <div className="flex gap-1">
                                       {config.translatable && (
@@ -209,6 +210,10 @@ export default function SiteConfigPage() {
                                       )}
                                     </div>
                                   </div>
+
+                                  <p className="mt-1 text-muted-foreground text-xs">
+                                    配置键: {config.key}
+                                  </p>
 
                                   <p className="mt-2 text-sm">
                                     <span className="font-medium">配置值:</span>{" "}
@@ -268,7 +273,7 @@ export default function SiteConfigPage() {
                                             确认删除
                                           </AlertDialogTitle>
                                           <AlertDialogDescription>
-                                            确定要删除配置项 "{config.key}"
+                                            确定要删除配置项 "{config.label || getConfigKeyLabel(config.key)}"
                                             吗？此操作不可撤销。
                                           </AlertDialogDescription>
                                         </AlertDialogHeader>

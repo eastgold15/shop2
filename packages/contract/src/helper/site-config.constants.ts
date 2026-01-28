@@ -42,3 +42,14 @@ export const SITE_CONFIG_KEY_OPTIONS = [
 export type SiteConfigKey =
   (typeof SITE_CONFIG_KEY_ENUM)[keyof typeof SITE_CONFIG_KEY_ENUM];
 export type SiteConfigKeyOption = (typeof SITE_CONFIG_KEY_OPTIONS)[number];
+
+// ===== 工具函数：将配置键转换为显示标签 =====
+/**
+ * 根据配置键获取对应的显示标签
+ * @param value - 配置键（如 "site_copyright"）
+ * @returns 对应的显示标签（如 "版权"），如果未找到则返回原值
+ */
+export function getConfigKeyLabel(value: string): string {
+  const option = SITE_CONFIG_KEY_OPTIONS.find((opt) => opt.value === value);
+  return option?.label || value;
+}
