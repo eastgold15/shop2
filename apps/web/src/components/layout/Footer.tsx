@@ -4,9 +4,9 @@ import { SITE_CONFIG_KEY_ENUM } from "@repo/contract";
 import Image from "next/image";
 import Link from "next/link";
 import type React from "react";
-import { useState, useEffect } from "react";
-import { useSiteConfigList } from "@/hooks/api/site-config";
+import { useEffect, useState } from "react";
 import { useSubscribeNewsletter } from "@/hooks/api/newsletter-hook";
+import { useSiteConfigList } from "@/hooks/api/site-config";
 
 const Footer: React.FC = () => {
   const { data: site_phone } = useSiteConfigList({
@@ -151,38 +151,38 @@ const Footer: React.FC = () => {
             <div className="flex justify-center space-x-6 text-gray-900 md:justify-start">
               <Link
                 aria-label="Instagram"
-                className="icon-[mdi--instagram] text-2xl text-gray-700 hover:text-pink-600 transition-colors"
+                className="icon-[mdi--instagram] text-2xl text-gray-700 transition-colors hover:text-pink-600"
                 href="https://www.instagram.com/yourusername"
-                target="_blank"
                 rel="noopener noreferrer"
+                target="_blank"
               />
               <Link
                 aria-label="LinkedIn"
-                className="icon-[mdi--linkedin] text-2xl text-gray-700 hover:text-blue-700 transition-colors"
+                className="icon-[mdi--linkedin] text-2xl text-gray-700 transition-colors hover:text-blue-700"
                 href="https://www.linkedin.com/company/yourcompany"
-                target="_blank"
                 rel="noopener noreferrer"
+                target="_blank"
               />
               <Link
                 aria-label="Twitter"
-                className="icon-[mdi--twitter] text-2xl text-gray-700 hover:text-blue-500 transition-colors"
+                className="icon-[mdi--twitter] text-2xl text-gray-700 transition-colors hover:text-blue-500"
                 href="https://twitter.com/yourusername"
-                target="_blank"
                 rel="noopener noreferrer"
+                target="_blank"
               />
               <Link
                 aria-label="Facebook"
-                className="icon-[mdi--facebook] text-2xl text-gray-700 hover:text-blue-600 transition-colors"
+                className="icon-[mdi--facebook] text-2xl text-gray-700 transition-colors hover:text-blue-600"
                 href="https://www.facebook.com/yourpage"
-                target="_blank"
                 rel="noopener noreferrer"
+                target="_blank"
               />
               <Link
                 aria-label="TikTok"
-                className="icon-[simple-icons--tiktok] text-2xl text-gray-700 hover:text-black transition-colors"
+                className="icon-[simple-icons--tiktok] text-2xl text-gray-700 transition-colors hover:text-black"
                 href="https://www.tiktok.com/@yourusername"
-                target="_blank"
                 rel="noopener noreferrer"
+                target="_blank"
               />
             </div>
           </div>
@@ -190,34 +190,40 @@ const Footer: React.FC = () => {
           {/* Newsletter */}
           <div className="mx-auto mb-20 max-w-xl text-center">
             <h4 className="mb-2 text-left font-serif text-sm">NEWSLETTER</h4>
-            <p className="mb-4 text-left text-xs text-gray-500">
-          Explore the latest series
+            <p className="mb-4 text-left text-gray-500 text-xs">
+              Explore the latest series
             </p>
 
             {/* 成功消息 */}
             {showSuccessMessage && (
-              <div className="mb-3 flex items-center gap-2 rounded bg-green-50 px-3 py-2 text-left text-xs text-green-700">
+              <div className="mb-3 flex items-center gap-2 rounded bg-green-50 px-3 py-2 text-left text-green-700 text-xs">
                 <div className="icon-[mdi--check-circle] text-lg" />
-                <span>Subscription successful! Thank you for your subscription</span>
+                <span>
+                  Subscription successful! Thank you for your subscription
+                </span>
               </div>
             )}
 
             {/* 错误消息 */}
             {emailError && (
-              <div className="mb-3 flex items-center gap-2 rounded bg-red-50 px-3 py-2 text-left text-xs text-red-700">
+              <div className="mb-3 flex items-center gap-2 rounded bg-red-50 px-3 py-2 text-left text-red-700 text-xs">
                 <div className="icon-[mdi--alert-circle] text-lg" />
                 <span>{emailError}</span>
               </div>
             )}
 
-            <form className="flex flex-col space-y-2" onSubmit={handleSubscribe}>
+            <form
+              className="flex flex-col space-y-2"
+              onSubmit={handleSubscribe}
+            >
               <div
-                className={`flex border-b pb-2 transition-colors ${emailError
-                  ? "border-red-500"
-                  : showSuccessMessage
-                    ? "border-green-500"
-                    : "border-black"
-                  }`}
+                className={`flex border-b pb-2 transition-colors ${
+                  emailError
+                    ? "border-red-500"
+                    : showSuccessMessage
+                      ? "border-green-500"
+                      : "border-black"
+                }`}
               >
                 <input
                   className="flex-1 bg-transparent text-sm placeholder-gray-400 focus:outline-none disabled:opacity-50"
@@ -228,12 +234,13 @@ const Footer: React.FC = () => {
                   value={email}
                 />
                 <button
-                  className={`font-bold text-xs uppercase tracking-widest transition-colors disabled:cursor-not-allowed ${subscribeMutation.isPending
-                    ? "text-gray-400"
-                    : showSuccessMessage
-                      ? "text-green-600 hover:text-green-700"
-                      : "hover:text-gray-600"
-                    }`}
+                  className={`font-bold text-xs uppercase tracking-widest transition-colors disabled:cursor-not-allowed ${
+                    subscribeMutation.isPending
+                      ? "text-gray-400"
+                      : showSuccessMessage
+                        ? "text-green-600 hover:text-green-700"
+                        : "hover:text-gray-600"
+                  }`}
                   disabled={subscribeMutation.isPending || !email.trim()}
                   type="submit"
                 >
@@ -289,7 +296,7 @@ const Footer: React.FC = () => {
               />
             ) : null}
 
-            <span>{site_email?.[0]?.value }</span>
+            <span>{site_email?.[0]?.value}</span>
           </div>
         </div>
       </div>

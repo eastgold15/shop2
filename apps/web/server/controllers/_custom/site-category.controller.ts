@@ -68,4 +68,4 @@ export const sitecategoriesController = new Elysia({
         description: "根据分类ID获取详细信息，包括名称、描述、父子关系等",
       },
     }
-  )
+  );

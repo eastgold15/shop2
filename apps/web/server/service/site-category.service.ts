@@ -39,24 +39,26 @@ export class SiteCategoryService {
   ) {
     const { page = 1, limit = 10 } = query;
 
-
     const siteCategoryName = await ctx.db.query.siteCategoryTable.findFirst({
       where: {
         siteId: ctx.site.id,
         id,
       },
       columns: {
-        name: true
-      }
+        name: true,
+      },
     });
 
-    console.log('siteCategoryName:', siteCategoryName)
+    console.log("siteCategoryName:", siteCategoryName);
     // 特殊处理：如果分类ID是 "new"，返回最近更新的商品
     if (siteCategoryName?.name?.toUpperCase() === "NEW") {
-      console.log('siteCategoryName?.name?.toUpperCase() === "NEW":', siteCategoryName?.name?.toUpperCase() === "NEW")
+      console.log(
+        'siteCategoryName?.name?.toUpperCase() === "NEW":',
+        siteCategoryName?.name?.toUpperCase() === "NEW"
+      );
       const flatProducts = await ctx.db
         .select({
-          id: siteProductTable.id,  // 返回站点商品ID，用于跳转到商品详情
+          id: siteProductTable.id, // 返回站点商品ID，用于跳转到商品详情
           displayName: sql<string>`COALESCE(${siteProductTable.siteName}, ${productTable.name})`,
           displayDesc: sql<string>`COALESCE(${siteProductTable.siteDescription}, ${productTable.description})`,
 
@@ -78,7 +80,10 @@ export class SiteCategoryService {
           isFeatured: siteProductTable.isFeatured,
         })
         .from(siteProductTable)
-        .innerJoin(productTable, eq(siteProductTable.productId, productTable.id))
+        .innerJoin(
+          productTable,
+          eq(siteProductTable.productId, productTable.id)
+        )
         // 必须连接 sku 表，minPrice 才能算出来
         .innerJoin(skuTable, eq(skuTable.productId, productTable.id))
         .leftJoin(
@@ -104,7 +109,7 @@ export class SiteCategoryService {
     // 正常分类商品查询
     const flatProducts = await ctx.db
       .select({
-        id: siteProductTable.id,  // 返回站点商品ID，用于跳转到商品详情
+        id: siteProductTable.id, // 返回站点商品ID，用于跳转到商品详情
         displayName: sql<string>`COALESCE(${siteProductTable.siteName}, ${productTable.name})`,
         displayDesc: sql<string>`COALESCE(${siteProductTable.siteDescription}, ${productTable.description})`,
 

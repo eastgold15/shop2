@@ -6,19 +6,10 @@
  * --------------------------------------------------------
  */
 
-import { ProductContract, SiteProductContract } from "@repo/contract";
+import { SiteProductContract } from "@repo/contract";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "./api-client";
 import { ProductPageListRes } from "./product.type";
-
-// --- Query Keys ---
-export const siteproductKeys = {
-  all: ["siteproduct"] as const,
-  lists: () => [...siteproductKeys.all, "list"] as const,
-  list: (params: any) => [...siteproductKeys.lists(), params] as const,
-  details: () => [...siteproductKeys.all, "detail"] as const,
-  detail: (id: string) => [...siteproductKeys.details(), id] as const,
-};
 
 // // --- 1. 列表查询 (GET) ---
 // // TRes = any, TQuery = typeof SiteProductContract.ListQuery.static
@@ -116,18 +107,15 @@ export function useBatchUpdateSortOrder() {
       queryClient.invalidateQueries({ queryKey: siteproductKeys.lists() });
     },
   });
-}// --- Query Keys ---
+} // --- Query Keys ---
 
-
-
-
-export const productKeys = {
-  all: ["product"] as const,
-  lists: () => [...productKeys.all, "list"] as const,
-  list: (params: any) => [...productKeys.lists(), params] as const,
-  details: () => [...productKeys.all, "detail"] as const,
-  detail: (id: string) => [...productKeys.details(), id] as const,
-  skus: (id: string) => [...productKeys.all, "sku", id] as const,
+export const siteproductKeys = {
+  all: ["siteproduct"] as const,
+  lists: () => [...siteproductKeys.all, "list"] as const,
+  list: (params: any) => [...siteproductKeys.lists(), params] as const,
+  details: () => [...siteproductKeys.all, "detail"] as const,
+  detail: (id: string) => [...siteproductKeys.details(), id] as const,
+  skus: (id: string) => [...siteproductKeys.all, "sku", id] as const,
 };
 /**
  * 获取商品分页列表（包含媒体和SKU）
@@ -138,13 +126,14 @@ export function useSiteProductPageList(
   enabled = true
 ) {
   return useQuery({
-    queryKey: productKeys.list(params),
-    queryFn: () => api.get<ProductPageListRes, typeof SiteProductContract.ListQuery.static>(
-      "/api/v1/site-product/page-list",
-      {
-        params,
-      }
-    ),
+    queryKey: siteproductKeys.list(params),
+    queryFn: () =>
+      api.get<ProductPageListRes, typeof SiteProductContract.ListQuery.static>(
+        "/api/v1/site-product/page-list",
+        {
+          params,
+        }
+      ),
     enabled,
   });
 }
@@ -154,7 +143,7 @@ export function useSiteProductPageList(
 
 export function useSiteProductSkus(productId: string, enabled = !!productId) {
   return useQuery({
-    queryKey: productKeys.skus(productId),
+    queryKey: siteproductKeys.skus(productId),
     queryFn: () => api.get<any>(`/api/v1/site-product/${productId}/sku`),
     enabled,
   });
@@ -166,12 +155,13 @@ export function useSiteProductSkus(productId: string, enabled = !!productId) {
 export function useCreateSiteProduct() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: typeof ProductContract.Create.static) => api.post<any, typeof ProductContract.Create.static>(
-      "/api/v1/site-product",
-      data
-    ),
+    mutationFn: (data: typeof SiteProductContract.Create.static) =>
+      api.post<any, typeof SiteProductContract.Create.static>(
+        "/api/v1/site-product",
+        data
+      ),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: productKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: siteproductKeys.lists() });
     },
   });
 }
@@ -184,21 +174,23 @@ export function useUpdateSiteProduct() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({
-      id, data,
+      id,
+      data,
     }: {
       id: string;
       data: typeof SiteProductContract.Update.static;
-    }) => api.put<any, typeof SiteProductContract.Update.static>(
-      `/api/v1/site-product/${id}`,
-      data
-    ),
+    }) =>
+      api.put<any, typeof SiteProductContract.Update.static>(
+        `/api/v1/site-product/${id}`,
+        data
+      ),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: productKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: siteproductKeys.lists() });
       queryClient.invalidateQueries({
-        queryKey: productKeys.detail(variables.id),
+        queryKey: siteproductKeys.detail(variables.id),
       });
       queryClient.invalidateQueries({
-        queryKey: productKeys.skus(variables.id),
+        queryKey: siteproductKeys.skus(variables.id),
       });
     },
   });
@@ -210,11 +202,12 @@ export function useUpdateSiteProduct() {
 export function useBatchDeleteSiteProduct() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (ids: string[]) => api.delete<any, { ids: string[]; }>("/api/v1/site-product/batch/delete", {
-      ids,
-    }),
+    mutationFn: (ids: string[]) =>
+      api.delete<any, { ids: string[] }>("/api/v1/site-product/batch/delete", {
+        ids,
+      }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: productKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: siteproductKeys.lists() });
     },
   });
 }
@@ -227,39 +220,28 @@ export function useDeleteSiteProduct() {
   return useMutation({
     mutationFn: (id: string) => api.delete<any>(`/api/v1/site-product/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: productKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: siteproductKeys.lists() });
     },
   });
 }
 
-
-
 // --- 5. 批量创建/收录 (POST) - 从 product.ts 迁移 ---
 
 export function useBatchCreateSiteProduct() {
-
   const queryClient = useQueryClient();
 
   return useMutation({
-
     mutationFn: (data: { items: any[] }) =>
-
       api.post<any, { items: any[] }>(
-
         "/api/v1/site-product/batch",
 
         data
-
       ),
 
     onSuccess: () => {
-
       queryClient.invalidateQueries({ queryKey: siteproductKeys.lists() });
 
       queryClient.invalidateQueries({ queryKey: siteproductKeys.all });
-
     },
-
   });
-
 }

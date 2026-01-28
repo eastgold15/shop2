@@ -1,8 +1,7 @@
 import { t } from "elysia";
 import { PaginationParams, SortParams } from "../../helper/query-types.model";
-import { spread, InferDTO } from "../../helper/utils";
+import { InferDTO, spread } from "../../helper/utils";
 import { newsletterSubscriptionTable } from "../../table.schema";
-
 
 /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
 export const NewsletterSubscriptionInsertFields = spread(

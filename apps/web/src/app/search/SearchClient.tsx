@@ -19,7 +19,10 @@ export default function SearchClient({ query }: SearchClientProps) {
     data: productListRes,
     isLoading,
     error,
-  } = useSiteProductList({ search: query || "" }, { enabled: isMounted && !!query });
+  } = useSiteProductList(
+    { search: query || "" },
+    { enabled: isMounted && !!query }
+  );
 
   if (!isMounted || isLoading) {
     return null;

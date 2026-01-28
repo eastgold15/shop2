@@ -1,7 +1,14 @@
 /**
  * 媒体文件扩展名常量
  */
-export const IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp", "svg"] as const;
+export const IMAGE_EXTENSIONS = [
+  "jpg",
+  "jpeg",
+  "png",
+  "gif",
+  "webp",
+  "svg",
+] as const;
 export const VIDEO_EXTENSIONS = ["mp4", "webm", "mov", "avi", "mkv"] as const;
 
 /**

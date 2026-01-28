@@ -864,11 +864,16 @@ export const dailyInquiryCounterTable = p.pgTable("daily_inquiry_counter", {
 });
 
 // Newsletter 订阅表
-export const newsletterSubscriptionTable = p.pgTable("newsletter_subscriptions", {
-  ...Audit,
-  email: p.varchar("email", { length: 255 }).notNull().unique(),
-  isActive: p.boolean("is_active").default(true).notNull(),
-  subscribedAt: p.timestamp("subscribed_at").defaultNow().notNull(),
-  siteId: p.uuid("site_id").references(() => siteTable.id, { onDelete: "cascade" }),
-  unsubscribedAt: p.timestamp("unsubscribed_at"),
-});
+export const newsletterSubscriptionTable = p.pgTable(
+  "newsletter_subscriptions",
+  {
+    ...Audit,
+    email: p.varchar("email", { length: 255 }).notNull().unique(),
+    isActive: p.boolean("is_active").default(true).notNull(),
+    subscribedAt: p.timestamp("subscribed_at").defaultNow().notNull(),
+    siteId: p
+      .uuid("site_id")
+      .references(() => siteTable.id, { onDelete: "cascade" }),
+    unsubscribedAt: p.timestamp("unsubscribed_at"),
+  }
+);

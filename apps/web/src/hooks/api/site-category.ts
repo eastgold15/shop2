@@ -78,14 +78,10 @@ export function useSiteCategoryProducts(
     enabled: options?.enabled ?? !!id,
     staleTime: 5 * 60 * 1000,
     retry: 2,
-    refetchOnMount: 'always', // 确保每次挂载时重新获取数据
+    refetchOnMount: "always", // 确保每次挂载时重新获取数据
     refetchOnWindowFocus: false,
   });
 }
-
-
-
-
 
 // 获取站点商品列表（支持搜索和分页）
 export function useSiteProductList(
@@ -110,7 +106,7 @@ export function useSiteProductList(
 
       const { data, error } = await rpc.site_products.get({
         query: cleanParams as any,
-      })
+      });
 
       if (error) {
         toast.error(error.value?.message || "获取商品列表失败");

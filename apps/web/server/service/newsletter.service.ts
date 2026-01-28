@@ -1,7 +1,7 @@
-import type { ServiceContext } from "~/middleware/site";
 import { newsletterSubscriptionTable } from "@repo/contract";
-import { HttpError } from "elysia-http-problem-json";
 import { eq } from "drizzle-orm";
+import { HttpError } from "elysia-http-problem-json";
+import type { ServiceContext } from "~/middleware/site";
 
 export class NewsletterService {
   /**
@@ -11,7 +11,7 @@ export class NewsletterService {
     // 检查是否已订阅
     const existing = await ctx.db.query.newsletterSubscriptionTable.findFirst({
       where: {
-        email: email,
+        email,
         siteId: ctx.site.id,
       },
     });
@@ -55,7 +55,7 @@ export class NewsletterService {
   async unsubscribe(ctx: ServiceContext, email: string) {
     const existing = await ctx.db.query.newsletterSubscriptionTable.findFirst({
       where: {
-        email: email,
+        email,
         siteId: ctx.site.id,
       },
     });
@@ -86,12 +86,13 @@ export class NewsletterService {
    * 检查订阅状态
    */
   async checkSubscription(ctx: ServiceContext, email: string) {
-    const subscription = await ctx.db.query.newsletterSubscriptionTable.findFirst({
-      where: {
-        email: email,
-        siteId: ctx.site.id,
-      },
-    });
+    const subscription =
+      await ctx.db.query.newsletterSubscriptionTable.findFirst({
+        where: {
+          email,
+          siteId: ctx.site.id,
+        },
+      });
 
     return {
       isSubscribed: !!subscription,
@@ -102,7 +103,10 @@ export class NewsletterService {
   /**
    * 获取订阅列表（管理后台）
    */
-  async getList(ctx: ServiceContext, params: { page?: number; limit?: number }) {
+  async getList(
+    ctx: ServiceContext,
+    params: { page?: number; limit?: number }
+  ) {
     const page = params.page ?? 1;
     const limit = params.limit ?? 20;
     const offset = (page - 1) * limit;

@@ -197,7 +197,8 @@ export default function SiteConfigPage() {
                                 <div className="flex-1">
                                   <div className="flex items-center gap-2">
                                     <h3 className="font-semibold text-lg">
-                                      {config.label || getConfigKeyLabel(config.key)}
+                                      {config.label ||
+                                        getConfigKeyLabel(config.key)}
                                     </h3>
                                     <div className="flex gap-1">
                                       {config.translatable && (
@@ -216,7 +217,9 @@ export default function SiteConfigPage() {
                                   </p>
 
                                   <p className="mt-2 text-sm">
-                                    <span className="font-medium">配置内容:</span>{" "}
+                                    <span className="font-medium">
+                                      配置内容:
+                                    </span>{" "}
                                     {config.value.length > 100
                                       ? `${config.value.substring(0, 100)}...`
                                       : config.value}
@@ -273,8 +276,10 @@ export default function SiteConfigPage() {
                                             确认删除
                                           </AlertDialogTitle>
                                           <AlertDialogDescription>
-                                            确定要删除配置项 "{config.label || getConfigKeyLabel(config.key)}"
-                                            吗？此操作不可撤销。
+                                            确定要删除配置项 "
+                                            {config.label ||
+                                              getConfigKeyLabel(config.key)}
+                                            " 吗？此操作不可撤销。
                                           </AlertDialogDescription>
                                         </AlertDialogHeader>
                                         <AlertDialogFooter>

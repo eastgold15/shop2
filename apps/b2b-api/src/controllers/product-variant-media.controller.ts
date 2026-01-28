@@ -1,4 +1,7 @@
-import { ProductVariantContract, ProductVariantMediaContract } from "@repo/contract";
+import {
+  ProductVariantContract,
+  ProductVariantMediaContract,
+} from "@repo/contract";
 import { Elysia, t } from "elysia";
 import { dbPlugin } from "~/db/connection";
 import { authGuardMid } from "~/middleware/auth";
@@ -160,10 +163,11 @@ export const productVariantController = new Elysia({
   .get(
     "/:productId",
     ({ params, user, db, currentDeptId }) =>
-      productVariantMediaService.getVariantMedia(
-        params.productId,
-        { db, user, currentDeptId },
-      ),
+      productVariantMediaService.getVariantMedia(params.productId, {
+        db,
+        user,
+        currentDeptId,
+      }),
     {
       params: t.Object({
         productId: t.String(),
@@ -185,10 +189,11 @@ export const productVariantController = new Elysia({
   .post(
     "/",
     ({ body, user, db, currentDeptId }) =>
-      productVariantMediaService.setVariantMedia(
-        body,
-        { db, user, currentDeptId },
-      ),
+      productVariantMediaService.setVariantMedia(body, {
+        db,
+        user,
+        currentDeptId,
+      }),
     {
       body: ProductVariantContract.SetVariantMedia,
       allPermissions: ["PRODUCT_EDIT"],
@@ -208,7 +213,6 @@ export const productVariantController = new Elysia({
     "/sku/:skuId/media",
     ({ params, user, db, currentDeptId }) =>
       productVariantMediaService.getSkuMedia(
-
         params.skuId,
         { db, user, currentDeptId }
       ),

@@ -46,7 +46,10 @@ export class SiteProductService {
     body: SiteProductContract["Create"],
     ctx: ServiceContext
   ) {
-    const siteId = ctx.user.context.site.id!;
+    const siteId = ctx.user.context.site?.id;
+    if (!siteId) {
+      throw new HttpError.BadRequest("当前部门未绑定站点");
+    }
     const siteType = ctx.user.context.site.siteType || "group";
     const tenantId = ctx.user.context.tenantId;
 
@@ -511,10 +514,6 @@ export class SiteProductService {
       return { success: true, id: productId };
     });
   }
-
-
-
-
 
   /**
    * 批量更新商品排序
@@ -1235,7 +1234,9 @@ export class SiteProductService {
           );
 
         if (siteProducts.length === 0) {
-          throw new HttpError.NotFound("未找到对应的商品，请检查商品ID是否正确");
+          throw new HttpError.NotFound(
+            "未找到对应的商品，请检查商品ID是否正确"
+          );
         }
 
         const physicalProductIds = siteProducts.map((sp) => sp.productId);
@@ -1254,22 +1255,38 @@ export class SiteProductService {
         const validPhysicalIds = validProducts.map((p) => p.id);
 
         if (validPhysicalIds.length === 0) {
-          throw new HttpError.NotFound("未找到有权删除的源头商品，可能不属于当前部门");
+          throw new HttpError.NotFound(
+            "未找到有权删除的源头商品，可能不属于当前部门"
+          );
         }
 
         // 3. 执行物理级联删除 (先子后父)
 
         // a. 删除关联表
-        await tx.delete(siteProductTable).where(inArray(siteProductTable.productId, validPhysicalIds));
-        await tx.delete(productMediaTable).where(inArray(productMediaTable.productId, validPhysicalIds));
-        await tx.delete(productTemplateTable).where(inArray(productTemplateTable.productId, validPhysicalIds));
-        await tx.delete(productMasterCategoryTable).where(inArray(productMasterCategoryTable.productId, validPhysicalIds));
+        await tx
+          .delete(siteProductTable)
+          .where(inArray(siteProductTable.productId, validPhysicalIds));
+        await tx
+          .delete(productMediaTable)
+          .where(inArray(productMediaTable.productId, validPhysicalIds));
+        await tx
+          .delete(productTemplateTable)
+          .where(inArray(productTemplateTable.productId, validPhysicalIds));
+        await tx
+          .delete(productMasterCategoryTable)
+          .where(
+            inArray(productMasterCategoryTable.productId, validPhysicalIds)
+          );
 
         // b. 删除 SKU (物理库存)
-        await tx.delete(skuTable).where(inArray(skuTable.productId, validPhysicalIds));
+        await tx
+          .delete(skuTable)
+          .where(inArray(skuTable.productId, validPhysicalIds));
 
         // c. 最后删除源商品
-        await tx.delete(productTable).where(inArray(productTable.id, validPhysicalIds));
+        await tx
+          .delete(productTable)
+          .where(inArray(productTable.id, validPhysicalIds));
 
         return { count: validPhysicalIds.length, message: "成功删除源头商品" };
       }
@@ -1279,7 +1296,9 @@ export class SiteProductService {
       // =========================================================
 
       // 1. 显式删除 site_sku (如果数据库没有配置 ON DELETE CASCADE)
-      await tx.delete(siteSkuTable).where(inArray(siteSkuTable.siteProductId, ids));
+      await tx
+        .delete(siteSkuTable)
+        .where(inArray(siteSkuTable.siteProductId, ids));
 
       // 2. 删除 site_product
       const result = await tx

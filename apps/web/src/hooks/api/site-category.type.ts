@@ -11,10 +11,6 @@ export interface SiteCategoryDetailRes {
   url?: string;
 }
 
-
-
-
-
 // 获取分类下的商品列表
 export type SiteCategoryProductRes = {
   id: string;
@@ -24,10 +20,7 @@ export type SiteCategoryProductRes = {
   minPrice: string;
   spuCode: string;
   isFeatured: boolean | null;
-}
-
-
-
+};
 
 // 获取站点商品列表（支持搜索和分页）
 export type SiteProductListRes = {

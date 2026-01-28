@@ -12,7 +12,7 @@ export * from "./inquiry"; // 询价
 export * from "./master-category"; // 主分类
 export * from "./media"; // 媒体
 export * from "./media-metadata"; // 媒体元数据
-export * from "./product"; // 产品
+
 export * from "./quotation"; // 报价
 export * from "./role"; // 角色
 

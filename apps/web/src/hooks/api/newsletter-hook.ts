@@ -23,12 +23,12 @@ export function useSubscribeNewsletter() {
   return useMutation({
     mutationFn: async (email: string) => {
       const { data, error } = await rpc.newsletter.subscribe1.post({
-        email
-      })
+        email,
+      });
 
       console.log(data);
       if (error as unknown as MError) {
-        return null
+        return null;
       }
       toast.success("订阅成功");
       return data;
@@ -81,10 +81,6 @@ export function useCheckNewsletterSubscription(email: string) {
   });
 }
 
-
-
-
-
 interface MError {
   status: number;
   value: {
@@ -92,6 +88,5 @@ interface MError {
     type: string;
     status: number;
     detail: string;
-  }
+  };
 }
-

@@ -23,8 +23,8 @@ export const SiteProductContract = {
    */
   Create: t.Object({
     spuCode: ProductFields.spuCode,
-    siteName: ProductFields.name,  // 站点商品名称，也是源头商品名称
-    siteDescription: ProductFields.description,  // 站点商品描述，也是源头商品描述
+    siteName: ProductFields.name, // 站点商品名称，也是源头商品名称
+    siteDescription: ProductFields.description, // 站点商品描述，也是源头商品描述
 
     productId: t.Optional(t.String()),
     status: t.Optional(ProductFields.status),
@@ -39,8 +39,6 @@ export const SiteProductContract = {
     // 商品独有属性（简单键值对）
     customAttributes: t.Optional(t.Record(t.String(), t.String())),
   }),
-
-
 
   Update: t.Partial(
     t.Object({
@@ -61,7 +59,6 @@ export const SiteProductContract = {
       description: ProductFields.description,
     })
   ),
-
 
   ListQuery: t.Object({
     ...t.Partial(t.Object(SiteProductInsertFields)).properties,
@@ -88,10 +85,6 @@ export const SiteProductContract = {
 } as const;
 
 export type SiteProductContract = InferDTO<typeof SiteProductContract>;
-
-
-
-
 
 export const ProductInsertFields = spread(productTable, "insert");
 

@@ -12,10 +12,7 @@ export const newsletterController = new Elysia({
   .post(
     "/subscribe1",
     async ({ db, site, body }) => {
-      return await newsletterService.subscribe(
-        { db, site },
-        body.email
-      );
+      return await newsletterService.subscribe({ db, site }, body.email);
     },
     {
       body: NewsletterContract.Subscribe,
@@ -29,10 +26,7 @@ export const newsletterController = new Elysia({
   .post(
     "/unsubscribe1",
     async ({ db, site, body }) => {
-      return await newsletterService.unsubscribe(
-        { db, site },
-        body.email
-      );
+      return await newsletterService.unsubscribe({ db, site }, body.email);
     },
     {
       body: NewsletterContract.Unsubscribe,

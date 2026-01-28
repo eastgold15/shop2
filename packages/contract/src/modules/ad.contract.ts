@@ -2,12 +2,10 @@ import { t } from "elysia";
 import { type InferDTO, spread } from "../helper/utils";
 import { adTable } from "../table.schema";
 
-
 export const AdInsertFields = spread(adTable, "insert");
 
 export const AdFields = spread(adTable, "select");
 export const AdContract = {
-
   Response: t.Object({
     ...AdFields,
   }),

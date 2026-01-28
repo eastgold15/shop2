@@ -497,7 +497,9 @@ export function ProductList({
 
                   <Checkbox
                     checked={isSelected}
-                    onCheckedChange={(c) => onSelect(product.siteProductId, !!c)}
+                    onCheckedChange={(c) =>
+                      onSelect(product.siteProductId, !!c)
+                    }
                   />
 
                   {product.mainImage ? (

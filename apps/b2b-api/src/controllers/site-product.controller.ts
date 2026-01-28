@@ -85,10 +85,10 @@ export const siteProductController = new Elysia({ prefix: "/site-product" })
   )
 
   /**
- * 批量更新商品排序
- * 工厂站点：同时更新 product 和 siteProduct 的 sortOrder
- * 出口商站点：只更新 siteProduct 的 sortOrder
- */
+   * 批量更新商品排序
+   * 工厂站点：同时更新 product 和 siteProduct 的 sortOrder
+   * 出口商站点：只更新 siteProduct 的 sortOrder
+   */
   .put(
     "/batch/sort-order",
     ({ body, user, db, currentDeptId }) =>
@@ -110,9 +110,9 @@ export const siteProductController = new Elysia({ prefix: "/site-product" })
     }
   )
   /**
-    * 更新商品（全量关联更新）
-    * 支持两种模式：全局商品（工厂）和站点商品（集团）
-    */
+   * 更新商品（全量关联更新）
+   * 支持两种模式：全局商品（工厂）和站点商品（集团）
+   */
   .put(
     "/:id",
     ({ params, body, user, db, currentDeptId }) =>
@@ -146,8 +146,8 @@ export const siteProductController = new Elysia({ prefix: "/site-product" })
     }
   )
   /**
-  * 批量删除商品
-  */
+   * 批量删除商品
+   */
   .delete(
     "/batch/delete",
     ({ body, user, db, currentDeptId }) => {
@@ -166,4 +166,4 @@ export const siteProductController = new Elysia({ prefix: "/site-product" })
           "根据ID列表批量删除商品记录及其关联数据（SKU、媒体、模板等）",
       },
     }
-  )
+  );
