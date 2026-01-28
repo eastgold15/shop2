@@ -19,7 +19,7 @@ import {
   templateKeyTable,
   templateValueTable,
 } from "@repo/contract";
-import { and, asc, desc, eq, like, sql } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, or, sql } from "drizzle-orm";
 import type { ServiceContext } from "~/middleware/site";
 
 export class SiteProductService {
@@ -123,13 +123,15 @@ export class SiteProductService {
     }
     // 搜索关键词：匹配站点商品名称或物理商品名称（不区分大小写）
     if (search) {
-      const searchTerm = `%${search}%`;
-      filters.push(
-        sql`(
-          ${siteProductTable.siteName} ILIKE ${searchTerm}
-          OR ${productTable.name} ILIKE ${searchTerm}
-        )`
+      // 构造 or 条件
+      const searchCondition = or(
+        ilike(siteProductTable.siteName, search),
+        ilike(productTable.name, search)
       );
+      // 只有当 searchCondition 存在时才 push
+      if (searchCondition) {
+        filters.push(searchCondition);
+      }
     }
 
     // 3. 执行查询

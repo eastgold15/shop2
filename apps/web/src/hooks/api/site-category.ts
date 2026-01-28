@@ -110,7 +110,7 @@ export function useSiteProductList(
 
       const { data, error } = await rpc.site_products.get({
         query: cleanParams as any,
-      });
+      })
 
       if (error) {
         toast.error(error.value?.message || "获取商品列表失败");

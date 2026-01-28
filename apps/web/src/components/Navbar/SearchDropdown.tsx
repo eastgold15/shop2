@@ -2,32 +2,71 @@
 
 import { Search, X } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSiteProductList } from "@/hooks/api/site-category";
 import ProductCard from "../product/productCard";
 
 export const SearchDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // 防抖：用户停止输入 500ms 后才发起搜索
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // 点击外部关闭下拉框
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
 
   const { data: productListRes, isLoading } = useSiteProductList(
-    { search: searchQuery, limit: 8 },
-    { enabled: searchQuery.length >= 2 }
+    { search: debouncedQuery, limit: 8 },
+    { enabled: debouncedQuery.length >= 2 }
   );
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
   };
 
+  // 回车键立即搜索
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      setDebouncedQuery(searchQuery);
+    }
+  };
+
   const clearSearch = () => {
     setSearchQuery("");
+    setDebouncedQuery("");
   };
 
   return (
     <div
       className="relative"
       onMouseEnter={() => setIsOpen(true)}
-      onMouseLeave={() => setIsOpen(false)}
+      ref={dropdownRef}
     >
       <button className="text-black transition-colors hover:text-gray-500">
         <Search className="h-4 w-4 md:h-5 md:w-5" strokeWidth={1.5} />
@@ -42,6 +81,7 @@ export const SearchDropdown = () => {
                 autoFocus
                 className="w-full rounded border border-gray-300 py-2 pr-10 pl-10 text-sm focus:border-black focus:outline-none"
                 onChange={handleSearchChange}
+                onKeyDown={handleKeyDown}
                 placeholder="搜索商品..."
                 type="text"
                 value={searchQuery}
