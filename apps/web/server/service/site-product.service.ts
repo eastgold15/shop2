@@ -121,13 +121,13 @@ export class SiteProductService {
     if (categoryId) {
       filters.push(eq(siteProductSiteCategoryTable.siteCategoryId, categoryId));
     }
-    // 搜索关键词：匹配站点商品名称或物理商品名称
+    // 搜索关键词：匹配站点商品名称或物理商品名称（不区分大小写）
     if (search) {
       const searchTerm = `%${search}%`;
       filters.push(
         sql`(
-          ${siteProductTable.siteName} LIKE ${searchTerm}
-          OR ${productTable.name} LIKE ${searchTerm}
+          ${siteProductTable.siteName} ILIKE ${searchTerm}
+          OR ${productTable.name} ILIKE ${searchTerm}
         )`
       );
     }
