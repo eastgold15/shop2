@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
@@ -13,10 +13,14 @@ interface BaseImageProps {
   defaultImage?: string;
   priority?: boolean;
   sizes?: string;
+  width?: number;
+  height?: number;
   unoptimized?: boolean; // 新增：允许手动控制优化
 }
 
 export const BaseImage: React.FC<BaseImageProps> = ({
+  width,
+  height,
   imageUrl,
   className,
   containerClassName,
@@ -26,17 +30,10 @@ export const BaseImage: React.FC<BaseImageProps> = ({
   sizes = "(max-width: 768px) 50vw, 33vw",
   // 默认为 true，解决之前的 504 超时问题，直接让浏览器加载原图
   unoptimized = true,
+  ...props
 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
-
-  // 1. 关键修复：当传入的图片 URL 变化时，必须重置加载状态！
-  // 否则切换图片时不会出现骨架屏
-  useEffect(() => {
-    setIsLoaded(false);
-    setHasError(false);
-  }, [imageUrl]);
-
   // 兜底图片逻辑
   const fallbackUrl =
     defaultImage ||
@@ -64,21 +61,15 @@ export const BaseImage: React.FC<BaseImageProps> = ({
         className={cn(
           "object-cover transition-all duration-500 ease-in-out",
           className,
-          // 加载完成前：透明 + 稍微放大 (scale-105)
-          // 加载完成后：不透明 + 恢复原大小 (scale-100)
           isLoaded ? "scale-100 opacity-100" : "scale-105 opacity-0"
         )}
         fill
         onError={() => {
           // 图片加载失败，触发重新渲染使用 fallbackUrl
           setHasError(true);
-          // 注意：如果 fallback 图也加载很快，我们可能需要保持 isLoaded 为 false 直到 fallback 加载完
-          // 但为了防止死循环，通常这里先不做复杂处理，直接认为“处理完毕”
-          // 或者让 fallbackUrl 触发下一次 onLoad
           setIsLoaded(false); // 重置为未加载，让 Image 组件去加载 fallbackUrl 并触发新的 onLoad
         }}
         onLoad={() => {
-          // 图片加载成功，隐藏骨架屏
           setIsLoaded(true);
         }}
         // 关键：绕过 Next.js 服务器优化，直接由浏览器请求图片，解决加载卡顿/超时

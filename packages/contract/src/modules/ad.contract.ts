@@ -2,12 +2,12 @@ import { t } from "elysia";
 import { type InferDTO, spread } from "../helper/utils";
 import { adTable } from "../table.schema";
 
-/** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+
 export const AdInsertFields = spread(adTable, "insert");
-/** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+
 export const AdFields = spread(adTable, "select");
 export const AdContract = {
-  /** [Auto-Generated] Do not edit this tag to keep updates. @generated */
+
   Response: t.Object({
     ...AdFields,
   }),

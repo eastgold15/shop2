@@ -91,7 +91,7 @@ export const HeroShowComponent: React.FC = () => {
         // style={{ height: "calc(100vh - var(--navbar-height))" }}
       >
         <div className="grid grid-cols-1 md:grid-cols-2">
-          {Array.from({ length: 7 }).map((_, i) => (
+          {Array.from({ length: 8 }).map((_, i) => (
             <div className="flex flex-col" key={i}>
               <Skeleton className="h-125 md:h-150" variant="rectangle" />
               <div className="flex h-50 flex-col justify-center space-y-4 p-8 md:h-62.5">
@@ -133,8 +133,8 @@ export const HeroShowComponent: React.FC = () => {
   return (
     <section className={cn("min-h-screen w-full")}>
       <div className="grid grid-cols-1 gap-0 md:grid-cols-2">
-        {/* 2. 修改：slice 取 6 个 API 数据，加上 1 个 Shop，共 7 个 */}
-        {[{ type: "shop" }, ...heroCards.slice(0, 6)].map((item, index) => {
+        {/* 显示所有后端返回的 hero-card */}
+        {[{ type: "shop" }, ...heroCards].map((item, index) => {
           // 3. 修改：样式逻辑升级
           // 原逻辑: index 0,3 是浅色 -> A B B A
           // 新逻辑: 使用取模运算 (% 4) 让这个模式无限循环 -> A B B A A B B ...

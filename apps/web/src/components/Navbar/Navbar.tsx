@@ -114,7 +114,9 @@ const Navbar = () => {
               className="pt-2 font-serif text-4xl tracking-widest md:text-5xl"
               href="/"
             >
-              {site_name?.[0]?.value || "error"}
+              <span className="animate-spin" key={site_name?.[0]?.value}>
+                {site_name?.[0]?.value || "Welcome"}
+              </span>
             </Link>
           </div>
 
