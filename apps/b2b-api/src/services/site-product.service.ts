@@ -1223,6 +1223,7 @@ export class SiteProductService {
         // 同时确保这些 siteProduct 属于当前站点
         const siteProducts = await tx
           .select({
+            id: siteProductTable.id,
             productId: siteProductTable.productId,
           })
           .from(siteProductTable)
@@ -1233,11 +1234,11 @@ export class SiteProductService {
             )
           );
 
-        const physicalProductIds = siteProducts.map((sp) => sp.productId);
-
-        if (physicalProductIds.length === 0) {
-          throw new HttpError.NotFound("未找到对应的有效商品");
+        if (siteProducts.length === 0) {
+          throw new HttpError.NotFound("未找到对应的商品，请检查商品ID是否正确");
         }
+
+        const physicalProductIds = siteProducts.map((sp) => sp.productId);
 
         // 2. [二次校验] 确保这些物理商品属于当前部门 (防止 ID 伪造删除他人商品)
         const validProducts = await tx
@@ -1253,7 +1254,7 @@ export class SiteProductService {
         const validPhysicalIds = validProducts.map((p) => p.id);
 
         if (validPhysicalIds.length === 0) {
-          throw new HttpError.NotFound("未找到有权删除的源头商品");
+          throw new HttpError.NotFound("未找到有权删除的源头商品，可能不属于当前部门");
         }
 
         // 3. 执行物理级联删除 (先子后父)
@@ -1277,9 +1278,6 @@ export class SiteProductService {
       // 场景 B: 集团站 (视图删除 - 仅取消收录)
       // =========================================================
 
-      // 直接删除 site_product 记录，外键级联会负责清理 site_sku 等
-      // 如果没有设置数据库级联，需要手动删 site_sku，这里假设数据库有级联或者需要显式处理
-
       // 1. 显式删除 site_sku (如果数据库没有配置 ON DELETE CASCADE)
       await tx.delete(siteSkuTable).where(inArray(siteSkuTable.siteProductId, ids));
 
@@ -1293,6 +1291,10 @@ export class SiteProductService {
           )
         )
         .returning({ id: siteProductTable.id });
+
+      if (result.length === 0) {
+        throw new HttpError.NotFound("未找到对应的商品，请检查商品ID是否正确");
+      }
 
       return { count: result.length, message: "成功取消收录" };
     });

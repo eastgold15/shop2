@@ -156,7 +156,7 @@ const SortableProductItem = memo(function SortableProductItem({
 
           <Checkbox
             checked={isSelected}
-            onCheckedChange={(c) => onSelect(product.id, !!c)}
+            onCheckedChange={(c) => onSelect(product.siteProductId, !!c)}
           />
 
           {product.mainImage ? (
@@ -444,7 +444,7 @@ export function ProductList({
             <div className="space-y-4 p-4">
               {sortableProducts.map((product) => {
                 const isExpanded = expandedIds.has(product.id);
-                const isSelected = selectedIds.has(product.id);
+                const isSelected = selectedIds.has(product.siteProductId);
 
                 return (
                   <SortableProductItem
@@ -479,7 +479,7 @@ export function ProductList({
         <div className="space-y-4 p-4">
           {nonSortableProducts.map((product) => {
             const isExpanded = expandedIds.has(product.id);
-            const isSelected = selectedIds.has(product.id);
+            const isSelected = selectedIds.has(product.siteProductId);
 
             return (
               <Collapsible
@@ -497,7 +497,7 @@ export function ProductList({
 
                   <Checkbox
                     checked={isSelected}
-                    onCheckedChange={(c) => onSelect(product.id, !!c)}
+                    onCheckedChange={(c) => onSelect(product.siteProductId, !!c)}
                   />
 
                   {product.mainImage ? (

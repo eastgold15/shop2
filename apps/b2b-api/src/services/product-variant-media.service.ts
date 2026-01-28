@@ -488,7 +488,7 @@ export class ProductVariantMediaService {
           await tx
             .update(productMediaTable)
             .set({ isMain: true })
-            .where(eq(productMediaTable.id, existingMedia.id));
+            .where(eq(productMediaTable.mediaId, existingMedia.mediaId));
         } else {
           // 如果不存在，插入为主图
           await tx.insert(productMediaTable).values({

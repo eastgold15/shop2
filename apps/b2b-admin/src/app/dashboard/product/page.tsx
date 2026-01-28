@@ -31,8 +31,10 @@ export default function ProductsPage() {
 
   // --- 2. 状态 ---
   const [searchTerm, setSearchTerm] = useState("");
+  // 🔥 注意：selectedIds 存储的是 siteProductId，用于删除操作
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [selectedSkuIds, setSelectedSkuIds] = useState<Set<string>>(new Set());
+  // expandedIds 存储的是物理 product.id，用于展开折叠
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
   // 弹窗控制
@@ -78,7 +80,8 @@ export default function ProductsPage() {
 
   const handleDeleteProduct = async (product: Product) => {
     if (!confirm(`确认删除商品 "${product.name}"?`)) return;
-    await deleteSingleProductMutation.mutateAsync(product.id);
+    // 🔥 使用 siteProductId 而不是 id 进行删除
+    await deleteSingleProductMutation.mutateAsync(product.siteProductId);
     toast.success("商品已删除");
     refetch();
   };
