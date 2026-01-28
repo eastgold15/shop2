@@ -170,7 +170,7 @@ export function CreateSiteConfigModal({
               name="siteId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>所属站点 *</FormLabel>
+                  <FormLabel>所属站点 （必填）</FormLabel>
                   <FormControl>
                     <SiteSelect
                       disabled={isEdit}
@@ -179,7 +179,7 @@ export function CreateSiteConfigModal({
                       value={field.value}
                     />
                   </FormControl>
-                  <FormDescription>选择此配置项所属 的站点</FormDescription>
+                  <FormDescription>选择此配置项所属的站点</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -190,7 +190,7 @@ export function CreateSiteConfigModal({
               name="key"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>配置类型 *</FormLabel>
+                  <FormLabel>配置类型 （必填））</FormLabel>
                   <Select
                     disabled={isEdit}
                     onValueChange={field.onChange}
@@ -220,7 +220,7 @@ export function CreateSiteConfigModal({
               name="value"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>配置内容 *</FormLabel>
+                  <FormLabel>配置内容 （必填）</FormLabel>
                   <FormControl>
                     <Textarea
                       className="min-h-[80px]"
@@ -241,7 +241,7 @@ export function CreateSiteConfigModal({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>描述（选填）</FormLabel>
+                  <FormLabel>配置说明（选填）</FormLabel>
                   <FormControl>
                     <Input placeholder="配置项的说明" {...field} />
                   </FormControl>
@@ -256,7 +256,7 @@ export function CreateSiteConfigModal({
               name="category"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>分类</FormLabel>
+                  <FormLabel>所属公司分类 （必填）</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
@@ -284,7 +284,7 @@ export function CreateSiteConfigModal({
               name="url"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>图片的URL</FormLabel>
+                  <FormLabel>图片的地址</FormLabel>
                   <FormControl>
                     <Input placeholder="https://example.com" {...field} />
                   </FormControl>
