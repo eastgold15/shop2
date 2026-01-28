@@ -111,6 +111,7 @@ export const AdShowComponent: React.FC<AdShowProps> = ({
             alt={ad.title || "Advertisement"}
             className="mt-20 h-full w-full transform object-cover transition-transform duration-1000 group-hover:scale-105 md:mt-0"
             imageId={ad.mediaId}
+            key={ad.mediaId}
           />
         </div>
 

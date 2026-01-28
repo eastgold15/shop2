@@ -37,9 +37,9 @@ const ContentBlock: React.FC<ContentBlockProps> = ({
   buttonUrl,
   buttonTextContent,
 }) => (
-  <div className={`flex h-full flex-col ${bgColor}`}>
+  <div className={`flex flex-col ${bgColor}`}>
     {/* 上部：根据传入的children渲染 */}
-    <div className="relative aspect-square w-full grow overflow-hidden">
+    <div className="relative h-screen min-h-0 w-full grow md:h-[calc(100vh-var(--navbar-height))]">
       {children}
     </div>
 
@@ -85,11 +85,7 @@ export const HeroShowComponent: React.FC = () => {
   // 1. 修改：骨架屏数量增加到 7 个
   if (isLoading) {
     return (
-      <section
-        className="min-h-screen w-full"
-        // 注意：如果你这部分内容会超过屏幕高度，这里建议移除 strict height calculation 或者改为 min-height
-        // style={{ height: "calc(100vh - var(--navbar-height))" }}
-      >
+      <section className="min-h-screen w-full">
         <div className="grid grid-cols-1 md:grid-cols-2">
           {Array.from({ length: 8 }).map((_, i) => (
             <div className="flex flex-col" key={i}>
@@ -131,7 +127,7 @@ export const HeroShowComponent: React.FC = () => {
   ];
 
   return (
-    <section className={cn("min-h-screen w-full")}>
+    <section className={cn("w-full")}>
       <div className="grid grid-cols-1 gap-0 md:grid-cols-2">
         {/* 显示所有后端返回的 hero-card */}
         {[{ type: "shop" }, ...heroCards].map((item, index) => {

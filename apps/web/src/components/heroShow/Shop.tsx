@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import type React from "react";
+
 import { useSiteProductList } from "@/hooks/api/site-category";
 import { BaseImage } from "../common/Image/baseImage";
 import { Skeleton } from "../ui/skeleton";
@@ -36,28 +37,35 @@ const Shop: React.FC<ShopProps> = ({ onProductSelect }) => {
   const products = data.items || [];
 
   return (
-    <div className="grid h-full w-full gap-x-8 gap-y-4 bg-white p-8 md:grid-cols-2">
-      {products.slice(0, 4).map((product) => (
-        <div
-          className="group flex basis-100 cursor-pointer flex-col items-center"
-          key={product.siteProductId}
-          onClick={() => router.push(`/product/${product.siteProductId}`)}
-        >
-          <div className="relative mb-6 aspect-4/3 w-full overflow-hidden">
-            <BaseImage
-              alt={product.displayName}
-              className="h-full w-full object-contain"
-              imageUrl={product.mainMedia}
-              key={product.mainMedia}
-            />
-          </div>
-          <div className="text-center">
-            <h3 className="mb-1 font-serif text-black text-lg italic transition-colors group-hover:text-gray-600 md:text-xl">
+    <div className="flex h-full w-full flex-col items-center justify-center bg-white p-2 md:p-3">
+      <div className="grid h-full w-full grid-cols-2 grid-rows-2 gap-x-3 gap-y-4">
+        {products.slice(0, 4).map((product) => (
+          <div
+            className="group flex cursor-pointer flex-col items-center justify-center"
+            key={product.siteProductId}
+            onClick={() => router.push(`/product/${product.siteProductId}`)}
+          >
+            {/* 🔥 图片容器：使用 flex-1 占据除了文字外的所有空间，并用 relative 配合 BaseImage */}
+            <div className="relative min-h-0 w-full flex-1">
+              <BaseImage
+                alt={product.displayName}
+                // 关键：imageId 用于 Nexus Flow 的数据追踪
+                className="object-contain"
+                // className 控制图片在盒子里的展示方式
+
+                containerClassName="absolute inset-0 bg-white/10 rounded-sm"
+                // 让 BaseImage 内部 div 绝对定位填满这个 flex-1 的空间
+                imageUrl={product.mainMedia}
+              />
+            </div>
+
+            {/* 文字部分：使用 shrink-0 防止文字区域被压缩 */}
+            <h3 className="mt-2 shrink-0 text-center font-serif text-2xs text-black italic transition-colors group-hover:text-gray-600 md:text-2xl">
               {product.displayName}
             </h3>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 };

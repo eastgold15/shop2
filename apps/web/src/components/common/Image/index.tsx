@@ -2,7 +2,7 @@
 
 import { AlertCircle, ImageIcon } from "lucide-react"; // 假设你使用 lucide-react，用于显示错误图标，可选
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCurrentMediaDetail } from "@/hooks/api/meida-hook"; // 修正了原本拼写错误的 meida-hook
 import { cn } from "@/lib/utils";
@@ -53,12 +53,6 @@ export const ImageComponent: React.FC<ImageProps> = ({
 
   // 计算最终使用的图片地址 (src 优先级高于 API 获取的 remoteUrl)
   const finalSrc = src || remoteUrl;
-
-  // 当 src 或 remoteUrl 发生变化时，重置加载状态
-  useEffect(() => {
-    setIsImgLoading(true);
-    setIsError(false);
-  }, [finalSrc]);
 
   // 判定是否显示骨架屏：
   // 1. 显式要求显示

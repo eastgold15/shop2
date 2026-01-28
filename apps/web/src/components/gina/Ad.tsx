@@ -63,8 +63,9 @@ const Ad: React.FC<{ className?: string }> = ({ className }) => {
             >
               <ImageComponent
                 alt={ad.title || "Advertisement"}
-                className="h-full w-full object-cover object-center md:object-[center_30%]" // 确保这里字段名对应 Hook 里的定义
-                imageId={ad.mediaId}
+                className="h-full w-full object-cover object-center md:object-[center_30%]"
+                imageId={ad.mediaId} // 确保这里字段名对应 Hook 里的定义
+                key={ad.id}
                 // 优化：只有第一张图需要 priority (LCP优化)，其他懒加载
                 priority={index === 0}
               />

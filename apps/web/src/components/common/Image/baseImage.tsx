@@ -46,7 +46,7 @@ export const BaseImage: React.FC<BaseImageProps> = ({
   return (
     <div
       className={cn(
-        "relative h-full w-full overflow-hidden bg-gray-50", // 给个淡灰色背景，比纯白更自然
+        "relative h-full w-full overflow-hidden bg-gray-50",
         containerClassName
       )}
     >
