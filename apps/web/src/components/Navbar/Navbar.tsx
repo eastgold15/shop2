@@ -125,7 +125,7 @@ const Navbar = () => {
             <SearchDropdown />
 
             {/* 导航图标：使用配置数据映射 */}
-            {navItems.map((item) => (
+            {/* {navItems.map((item) => (
               <NavIcon
                 icon={item.icon}
                 key={item.href}
@@ -133,7 +133,7 @@ const Navbar = () => {
                 // showOnMobile={item.showOnMobile}
                 // badgeCount={item.badgeCount}
               />
-            ))}
+            ))} */}
           </div>
         </div>
 
