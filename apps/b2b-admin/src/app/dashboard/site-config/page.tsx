@@ -140,7 +140,7 @@ export default function SiteConfigPage() {
                   <Input
                     className="pl-10"
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="搜索配置键、值或描述..."
+                    placeholder="搜索配置类型、内容或描述..."
                     value={searchTerm}
                   />
                 </div>
@@ -212,11 +212,11 @@ export default function SiteConfigPage() {
                                   </div>
 
                                   <p className="mt-1 text-muted-foreground text-xs">
-                                    配置键: {config.key}
+                                    配置类型: {config.key}
                                   </p>
 
                                   <p className="mt-2 text-sm">
-                                    <span className="font-medium">配置值:</span>{" "}
+                                    <span className="font-medium">配置内容:</span>{" "}
                                     {config.value.length > 100
                                       ? `${config.value.substring(0, 100)}...`
                                       : config.value}

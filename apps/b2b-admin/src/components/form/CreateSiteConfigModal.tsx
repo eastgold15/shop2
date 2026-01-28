@@ -46,8 +46,8 @@ import {
 } from "@/hooks/api/site-config";
 
 const formSchema = z.object({
-  key: z.string().min(1, "配置键不能为空"),
-  value: z.string().min(1, "配置值不能为空"),
+  key: z.string().min(1, "配置类型不能为空"),
+  value: z.string().min(1, "配置内容不能为空"),
   description: z.string().optional(),
   category: z.string().default("general"),
   url: z.string().optional(),
@@ -190,7 +190,7 @@ export function CreateSiteConfigModal({
               name="key"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>配置键 *</FormLabel>
+                  <FormLabel>配置类型 *</FormLabel>
                   <Select
                     disabled={isEdit}
                     onValueChange={field.onChange}
@@ -220,16 +220,16 @@ export function CreateSiteConfigModal({
               name="value"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>配置值 *</FormLabel>
+                  <FormLabel>配置内容 *</FormLabel>
                   <FormControl>
                     <Textarea
                       className="min-h-[80px]"
-                      placeholder="请输入配置值"
+                      placeholder="请输入配置内容"
                       {...field}
                     />
                   </FormControl>
                   <FormDescription>
-                    你所需要修改的内容，支持文本、JSON 等格式
+                    你所需要修改的内容，支持文本、链接等多种格式
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
