@@ -135,8 +135,12 @@ export function CreateSiteConfigModal({
         await createSiteConfig.mutateAsync(submitData);
       }
       onSuccess?.();
-      form.reset();
-      onOpenChange(false);
+
+      // Delay closing to avoid DOM conflicts
+      setTimeout(() => {
+        onOpenChange(false);
+        form.reset();
+      }, 100);
     } catch (error) {
       // 错误已在 mutation 中处理
     }
@@ -144,7 +148,10 @@ export function CreateSiteConfigModal({
 
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
-      form.reset();
+      // Use setTimeout to avoid DOM manipulation conflicts
+      setTimeout(() => {
+        form.reset();
+      }, 0);
     }
     onOpenChange(isOpen);
   };
@@ -164,7 +171,11 @@ export function CreateSiteConfigModal({
         </DialogHeader>
 
         <Form {...form}>
-          <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
+          <form
+            className="space-y-4"
+            onSubmit={form.handleSubmit(onSubmit)}
+            id="site-config-form"
+          >
             <FormField
               control={form.control}
               name="siteId"
@@ -190,7 +201,7 @@ export function CreateSiteConfigModal({
               name="key"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>配置类型 （必填））</FormLabel>
+                  <FormLabel>配置类型 （必填）</FormLabel>
                   <Select
                     disabled={isEdit}
                     onValueChange={field.onChange}
@@ -284,7 +295,7 @@ export function CreateSiteConfigModal({
               name="url"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>图片的地址</FormLabel>
+                  <FormLabel>url</FormLabel>
                   <FormControl>
                     <Input placeholder="https://example.com" {...field} />
                   </FormControl>
@@ -331,31 +342,35 @@ export function CreateSiteConfigModal({
                 )}
               />
             </div>
-
-            <DialogFooter>
-              <Button
-                disabled={isLoading}
-                onClick={() => onOpenChange(false)}
-                type="button"
-                variant="outline"
-              >
-                取消
-              </Button>
-              <Button disabled={isLoading} type="submit">
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {isEdit ? "保存中..." : "创建中..."}
-                  </>
-                ) : isEdit ? (
-                  "保存修改"
-                ) : (
-                  "创建配置"
-                )}
-              </Button>
-            </DialogFooter>
           </form>
         </Form>
+
+        <DialogFooter>
+          <Button
+            disabled={isLoading}
+            onClick={() => onOpenChange(false)}
+            type="button"
+            variant="outline"
+          >
+            取消
+          </Button>
+          <Button
+            disabled={isLoading}
+            form="site-config-form"
+            type="submit"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {isEdit ? "保存中..." : "创建中..."}
+              </>
+            ) : isEdit ? (
+              "保存修改"
+            ) : (
+              "创建配置"
+            )}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
